@@ -1,2 +1,5 @@
 dist
-node_modules
+.husky/
+node_modules/
+coverage/
+.vscode/
