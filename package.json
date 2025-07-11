@@ -1,5 +1,5 @@
 {
-  "name": "nodejsapp",
+  "name": "nodejs-app",
   "version": "1.0.0",
   "description": "An Express.js template with TypeScript, ESLint and Prettier",
   "type": "module",
@@ -15,6 +15,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+    "imports": {
+    "#*": "./dist/*"
   },
   "repository": {
     "type": "git",
