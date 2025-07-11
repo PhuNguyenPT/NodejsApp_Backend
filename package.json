@@ -4,8 +4,8 @@
   "description": "An Express.js template with TypeScript, ESLint and Prettier",
   "type": "module",
   "scripts": {
-    "dev": "tsx --watch src/index.ts",
-    "start": "node dist/app/index.js",
+    "dev": "tsx --watch --env-file .env src/index.ts",
+    "start": "node --env-file .env dist/app/index.js",
     "build": "tsc",
     "clean": "rm -rf dist",
     "build:clean": "npm run clean && npm run build",
