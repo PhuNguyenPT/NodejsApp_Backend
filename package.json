@@ -16,7 +16,7 @@
     "format:check": "prettier --check .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-    "imports": {
+  "imports": {
     "#*": "./dist/*"
   },
   "repository": {
