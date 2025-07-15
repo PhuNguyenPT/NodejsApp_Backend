@@ -1,0 +1,27 @@
+networks:
+  node-network:
+    driver: bridge
+services:
+  postgres:
+    image: "postgres:latest"
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: node_app_dev
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - node_postgres_data:/var/lib/postgresql/data
+    networks:
+      - node-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d node_app_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+volumes:
+  node_postgres_data:
+    driver: local
