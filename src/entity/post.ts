@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 
-@Entity({ name: "users" })
+@Entity({ name: "posts" })
 export class Post {
   @Column({ length: 255, type: "varchar" })
   body!: string;
