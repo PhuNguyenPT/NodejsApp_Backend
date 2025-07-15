@@ -11,11 +11,19 @@
     "declarationMap": true,
     "sourceMap": true,
     "forceConsistentCasingInFileNames": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     "baseUrl": "./src",
     "paths": {
-      "@/resources/*": ["resources/*"],
-      "@/utils/*": ["utils/*"],
-      "@/middlewares/*": ["middlewares/*"]
+      "@/app/*": ["app/*"],
+      "@/config/*": ["config/*"],
+      "@/controller/*": ["controller/*"],
+      "@/entity/*": ["entity/*"],
+      "@/handler/*": ["handler/*"],
+      "@/middleware/*": ["middleware/*"],
+      "@/util/*": ["util/*"],
+      "@/service/*": ["service/*"],
+      "@/type/*": ["type/*"]
     }
   },
   "include": ["src/**/*"]

@@ -1,14 +1,12 @@
-// index.ts
-import express from "express";
+// src/app/index.ts
+import validateEnv from "util/validate.env.js";
 
-import { middleware } from "@/middlewares/middlewares.js";
+import App from "@/app/app.js";
+import PostController from "@/controller/post.controller.js";
 
-const app = express();
-const port = process.env.PORT ?? "9001";
+console.log("Port: ", process.env.PORT);
+validateEnv();
 
-app.get("/", middleware);
+const app = new App([new PostController()], Number(process.env.PORT));
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
-export default app;
+app.listen();
