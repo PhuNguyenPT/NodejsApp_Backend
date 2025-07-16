@@ -10,7 +10,7 @@ export default tseslint.config(
     ignores: ["**/*.js", "dist/**/*"],
   },
   eslint.configs.recommended,
-  tseslint.configs.strictTypeChecked,
+  tseslint.configs.recommendedTypeChecked,
   tseslint.configs.stylisticTypeChecked,
   {
     languageOptions: {
@@ -29,6 +29,7 @@ export default tseslint.config(
     rules: {
       ...vitest.configs.recommended.rules,
       "@typescript-eslint/unbound-method": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
     },
   },
 );

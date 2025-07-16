@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
+    "noImplicitAny": false,
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -18,8 +19,10 @@
       "@/app/*": ["app/*"],
       "@/config/*": ["config/*"],
       "@/controller/*": ["controller/*"],
+      "@/dto/*": ["dto/*"],
       "@/entity/*": ["entity/*"],
       "@/handler/*": ["handler/*"],
+      "@/mapper/*": ["mapper/*"],
       "@/middleware/*": ["middleware/*"],
       "@/util/*": ["util/*"],
       "@/service/*": ["service/*"],

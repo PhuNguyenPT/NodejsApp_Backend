@@ -17,10 +17,10 @@ class App {
     this.express = express();
     this.port = port;
 
-    this.initialiseDatabaseConnection();
-    this.initialiseMiddleware();
-    this.initialiseControllers(controllers);
-    this.initialiseErrorHandling();
+    this.initializeDatabaseConnection();
+    this.initializeMiddleware();
+    this.initializeControllers(controllers);
+    this.initializeErrorHandling();
   }
 
   public listen(): void {
@@ -29,13 +29,13 @@ class App {
     });
   }
 
-  private initialiseControllers(controllers: Controller[]): void {
+  private initializeControllers(controllers: Controller[]): void {
     controllers.forEach((controller: Controller) => {
       this.express.use("/api" + controller.path, controller.router); // Use controller.path
     });
   }
 
-  private initialiseDatabaseConnection(): void {
+  private initializeDatabaseConnection(): void {
     AppDataSource.initialize()
       .then(() => {
         console.log("Database connection established");
@@ -45,11 +45,11 @@ class App {
       });
   }
 
-  private initialiseErrorHandling(): void {
+  private initializeErrorHandling(): void {
     this.express.use(ErrorMiddleware);
   }
 
-  private initialiseMiddleware(): void {
+  private initializeMiddleware(): void {
     this.express.use(helmet());
     this.express.use(cors());
     this.express.use(morgan("dev"));
