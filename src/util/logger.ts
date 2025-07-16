@@ -25,7 +25,7 @@ winston.addColors(logColors);
 
 // Use config for environment and log settings
 const isProduction = config.NODE_ENV === "production";
-const logLevel = config.LOG_LEVEL || (isProduction ? "info" : "debug");
+const logLevel = config.LOG_LEVEL;
 const logDir = config.LOG_DIR;
 const enableFileLogging = config.ENABLE_FILE_LOGGING === "true";
 
