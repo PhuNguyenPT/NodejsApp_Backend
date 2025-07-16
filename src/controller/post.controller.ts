@@ -1,5 +1,11 @@
 // src/controller/post.controller.ts
-import { NextFunction, Request, Response, Router } from "express";
+import {
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response,
+  Router,
+} from "express";
 
 import { CreatePostDto } from "@/dto/create.post.js";
 import PostResponse from "@/dto/post.res.js";
@@ -21,71 +27,75 @@ class PostController implements Controller {
     logger.info(`PostController initialized with path: ${this.path}`);
   }
 
-  private create(
-    req: Request<
-      Record<string, never>,
-      { postResponse: PostResponse },
-      CreatePostDto
-    >,
-    res: Response<{ postResponse: PostResponse }>,
+  /**
+   * Handles the creation of a new post.
+   * This method now conforms to the detailed Express RequestHandler signature.
+   * @param req The Express request object, typed with route parameters, response body, request body, and query strings.
+   * @param res The Express response object, typed with the response body.
+   * @param next The Express next function to pass control to the next middleware.
+   */
+  private create: RequestHandler<
+    Record<string, never>, // P (RouteParameters): No route parameters like /:id
+    PostResponse, // ResBody: The type of the response body
+    CreatePostDto // ReqQuery: The type for parsed query strings
+  > = async (
+    req: Request,
+    res: Response,
     next: NextFunction,
-  ): Promise<void> {
-    return (async () => {
-      try {
-        logger.info("Creating new post", {
-          bodyLength: req.body.body?.length || 0,
-          title: req.body.title,
-        });
+  ): Promise<void> => {
+    // req.body is already validated and transformed to CreatePostDto by the middleware
+    const createPostDto: CreatePostDto = req.body as CreatePostDto;
+    try {
+      logger.info("Creating new post", {
+        bodyLength: createPostDto.body.length || 0,
+        title: createPostDto.title,
+      });
 
-        // req.body is already validated and transformed by middleware
-        const createPostDto = req.body;
+      // Create post using the service
+      const post: Post = await this.postService.create(
+        createPostDto.title,
+        createPostDto.body,
+      );
 
-        // Create post - validation already passed
-        const post: Post = await this.postService.create(
-          createPostDto.title,
-          createPostDto.body,
-        );
+      logger.info("Post created successfully", {
+        bodyLength: post.body.length || 0,
+        createdAt: post.createdAt,
+        postId: post.id,
+        title: post.title,
+      });
 
-        logger.info("Post created successfully", {
-          bodyLength: post.body?.length || 0,
-          createdAt: post.createdAt,
-          postId: post.id,
-          title: post.title,
-        });
+      // Map the Post entity to the response DTO
+      const postResponse: PostResponse = PostMapper.toDTO(post);
 
-        // Map Post entity to PostResponse DTO using mapper
-        const postResponse: PostResponse = PostMapper.toDTO(post);
+      logger.debug("Post mapped to response DTO", {
+        postId: post.id,
+        responseFields: Object.keys(postResponse),
+      });
 
-        logger.debug("Post mapped to response DTO", {
-          postId: post.id,
-          responseFields: Object.keys(postResponse),
-        });
+      // Send the successful response
+      res.status(201).json({ postResponse });
 
-        res.status(201).json({ postResponse });
+      logger.info("Post creation response sent", {
+        postId: post.id,
+        statusCode: 201,
+      });
+    } catch (error: unknown) {
+      logger.error("Error creating post", {
+        error: error instanceof Error ? error.message : "Unknown error",
+        requestBody: req.body ? JSON.stringify(req.body) : "No body",
+        stack: error instanceof Error ? error.stack : undefined,
+      });
 
-        logger.info("Post creation response sent", {
-          postId: post.id,
-          statusCode: 201,
-        });
-      } catch (error: unknown) {
-        logger.error("Error creating post", {
-          error: error instanceof Error ? error.message : "Unknown error",
-          requestBody: req.body,
-          stack: error instanceof Error ? error.stack : undefined,
-        });
-
-        const httpException = new HttpException(500, "Internal server error");
-        next(httpException);
-      }
-    })();
-  }
+      // Pass error to the error handling middleware
+      const httpException = new HttpException(500, "Internal server error");
+      next(httpException);
+    }
+  };
 
   private initializeRoutes(): void {
-    this.router.post(
-      "/",
-      validationMiddleware(CreatePostDto),
-      this.create.bind(this),
-    );
+    // The 'create' method is already an arrow function, so 'this' is automatically bound.
+    // No need for .bind(this)
+    this.router.post("/", validationMiddleware(CreatePostDto), this.create);
     logger.debug("PostController routes initialized");
   }
 }

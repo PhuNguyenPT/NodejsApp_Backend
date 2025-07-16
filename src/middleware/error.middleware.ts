@@ -26,7 +26,8 @@ function errorMiddleware(
 
   // Check if response has already been sent
   if (res.headersSent) {
-    return next(error);
+    next(error);
+    return;
   }
 
   res.status(status).json(response);
