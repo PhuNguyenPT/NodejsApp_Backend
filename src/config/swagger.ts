@@ -8,7 +8,7 @@ import log from "@/util/logger.js";
 import pkg from "../../package.json" with { type: "json" };
 
 const options: Options = {
-  apis: ["@/app/routes.ts", "@/entity/*.ts"],
+  apis: ["src/app/routes.ts", "src/entity/*.ts"],
   definition: {
     components: {
       securitySchemes: {

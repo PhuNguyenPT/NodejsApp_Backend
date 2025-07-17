@@ -18,7 +18,7 @@ export function configureRoutes(
    * /health:
    *  get:
    *     tags:
-   *     - Health
+   *     - Health check
    *     description: Responds if the app is up and running
    *     responses:
    *       200:
