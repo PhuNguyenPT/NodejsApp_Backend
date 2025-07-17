@@ -1,0 +1,39 @@
+{
+  "entryFile": "src/app/index.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "controllerPathGlobs": ["src/controller/**/*.ts"],
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "@/app/*": ["app/*"],
+      "@/config/*": ["config/*"],
+      "@/controller/*": ["controller/*"],
+      "@/dto/*": ["dto/*"],
+      "@/entity/*": ["entity/*"],
+      "@/handler/*": ["handler/*"],
+      "@/mapper/*": ["mapper/*"],
+      "@/middleware/*": ["middleware/*"],
+      "@/util/*": ["util/*"],
+      "@/service/*": ["service/*"],
+      "@/type/*": ["type/*"]
+    }
+  },
+  "spec": {
+    "outputDirectory": "src/generated",
+    "specVersion": 3,
+    "basePath": "/api",
+    "schemes": ["http", "https"],
+    "securityDefinitions": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "routes": {
+    "routesDir": "src/generated",
+    "basePath": "/api",
+    "middleware": "express"
+  }
+}

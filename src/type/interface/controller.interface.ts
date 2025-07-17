@@ -1,9 +1,9 @@
 // src/type/interface/controller.interface.ts
 import { Router } from "express";
 
-interface Controller {
+interface IController {
   path: string;
   router: Router;
 }
 
-export default Controller;
+export default IController;

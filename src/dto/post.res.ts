@@ -1,7 +1,7 @@
 // src/dto/post.res.ts
 import { Expose } from "class-transformer";
 
-class PostResponse {
+export class PostResponse {
   @Expose()
   body!: string;
 
@@ -11,5 +11,3 @@ class PostResponse {
   @Expose()
   title!: string;
 }
-
-export default PostResponse;

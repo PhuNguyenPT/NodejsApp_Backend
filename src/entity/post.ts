@@ -1,3 +1,4 @@
+// src/entity/post.ts
 import {
   Column,
   CreateDateColumn,
@@ -7,7 +8,7 @@ import {
 } from "typeorm";
 
 @Entity({ name: "posts" })
-export class Post {
+export class PostEntity {
   @Column({ length: 255, type: "varchar" })
   body!: string;
 
@@ -29,11 +30,11 @@ export class Post {
   @Column({ length: 255, type: "varchar" })
   title!: string;
 
-  constructor(user?: Partial<Post>) {
+  constructor(user?: Partial<PostEntity>) {
     if (user) {
       Object.assign(this, user);
     }
   }
 }
 
-export default Post;
+export default PostEntity;

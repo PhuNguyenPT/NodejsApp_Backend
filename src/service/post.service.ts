@@ -2,25 +2,31 @@
 import { Repository } from "typeorm";
 
 import { AppDataSource } from "@/config/data.source.js";
-import Post from "@/entity/post.js";
+import PostEntity from "@/entity/post.js";
+import logger from "@/util/logger.js";
 
 class PostService {
-  private repository: Repository<Post>;
+  private repository: Repository<PostEntity>;
 
   constructor() {
-    this.repository = AppDataSource.getRepository(Post);
+    this.repository = AppDataSource.getRepository(PostEntity);
   }
 
   /**
    * Create a new post
    */
-  public async create(title: string, body: string): Promise<Post> {
+  public async create(title: string, body: string): Promise<PostEntity> {
     try {
-      const post: Post = new Post({
+      const post: PostEntity = new PostEntity({
         body,
         title,
       });
-      const savedPost = await this.repository.save(post);
+      const savedPost: PostEntity = await this.repository.save(post);
+      logger.info("Post saved to database", {
+        bodyLength: savedPost.body.length,
+        postId: savedPost.id,
+        title: savedPost.title,
+      });
       return savedPost;
     } catch (error: unknown) {
       console.error("Error creating post:", error);
