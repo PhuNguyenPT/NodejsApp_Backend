@@ -27,7 +27,9 @@
       "@/util/*": ["util/*"],
       "@/service/*": ["service/*"],
       "@/type/*": ["type/*"]
-    }
+    },
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
   "include": ["src/**/*"]
 }
