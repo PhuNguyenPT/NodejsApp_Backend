@@ -1,47 +1,46 @@
+import type { Express } from "express";
+
 // src/app/app.ts
 import compression from "compression";
 import cors from "cors";
-import express, { Application } from "express";
+import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 
 import { AppDataSource } from "@/config/data.source.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
-import Controller from "@/type/interface/controller.interface.js";
+import IController from "@/type/interface/controller.interface.js";
+import logger from "@/util/logger.js";
+
+import { configureRoutes } from "./routes.js";
 
 class App {
-  public express: Application;
+  public express: Express;
   public port: number;
 
-  constructor(controllers: Controller[], port: number) {
+  constructor(controllers: IController[], port: number) {
     this.express = express();
     this.port = port;
 
     this.initializeDatabaseConnection();
     this.initializeMiddleware();
-    this.initializeControllers(controllers);
+    this.initializeRoutes(controllers);
     this.initializeErrorHandling();
   }
 
   public listen(): void {
     this.express.listen(this.port, () => {
-      console.log(`App listening on the port ${this.port.toString()}`);
-    });
-  }
-
-  private initializeControllers(controllers: Controller[]): void {
-    controllers.forEach((controller: Controller) => {
-      this.express.use("/api" + controller.path, controller.router); // Use controller.path
+      logger.info(`App listening on the port ${this.port.toString()}`);
     });
   }
 
   private initializeDatabaseConnection(): void {
     AppDataSource.initialize()
       .then(() => {
-        console.log("Database connection established");
+        logger.info("Database connection established");
       })
       .catch((error: unknown) => {
-        console.error("Error during Data Source initialization:", error);
+        logger.error("Error during Data Source initialization:", error);
       });
   }
 
@@ -57,6 +56,9 @@ class App {
     this.express.use(express.urlencoded({ extended: false }));
     this.express.use(compression());
   }
-}
 
+  private initializeRoutes(controllers: IController[]): void {
+    configureRoutes(this.express, controllers);
+  }
+}
 export default App;

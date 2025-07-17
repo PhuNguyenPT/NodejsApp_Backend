@@ -8,7 +8,7 @@ import {
 } from "express";
 
 import { CreatePostDto } from "@/dto/create.post.js";
-import PostResponse from "@/dto/post.res.js";
+import { PostResponse } from "@/dto/post.res.js";
 import Post from "@/entity/post.js";
 import PostMapper from "@/mapper/post.mapper.js";
 import validationMiddleware from "@/middleware/validation.middleware.js";

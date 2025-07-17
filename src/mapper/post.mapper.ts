@@ -1,7 +1,7 @@
 // src/mapper/post.mapper.ts
 import { plainToInstance } from "class-transformer";
 
-import PostResponse from "@/dto/post.res.js";
+import { PostResponse } from "@/dto/post.res.js";
 import Post from "@/entity/post.js";
 
 const PostMapper = {
