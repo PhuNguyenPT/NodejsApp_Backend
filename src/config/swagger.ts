@@ -5,7 +5,7 @@ import swaggerUi from "swagger-ui-express";
 
 import log from "@/util/logger.js";
 
-import pkg from "../../package.json" with { type: "json" };
+import pkg from "../../package.json";
 
 const options: Options = {
   apis: ["src/app/routes.ts", "src/entity/*.ts"],

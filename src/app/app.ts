@@ -1,13 +1,12 @@
-import type { Express } from "express";
-
 // src/app/app.ts
 import compression from "compression";
 import cors from "cors";
-import express from "express";
+import express, { Express } from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 
 import { AppDataSource } from "@/config/data.source.js";
+import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
 import IController from "@/type/interface/controller.interface.js";
 import logger from "@/util/logger.js";
@@ -59,6 +58,7 @@ class App {
 
   private initializeRoutes(controllers: IController[]): void {
     configureRoutes(this.express, controllers);
+    RegisterRoutes(this.express.router);
   }
 }
 export default App;

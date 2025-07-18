@@ -1,5 +1,4 @@
-// @ts-check
-
+// eslint.config.mjs
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import perfectionist from "eslint-plugin-perfectionist";
@@ -7,7 +6,8 @@ import vitest from "@vitest/eslint-plugin";
 
 export default tseslint.config(
   {
-    ignores: ["**/*.js", "dist/**/*", "src/generated/"],
+    // 👇 Add the config file to the ignores list here
+    ignores: ["**/*.js", "dist/**/*", "**/generated/", "eslint.config.mjs"],
   },
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,

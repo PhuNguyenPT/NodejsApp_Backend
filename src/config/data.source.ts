@@ -2,10 +2,11 @@
 import { DataSource } from "typeorm";
 
 import { PostEntity } from "@/entity/post.js";
+import UserEntity from "@/entity/user.js";
 
 export const AppDataSource = new DataSource({
   database: process.env.POSTGRES_DB,
-  entities: [PostEntity],
+  entities: [PostEntity, UserEntity],
   host: process.env.POSTGRES_HOST,
   logging: process.env.DB_LOGGING === "true",
   migrations: [],
