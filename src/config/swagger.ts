@@ -1,5 +1,4 @@
 // src/config/swagger.ts
-
 import { Express, Request, Response } from "express";
 import swaggerUi from "swagger-ui-express";
 
@@ -11,25 +10,46 @@ import log from "@/util/logger.js";
 const swaggerSpec = swaggerJson;
 
 function swaggerDocs(app: Express, serverUrl: string): void {
-  // <-- UPDATED PARAMETER NAME
   // Dynamically set the server URL in the Swagger spec
-  swaggerSpec.servers = [
-    {
-      url: serverUrl,
-    },
-  ];
+  // Use Object.assign to bypass TypeScript checking
+  const serverObject = Object.assign(
+    { url: serverUrl },
+    { description: "Server" },
+  );
 
-  // Swagger page
-  app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // <-- Use the modified spec
+  swaggerSpec.servers = [serverObject];
 
-  // Docs in JSON format
-  app.get("/docs.json", (req: Request, res: Response) => {
+  // Spring Boot style paths
+  app.use("/api/swagger-ui", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+  // Alternative shorter path (still supported)
+  app.use("/swagger-ui", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+  // OpenAPI spec endpoints (Spring Boot style)
+  app.get("/api/v3/api-docs", (req: Request, res: Response) => {
     res.setHeader("Content-Type", "application/json");
-    res.send(swaggerSpec); // <-- Serve the modified spec
+    res.send(swaggerSpec);
   });
 
-  // The log message no longer needs to construct the URL manually
-  log.info(`Docs available at ${serverUrl.replace("/api", "/docs")}`);
+  // Alternative spec endpoint
+  app.get("/api-docs", (req: Request, res: Response) => {
+    res.setHeader("Content-Type", "application/json");
+    res.send(swaggerSpec);
+  });
+
+  // Root redirect to swagger-ui (like Spring Boot)
+  app.get("/", (req: Request, res: Response) => {
+    res.redirect("/api/swagger-ui/");
+  });
+
+  // Log available endpoints in Spring Boot style
+  const baseUrl = serverUrl.replace("/api", "");
+  log.info(`Swagger UI available at:`);
+  log.info(`  - ${baseUrl}/api/swagger-ui/`);
+  log.info(`  - ${baseUrl}/swagger-ui/`);
+  log.info(`OpenAPI spec available at:`);
+  log.info(`  - ${baseUrl}/api/v3/api-docs`);
+  log.info(`  - ${baseUrl}/api-docs`);
 }
 
 export default swaggerDocs;
