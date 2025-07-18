@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["**/*.test.ts", "**/*.spec.ts", "**/generated/*.ts"],
+  "exclude": ["**/*.test.ts", "**/*.spec.ts"],
   "compilerOptions": {
     "tsBuildInfoFile": "./dist/.tsbuildinfo.build"
   }

@@ -21,7 +21,6 @@
   "spec": {
     "outputDirectory": "src/generated",
     "specVersion": 3,
-    "basePath": "/api",
     "schemes": ["http", "https"],
     "securityDefinitions": {
       "bearerAuth": {
@@ -33,7 +32,6 @@
   },
   "routes": {
     "routesDir": "src/generated",
-    "basePath": "/api",
     "middleware": "express"
   }
 }
