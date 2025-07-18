@@ -1,8 +1,5 @@
 // src/app/routes.ts
-
-import type { Express } from "express";
-
-import { Request, Response } from "express";
+import { Express, Request, Response } from "express";
 
 import type IController from "@/type/interface/controller.interface.js";
 
