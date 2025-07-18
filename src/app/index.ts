@@ -29,7 +29,7 @@ app.listen();
 
 // Setup Swagger documentation in non-production environments
 if (process.env.NODE_ENV !== "production") {
-  swaggerDocs(app.express, config.SERVER_PORT);
+  swaggerDocs(app.express, app.getServerUrl());
 }
 
 // Log the complete server URL
