@@ -3,9 +3,9 @@ import { Repository } from "typeorm";
 
 // src/users/usersService.ts
 import { AppDataSource } from "@/config/data.source.js";
-import { CreateUserDto } from "@/dto/create.user.js";
+import { CreateUserDto } from "@/dto/user/create.user.js";
+import { User } from "@/dto/user/user.js";
 import UserEntity from "@/entity/user.js";
-import { User } from "@/type/interface/user.js";
 
 export class UsersService {
   private userRepository: Repository<UserEntity> =
