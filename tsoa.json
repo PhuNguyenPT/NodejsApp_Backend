@@ -33,7 +33,6 @@
   },
   "routes": {
     "routesDir": "src/generated",
-    "basePath": "/api",
     "middleware": "express"
   }
 }

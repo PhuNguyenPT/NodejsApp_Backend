@@ -1,7 +1,7 @@
 // src/app/app.ts
 import compression from "compression";
 import cors from "cors";
-import express, { Express } from "express";
+import express, { Express, Router } from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 
@@ -11,12 +11,16 @@ import ErrorMiddleware from "@/middleware/error.middleware.js";
 import logger from "@/util/logger.js";
 
 class App {
-  public express: Express;
-  public port: number;
+  public basePath!: string;
+  public express!: Express;
+  public hostname!: string;
+  public port!: number;
 
-  constructor(port: number) {
+  constructor(port: number, hostname: string, basePath: string) {
     this.express = express();
     this.port = port;
+    this.hostname = hostname;
+    this.basePath = basePath;
 
     this.initializeDatabaseConnection();
     this.initializeMiddleware();
@@ -24,9 +28,15 @@ class App {
     this.initializeErrorHandling();
   }
 
+  public getServerUrl(): string {
+    return `http://${this.hostname}:${this.port.toString()}${this.basePath}`;
+  }
+
   public listen(): void {
-    this.express.listen(this.port, () => {
-      logger.info(`App listening on the port ${this.port.toString()}`);
+    this.express.listen(this.port, this.hostname, () => {
+      logger.info(
+        `App listening on ${this.hostname}:${this.port.toString()}${this.basePath}`,
+      );
     });
   }
 
@@ -54,7 +64,23 @@ class App {
   }
 
   private initializeRoutes(): void {
-    RegisterRoutes(this.express.router);
+    // Create a router for the API base path
+    const apiRouter: Router = express.Router();
+
+    // Register TSOA routes to the API router
+    RegisterRoutes(apiRouter);
+
+    // Mount the API router at the base path
+    this.express.use(this.basePath, apiRouter);
+
+    this.express.get("/health", (req, res) => {
+      res.json({
+        basePath: this.basePath,
+        status: "healthy",
+        timestamp: new Date().toISOString(),
+      });
+    });
   }
 }
+
 export default App;

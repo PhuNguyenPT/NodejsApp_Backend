@@ -29,15 +29,17 @@ export const config = cleanEnv(process.env, {
   NODE_ENV: str({
     choices: ["development", "production", "staging"],
   }),
-  PORT: port({ default: 3000 }),
-
   // Database config
   POSTGRES_DB: str(),
   POSTGRES_HOST: str(),
-
   POSTGRES_PASSWORD: str(),
   POSTGRES_PORT: port({ default: 5432 }),
   POSTGRES_USER: str(),
+
+  // Application config
+  SERVER_HOSTNAME: str({ default: "localhost" }),
+  SERVER_PATH: str({ default: "/api" }),
+  SERVER_PORT: port({ default: 3000 }),
 });
 
 // Legacy function for backward compatibility
