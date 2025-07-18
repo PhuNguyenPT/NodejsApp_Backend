@@ -75,7 +75,6 @@ class App {
 
     this.express.get("/health", (req, res) => {
       res.json({
-        basePath: this.basePath,
         status: "healthy",
         timestamp: new Date().toISOString(),
       });
