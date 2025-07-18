@@ -2,7 +2,6 @@
 import {
   Body,
   Controller,
-  Example,
   Get,
   Middlewares,
   Path,
@@ -31,12 +30,7 @@ export class UsersController extends Controller {
    * The request body will be validated to ensure it contains all required user fields.
    * @param requestBody The user information needed to create a new user.
    */
-  @Example<CreateUserDto>({
-    email: "jane.doe@example.com",
-    name: "Jane Doe",
-    phoneNumbers: ["+1 (555) 123-4567", "+84 123 456 789"],
-    status: "Happy",
-  })
+
   @Middlewares(validationMiddleware(CreateUserDto))
   @Post()
   @SuccessResponse("201", "Created")
