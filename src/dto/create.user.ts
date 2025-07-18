@@ -1,4 +1,3 @@
-// src/dto/create.user.ts
 import {
   ArrayMinSize,
   IsArray,
@@ -10,6 +9,15 @@ import {
   Matches,
 } from "class-validator";
 
+/**
+ * Data Transfer Object for creating a new user
+ * @example {
+ *   "email": "jane.doe@example.com",
+ *   "name": "Jane Doe",
+ *   "phoneNumbers": ["+1 (555) 123-4567", "+84 123 456 789"],
+ *   "status": "Happy"
+ * }
+ */
 export class CreateUserDto {
   @IsEmail({}, { message: "Must be a valid email address" })
   email!: string;
