@@ -13,10 +13,10 @@ import {
   Tags,
 } from "tsoa";
 
-import { CreateUserDto } from "@/dto/create.user.js";
+import { CreateUserDto } from "@/dto/user/create.user.js";
+import { User } from "@/dto/user/user.js";
 import validationMiddleware from "@/middleware/validation.middleware.js";
 import { UsersService } from "@/service/user.service.js";
-import { User } from "@/type/interface/user.js";
 
 /**
  * Manages user-related operations.

@@ -10,9 +10,9 @@ import {
   ValidateNested,
 } from "class-validator";
 
-import { AwardDTO } from "@/dto/award.js";
-import { BudgetDTO } from "@/dto/budget.js"; // Assuming BudgetDTO is defined in a similar manner
-import { CertificationDTO } from "@/dto/certification.js";
+import { AwardDTO } from "@/dto/student/award.js";
+import { BudgetDTO } from "@/dto/student/budget"; // Assuming BudgetDTO is defined in a similar manner
+import { CertificationDTO } from "@/dto/student/certification.js";
 export class StudentInfoDTO {
   @IsArray({ message: "Awards must be an array" })
   @IsOptional()
