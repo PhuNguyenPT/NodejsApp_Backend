@@ -17,6 +17,7 @@ A modern Node.js Express application template built with TypeScript, ESLint, Pre
 ## 📋 Prerequisites
 
 - **Node.js** (v22+ recommended)
+- **Docker Desktop**
 - **npm**
 - **Git**
 
@@ -48,6 +49,14 @@ cp .env.example .env.prod
 ## 🚀 Getting Started
 
 ### Development
+
+Run Docker Compose script:
+
+```bash
+# For Linux environment
+chmod +x ./scripts/docker-compose.sh
+./scripts/docker-compose.sh
+```
 
 Start the development server with hot reloading:
 
