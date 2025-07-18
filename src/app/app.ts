@@ -8,22 +8,19 @@ import morgan from "morgan";
 import { AppDataSource } from "@/config/data.source.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
-import IController from "@/type/interface/controller.interface.js";
 import logger from "@/util/logger.js";
-
-import { configureRoutes } from "./routes.js";
 
 class App {
   public express: Express;
   public port: number;
 
-  constructor(controllers: IController[], port: number) {
+  constructor(port: number) {
     this.express = express();
     this.port = port;
 
     this.initializeDatabaseConnection();
     this.initializeMiddleware();
-    this.initializeRoutes(controllers);
+    this.initializeRoutes();
     this.initializeErrorHandling();
   }
 
@@ -56,8 +53,7 @@ class App {
     this.express.use(compression());
   }
 
-  private initializeRoutes(controllers: IController[]): void {
-    configureRoutes(this.express, controllers);
+  private initializeRoutes(): void {
     RegisterRoutes(this.express.router);
   }
 }

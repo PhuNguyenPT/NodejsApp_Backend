@@ -1,7 +1,6 @@
 // src/app/index.ts
 import App from "@/app/app.js";
 import swaggerDocs from "@/config/swagger.js";
-import PostController from "@/controller/post.controller.js";
 import logger from "@/util/logger.js";
 import validateEnv, { config } from "@/util/validate.env.js";
 
@@ -18,7 +17,7 @@ logger.info("Starting application", {
 });
 
 // Create and start the app (no need to pass controllers anymore)
-const app = new App([new PostController()], config.PORT);
+const app = new App(config.PORT);
 
 app.listen();
 
