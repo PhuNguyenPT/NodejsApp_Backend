@@ -3,9 +3,9 @@ import compression from "compression";
 import cors from "cors";
 import express, { Express, Router } from "express";
 import helmet from "helmet";
-import morgan from "morgan";
 
 import { AppDataSource } from "@/config/data.source.js";
+import { getMorganConfig, setupRequestTracking } from "@/config/morgan.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
 import logger from "@/util/logger.js";
@@ -83,10 +83,25 @@ class App {
 
   private initializeMiddleware(): void {
     this.express.use(helmet());
-    this.express.use(morgan("dev"));
+    // Request tracking (must come before Morgan)
+    this.initializeRequestTracking();
+    this.initializeMorganLogging();
     this.express.use(express.json({ limit: "10mb" })); // Added size limit
     this.express.use(express.urlencoded({ extended: false, limit: "10mb" }));
     this.express.use(compression());
+  }
+
+  private initializeMorganLogging(): void {
+    // Morgan logging based on environment
+    const morganMiddlewares = getMorganConfig();
+    morganMiddlewares.forEach((middleware) => {
+      this.express.use(middleware);
+    });
+  }
+
+  private initializeRequestTracking(): void {
+    // Request tracking (must come before Morgan)
+    this.express.use(setupRequestTracking());
   }
 
   private initializeRoutes(): void {

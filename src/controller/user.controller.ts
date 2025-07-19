@@ -46,6 +46,7 @@ export class UsersController extends Controller {
    * @param name Optional. A query to filter by the user's name.
    */
   @Get("{userId}")
+  @SuccessResponse("200", "Successfully")
   public async getUser(
     @Path() userId: string,
     @Query() name?: string,
