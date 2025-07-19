@@ -1,25 +1,54 @@
 // src/util/validate.env.ts
-import { cleanEnv, port, str } from "envalid";
+import { bool, cleanEnv, makeValidator, port, str } from "envalid";
 
-// Validate and export the config object
-export const config = cleanEnv(process.env, {
+const commaSeparatedString = makeValidator((x) =>
+  x.split(",").map((s) => s.trim()),
+);
+
+// Define the configuration interface
+interface Config {
+  CORS_CREDENTIALS: boolean;
+  // CORS Configuration
+  CORS_ORIGIN: string[];
+
   // Database connection settings
-  DB_LOGGING: str({
-    choices: ["true", "false"],
-    default: "false",
-  }),
-  DB_SYNCHRONIZE: str({
-    choices: ["true", "false"],
-    default: "false",
-  }),
+  DB_LOGGING: boolean;
+  DB_SYNCHRONIZE: boolean;
 
   // Logging settings
-  ENABLE_FILE_LOGGING: str({
-    choices: ["true", "false"],
-    default: "false",
-  }),
+  ENABLE_FILE_LOGGING: boolean;
+  LOG_DIR: string;
+  LOG_LEVEL: "debug" | "error" | "http" | "info" | "warn";
+
+  // Environment config
+  NODE_ENV: "development" | "production" | "staging";
+
+  // Database config
+  POSTGRES_DB: string;
+  POSTGRES_HOST: string;
+  POSTGRES_PASSWORD: string;
+  POSTGRES_PORT: number;
+  POSTGRES_USER: string;
+
+  // Application config
+  SERVER_HOSTNAME: string;
+  SERVER_PATH: string;
+  SERVER_PORT: number;
+}
+
+// Validate and export the typed config object
+export const config: Config = cleanEnv(process.env, {
+  CORS_CREDENTIALS: bool({ default: true }), // Use bool validator
+
+  // CORS Configuration
+  CORS_ORIGIN: commaSeparatedString({ default: ["http://localhost:3000"] }),
+  // Database connection settings
+  DB_LOGGING: bool({ default: false }),
+  DB_SYNCHRONIZE: bool({ default: false }),
+
+  // Logging settings
+  ENABLE_FILE_LOGGING: bool({ default: false }),
   LOG_DIR: str({ default: "logs" }),
-  // Logging config (optional - add if you want configurable logging)
   LOG_LEVEL: str({
     choices: ["error", "warn", "info", "http", "debug"],
     default: "info",
@@ -29,6 +58,7 @@ export const config = cleanEnv(process.env, {
   NODE_ENV: str({
     choices: ["development", "production", "staging"],
   }),
+
   // Database config
   POSTGRES_DB: str(),
   POSTGRES_HOST: str(),
@@ -42,9 +72,7 @@ export const config = cleanEnv(process.env, {
   SERVER_PORT: port({ default: 3000 }),
 });
 
-// Legacy function for backward compatibility
 function validateEnv(): void {
-  // This now just triggers the validation above
   console.log("Environment validation completed");
 }
 

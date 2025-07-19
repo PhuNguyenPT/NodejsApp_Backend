@@ -3,26 +3,27 @@ import compression from "compression";
 import cors from "cors";
 import express, { Express, Router } from "express";
 import helmet from "helmet";
-import morgan from "morgan";
 
 import { AppDataSource } from "@/config/data.source.js";
+import { getMorganConfig, setupRequestTracking } from "@/config/morgan.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
 import logger from "@/util/logger.js";
-
+import { config } from "@/util/validate.env.js";
 class App {
   public basePath!: string;
   public express!: Express;
   public hostname!: string;
   public port!: number;
 
-  constructor(port: number, hostname: string, basePath: string) {
+  constructor() {
     this.express = express();
-    this.port = port;
-    this.hostname = hostname;
-    this.basePath = basePath;
+    this.port = config.SERVER_PORT;
+    this.hostname = config.SERVER_HOSTNAME;
+    this.basePath = config.SERVER_PATH;
 
     this.initializeDatabaseConnection();
+    this.initializeCors();
     this.initializeMiddleware();
     this.initializeRoutes();
     this.initializeErrorHandling();
@@ -38,6 +39,32 @@ class App {
         `App listening on ${this.hostname}:${this.port.toString()}${this.basePath}`,
       );
     });
+  }
+
+  private getCorsOptions() {
+    const corsOptions = {
+      allowedHeaders: [
+        "Origin",
+        "X-Requested-With",
+        "Content-Type",
+        "Accept",
+        "Authorization",
+        "Cache-Control",
+        "Pragma",
+      ],
+      credentials: config.CORS_CREDENTIALS,
+      exposedHeaders: ["Authorization", "X-Total-Count", "X-Request-ID"],
+      maxAge: 86400,
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      origin: config.CORS_ORIGIN,
+    };
+
+    logger.info("CORS Configuration:", corsOptions);
+    return corsOptions;
+  }
+
+  private initializeCors(): void {
+    this.express.use(cors(this.getCorsOptions()));
   }
 
   private initializeDatabaseConnection(): void {
@@ -56,11 +83,25 @@ class App {
 
   private initializeMiddleware(): void {
     this.express.use(helmet());
-    this.express.use(cors());
-    this.express.use(morgan("dev"));
-    this.express.use(express.json());
-    this.express.use(express.urlencoded({ extended: false }));
+    // Request tracking (must come before Morgan)
+    this.initializeRequestTracking();
+    this.initializeMorganLogging();
+    this.express.use(express.json({ limit: "10mb" })); // Added size limit
+    this.express.use(express.urlencoded({ extended: false, limit: "10mb" }));
     this.express.use(compression());
+  }
+
+  private initializeMorganLogging(): void {
+    // Morgan logging based on environment
+    const morganMiddlewares = getMorganConfig();
+    morganMiddlewares.forEach((middleware) => {
+      this.express.use(middleware);
+    });
+  }
+
+  private initializeRequestTracking(): void {
+    // Request tracking (must come before Morgan)
+    this.express.use(setupRequestTracking());
   }
 
   private initializeRoutes(): void {
