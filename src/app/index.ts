@@ -9,13 +9,15 @@ validateEnv();
 
 // Log startup information
 logger.info("Starting application", {
-  basePath: config.SERVER_PATH,
-  dbHost: config.POSTGRES_HOST,
-  dbName: config.POSTGRES_DB,
-  dbPort: config.POSTGRES_PORT,
-  hostname: config.SERVER_HOSTNAME,
-  nodeEnv: config.NODE_ENV,
-  port: config.SERVER_PORT,
+  CORS_CREDENTIALS: config.CORS_CREDENTIALS,
+  CORS_ORIGIN: config.CORS_ORIGIN,
+  NODE_ENV: config.NODE_ENV,
+  POSTGRES_DB: config.POSTGRES_DB,
+  POSTGRES_HOST: config.POSTGRES_HOST,
+  POSTGRES_PORT: config.POSTGRES_PORT,
+  SERVER_HOSTNAME: config.SERVER_HOSTNAME,
+  SERVER_PATH: config.SERVER_PATH,
+  SERVER_PORT: config.SERVER_PORT,
 });
 
 // Create the app with environment variables

@@ -23,6 +23,7 @@ class App {
     this.basePath = config.SERVER_PATH;
 
     this.initializeDatabaseConnection();
+    this.initializeCors();
     this.initializeMiddleware();
     this.initializeRoutes();
     this.initializeErrorHandling();
@@ -38,6 +39,32 @@ class App {
         `App listening on ${this.hostname}:${this.port.toString()}${this.basePath}`,
       );
     });
+  }
+
+  private getCorsOptions() {
+    const corsOptions = {
+      allowedHeaders: [
+        "Origin",
+        "X-Requested-With",
+        "Content-Type",
+        "Accept",
+        "Authorization",
+        "Cache-Control",
+        "Pragma",
+      ],
+      credentials: config.CORS_CREDENTIALS,
+      exposedHeaders: ["Authorization", "X-Total-Count", "X-Request-ID"],
+      maxAge: 86400,
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      origin: config.CORS_ORIGIN,
+    };
+
+    logger.info("CORS Configuration:", corsOptions);
+    return corsOptions;
+  }
+
+  private initializeCors(): void {
+    this.express.use(cors(this.getCorsOptions()));
   }
 
   private initializeDatabaseConnection(): void {
@@ -56,10 +83,9 @@ class App {
 
   private initializeMiddleware(): void {
     this.express.use(helmet());
-    this.express.use(cors());
     this.express.use(morgan("dev"));
-    this.express.use(express.json());
-    this.express.use(express.urlencoded({ extended: false }));
+    this.express.use(express.json({ limit: "10mb" })); // Added size limit
+    this.express.use(express.urlencoded({ extended: false, limit: "10mb" }));
     this.express.use(compression());
   }
 

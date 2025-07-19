@@ -1,14 +1,22 @@
 // src/util/validate.env.ts
-import { cleanEnv, port, str } from "envalid";
+import { bool, cleanEnv, makeValidator, port, str } from "envalid";
+
+const commaSeparatedString = makeValidator((x) =>
+  x.split(",").map((s) => s.trim()),
+);
 
 // Define the configuration interface
 interface Config {
+  CORS_CREDENTIALS: boolean;
+  // CORS Configuration
+  CORS_ORIGIN: string[];
+
   // Database connection settings
-  DB_LOGGING: "false" | "true";
-  DB_SYNCHRONIZE: "false" | "true";
+  DB_LOGGING: boolean;
+  DB_SYNCHRONIZE: boolean;
 
   // Logging settings
-  ENABLE_FILE_LOGGING: "false" | "true";
+  ENABLE_FILE_LOGGING: boolean;
   LOG_DIR: string;
   LOG_LEVEL: "debug" | "error" | "http" | "info" | "warn";
 
@@ -30,21 +38,16 @@ interface Config {
 
 // Validate and export the typed config object
 export const config: Config = cleanEnv(process.env, {
+  CORS_CREDENTIALS: bool({ default: true }), // Use bool validator
+
+  // CORS Configuration
+  CORS_ORIGIN: commaSeparatedString({ default: ["http://localhost:3000"] }),
   // Database connection settings
-  DB_LOGGING: str({
-    choices: ["true", "false"],
-    default: "false",
-  }),
-  DB_SYNCHRONIZE: str({
-    choices: ["true", "false"],
-    default: "false",
-  }),
+  DB_LOGGING: bool({ default: false }),
+  DB_SYNCHRONIZE: bool({ default: false }),
 
   // Logging settings
-  ENABLE_FILE_LOGGING: str({
-    choices: ["true", "false"],
-    default: "false",
-  }),
+  ENABLE_FILE_LOGGING: bool({ default: false }),
   LOG_DIR: str({ default: "logs" }),
   LOG_LEVEL: str({
     choices: ["error", "warn", "info", "http", "debug"],
@@ -69,7 +72,6 @@ export const config: Config = cleanEnv(process.env, {
   SERVER_PORT: port({ default: 3000 }),
 });
 
-// Legacy function for backward compatibility
 function validateEnv(): void {
   console.log("Environment validation completed");
 }

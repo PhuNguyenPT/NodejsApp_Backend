@@ -24,10 +24,10 @@ const logColors = {
 winston.addColors(logColors);
 
 // Use config for environment and log settings
-const isProduction = config.NODE_ENV === "production";
-const logLevel = config.LOG_LEVEL;
-const logDir = config.LOG_DIR;
-const enableFileLogging = config.ENABLE_FILE_LOGGING === "true";
+const isProduction: boolean = config.NODE_ENV === "production";
+const logLevel: string = config.LOG_LEVEL;
+const logDir: string = config.LOG_DIR;
+const enableFileLogging: boolean = config.ENABLE_FILE_LOGGING;
 
 // Custom format for development with metadata support
 const developmentFormat = format.combine(
