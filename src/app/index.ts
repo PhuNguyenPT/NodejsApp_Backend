@@ -19,11 +19,7 @@ logger.info("Starting application", {
 });
 
 // Create the app with environment variables
-const app = new App(
-  config.SERVER_PORT,
-  config.SERVER_HOSTNAME,
-  config.SERVER_PATH,
-);
+const app = new App();
 
 // Setup Swagger documentation in non-production environments BEFORE starting the server
 if (process.env.NODE_ENV !== "production") {

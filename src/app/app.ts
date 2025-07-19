@@ -9,18 +9,18 @@ import { AppDataSource } from "@/config/data.source.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
 import logger from "@/util/logger.js";
-
+import { config } from "@/util/validate.env.js";
 class App {
   public basePath!: string;
   public express!: Express;
   public hostname!: string;
   public port!: number;
 
-  constructor(port: number, hostname: string, basePath: string) {
+  constructor() {
     this.express = express();
-    this.port = port;
-    this.hostname = hostname;
-    this.basePath = basePath;
+    this.port = config.SERVER_PORT;
+    this.hostname = config.SERVER_HOSTNAME;
+    this.basePath = config.SERVER_PATH;
 
     this.initializeDatabaseConnection();
     this.initializeMiddleware();
