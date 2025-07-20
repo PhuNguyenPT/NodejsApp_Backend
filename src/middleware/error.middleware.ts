@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 
 import HttpException from "@/type/exception/http.exception.js";
+import { EntityNotFoundException } from "@/type/exception/user.not.found.exception";
 import ValidationException from "@/type/exception/validation.exception.js";
 import logger from "@/util/logger.js";
 
@@ -13,6 +14,9 @@ interface ErrorDetails {
 interface ErrorResponse {
   message: string;
   status: number;
+}
+
+interface ValidationResponse extends ErrorResponse {
   validationErrors?: Record<string, string>;
 }
 
@@ -42,7 +46,30 @@ function getErrorDetails(error: Error): ErrorDetails {
     return handleHttpException(error);
   }
 
+  if (error instanceof EntityNotFoundException) {
+    return handleEntityNotFoundException(error);
+  }
+
   return handleGenericError(error);
+}
+
+function handleEntityNotFoundException(
+  error: EntityNotFoundException,
+): ErrorDetails {
+  const status: number = error.status;
+  const message: string = error.message;
+
+  const response: ErrorResponse = {
+    message,
+    status,
+  };
+
+  logger.warn("EntityNotFoundException", {
+    message,
+    status,
+  });
+
+  return { message, response, status };
 }
 
 function handleGenericError(error: Error): ErrorDetails {
@@ -85,7 +112,7 @@ function handleValidationException(error: ValidationException): ErrorDetails {
   const status = error.status;
   const message = error.message;
 
-  const response: ErrorResponse = {
+  const response: ValidationResponse = {
     message,
     status,
     validationErrors: error.validationErrors,

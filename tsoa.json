@@ -10,12 +10,13 @@
       "@/controller/*": ["controller/*"],
       "@/dto/*": ["dto/*"],
       "@/entity/*": ["entity/*"],
-      "@/handler/*": ["handler/*"],
+      "@/generated/*": ["generated/*"],
       "@/mapper/*": ["mapper/*"],
       "@/middleware/*": ["middleware/*"],
-      "@/util/*": ["util/*"],
+      "@/repository/*": ["repository"],
       "@/service/*": ["service/*"],
-      "@/type/*": ["type/*"]
+      "@/type/*": ["type/*"],
+      "@/util/*": ["util/*"]
     }
   },
   "spec": {
