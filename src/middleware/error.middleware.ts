@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 
-import HttpException from "@/type/exception/http.exception.js";
+import { HttpException } from "@/type/exception/http.exception.js";
+import { InvalidUuidException } from "@/type/exception/invalid.uuid.exception";
 import { EntityNotFoundException } from "@/type/exception/user.not.found.exception";
-import ValidationException from "@/type/exception/validation.exception.js";
+import { ValidationException } from "@/type/exception/validation.exception.js";
 import logger from "@/util/logger.js";
 
 interface ErrorDetails {
@@ -42,12 +43,16 @@ function getErrorDetails(error: Error): ErrorDetails {
     return handleValidationException(error);
   }
 
-  if (error instanceof HttpException) {
-    return handleHttpException(error);
-  }
-
   if (error instanceof EntityNotFoundException) {
     return handleEntityNotFoundException(error);
+  }
+
+  if (error instanceof InvalidUuidException) {
+    return handleInvalidUuidException(error);
+  }
+
+  if (error instanceof HttpException) {
+    return handleHttpException(error);
   }
 
   return handleGenericError(error);
@@ -102,6 +107,23 @@ function handleHttpException(error: HttpException): ErrorDetails {
   logger.error("HTTP error occurred", {
     message,
     stack: error.stack,
+    status,
+  });
+
+  return { message, response, status };
+}
+
+function handleInvalidUuidException(error: InvalidUuidException): ErrorDetails {
+  const status = error.status;
+  const message = error.message;
+
+  const response: ErrorResponse = {
+    message,
+    status,
+  };
+
+  logger.warn("InvalidUuidException", {
+    message,
     status,
   });
 

@@ -3,8 +3,8 @@ import { ClassConstructor, plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { NextFunction, Request, Response } from "express";
 
-import HttpException from "@/type/exception/http.exception.js";
-import ValidationException from "@/type/exception/validation.exception.js";
+import { HttpException } from "@/type/exception/http.exception.js";
+import { ValidationException } from "@/type/exception/validation.exception.js";
 
 function validationMiddleware<T extends object>(
   type: ClassConstructor<T>,

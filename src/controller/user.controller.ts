@@ -17,6 +17,7 @@ import {
 import { CreateUserDto } from "@/dto/user/create.user.js";
 import { UpdateUserDTO } from "@/dto/user/update.user.js";
 import { User } from "@/dto/user/user.js";
+import { validateUuidParam } from "@/middleware/uuid.validation.middleware";
 import validationMiddleware from "@/middleware/validation.middleware.js";
 import { UsersService } from "@/service/user.service.js";
 
@@ -62,6 +63,7 @@ export class UsersController extends Controller {
    * @param userId The unique identifier of the user to delete.
    */
   @Delete("{userId}")
+  @Middlewares(validateUuidParam("userId"))
   @SuccessResponse("204", "Successfully deleted user")
   public async deleteUser(@Path() userId: string): Promise<void> {
     this.setStatus(204);
@@ -85,6 +87,7 @@ export class UsersController extends Controller {
    * @param name Optional. A query to filter by the user's name.
    */
   @Get("{userId}/search")
+  @Middlewares(validateUuidParam("userId"))
   @SuccessResponse("200", "Successfully retrieved user")
   public async getUser(
     @Path() userId: string,
@@ -98,6 +101,7 @@ export class UsersController extends Controller {
    * @param userId The unique identifier of the user (UUID).
    */
   @Get("{userId}")
+  @Middlewares(validateUuidParam("userId"))
   @SuccessResponse("200", "Successfully retrieved user")
   public async getUserById(@Path() userId: string): Promise<User> {
     return this.usersService.getById(userId);
@@ -109,6 +113,7 @@ export class UsersController extends Controller {
    * @param userId The unique identifier of the user to update.
    * @param requestBody Partial user data containing the fields to update.
    */
+  @Middlewares(validateUuidParam("userId"))
   @Patch("{userId}")
   @SuccessResponse("200", "Successfully updated user")
   public async updateUser(
