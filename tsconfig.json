@@ -24,12 +24,12 @@
       "@/dto/*": ["dto/*"],
       "@/entity/*": ["entity/*"],
       "@/generated/*": ["generated/*"],
-      "@/handler/*": ["handler/*"],
       "@/mapper/*": ["mapper/*"],
       "@/middleware/*": ["middleware/*"],
-      "@/util/*": ["util/*"],
+      "@/repository/*": ["repository/*"],
       "@/service/*": ["service/*"],
-      "@/type/*": ["type/*"]
+      "@/type/*": ["type/*"],
+      "@/util/*": ["util/*"]
     },
     "incremental": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
