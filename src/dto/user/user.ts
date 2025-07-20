@@ -11,9 +11,9 @@
  * }
  */
 export class User {
-  email?: string;
-  id?: string; // UUID
-  name?: string;
-  phoneNumbers?: string[];
-  status?: "Happy" | "Sad";
+    email?: string;
+    id?: string; // UUID
+    name?: string;
+    phoneNumbers?: string[];
+    status?: "Happy" | "Sad";
 }

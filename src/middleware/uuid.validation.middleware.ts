@@ -10,21 +10,21 @@ import { InvalidUuidException } from "@/type/exception/invalid.uuid.exception.js
  * @returns Express middleware function
  */
 export const validateUuidParam = (paramName = "uuid") => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const paramValue = req.params[paramName];
+    return (req: Request, res: Response, next: NextFunction) => {
+        const paramValue = req.params[paramName];
 
-    if (!paramValue) {
-      next(new Error(`${paramName} parameter is required`));
-      return;
-    }
+        if (!paramValue) {
+            next(new Error(`${paramName} parameter is required`));
+            return;
+        }
 
-    if (!validateUuid(paramValue)) {
-      next(new InvalidUuidException());
-      return;
-    }
+        if (!validateUuid(paramValue)) {
+            next(new InvalidUuidException());
+            return;
+        }
 
-    next();
-  };
+        next();
+    };
 };
 
 // Convenience middleware for id validation
