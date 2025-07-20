@@ -1,153 +1,70 @@
+// src/middleware/error.middleware.ts
 import { NextFunction, Request, Response } from "express";
 
-import { HttpException } from "@/type/exception/http.exception.js";
-import { InvalidUuidException } from "@/type/exception/invalid.uuid.exception";
-import { EntityNotFoundException } from "@/type/exception/user.not.found.exception";
-import { ValidationException } from "@/type/exception/validation.exception.js";
-import logger from "@/util/logger.js";
+import { ExceptionHandlerRegistry } from "@/decorator/exception.handler.decorator.js";
+import { handleGenericError } from "@/handler/global.exception.handler.js";
+import { ErrorDetails } from "@/type/interface/error.details.js";
 
-interface ErrorDetails {
-  message: string;
-  response: ErrorResponse;
-  status: number;
-}
+function ensureError(error: unknown): Error {
+  if (error instanceof Error) {
+    return error;
+  }
 
-interface ErrorResponse {
-  message: string;
-  status: number;
-}
+  // Convert non-Error values to Error instances
+  if (typeof error === "string") {
+    return new Error(error);
+  }
 
-interface ValidationResponse extends ErrorResponse {
-  validationErrors?: Record<string, string>;
+  if (typeof error === "object" && error !== null) {
+    return new Error(JSON.stringify(error));
+  }
+
+  return new Error("Unknown error occurred");
 }
 
 function errorMiddleware(
-  error: Error,
+  error: unknown,
   _req: Request,
   res: Response,
   next: NextFunction,
 ): void {
-  const { response, status } = getErrorDetails(error);
+  // Ensure error is an Error instance
+  const actualError = ensureError(error);
+  const errorDetails = getErrorDetails(actualError);
 
   // Check if response has already been sent
   if (res.headersSent) {
-    next(error);
+    next(actualError);
     return;
   }
 
-  res.status(status).json(response);
+  // Ensure status is a valid HTTP status code
+  const status = validateHttpStatus(errorDetails.status);
+
+  res.status(status).json(errorDetails.response);
 }
 
 function getErrorDetails(error: Error): ErrorDetails {
-  if (error instanceof ValidationException) {
-    return handleValidationException(error);
+  // Try to find a registered handler
+  const handler = ExceptionHandlerRegistry.getHandler(error);
+
+  if (handler) {
+    return handler(error);
   }
 
-  if (error instanceof EntityNotFoundException) {
-    return handleEntityNotFoundException(error);
-  }
-
-  if (error instanceof InvalidUuidException) {
-    return handleInvalidUuidException(error);
-  }
-
-  if (error instanceof HttpException) {
-    return handleHttpException(error);
-  }
-
+  // Fallback to generic error handler
   return handleGenericError(error);
 }
 
-function handleEntityNotFoundException(
-  error: EntityNotFoundException,
-): ErrorDetails {
-  const status: number = error.status;
-  const message: string = error.message;
+function validateHttpStatus(status: unknown): number {
+  // Ensure status is a valid HTTP status code
+  const numericStatus = Number(status);
 
-  const response: ErrorResponse = {
-    message,
-    status,
-  };
+  if (isNaN(numericStatus) || numericStatus < 100 || numericStatus > 599) {
+    return 500; // Default to Internal Server Error
+  }
 
-  logger.warn("EntityNotFoundException", {
-    message,
-    status,
-  });
-
-  return { message, response, status };
-}
-
-function handleGenericError(error: Error): ErrorDetails {
-  const status = 500;
-  const message = error.message || "Something went wrong";
-
-  const response: ErrorResponse = {
-    message,
-    status,
-  };
-
-  logger.error("Unhandled error", {
-    message,
-    stack: error.stack,
-    status,
-  });
-
-  return { message, response, status };
-}
-
-function handleHttpException(error: HttpException): ErrorDetails {
-  const status = Number(error.status) || 500;
-  const message = String(error.message) || "Something went wrong";
-
-  const response: ErrorResponse = {
-    message,
-    status,
-  };
-
-  logger.error("HTTP error occurred", {
-    message,
-    stack: error.stack,
-    status,
-  });
-
-  return { message, response, status };
-}
-
-function handleInvalidUuidException(error: InvalidUuidException): ErrorDetails {
-  const status = error.status;
-  const message = error.message;
-
-  const response: ErrorResponse = {
-    message,
-    status,
-  };
-
-  logger.warn("InvalidUuidException", {
-    message,
-    status,
-  });
-
-  return { message, response, status };
-}
-
-function handleValidationException(error: ValidationException): ErrorDetails {
-  const status = error.status;
-  const message = error.message;
-
-  const response: ValidationResponse = {
-    message,
-    status,
-    validationErrors: error.validationErrors,
-  };
-
-  logger.error("Validation error occurred", {
-    message,
-    stack: error.stack,
-    status,
-    validationErrors: error.validationErrors,
-  });
-
-  return { message, response, status };
+  return numericStatus;
 }
 
 export default errorMiddleware;
