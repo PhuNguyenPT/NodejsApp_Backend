@@ -2,13 +2,13 @@
 import { HttpException } from "@/type/exception/http.exception.js";
 
 export class ValidationException extends HttpException {
-  public validationErrors: Record<string, string>;
+    public validationErrors: Record<string, string>;
 
-  constructor(
-    validationErrors: Record<string, string>,
-    message = "Validation failed",
-  ) {
-    super(400, message, "ValidationException");
-    this.validationErrors = validationErrors;
-  }
+    constructor(
+        validationErrors: Record<string, string>,
+        message = "Validation failed",
+    ) {
+        super(400, message, "ValidationException");
+        this.validationErrors = validationErrors;
+    }
 }

@@ -6,7 +6,7 @@ import { HttpException } from "@/type/exception/http.exception";
  * Extends HttpException for consistent error handling
  */
 export class InvalidUuidException extends HttpException {
-  constructor() {
-    super(400, "Invalid UUID format", "InvalidUuidException");
-  }
+    constructor() {
+        super(400, "Invalid UUID format", "InvalidUuidException");
+    }
 }

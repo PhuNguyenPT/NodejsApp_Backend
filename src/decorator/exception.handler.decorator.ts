@@ -4,9 +4,9 @@
 type ErrorConstructor = abstract new (...args: never[]) => Error;
 
 interface ErrorDetails {
-  message: string;
-  response: unknown;
-  status: number;
+    message: string;
+    response: unknown;
+    status: number;
 }
 
 type ExceptionHandlerFn = (error: Error) => ErrorDetails;
@@ -15,38 +15,41 @@ type ExceptionHandlerFn = (error: Error) => ErrorDetails;
 const handlers = new Map<ErrorConstructor, ExceptionHandlerFn>();
 
 export const ExceptionHandlerRegistry = {
-  getAllHandlers(): Map<ErrorConstructor, ExceptionHandlerFn> {
-    return new Map(handlers);
-  },
+    getAllHandlers(): Map<ErrorConstructor, ExceptionHandlerFn> {
+        return new Map(handlers);
+    },
 
-  getHandler(error: Error): ExceptionHandlerFn | null {
-    // Check for exact match first
-    for (const [ExceptionClass, handler] of handlers.entries()) {
-      if (error.constructor === ExceptionClass) {
-        return handler;
-      }
-    }
-    // Then check for instanceof matches (inheritance)
-    for (const [ExceptionClass, handler] of handlers.entries()) {
-      if (error instanceof ExceptionClass) {
-        return handler;
-      }
-    }
-    return null;
-  },
+    getHandler(error: Error): ExceptionHandlerFn | null {
+        // Check for exact match first
+        for (const [ExceptionClass, handler] of handlers.entries()) {
+            if (error.constructor === ExceptionClass) {
+                return handler;
+            }
+        }
+        // Then check for instanceof matches (inheritance)
+        for (const [ExceptionClass, handler] of handlers.entries()) {
+            if (error instanceof ExceptionClass) {
+                return handler;
+            }
+        }
+        return null;
+    },
 
-  register(exceptionType: ErrorConstructor, handler: ExceptionHandlerFn): void {
-    handlers.set(exceptionType, handler);
-  },
+    register(
+        exceptionType: ErrorConstructor,
+        handler: ExceptionHandlerFn,
+    ): void {
+        handlers.set(exceptionType, handler);
+    },
 };
 
 export function ExceptionHandler(exceptionType: ErrorConstructor) {
-  return function (
-    target: object,
-    propertyKey: string | symbol,
-    descriptor: PropertyDescriptor,
-  ): void {
-    const handler = descriptor.value as ExceptionHandlerFn;
-    ExceptionHandlerRegistry.register(exceptionType, handler);
-  };
+    return function (
+        target: object,
+        propertyKey: string | symbol,
+        descriptor: PropertyDescriptor,
+    ): void {
+        const handler = descriptor.value as ExceptionHandlerFn;
+        ExceptionHandlerRegistry.register(exceptionType, handler);
+    };
 }

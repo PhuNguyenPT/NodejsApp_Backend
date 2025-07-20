@@ -11,99 +11,101 @@ import logger from "@/util/logger";
 
 // Use a class but instantiate it to avoid ESLint error
 class ExceptionHandlers {
-  @ExceptionHandler(EntityNotFoundException)
-  handleEntityNotFoundException(error: EntityNotFoundException): ErrorDetails {
-    const status: number = error.status;
-    const message: string = error.message;
+    @ExceptionHandler(EntityNotFoundException)
+    handleEntityNotFoundException(
+        error: EntityNotFoundException,
+    ): ErrorDetails {
+        const status: number = error.status;
+        const message: string = error.message;
 
-    const response: ErrorResponse = {
-      message,
-      status,
-    };
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
 
-    logger.warn("EntityNotFoundException", {
-      message,
-      status,
-    });
+        logger.warn("EntityNotFoundException", {
+            message,
+            status,
+        });
 
-    return { message, response, status };
-  }
+        return { message, response, status };
+    }
 
-  handleGenericError(error: Error): ErrorDetails {
-    const status = 500;
-    const message = error.message || "Something went wrong";
+    handleGenericError(error: Error): ErrorDetails {
+        const status = 500;
+        const message = error.message || "Something went wrong";
 
-    const response: ErrorResponse = {
-      message,
-      status,
-    };
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
 
-    logger.error("Unhandled error", {
-      message,
-      stack: error.stack,
-      status,
-    });
+        logger.error("Unhandled error", {
+            message,
+            stack: error.stack,
+            status,
+        });
 
-    return { message, response, status };
-  }
+        return { message, response, status };
+    }
 
-  @ExceptionHandler(HttpException)
-  handleHttpException(error: HttpException): ErrorDetails {
-    const status = Number(error.status) || 500;
-    const message = String(error.message) || "Something went wrong";
+    @ExceptionHandler(HttpException)
+    handleHttpException(error: HttpException): ErrorDetails {
+        const status = Number(error.status) || 500;
+        const message = String(error.message) || "Something went wrong";
 
-    const response: ErrorResponse = {
-      message,
-      status,
-    };
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
 
-    logger.error("HTTP error occurred", {
-      message,
-      stack: error.stack,
-      status,
-    });
+        logger.error("HTTP error occurred", {
+            message,
+            stack: error.stack,
+            status,
+        });
 
-    return { message, response, status };
-  }
+        return { message, response, status };
+    }
 
-  @ExceptionHandler(InvalidUuidException)
-  handleInvalidUuidException(error: InvalidUuidException): ErrorDetails {
-    const status = error.status;
-    const message = error.message;
+    @ExceptionHandler(InvalidUuidException)
+    handleInvalidUuidException(error: InvalidUuidException): ErrorDetails {
+        const status = error.status;
+        const message = error.message;
 
-    const response: ErrorResponse = {
-      message,
-      status,
-    };
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
 
-    logger.warn("InvalidUuidException", {
-      message,
-      status,
-    });
+        logger.warn("InvalidUuidException", {
+            message,
+            status,
+        });
 
-    return { message, response, status };
-  }
+        return { message, response, status };
+    }
 
-  @ExceptionHandler(ValidationException)
-  handleValidationException(error: ValidationException): ErrorDetails {
-    const status = error.status;
-    const message = error.message;
+    @ExceptionHandler(ValidationException)
+    handleValidationException(error: ValidationException): ErrorDetails {
+        const status = error.status;
+        const message = error.message;
 
-    const response: ValidationResponse = {
-      message,
-      status,
-      validationErrors: error.validationErrors,
-    };
+        const response: ValidationResponse = {
+            message,
+            status,
+            validationErrors: error.validationErrors,
+        };
 
-    logger.error("Validation error occurred", {
-      message,
-      stack: error.stack,
-      status,
-      validationErrors: error.validationErrors,
-    });
+        logger.error("Validation error occurred", {
+            message,
+            stack: error.stack,
+            status,
+            validationErrors: error.validationErrors,
+        });
 
-    return { message, response, status };
-  }
+        return { message, response, status };
+    }
 }
 
 // Create an instance to avoid "only static properties" ESLint error
@@ -111,7 +113,7 @@ const exceptionHandlers = new ExceptionHandlers();
 
 // Export the generic error handler with proper typing
 export const handleGenericError = (error: Error): ErrorDetails => {
-  return exceptionHandlers.handleGenericError(error);
+    return exceptionHandlers.handleGenericError(error);
 };
 
 // Also export the class instance if needed elsewhere
