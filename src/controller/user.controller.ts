@@ -127,7 +127,7 @@ export class UserController extends Controller {
     @SuccessResponse("200", "Successfully updated user")
     public async updateUser(
         @Path() userId: string,
-        @Body() requestBody: Partial<UpdateUserDTO>,
+        @Body() requestBody: UpdateUserDTO,
     ): Promise<User> {
         return this.userService.update(userId, requestBody);
     }
