@@ -59,7 +59,7 @@ class ExceptionHandlers {
             status,
         };
 
-        logger.error("HTTP error occurred", {
+        logger.warn("HttpException", {
             message,
             stack: error.stack,
             status,
@@ -97,7 +97,7 @@ class ExceptionHandlers {
             validationErrors: error.validationErrors,
         };
 
-        logger.error("Validation error occurred", {
+        logger.warn("ValidationException", {
             message,
             stack: error.stack,
             status,

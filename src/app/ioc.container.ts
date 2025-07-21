@@ -11,17 +11,20 @@ import { WinstonLoggerService } from "@/util/logger.js";
 
 const iocContainer = new Container();
 
-// Bind logger with proper typing
 iocContainer
     .bind<ILogger>(TYPES.Logger)
     .to(WinstonLoggerService)
     .inSingletonScope();
 
-// Bind repositories
-iocContainer.bind<IUserRepository>(TYPES.UserRepository).to(UserRepository);
+iocContainer
+    .bind<IUserRepository>(TYPES.UserRepository)
+    .to(UserRepository)
+    .inSingletonScope();
 
-// Bind services
-iocContainer.bind<UserService>(TYPES.UserService).to(UserService);
+iocContainer
+    .bind<UserService>(TYPES.UserService)
+    .to(UserService)
+    .inSingletonScope();
 
 iocContainer.bind<UserController>(UserController).toSelf().inRequestScope();
 
