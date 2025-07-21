@@ -22,7 +22,6 @@
     }
   },
   "spec": {
-    "specMerging": "recursive",
     "outputDirectory": "src/generated",
     "specVersion": 3,
     "schemes": ["http", "https"],
