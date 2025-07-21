@@ -33,8 +33,7 @@
         "bearerFormat": "JWT",
         "in": "header"
       }
-    },
-    "yaml": true
+    }
   },
   "routes": {
     "routesDir": "src/generated",
