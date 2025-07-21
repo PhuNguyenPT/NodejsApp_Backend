@@ -10,7 +10,7 @@ import {
 } from "class-validator";
 
 /**
- * Data Transfer Object for creating a new user
+ * Data Transfer Object for updating a new user
  * @example {
  *   "email": "jane.doe@example.com",
  *   "name": "Jane Doe",
@@ -19,7 +19,10 @@ import {
  * }
  */
 export class UpdateUserDTO {
-    @IsEmail({}, { message: "Must be a valid email address" })
+    @IsEmail(
+        {},
+        { message: "Must be a valid email address in format email@domain.com" },
+    )
     @IsOptional()
     email?: string;
 

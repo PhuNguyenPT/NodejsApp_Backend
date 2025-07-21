@@ -22,6 +22,7 @@
     }
   },
   "spec": {
+    "specMerging": "recursive",
     "outputDirectory": "src/generated",
     "specVersion": 3,
     "schemes": ["http", "https"],
@@ -29,12 +30,15 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "bearerFormat": "JWT"
+        "bearerFormat": "JWT",
+        "in": "header"
       }
-    }
+    },
+    "yaml": true
   },
   "routes": {
     "routesDir": "src/generated",
-    "middleware": "express"
+    "middleware": "express",
+    "iocModule": "src/app/ioc.container"
   }
 }

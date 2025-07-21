@@ -1,3 +1,4 @@
+import { inject, injectable } from "inversify";
 // src/users/usersController.ts
 import {
     Body,
@@ -18,16 +19,23 @@ import { CreateUserDto } from "@/dto/user/create.user.js";
 import { UpdateUserDTO } from "@/dto/user/update.user.js";
 import { User } from "@/dto/user/user.js";
 import { validateUuidParam } from "@/middleware/uuid.validation.middleware";
-import validationMiddleware from "@/middleware/validation.middleware.js";
-import { UsersService } from "@/service/user.service.js";
+import validateDTO from "@/middleware/validation.middleware.js";
+import { UserService } from "@/service/user.service.js";
+import { TYPES } from "@/type/container/types";
 
 /**
  * Manages user-related operations.
  */
+@injectable()
 @Route("users")
 @Tags("Users")
-export class UsersController extends Controller {
-    private usersService: UsersService = new UsersService();
+export class UserController extends Controller {
+    constructor(
+        @inject(TYPES.UserService)
+        private readonly userService: UserService,
+    ) {
+        super();
+    }
 
     /**
      * Checks if a user exists in the system.
@@ -35,11 +43,12 @@ export class UsersController extends Controller {
      * @returns Boolean indicating whether the user exists.
      */
     @Get("{userId}/exists")
+    @Middlewares(validateUuidParam("userId"))
     @SuccessResponse("200", "Successfully checked user existence")
     public async checkUserExists(
         @Path() userId: string,
     ): Promise<{ exists: boolean }> {
-        const exists = await this.usersService.exists(userId);
+        const exists = await this.userService.exists(userId);
         return { exists };
     }
 
@@ -48,12 +57,12 @@ export class UsersController extends Controller {
      * The request body will be validated to ensure it contains all required user fields.
      * @param requestBody The user information needed to create a new user.
      */
-    @Middlewares(validationMiddleware(CreateUserDto))
+    @Middlewares(validateDTO(CreateUserDto))
     @Post()
     @SuccessResponse("201", "Created")
     public async createUser(@Body() requestBody: CreateUserDto): Promise<User> {
         this.setStatus(201);
-        const user = await this.usersService.create(requestBody);
+        const user = await this.userService.create(requestBody);
         return user;
     }
 
@@ -67,7 +76,7 @@ export class UsersController extends Controller {
     @SuccessResponse("204", "Successfully deleted user")
     public async deleteUser(@Path() userId: string): Promise<void> {
         this.setStatus(204);
-        await this.usersService.delete(userId);
+        await this.userService.delete(userId);
     }
 
     /**
@@ -77,7 +86,7 @@ export class UsersController extends Controller {
     @Get()
     @SuccessResponse("200", "Successfully retrieved all users")
     public async getAllUsers(): Promise<User[]> {
-        return this.usersService.getAll();
+        return this.userService.getAll();
     }
 
     /**
@@ -93,7 +102,7 @@ export class UsersController extends Controller {
         @Path() userId: string,
         @Query() name?: string,
     ): Promise<User> {
-        return this.usersService.getByIdAndName(userId, name);
+        return this.userService.getByIdAndName(userId, name);
     }
 
     /**
@@ -104,7 +113,7 @@ export class UsersController extends Controller {
     @Middlewares(validateUuidParam("userId"))
     @SuccessResponse("200", "Successfully retrieved user")
     public async getUserById(@Path() userId: string): Promise<User> {
-        return this.usersService.getById(userId);
+        return this.userService.getById(userId);
     }
 
     /**
@@ -113,13 +122,13 @@ export class UsersController extends Controller {
      * @param userId The unique identifier of the user to update.
      * @param requestBody Partial user data containing the fields to update.
      */
-    @Middlewares(validateUuidParam("userId"))
+    @Middlewares(validateUuidParam("userId"), validateDTO(UpdateUserDTO))
     @Patch("{userId}")
     @SuccessResponse("200", "Successfully updated user")
     public async updateUser(
         @Path() userId: string,
-        @Body() requestBody: Partial<UpdateUserDTO>,
+        @Body() requestBody: UpdateUserDTO,
     ): Promise<User> {
-        return this.usersService.update(userId, requestBody);
+        return this.userService.update(userId, requestBody);
     }
 }

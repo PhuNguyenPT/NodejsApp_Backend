@@ -1,70 +1,75 @@
 // src/middleware/validation.middleware.ts
 import { ClassConstructor, plainToInstance } from "class-transformer";
-import { validate } from "class-validator";
+import { validate, ValidationError } from "class-validator";
 import { NextFunction, Request, Response } from "express";
 
-import { HttpException } from "@/type/exception/http.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 
-function validationMiddleware<T extends object>(
-    type: ClassConstructor<T>,
-): (req: Request, res: Response, next: NextFunction) => void {
-    return (req: Request, res: Response, next: NextFunction) => {
-        // Validate that req.body exists and is an object
-        if (!req.body || typeof req.body !== "object") {
-            const httpException = new HttpException(
-                400,
-                "Invalid request body",
-            );
-            next(httpException);
-            return;
+/**
+ * Recursively formats validation errors from class-validator into a simple
+ * key-value object. Handles nested DTOs by creating dot-notation keys.
+ * @param errors The array of ValidationError objects.
+ * @returns A record of field names to error messages.
+ */
+const formatValidationErrors = (
+    errors: ValidationError[],
+): Record<string, string> => {
+    const formattedErrors: Record<string, string> = {};
+
+    for (const error of errors) {
+        // Handle nested errors (e.g., for a nested DTO)
+        if (error.children && error.children.length > 0) {
+            const nestedErrors = formatValidationErrors(error.children);
+            for (const key in nestedErrors) {
+                formattedErrors[`${error.property}.${key}`] = nestedErrors[key];
+            }
+        } else if (error.constraints) {
+            // Handle top-level errors
+            formattedErrors[error.property] = Object.values(
+                error.constraints,
+            ).join(", ");
         }
+    }
+    return formattedErrors;
+};
 
-        try {
-            // Transform plain object to DTO class instance
-            const dto = plainToInstance(
-                type,
-                req.body as Record<string, unknown>,
-            );
+/**
+ * Creates an Express middleware to validate and transform the request body
+ * against a given DTO class.
+ * @param type The DTO class to validate against.
+ */
+function validateDTO<T extends object>(type: ClassConstructor<T>) {
+    // This function is no longer async
+    return (req: Request, res: Response, next: NextFunction): void => {
+        // Transform the plain request body to an instance of the DTO class
+        const dto = plainToInstance(type, req.body);
 
-            // Validate the DTO instance
-            validate(dto)
-                .then((errors) => {
-                    if (errors.length > 0) {
-                        // Create a structured validation errors object
-                        const validationErrors: Record<string, string> = {};
-
-                        errors.forEach((error) => {
-                            const field = error.property;
-                            const messages = Object.values(
-                                error.constraints ?? {},
-                            );
-                            validationErrors[field] = messages.join(", ");
-                        });
-
-                        // Use ValidationException instead of HttpException
-                        next(
-                            new ValidationException(
-                                validationErrors,
-                                "Validation failed",
-                            ),
-                        );
-                        return;
-                    } else {
-                        // Replace req.body with the validated and transformed DTO instance
-                        req.body = dto;
-                        next();
-                    }
-                })
-                .catch((error: unknown) => {
-                    console.error("Validation error:", error);
-                    next(new HttpException(500, "Validation error"));
-                });
-        } catch (error: unknown) {
-            console.error("DTO transformation error:", error);
-            next(new HttpException(400, "Invalid request format"));
-        }
+        // Validate the DTO instance and handle the promise
+        validate(dto, {
+            forbidNonWhitelisted: true,
+            whitelist: true,
+        })
+            .then((errors) => {
+                if (errors.length > 0) {
+                    const formattedErrors = formatValidationErrors(errors);
+                    // Pass a structured validation error to the global error handler
+                    next(
+                        new ValidationException(
+                            formattedErrors,
+                            "Input validation failed",
+                        ),
+                    );
+                } else {
+                    // The DTO is valid, replace req.body with the validated instance
+                    req.body = dto;
+                    next();
+                }
+            })
+            .catch((error: unknown) => {
+                // Forward any other unexpected errors
+                next(error);
+            });
     };
 }
 
-export default validationMiddleware;
+export default validateDTO;
