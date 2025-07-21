@@ -19,7 +19,7 @@ import { CreateUserDto } from "@/dto/user/create.user.js";
 import { UpdateUserDTO } from "@/dto/user/update.user.js";
 import { User } from "@/dto/user/user.js";
 import { validateUuidParam } from "@/middleware/uuid.validation.middleware";
-import validationMiddleware from "@/middleware/validation.middleware.js";
+import validateDTO from "@/middleware/validation.middleware.js";
 import { UserService } from "@/service/user.service.js";
 import { TYPES } from "@/type/container/types";
 
@@ -57,7 +57,7 @@ export class UserController extends Controller {
      * The request body will be validated to ensure it contains all required user fields.
      * @param requestBody The user information needed to create a new user.
      */
-    @Middlewares(validationMiddleware(CreateUserDto))
+    @Middlewares(validateDTO(CreateUserDto))
     @Post()
     @SuccessResponse("201", "Created")
     public async createUser(@Body() requestBody: CreateUserDto): Promise<User> {
@@ -122,7 +122,7 @@ export class UserController extends Controller {
      * @param userId The unique identifier of the user to update.
      * @param requestBody Partial user data containing the fields to update.
      */
-    @Middlewares(validateUuidParam("userId"))
+    @Middlewares(validateUuidParam("userId"), validateDTO(UpdateUserDTO))
     @Patch("{userId}")
     @SuccessResponse("200", "Successfully updated user")
     public async updateUser(
