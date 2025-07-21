@@ -1,5 +1,8 @@
-import winston, { format, transports } from "winston";
+import { injectable } from "inversify";
+// src/util/logger.ts
+import winston, { format, Logger, transports } from "winston";
 
+import { ILogger } from "@/type/interface/logger.js";
 import { config } from "@/util/validate.env.js";
 
 // Custom log levels
@@ -81,8 +84,8 @@ if (enableFileLogging || isProduction) {
     );
 }
 
-// Create logger instance
-const logger = winston.createLogger({
+// Create winston logger instance
+const winstonLogger = winston.createLogger({
     exceptionHandlers:
         enableFileLogging || isProduction
             ? [
@@ -113,4 +116,35 @@ const logger = winston.createLogger({
     transports: loggerTransports,
 });
 
-export default logger;
+// Create a wrapper class that implements ILogger interface
+@injectable()
+export class WinstonLoggerService implements ILogger {
+    private readonly logger: Logger;
+
+    constructor() {
+        this.logger = winstonLogger;
+    }
+
+    debug(message: string, meta?: Record<string, unknown>): void {
+        this.logger.debug(message, meta);
+    }
+
+    error(message: string, meta?: Record<string, unknown>): void {
+        this.logger.error(message, meta);
+    }
+
+    http(message: string, meta?: Record<string, unknown>): void {
+        this.logger.http(message, meta);
+    }
+
+    info(message: string, meta?: Record<string, unknown>): void {
+        this.logger.info(message, meta);
+    }
+
+    warn(message: string, meta?: Record<string, unknown>): void {
+        this.logger.warn(message, meta);
+    }
+}
+
+// Export the winston instance for backward compatibility if needed
+export default winstonLogger;

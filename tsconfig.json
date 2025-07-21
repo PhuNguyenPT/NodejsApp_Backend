@@ -30,6 +30,7 @@
       "@/middleware/*": ["middleware/*"],
       "@/repository/*": ["repository/*"],
       "@/service/*": ["service/*"],
+      "@/token/*": ["token/*"],
       "@/type/*": ["type/*"],
       "@/util/*": ["util/*"]
     },

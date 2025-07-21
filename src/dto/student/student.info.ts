@@ -1,5 +1,5 @@
+// src/dto/student.info.ts
 import { Type } from "class-transformer";
-// src/dto/create.post.ts
 import {
     IsArray,
     IsNotEmpty,
