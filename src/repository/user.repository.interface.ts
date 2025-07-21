@@ -6,6 +6,7 @@ export interface IUserRepository {
     create(createUserDto: CreateUserDto): Promise<UserEntity>;
     delete(id: string): Promise<void>;
     exists(id: string): Promise<boolean>;
+    existsByEmail(email: string): Promise<boolean>;
     findAll(): Promise<UserEntity[]>;
     findById(id: string): Promise<null | UserEntity>;
     findByIdAndName(id: string, name?: string): Promise<null | UserEntity>;

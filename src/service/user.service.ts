@@ -9,6 +9,7 @@ import UserEntity from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/user.not.found.exception.js";
+import { ValidationException } from "@/type/exception/validation.exception";
 import { ILogger } from "@/type/interface/logger.js";
 
 @injectable()
@@ -32,6 +33,9 @@ export class UserService {
             });
             return user;
         } catch (error) {
+            if (error instanceof ValidationException) {
+                throw error;
+            }
             this.logger.error("Error creating user", {
                 createUserDto,
                 error: error instanceof Error ? error.message : String(error),

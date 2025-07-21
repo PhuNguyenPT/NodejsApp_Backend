@@ -53,12 +53,7 @@ function validateDTO<T extends object>(type: ClassConstructor<T>) {
                 if (errors.length > 0) {
                     const formattedErrors = formatValidationErrors(errors);
                     // Pass a structured validation error to the global error handler
-                    next(
-                        new ValidationException(
-                            formattedErrors,
-                            "Input validation failed",
-                        ),
-                    );
+                    next(new ValidationException(formattedErrors));
                 } else {
                     // The DTO is valid, replace req.body with the validated instance
                     req.body = dto;

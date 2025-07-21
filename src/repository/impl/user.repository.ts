@@ -5,6 +5,7 @@ import { AppDataSource } from "@/config/data.source.js";
 import { CreateUserDto } from "@/dto/user/create.user.js";
 import UserEntity from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
+import { ValidationException } from "@/type/exception/validation.exception";
 
 export class UserRepository implements IUserRepository {
     private repository: Repository<UserEntity>;
@@ -13,32 +14,45 @@ export class UserRepository implements IUserRepository {
         this.repository = AppDataSource.getRepository(UserEntity);
     }
 
-    async create(createUserDto: CreateUserDto): Promise<UserEntity> {
+    public async create(createUserDto: CreateUserDto): Promise<UserEntity> {
+        const emailExists: boolean = await this.existsByEmail(
+            createUserDto.email,
+        );
+
+        if (emailExists) {
+            throw new ValidationException({
+                email: `User with email '${createUserDto.email}' already exists`,
+            });
+        }
         const userEntity = this.repository.create(createUserDto);
         return await this.repository.save(userEntity);
     }
 
-    async delete(id: string): Promise<void> {
+    public async delete(id: string): Promise<void> {
         const result = await this.repository.delete(id);
         if (result.affected === 0) {
             throw new Error(`User with id ${id} not found`);
         }
     }
 
-    async exists(id: string): Promise<boolean> {
+    public async exists(id: string): Promise<boolean> {
         const count = await this.repository.count({ where: { id } });
         return count > 0;
     }
 
-    async findAll(): Promise<UserEntity[]> {
+    public async existsByEmail(email: string): Promise<boolean> {
+        return await this.repository.existsBy({ email });
+    }
+
+    public async findAll(): Promise<UserEntity[]> {
         return await this.repository.find();
     }
 
-    async findById(id: string): Promise<null | UserEntity> {
+    public async findById(id: string): Promise<null | UserEntity> {
         return await this.repository.findOne({ where: { id } });
     }
 
-    async findByIdAndName(
+    public async findByIdAndName(
         id: string,
         name?: string,
     ): Promise<null | UserEntity> {
@@ -55,7 +69,7 @@ export class UserRepository implements IUserRepository {
         return await queryBuilder.getOne();
     }
 
-    async update(
+    public async update(
         id: string,
         updateData: Partial<UserEntity>,
     ): Promise<UserEntity> {
