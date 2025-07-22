@@ -1,8 +1,10 @@
+import { Exception } from "tsoa";
+
 /**
  * Base class for all HTTP-related exceptions.
  * Extends the native Error object and adds an HTTP status code.
  */
-export class HttpException extends Error {
+export class HttpException extends Error implements Exception {
     public status: number;
 
     /**
