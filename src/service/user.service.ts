@@ -1,5 +1,5 @@
 // src/service/user.service.ts
-import { instanceToInstance } from "class-transformer";
+import { plainToClass } from "class-transformer";
 import { inject, injectable } from "inversify";
 
 import { CreateUserDto } from "@/dto/user/create.user.js";
@@ -11,6 +11,7 @@ import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { InvalidArgumentException } from "@/type/exception/invalid.argument.exception";
 import { ILogger } from "@/type/interface/logger.js";
+import { hashPassword } from "@/util/bcrypt";
 
 @injectable()
 export class UserService {
@@ -23,11 +24,15 @@ export class UserService {
 
     public async create(createUserDto: CreateUserDto): Promise<User> {
         try {
-            this.logger.info("Creating new user", { createUserDto });
+            this.logger.info("Creating new user", {
+                email: createUserDto.email,
+            });
+
+            // Hash the password before saving
+            createUserDto.password = await hashPassword(createUserDto.password);
 
             const savedEntity = await this.userRepository.create(createUserDto);
-            const user: User = instanceToInstance(savedEntity) as User;
-
+            const user: User = this.transformToUser(savedEntity);
             this.logger.info("User created successfully", {
                 userId: savedEntity.id,
             });
@@ -86,9 +91,7 @@ export class UserService {
 
             const userEntities: UserEntity[] =
                 await this.userRepository.findAll();
-            const users: User[] = userEntities.map(
-                (entity) => instanceToInstance(entity) as User,
-            );
+            const users: User[] = this.transformToUsers(userEntities);
 
             this.logger.info("All users retrieved successfully", {
                 count: users.length,
@@ -116,7 +119,7 @@ export class UserService {
                 );
             }
 
-            const user: User = instanceToInstance(userEntity) as User;
+            const user: User = this.transformToUser(userEntity);
             this.logger.info("User retrieved successfully by id", {
                 userId: id,
             });
@@ -150,7 +153,7 @@ export class UserService {
                 throw new EntityNotFoundException(errorMsg);
             }
 
-            const user: User = instanceToInstance(userEntity) as User;
+            const user: User = this.transformToUser(userEntity);
             this.logger.info("User retrieved successfully", {
                 name,
                 userId: id,
@@ -185,11 +188,15 @@ export class UserService {
                 userId: id,
             });
 
+            if (updateData.password) {
+                updateData.password = await hashPassword(updateData.password);
+            }
+
             const updatedEntity = await this.userRepository.update(
                 id,
                 updateData,
             );
-            const user: User = instanceToInstance(updatedEntity) as User;
+            const user: User = this.transformToUser(updatedEntity);
 
             this.logger.info("User updated successfully", { userId: id });
             return user;
@@ -204,5 +211,21 @@ export class UserService {
             });
             throw new Error(`Failed to update user with id ${id}`);
         }
+    }
+
+    /**
+     * Transform UserEntity to User DTO
+     */
+    private transformToUser(entity: UserEntity): User {
+        return plainToClass(User, entity, {
+            excludeExtraneousValues: true,
+        });
+    }
+
+    /**
+     * Transform multiple UserEntities to User DTOs
+     */
+    private transformToUsers(entities: UserEntity[]): User[] {
+        return entities.map((entity) => this.transformToUser(entity));
     }
 }
