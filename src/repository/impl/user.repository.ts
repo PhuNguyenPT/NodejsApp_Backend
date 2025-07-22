@@ -73,6 +73,14 @@ export class UserRepository implements IUserRepository {
         id: string,
         updateData: Partial<UserEntity>,
     ): Promise<UserEntity> {
+        if (updateData.email) {
+            const emailExists = await this.existsByEmail(updateData.email);
+            if (emailExists) {
+                throw new InvalidArgumentException(
+                    `Email ${updateData.email} already exists`,
+                );
+            }
+        }
         await this.repository.update(id, updateData);
         const updatedUser = await this.findById(id);
         if (!updatedUser) {

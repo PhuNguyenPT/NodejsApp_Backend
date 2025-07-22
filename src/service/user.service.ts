@@ -184,16 +184,6 @@ export class UserService {
                 updatedFields: Object.keys(updateData),
                 userId: id,
             });
-            if (updateData.email) {
-                const emailExists = await this.userRepository.existsByEmail(
-                    updateData.email,
-                );
-                if (emailExists) {
-                    throw new InvalidArgumentException(
-                        `Email ${updateData.email} already exists`,
-                    );
-                }
-            }
 
             const updatedEntity = await this.userRepository.update(
                 id,
