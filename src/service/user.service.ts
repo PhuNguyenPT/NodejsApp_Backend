@@ -184,6 +184,16 @@ export class UserService {
                 updatedFields: Object.keys(updateData),
                 userId: id,
             });
+            if (updateData.email) {
+                const emailExists = await this.userRepository.existsByEmail(
+                    updateData.email,
+                );
+                if (emailExists) {
+                    throw new InvalidArgumentException(
+                        `Email ${updateData.email} already exists`,
+                    );
+                }
+            }
 
             const updatedEntity = await this.userRepository.update(
                 id,
@@ -194,6 +204,9 @@ export class UserService {
             this.logger.info("User updated successfully", { userId: id });
             return user;
         } catch (error) {
+            if (error instanceof InvalidArgumentException) {
+                throw error;
+            }
             this.logger.error("Error updating user", {
                 error: error instanceof Error ? error.message : String(error),
                 updateData,
