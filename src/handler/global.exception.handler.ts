@@ -43,12 +43,14 @@ class ExceptionHandlers {
 
         logger.error("Unhandled error", {
             message,
+            originalError: error.name,
             stack: error.stack,
             status,
         });
 
         return { message, response, status };
     }
+
     @ExceptionHandler(HttpException)
     handleHttpException(exception: HttpException): ErrorDetails {
         const status = Number(exception.status) || 500;
@@ -96,6 +98,25 @@ class ExceptionHandlers {
 
         logger.warn("InvalidUuidException", {
             message,
+            status,
+        });
+
+        return { message, response, status };
+    }
+
+    @ExceptionHandler(SyntaxError)
+    handleSyntaxError(error: SyntaxError): ErrorDetails {
+        const status = 400;
+        const message = "Invalid request format or malformed data";
+
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
+
+        logger.warn("SyntaxError", {
+            message: error.message,
+            originalError: error.name,
             status,
         });
 
