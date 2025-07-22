@@ -33,6 +33,9 @@ export class UserEntity {
     @Column({ length: 255, type: "varchar" })
     name!: string;
 
+    @Column({ type: "varchar" })
+    password!: string;
+
     @Column({ nullable: true, type: "simple-array" })
     phoneNumbers!: string[];
 

@@ -1,3 +1,7 @@
+# Keys
+private.pem
+public.pem
+
 # Logs
 logs
 *.log

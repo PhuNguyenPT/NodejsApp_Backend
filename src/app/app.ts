@@ -8,6 +8,7 @@ import { AppDataSource } from "@/config/data.source.js";
 import { getMorganConfig, setupRequestTracking } from "@/config/morgan.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
+import { keyStore } from "@/util/key";
 import logger from "@/util/logger.js";
 import { config } from "@/util/validate.env.js";
 class App {
@@ -27,6 +28,7 @@ class App {
         this.initializeMiddleware();
         this.initializeRoutes();
         this.initializeErrorHandling();
+        this.initializeKeyStore();
     }
 
     public getServerUrl(): string {
@@ -62,7 +64,6 @@ class App {
         logger.info("CORS Configuration:", corsOptions);
         return corsOptions;
     }
-
     private initializeCors(): void {
         this.express.use(cors(this.getCorsOptions()));
     }
@@ -79,6 +80,12 @@ class App {
 
     private initializeErrorHandling(): void {
         this.express.use(ErrorMiddleware);
+    }
+
+    private initializeKeyStore(): void {
+        if (keyStore.privateKey && keyStore.publicKey) {
+            logger.info("Initializing key pairs successfully");
+        }
     }
 
     private initializeMiddleware(): void {
