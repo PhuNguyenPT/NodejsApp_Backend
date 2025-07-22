@@ -15,6 +15,8 @@ logger.info("Starting application", {
     POSTGRES_DB: config.POSTGRES_DB,
     POSTGRES_HOST: config.POSTGRES_HOST,
     POSTGRES_PORT: config.POSTGRES_PORT,
+    PRIVATE_KEY_PATH: config.PRIVATE_KEY_PATH,
+    PUBLIC_KEY_PATH: config.PUBLIC_KEY_PATH,
     SERVER_HOSTNAME: config.SERVER_HOSTNAME,
     SERVER_PATH: config.SERVER_PATH,
     SERVER_PORT: config.SERVER_PORT,

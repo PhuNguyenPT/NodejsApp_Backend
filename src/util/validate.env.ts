@@ -30,8 +30,13 @@ interface Config {
     POSTGRES_PORT: number;
     POSTGRES_USER: string;
 
+    // JWT RSA Keys
+    PRIVATE_KEY_PATH: string;
+    PUBLIC_KEY_PATH: string;
+
     // Application config
     SERVER_HOSTNAME: string;
+
     SERVER_PATH: string;
     SERVER_PORT: number;
 }
@@ -62,9 +67,13 @@ export const config: Config = cleanEnv(process.env, {
     // Database config
     POSTGRES_DB: str(),
     POSTGRES_HOST: str(),
+
     POSTGRES_PASSWORD: str(),
     POSTGRES_PORT: port({ default: 5432 }),
     POSTGRES_USER: str(),
+    // JWT RSA Keys
+    PRIVATE_KEY_PATH: str(),
+    PUBLIC_KEY_PATH: str(),
 
     // Application config
     SERVER_HOSTNAME: str({ default: "localhost" }),

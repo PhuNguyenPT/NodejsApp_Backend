@@ -46,6 +46,13 @@ cp .env.example .env.prod
 
 4. Configure your environment variables in the respective `.env.*` files.
 
+5. Generate key pairs
+
+```bash
+openssl genrsa -out private_key.pem 4096
+openssl rsa -in private.pem -pubout -out public.pem
+```
+
 ## 🚀 Getting Started
 
 ### Development
