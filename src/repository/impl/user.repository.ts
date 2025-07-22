@@ -5,7 +5,7 @@ import { AppDataSource } from "@/config/data.source.js";
 import { CreateUserDto } from "@/dto/user/create.user.js";
 import UserEntity from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
-import { ValidationException } from "@/type/exception/validation.exception";
+import { InvalidArgumentException } from "@/type/exception/invalid.argument.exception";
 
 export class UserRepository implements IUserRepository {
     private repository: Repository<UserEntity>;
@@ -20,9 +20,9 @@ export class UserRepository implements IUserRepository {
         );
 
         if (emailExists) {
-            throw new ValidationException({
-                email: `User with email '${createUserDto.email}' already exists`,
-            });
+            throw new InvalidArgumentException(
+                `User with email '${createUserDto.email}' already exists`,
+            );
         }
         const userEntity = this.repository.create(createUserDto);
         return await this.repository.save(userEntity);
@@ -73,6 +73,14 @@ export class UserRepository implements IUserRepository {
         id: string,
         updateData: Partial<UserEntity>,
     ): Promise<UserEntity> {
+        if (updateData.email) {
+            const emailExists = await this.existsByEmail(updateData.email);
+            if (emailExists) {
+                throw new InvalidArgumentException(
+                    `Email ${updateData.email} already exists`,
+                );
+            }
+        }
         await this.repository.update(id, updateData);
         const updatedUser = await this.findById(id);
         if (!updatedUser) {

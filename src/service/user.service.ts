@@ -8,8 +8,8 @@ import { User } from "@/dto/user/user.js";
 import UserEntity from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { TYPES } from "@/type/container/types.js";
-import { EntityNotFoundException } from "@/type/exception/user.not.found.exception.js";
-import { ValidationException } from "@/type/exception/validation.exception";
+import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
+import { InvalidArgumentException } from "@/type/exception/invalid.argument.exception";
 import { ILogger } from "@/type/interface/logger.js";
 
 @injectable()
@@ -33,7 +33,7 @@ export class UserService {
             });
             return user;
         } catch (error) {
-            if (error instanceof ValidationException) {
+            if (error instanceof InvalidArgumentException) {
                 throw error;
             }
             this.logger.error("Error creating user", {
@@ -194,6 +194,9 @@ export class UserService {
             this.logger.info("User updated successfully", { userId: id });
             return user;
         } catch (error) {
+            if (error instanceof InvalidArgumentException) {
+                throw error;
+            }
             this.logger.error("Error updating user", {
                 error: error instanceof Error ? error.message : String(error),
                 updateData,
