@@ -61,7 +61,6 @@ export class UserController extends Controller {
     @Post()
     @SuccessResponse("201", "Created")
     public async createUser(@Body() requestBody: CreateUserDto): Promise<User> {
-        this.setStatus(201);
         const user = await this.userService.create(requestBody);
         return user;
     }
@@ -75,7 +74,6 @@ export class UserController extends Controller {
     @Middlewares(validateUuidParam("userId"))
     @SuccessResponse("204", "Successfully deleted user")
     public async deleteUser(@Path() userId: string): Promise<void> {
-        this.setStatus(204);
         await this.userService.delete(userId);
     }
 
