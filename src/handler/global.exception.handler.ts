@@ -1,6 +1,8 @@
 // src/handler/global.exception.handler.ts
 import { ExceptionHandler } from "@/decorator/exception.handler.decorator.js";
+import { EntityExistsException } from "@/type/exception/entity.exists.exception";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
+import { ExpiredJwtException } from "@/type/exception/expire.jwt.exception";
 import { HttpException } from "@/type/exception/http.exception";
 import { InvalidArgumentException } from "@/type/exception/invalid.argument.exception";
 import { InvalidUuidException } from "@/type/exception/invalid.uuid.exception";
@@ -9,9 +11,28 @@ import { ErrorDetails } from "@/type/interface/error.details";
 import { ErrorResponse } from "@/type/interface/error.response";
 import { ValidationResponse } from "@/type/interface/validation.response";
 import logger from "@/util/logger";
-
 // Use a class but instantiate it to avoid ESLint error
 class ExceptionHandlers {
+    @ExceptionHandler(EntityExistsException)
+    handleEntityExistsException(
+        exception: EntityExistsException,
+    ): ErrorDetails {
+        const status: number = exception.status;
+        const message: string = exception.message;
+
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
+
+        logger.warn("EntityExistsException", {
+            message,
+            status,
+        });
+
+        return { message, response, status };
+    }
+
     @ExceptionHandler(EntityNotFoundException)
     handleEntityNotFoundException(
         exception: EntityNotFoundException,
@@ -97,6 +118,24 @@ class ExceptionHandlers {
         };
 
         logger.warn("InvalidUuidException", {
+            message,
+            status,
+        });
+
+        return { message, response, status };
+    }
+
+    @ExceptionHandler(ExpiredJwtException)
+    handleJsonWebTokenError(exception: ExpiredJwtException): ErrorDetails {
+        const status = exception.status;
+        const message = exception.message;
+
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
+
+        logger.warn("ExpiredJwtException", {
             message,
             status,
         });

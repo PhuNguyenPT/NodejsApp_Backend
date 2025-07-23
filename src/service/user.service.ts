@@ -30,8 +30,9 @@ export class UserService {
 
             // Hash the password before saving
             createUserDto.password = await hashPassword(createUserDto.password);
-
-            const savedEntity = await this.userRepository.create(createUserDto);
+            const newUser: UserEntity =
+                this.userRepository.createUser(createUserDto);
+            const savedEntity = await this.userRepository.saveUser(newUser);
             const user: User = this.transformToUser(savedEntity);
             this.logger.info("User created successfully", {
                 userId: savedEntity.id,

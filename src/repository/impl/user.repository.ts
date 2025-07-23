@@ -2,9 +2,11 @@
 import { Repository } from "typeorm";
 
 import { AppDataSource } from "@/config/data.source.js";
-import { CreateUserDto } from "@/dto/user/create.user.js";
+import { User } from "@/dto/user/user";
 import UserEntity from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
+import { EntityExistsException } from "@/type/exception/entity.exists.exception";
+import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
 import { InvalidArgumentException } from "@/type/exception/invalid.argument.exception";
 
 export class UserRepository implements IUserRepository {
@@ -14,18 +16,8 @@ export class UserRepository implements IUserRepository {
         this.repository = AppDataSource.getRepository(UserEntity);
     }
 
-    public async create(createUserDto: CreateUserDto): Promise<UserEntity> {
-        const emailExists: boolean = await this.existsByEmail(
-            createUserDto.email,
-        );
-
-        if (emailExists) {
-            throw new InvalidArgumentException(
-                `User with email '${createUserDto.email}' already exists`,
-            );
-        }
-        const userEntity = this.repository.create(createUserDto);
-        return await this.repository.save(userEntity);
+    public createUser(user: User): UserEntity {
+        return this.repository.create(user);
     }
 
     public async delete(id: string): Promise<void> {
@@ -48,6 +40,24 @@ export class UserRepository implements IUserRepository {
         return await this.repository.find();
     }
 
+    public async findByEmail(email: string): Promise<UserEntity> {
+        if (!email) {
+            throw new InvalidArgumentException(`Invalid email ${email}`);
+        }
+
+        const userEntity: null | UserEntity = await this.repository.findOneBy({
+            email,
+        });
+
+        if (!userEntity) {
+            throw new EntityNotFoundException(
+                `User with email ${email} not found`,
+            );
+        }
+
+        return userEntity;
+    }
+
     public async findById(id: string): Promise<null | UserEntity> {
         return await this.repository.findOne({ where: { id } });
     }
@@ -67,6 +77,17 @@ export class UserRepository implements IUserRepository {
         }
 
         return await queryBuilder.getOne();
+    }
+
+    public async saveUser(userEntity: UserEntity): Promise<UserEntity> {
+        const emailExists: boolean = await this.existsByEmail(userEntity.email);
+
+        if (emailExists) {
+            throw new EntityExistsException(
+                `User with email '${userEntity.email}' already exists`,
+            );
+        }
+        return await this.repository.save(userEntity);
     }
 
     public async update(
