@@ -5,7 +5,6 @@ import passport from "passport";
 import { Strategy as JwtStrategy } from "passport-jwt";
 
 import { IUserRepository } from "@/repository/user.repository.interface";
-import { KeyStore } from "@/type/class/keystore";
 import { TYPES } from "@/type/container/types";
 import { UserStatus } from "@/type/enum/user.status.js";
 import { strategyOptionsWithRequest } from "@/util/jwt.options.js";
@@ -17,8 +16,6 @@ export class PassportConfig {
     constructor(
         @inject(TYPES.UserRepository)
         private userRepository: IUserRepository,
-        @inject(TYPES.KeyStore)
-        private keyStore: KeyStore,
     ) {}
 
     public initializeStrategies(): void {
@@ -39,10 +36,6 @@ export class PassportConfig {
                             const clientIP = req.ip ?? "unknown";
                             const userAgent =
                                 req.headers["user-agent"] ?? "unknown";
-
-                            console.log("Request IP:", clientIP);
-                            console.log("User Agent:", userAgent);
-                            console.log("Request Path:", req.path);
 
                             const user = await this.userRepository.findById(
                                 payload.id,
