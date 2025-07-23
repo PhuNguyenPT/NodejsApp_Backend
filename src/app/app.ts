@@ -3,14 +3,19 @@ import compression from "compression";
 import cors from "cors";
 import express, { Express, Router } from "express";
 import helmet from "helmet";
+import passport from "passport";
 
+import { iocContainer } from "@/app/ioc.container.js";
 import { AppDataSource } from "@/config/data.source.js";
 import { getMorganConfig, setupRequestTracking } from "@/config/morgan.js";
+import { PassportConfig } from "@/config/passport.config.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
+import { TYPES } from "@/type/container/types.js";
 import { keyStore } from "@/util/key";
 import logger from "@/util/logger.js";
 import { config } from "@/util/validate.env.js";
+
 class App {
     public basePath!: string;
     public express!: Express;
@@ -24,6 +29,7 @@ class App {
         this.basePath = config.SERVER_PATH;
 
         this.initializeDatabaseConnection();
+        this.initializePassportStrategies(); // Initialize passport before other middleware
         this.initializeCors();
         this.initializeMiddleware();
         this.initializeRoutes();
@@ -64,6 +70,7 @@ class App {
         logger.info("CORS Configuration:", corsOptions);
         return corsOptions;
     }
+
     private initializeCors(): void {
         this.express.use(cors(this.getCorsOptions()));
     }
@@ -98,6 +105,7 @@ class App {
             express.urlencoded({ extended: false, limit: "10mb" }),
         );
         this.express.use(compression());
+        this.express.use(passport.initialize());
     }
 
     private initializeMorganLogging(): void {
@@ -106,6 +114,19 @@ class App {
         morganMiddlewares.forEach((middleware) => {
             this.express.use(middleware);
         });
+    }
+
+    private initializePassportStrategies(): void {
+        try {
+            const passportConfig = iocContainer.get<PassportConfig>(
+                TYPES.PassportConfig,
+            );
+            passportConfig.initializeStrategies();
+            logger.info("Passport strategies initialized successfully");
+        } catch (error) {
+            logger.error("Error initializing Passport strategies:", error);
+            throw error;
+        }
     }
 
     private initializeRequestTracking(): void {

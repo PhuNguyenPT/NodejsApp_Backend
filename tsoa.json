@@ -32,11 +32,17 @@
         "bearerFormat": "JWT",
         "in": "header"
       }
-    }
+    },
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ]
   },
   "routes": {
     "routesDir": "src/generated",
     "middleware": "express",
-    "iocModule": "src/app/ioc.container"
+    "authenticationModule": "src/config/authentication.ts",
+    "iocModule": "src/app/ioc.container.ts"
   }
 }
