@@ -1,4 +1,4 @@
-import { UserStatus } from "../enum/user.status";
+import { UserStatus } from "@/type/enum/user.js";
 
 export interface IUser {
     email?: string;

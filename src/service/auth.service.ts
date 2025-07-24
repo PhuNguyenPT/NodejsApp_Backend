@@ -8,16 +8,16 @@ import { LoginRequest, RegisterRequest } from "@/dto/auth/auth.request.js";
 import { AuthResponse } from "@/dto/auth/auth.response.js";
 import { User } from "@/dto/user/user.js";
 import { UserEntity } from "@/entity/user.js";
-import { IUserRepository } from "@/repository/user.repository.interface";
+import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { CustomJwtPayload, JWTService } from "@/service/jwt.service.js";
-import { TYPES } from "@/type/container/types";
-import { UserStatus } from "@/type/enum/user.status.js";
+import { TYPES } from "@/type/container/types.js";
+import { UserStatus } from "@/type/enum/user.js";
 import { BadCredentialsException } from "@/type/exception/bad.credentials.exception.js";
-import { EntityExistsException } from "@/type/exception/entity.exists.exception";
-import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
-import { HttpException } from "@/type/exception/http.exception";
-import { ILogger } from "@/type/interface/logger";
-import { JWT_EXPIRATION_TIME_IN_SECONDS } from "@/util/jwt.options";
+import { EntityExistsException } from "@/type/exception/entity.exists.exception.js";
+import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
+import { HttpException } from "@/type/exception/http.exception.js";
+import { ILogger } from "@/type/interface/logger.js";
+import { JWT_EXPIRATION_TIME_IN_SECONDS } from "@/util/jwt.options.js";
 
 @injectable()
 export class AuthService {

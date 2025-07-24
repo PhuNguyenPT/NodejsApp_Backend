@@ -1,7 +1,7 @@
 // src/dto/user/user.ts
 import { Exclude, Expose, Type } from "class-transformer";
 
-import { UserStatus } from "@/type/enum/user.status";
+import { Role, UserStatus } from "@/type/enum/user.js";
 
 /**
  * Data Transfer Object for user response
@@ -52,4 +52,10 @@ export class User {
             Object.assign(this, partial);
         }
     }
+}
+
+export class UserAdmin extends User {
+    @Expose()
+    @Type(() => String)
+    role!: Role;
 }

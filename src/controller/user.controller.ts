@@ -15,9 +15,11 @@ import {
     Tags,
 } from "tsoa";
 
-import { CreateUserDto } from "@/dto/user/create.user.js";
-import { UpdateUserDTO } from "@/dto/user/update.user.js";
-import { User } from "@/dto/user/user.js";
+import { CreateUserAdminDTO } from "@/dto/user/create.user.js";
+import { UpdateUserAdminDTO } from "@/dto/user/update.user.js";
+import { UserAdmin } from "@/dto/user/user.js";
+import UserEntity from "@/entity/user";
+import { UserMapper } from "@/mapper/user.mapper";
 import { validateUuidParam } from "@/middleware/uuid.validation.middleware";
 import validateDTO from "@/middleware/validation.middleware.js";
 import { UserService } from "@/service/user.service.js";
@@ -57,12 +59,16 @@ export class UserController extends Controller {
      * The request body will be validated to ensure it contains all required user fields.
      * @param requestBody The user information needed to create a new user.
      */
-    @Middlewares(validateDTO(CreateUserDto))
+    @Middlewares(validateDTO(CreateUserAdminDTO))
     @Post()
     @SuccessResponse("201", "Created")
-    public async createUser(@Body() requestBody: CreateUserDto): Promise<User> {
-        const user = await this.userService.create(requestBody);
-        return user;
+    public async createUser(
+        @Body() requestBody: CreateUserAdminDTO,
+    ): Promise<UserAdmin> {
+        const userEntity: UserEntity =
+            await this.userService.create(requestBody);
+        const responseDTO: UserAdmin = UserMapper.toUserAdmin(userEntity);
+        return responseDTO;
     }
 
     /**
@@ -83,8 +89,11 @@ export class UserController extends Controller {
      */
     @Get()
     @SuccessResponse("200", "Successfully retrieved all users")
-    public async getAllUsers(): Promise<User[]> {
-        return this.userService.getAll();
+    public async getAllUsers(): Promise<UserAdmin[]> {
+        const userEntities: UserEntity[] = await this.userService.getAll();
+        const responseArray: UserAdmin[] =
+            UserMapper.toUserAdmins(userEntities);
+        return responseArray;
     }
 
     /**
@@ -99,8 +108,13 @@ export class UserController extends Controller {
     public async getUser(
         @Path() userId: string,
         @Query() name?: string,
-    ): Promise<User> {
-        return this.userService.getByIdAndName(userId, name);
+    ): Promise<UserAdmin> {
+        const userEntity: UserEntity = await this.userService.getByIdAndName(
+            userId,
+            name,
+        );
+        const responseDTO: UserAdmin = UserMapper.toUserAdmin(userEntity);
+        return responseDTO;
     }
 
     /**
@@ -110,8 +124,10 @@ export class UserController extends Controller {
     @Get("{userId}")
     @Middlewares(validateUuidParam("userId"))
     @SuccessResponse("200", "Successfully retrieved user")
-    public async getUserById(@Path() userId: string): Promise<User> {
-        return this.userService.getById(userId);
+    public async getUserById(@Path() userId: string): Promise<UserAdmin> {
+        const userEntity: UserEntity = await this.userService.getById(userId);
+        const responseDTO: UserAdmin = UserMapper.toUserAdmin(userEntity);
+        return responseDTO;
     }
 
     /**
@@ -120,13 +136,15 @@ export class UserController extends Controller {
      * @param userId The unique identifier of the user to update.
      * @param requestBody Partial user data containing the fields to update.
      */
-    @Middlewares(validateUuidParam("userId"), validateDTO(UpdateUserDTO))
+    @Middlewares(validateUuidParam("userId"), validateDTO(UpdateUserAdminDTO))
     @Patch("{userId}")
     @SuccessResponse("200", "Successfully updated user")
     public async updateUser(
         @Path() userId: string,
-        @Body() requestBody: UpdateUserDTO,
-    ): Promise<User> {
-        return this.userService.update(userId, requestBody);
+        @Body() requestBody: UpdateUserAdminDTO,
+    ): Promise<UserAdmin> {
+        const userEntity = await this.userService.update(userId, requestBody);
+        const responseDTO: UserAdmin = UserMapper.toUserAdmin(userEntity);
+        return responseDTO;
     }
 }

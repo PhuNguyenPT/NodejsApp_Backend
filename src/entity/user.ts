@@ -8,7 +8,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { UserStatus } from "@/type/enum/user.status.js";
+import { Role, UserStatus } from "@/type/enum/user.js";
 
 @Entity({ name: "users" })
 // This composite index will be used for your findByIdAndName query - FASTEST for your specific case
@@ -43,6 +43,13 @@ export class UserEntity {
 
     @Column("simple-array", { nullable: true })
     phoneNumbers?: string[];
+
+    @Column({
+        default: Role.USER,
+        enum: Role,
+        type: "enum",
+    })
+    role!: Role;
 
     @Column({
         default: UserStatus.HAPPY,
