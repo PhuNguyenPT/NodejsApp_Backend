@@ -7,6 +7,7 @@ import { Strategy as JwtStrategy } from "passport-jwt";
 import { IUserRepository } from "@/repository/user.repository.interface";
 import { TYPES } from "@/type/container/types";
 import { UserStatus } from "@/type/enum/user.status.js";
+import { ILogger } from "@/type/interface/logger";
 import { strategyOptionsWithRequest } from "@/util/jwt.options.js";
 
 @injectable()
@@ -16,6 +17,8 @@ export class PassportConfig {
     constructor(
         @inject(TYPES.UserRepository)
         private userRepository: IUserRepository,
+        @inject(TYPES.Logger)
+        private logger: ILogger,
     ) {}
 
     public initializeStrategies(): void {
@@ -65,7 +68,7 @@ export class PassportConfig {
                             // Example: Additional security checks using request data
                             // Check for suspicious IP patterns
                             if (this.isSuspiciousIP(clientIP)) {
-                                console.warn(
+                                this.logger.warn(
                                     `Suspicious login attempt from IP: ${clientIP} for user: ${user.id}`,
                                 );
                                 done(null, false, { message: "Access denied" });
@@ -73,8 +76,8 @@ export class PassportConfig {
                             }
 
                             // Example: Log authentication for audit purposes
-                            console.log(
-                                `User ${user.id} authenticated from ${clientIP} - ${userAgent}`,
+                            this.logger.info(
+                                `User ${user.id} authenticated from IP: ${clientIP} - ${userAgent}`,
                             );
 
                             // Return user that conforms to Express.User (which extends JWTPayload)
@@ -89,7 +92,12 @@ export class PassportConfig {
 
                             done(null, userPayload);
                         } catch (error) {
-                            console.error("JWT Strategy Error:", error);
+                            this.logger.error("JWT Strategy Error:", {
+                                error:
+                                    error instanceof Error
+                                        ? error.message
+                                        : String(error),
+                            });
                             done(error, false);
                         }
                     })();

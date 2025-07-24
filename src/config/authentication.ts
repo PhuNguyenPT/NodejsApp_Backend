@@ -25,8 +25,10 @@ export function expressAuthentication(
                     return;
                 }
                 if (!user) {
-                    const message =
-                        info instanceof Error ? info.message : "Unauthorized";
+                    if (info instanceof Error) {
+                        reject(info);
+                    }
+                    const message = "Unauthorized";
                     reject(new Error(message));
                     return;
                 }

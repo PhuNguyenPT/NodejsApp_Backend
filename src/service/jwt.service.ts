@@ -57,7 +57,7 @@ export class JWTService {
     }
 
     /**
-     * Generate refresh token (longer expiry)
+     * Generate refresh token
      */
     generateRefreshToken(payload: CustomJwtPayload): string {
         return jwt.sign(payload, this.keyStore.getPrivateKey(), signOptions);

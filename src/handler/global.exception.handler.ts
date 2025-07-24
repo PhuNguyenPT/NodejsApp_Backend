@@ -1,8 +1,13 @@
+import {
+    JsonWebTokenError,
+    NotBeforeError,
+    TokenExpiredError,
+} from "jsonwebtoken";
+
 // src/handler/global.exception.handler.ts
 import { ExceptionHandler } from "@/decorator/exception.handler.decorator.js";
 import { EntityExistsException } from "@/type/exception/entity.exists.exception";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
-import { ExpiredJwtException } from "@/type/exception/expire.jwt.exception";
 import { HttpException } from "@/type/exception/http.exception";
 import { InvalidArgumentException } from "@/type/exception/invalid.argument.exception";
 import { InvalidUuidException } from "@/type/exception/invalid.uuid.exception";
@@ -125,18 +130,39 @@ class ExceptionHandlers {
         return { message, response, status };
     }
 
-    @ExceptionHandler(ExpiredJwtException)
-    handleJsonWebTokenError(exception: ExpiredJwtException): ErrorDetails {
-        const status = exception.status;
-        const message = exception.message;
+    @ExceptionHandler(JsonWebTokenError)
+    handleJsonWebTokenError(error: JsonWebTokenError): ErrorDetails {
+        const status = 401;
+        const message = "Invalid token";
 
         const response: ErrorResponse = {
             message,
             status,
         };
 
-        logger.warn("ExpiredJwtException", {
+        logger.warn("JsonWebTokenError", {
+            message: error.message,
+            originalError: error.name,
+            status,
+        });
+
+        return { message, response, status };
+    }
+
+    @ExceptionHandler(NotBeforeError)
+    handleNotBeforeError(error: NotBeforeError): ErrorDetails {
+        const status = 401;
+        const message = "Token not active yet";
+
+        const response: ErrorResponse = {
             message,
+            status,
+        };
+
+        logger.warn("NotBeforeError", {
+            date: error.date,
+            message: error.message,
+            originalError: error.name,
             status,
         });
 
@@ -154,6 +180,26 @@ class ExceptionHandlers {
         };
 
         logger.warn("SyntaxError", {
+            message: error.message,
+            originalError: error.name,
+            status,
+        });
+
+        return { message, response, status };
+    }
+
+    @ExceptionHandler(TokenExpiredError)
+    handleTokenExpiredError(error: TokenExpiredError): ErrorDetails {
+        const status = 401;
+        const message = "Token has expired";
+
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
+
+        logger.warn("TokenExpiredError", {
+            expiredAt: error.expiredAt,
             message: error.message,
             originalError: error.name,
             status,

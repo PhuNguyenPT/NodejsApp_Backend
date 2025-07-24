@@ -4,6 +4,9 @@ import { ExtractJwt, StrategyOptionsWithRequest } from "passport-jwt";
 
 import { keyStore } from "@/util/key.js";
 
+export const JWT_EXPIRATION_TIME_IN_SECONDS = 86400;
+export const JWT_MAX_AGE_IN_MILLISECONDS = 3600000;
+
 export const strategyOptionsWithRequest: StrategyOptionsWithRequest & {
     audience: string;
     issuer: string;
@@ -20,7 +23,7 @@ export const strategyOptionsWithRequest: StrategyOptionsWithRequest & {
 export const signOptions: SignOptions = {
     algorithm: strategyOptionsWithRequest.algorithms?.[0] ?? "RS384",
     audience: strategyOptionsWithRequest.audience,
-    expiresIn: 86400,
+    expiresIn: JWT_EXPIRATION_TIME_IN_SECONDS,
     issuer: strategyOptionsWithRequest.issuer,
 };
 
@@ -29,5 +32,5 @@ export const verifyOptions: VerifyOptions = {
     audience: strategyOptionsWithRequest.audience,
     ignoreExpiration: false,
     issuer: strategyOptionsWithRequest.issuer,
-    maxAge: 3600000, // ✅ 1 hour in ms
+    maxAge: JWT_MAX_AGE_IN_MILLISECONDS, // ✅ 1 hour in ms
 };

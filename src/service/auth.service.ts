@@ -15,10 +15,9 @@ import { UserStatus } from "@/type/enum/user.status.js";
 import { BadCredentialsException } from "@/type/exception/bad.credentials.exception.js";
 import { EntityExistsException } from "@/type/exception/entity.exists.exception";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
-import { ExpiredJwtException } from "@/type/exception/expire.jwt.exception";
 import { HttpException } from "@/type/exception/http.exception";
-import { JwtException } from "@/type/exception/jwt.exception";
 import { ILogger } from "@/type/interface/logger";
+import { JWT_EXPIRATION_TIME_IN_SECONDS } from "@/util/jwt.options";
 
 @injectable()
 export class AuthService {
@@ -72,6 +71,7 @@ export class AuthService {
 
             return new AuthResponse({
                 accessToken,
+                expiresIn: JWT_EXPIRATION_TIME_IN_SECONDS,
                 message: "Login successful",
                 success: true,
                 user: userDto,
@@ -81,10 +81,10 @@ export class AuthService {
             if (error instanceof EntityNotFoundException) {
                 // Convert to BadCredentialsException to avoid revealing user existence
                 throw new BadCredentialsException("Invalid email or password");
-            } else if (error instanceof jwt.JsonWebTokenError) {
-                throw new JwtException(`JsonWebTokenError ${error.message}`);
             } else if (
-                error instanceof BadCredentialsException ||
+                error instanceof jwt.TokenExpiredError ||
+                error instanceof jwt.JsonWebTokenError ||
+                error instanceof jwt.NotBeforeError ||
                 error instanceof HttpException
             ) {
                 throw error;
@@ -115,7 +115,7 @@ export class AuthService {
     async refreshToken(
         refreshToken: string,
         userJwtPayload: Express.User,
-    ): Promise<string> {
+    ): Promise<AuthResponse> {
         try {
             this.logger.debug("Verifying token", {
                 token: refreshToken.substring(0, 50) + "...", // Only log first 50 chars for security
@@ -159,19 +159,24 @@ export class AuthService {
                 status: user.status,
             };
 
-            // Generate new access token (not refresh token)
             const newAccessToken =
                 this.jwtService.generateAccessToken(jwtPayload);
 
             this.logger.info(`Token refreshed for user: ${user.email}`);
 
-            return newAccessToken; // Return access token, not refresh token
+            return new AuthResponse({
+                expiresIn: JWT_EXPIRATION_TIME_IN_SECONDS,
+                message: "Token refresh successful",
+                refreshToken: newAccessToken,
+                success: true,
+            });
         } catch (error) {
-            if (error instanceof jwt.TokenExpiredError) {
-                throw new ExpiredJwtException(`JWT token has expired`);
-            } else if (error instanceof jwt.JsonWebTokenError) {
-                throw new JwtException(`JsonWebTokenError ${error.message}`);
-            } else if (error instanceof HttpException) {
+            if (
+                error instanceof jwt.TokenExpiredError ||
+                error instanceof jwt.JsonWebTokenError ||
+                error instanceof jwt.NotBeforeError ||
+                error instanceof HttpException
+            ) {
                 throw error;
             }
 
@@ -227,12 +232,18 @@ export class AuthService {
 
             return new AuthResponse({
                 accessToken,
+                expiresIn: JWT_EXPIRATION_TIME_IN_SECONDS,
                 message: "Registration successful",
                 success: true,
                 user: userDto,
             });
         } catch (error) {
-            if (error instanceof EntityExistsException) {
+            if (
+                error instanceof jwt.TokenExpiredError ||
+                error instanceof jwt.JsonWebTokenError ||
+                error instanceof jwt.NotBeforeError ||
+                error instanceof HttpException
+            ) {
                 throw error;
             }
 
