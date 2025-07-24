@@ -15,9 +15,7 @@ import { UserStatus } from "@/type/enum/user.status.js";
 import { BadCredentialsException } from "@/type/exception/bad.credentials.exception.js";
 import { EntityExistsException } from "@/type/exception/entity.exists.exception";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
-import { ExpiredJwtException } from "@/type/exception/expire.jwt.exception";
 import { HttpException } from "@/type/exception/http.exception";
-import { JwtException } from "@/type/exception/jwt.exception";
 import { ILogger } from "@/type/interface/logger";
 import { JWT_EXPIRATION_TIME_IN_SECONDS } from "@/util/jwt.options";
 
@@ -83,10 +81,10 @@ export class AuthService {
             if (error instanceof EntityNotFoundException) {
                 // Convert to BadCredentialsException to avoid revealing user existence
                 throw new BadCredentialsException("Invalid email or password");
-            } else if (error instanceof jwt.JsonWebTokenError) {
-                throw new JwtException(`JsonWebTokenError ${error.message}`);
             } else if (
-                error instanceof BadCredentialsException ||
+                error instanceof jwt.TokenExpiredError ||
+                error instanceof jwt.JsonWebTokenError ||
+                error instanceof jwt.NotBeforeError ||
                 error instanceof HttpException
             ) {
                 throw error;
@@ -173,11 +171,12 @@ export class AuthService {
                 success: true,
             });
         } catch (error) {
-            if (error instanceof jwt.TokenExpiredError) {
-                throw new ExpiredJwtException(`JWT token has expired`);
-            } else if (error instanceof jwt.JsonWebTokenError) {
-                throw new JwtException(`JsonWebTokenError ${error.message}`);
-            } else if (error instanceof HttpException) {
+            if (
+                error instanceof jwt.TokenExpiredError ||
+                error instanceof jwt.JsonWebTokenError ||
+                error instanceof jwt.NotBeforeError ||
+                error instanceof HttpException
+            ) {
                 throw error;
             }
 
@@ -239,7 +238,12 @@ export class AuthService {
                 user: userDto,
             });
         } catch (error) {
-            if (error instanceof EntityExistsException) {
+            if (
+                error instanceof jwt.TokenExpiredError ||
+                error instanceof jwt.JsonWebTokenError ||
+                error instanceof jwt.NotBeforeError ||
+                error instanceof HttpException
+            ) {
                 throw error;
             }
 

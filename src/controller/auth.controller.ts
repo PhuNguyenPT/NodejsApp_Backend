@@ -86,7 +86,7 @@ export class AuthController extends Controller {
             ExtractJwt.fromAuthHeaderAsBearerToken()(request);
         if (!currentToken) {
             this.setStatus(401);
-            throw new Error("No valid bearer token provided");
+            throw new JwtException("No valid bearer token provided");
         }
         // Pass user info to refresh token service if needed
         const authResponse: AuthResponse = await this.authService.refreshToken(
