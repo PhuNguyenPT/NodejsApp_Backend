@@ -9,8 +9,7 @@ import {
     Matches,
 } from "class-validator";
 
-import { UserStatus } from "@/type/enum/user.status";
-import { IUser } from "@/type/interface/user";
+import { Role, UserStatus } from "@/type/enum/user.js";
 
 /**
  * Data Transfer Object for creating a new user
@@ -22,7 +21,7 @@ import { IUser } from "@/type/interface/user";
  *   "status": "Happy"
  * }
  */
-export class CreateUserDto implements IUser {
+export class CreateUserDto {
     @IsEmail({}, { message: "Must be a valid email address" })
     email!: string;
 
@@ -59,4 +58,12 @@ export class CreateUserDto implements IUser {
     })
     @IsOptional()
     status?: UserStatus;
+}
+
+export class CreateUserAdminDTO extends CreateUserDto {
+    @IsEnum(Role, {
+        message: `Role must be one of: ${Object.values(UserStatus).join(", ")}`,
+    })
+    @IsOptional()
+    role?: Role;
 }

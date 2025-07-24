@@ -1,10 +1,8 @@
 // src/service/user.service.ts
-import { plainToClass } from "class-transformer";
 import { inject, injectable } from "inversify";
 
 import { CreateUserDto } from "@/dto/user/create.user.js";
 import { UpdateUserDTO } from "@/dto/user/update.user.js";
-import { User } from "@/dto/user/user.js";
 import UserEntity from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { TYPES } from "@/type/container/types.js";
@@ -22,7 +20,7 @@ export class UserService {
         private readonly logger: ILogger, // Now properly typed!
     ) {}
 
-    public async create(createUserDto: CreateUserDto): Promise<User> {
+    public async create(createUserDto: CreateUserDto): Promise<UserEntity> {
         try {
             this.logger.info("Creating new user", {
                 email: createUserDto.email,
@@ -32,12 +30,12 @@ export class UserService {
             createUserDto.password = await hashPassword(createUserDto.password);
             const newUser: UserEntity =
                 this.userRepository.createUser(createUserDto);
-            const savedEntity = await this.userRepository.saveUser(newUser);
-            const user: User = this.transformToUser(savedEntity);
+            const savedEntity: UserEntity =
+                await this.userRepository.saveUser(newUser);
             this.logger.info("User created successfully", {
                 userId: savedEntity.id,
             });
-            return user;
+            return savedEntity;
         } catch (error) {
             if (error instanceof InvalidArgumentException) {
                 throw error;
@@ -70,7 +68,7 @@ export class UserService {
         try {
             this.logger.info("Checking if user exists", { userId: id });
 
-            const exists = await this.userRepository.exists(id);
+            const exists: boolean = await this.userRepository.exists(id);
 
             this.logger.info("User existence check completed", {
                 exists,
@@ -86,18 +84,17 @@ export class UserService {
         }
     }
 
-    public async getAll(): Promise<User[]> {
+    public async getAll(): Promise<UserEntity[]> {
         try {
             this.logger.info("Retrieving all users");
 
             const userEntities: UserEntity[] =
                 await this.userRepository.findAll();
-            const users: User[] = this.transformToUsers(userEntities);
 
             this.logger.info("All users retrieved successfully", {
-                count: users.length,
+                count: userEntities.length,
             });
-            return users;
+            return userEntities;
         } catch (error) {
             this.logger.error("Error retrieving all users", {
                 error: error instanceof Error ? error.message : String(error),
@@ -106,7 +103,7 @@ export class UserService {
         }
     }
 
-    public async getById(id: string): Promise<User> {
+    public async getById(id: string): Promise<UserEntity> {
         try {
             this.logger.info("Retrieving user by id", { userId: id });
 
@@ -120,11 +117,10 @@ export class UserService {
                 );
             }
 
-            const user: User = this.transformToUser(userEntity);
             this.logger.info("User retrieved successfully by id", {
-                userId: id,
+                userId: userEntity.id,
             });
-            return user;
+            return userEntity;
         } catch (error) {
             if (error instanceof EntityNotFoundException) {
                 throw error;
@@ -139,7 +135,10 @@ export class UserService {
         }
     }
 
-    public async getByIdAndName(id: string, name?: string): Promise<User> {
+    public async getByIdAndName(
+        id: string,
+        name?: string,
+    ): Promise<UserEntity> {
         try {
             this.logger.info("Retrieving user", { name, userId: id });
 
@@ -154,12 +153,11 @@ export class UserService {
                 throw new EntityNotFoundException(errorMsg);
             }
 
-            const user: User = this.transformToUser(userEntity);
             this.logger.info("User retrieved successfully", {
                 name,
                 userId: id,
             });
-            return user;
+            return userEntity;
         } catch (error) {
             if (error instanceof EntityNotFoundException) {
                 throw error;
@@ -182,7 +180,7 @@ export class UserService {
     public async update(
         id: string,
         updateData: Partial<UpdateUserDTO>,
-    ): Promise<User> {
+    ): Promise<UserEntity> {
         try {
             this.logger.info("Updating user", {
                 updatedFields: Object.keys(updateData),
@@ -193,14 +191,13 @@ export class UserService {
                 updateData.password = await hashPassword(updateData.password);
             }
 
-            const updatedEntity = await this.userRepository.update(
+            const updatedEntity: UserEntity = await this.userRepository.update(
                 id,
                 updateData,
             );
-            const user: User = this.transformToUser(updatedEntity);
 
             this.logger.info("User updated successfully", { userId: id });
-            return user;
+            return updatedEntity;
         } catch (error) {
             if (error instanceof InvalidArgumentException) {
                 throw error;
@@ -212,21 +209,5 @@ export class UserService {
             });
             throw new Error(`Failed to update user with id ${id}`);
         }
-    }
-
-    /**
-     * Transform UserEntity to User DTO
-     */
-    private transformToUser(entity: UserEntity): User {
-        return plainToClass(User, entity, {
-            excludeExtraneousValues: true,
-        });
-    }
-
-    /**
-     * Transform multiple UserEntities to User DTOs
-     */
-    private transformToUsers(entities: UserEntity[]): User[] {
-        return entities.map((entity) => this.transformToUser(entity));
     }
 }

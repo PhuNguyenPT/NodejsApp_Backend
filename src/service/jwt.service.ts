@@ -2,11 +2,11 @@
 import { inject, injectable } from "inversify";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
-import { KeyStore } from "@/type/class/keystore";
-import { TYPES } from "@/type/container/types";
-import { UserStatus } from "@/type/enum/user.status.js";
-import { ILogger } from "@/type/interface/logger";
-import { signOptions, verifyOptions } from "@/util/jwt.options";
+import { KeyStore } from "@/type/class/keystore.js";
+import { TYPES } from "@/type/container/types.js";
+import { UserStatus } from "@/type/enum/user.js";
+import { ILogger } from "@/type/interface/logger.js";
+import { signOptions, verifyOptions } from "@/util/jwt.options.js";
 
 // Extend the standard JwtPayload with our custom claims
 export interface CustomJwtPayload extends JwtPayload {

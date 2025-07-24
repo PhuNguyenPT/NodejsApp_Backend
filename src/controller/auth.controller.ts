@@ -17,13 +17,13 @@ import {
 
 import { LoginRequest, RegisterRequest } from "@/dto/auth/auth.request.js";
 import { AuthResponse } from "@/dto/auth/auth.response.js";
-import validateDTO from "@/middleware/validation.middleware";
+import validateDTO from "@/middleware/validation.middleware.js";
 import { AuthService } from "@/service/auth.service.js";
 import { CustomJwtPayload } from "@/service/jwt.service.js";
-import { TYPES } from "@/type/container/types";
-import { UserStatus } from "@/type/enum/user.status";
-import { JwtException } from "@/type/exception/jwt.exception";
-import { ILogger } from "@/type/interface/logger";
+import { TYPES } from "@/type/container/types.js";
+import { UserStatus } from "@/type/enum/user.js";
+import { JwtException } from "@/type/exception/jwt.exception.js";
+import { ILogger } from "@/type/interface/logger.js";
 
 @injectable()
 @Route("auth")

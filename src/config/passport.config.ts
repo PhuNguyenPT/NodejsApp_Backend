@@ -4,10 +4,10 @@ import { inject, injectable } from "inversify";
 import passport from "passport";
 import { Strategy as JwtStrategy } from "passport-jwt";
 
-import { IUserRepository } from "@/repository/user.repository.interface";
-import { TYPES } from "@/type/container/types";
-import { UserStatus } from "@/type/enum/user.status.js";
-import { ILogger } from "@/type/interface/logger";
+import { IUserRepository } from "@/repository/user.repository.interface.js";
+import { TYPES } from "@/type/container/types.js";
+import { UserStatus } from "@/type/enum/user.js";
+import { ILogger } from "@/type/interface/logger.js";
 import { strategyOptionsWithRequest } from "@/util/jwt.options.js";
 
 @injectable()
