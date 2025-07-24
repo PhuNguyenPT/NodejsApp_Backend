@@ -62,6 +62,17 @@ export class UpdateUserDTO {
     status?: UserStatus;
 }
 
+/**
+ * Data Transfer Object for updating a new user
+ * @example {
+ *   "email": "jane.doe@example.com",
+ *   "name": "Jane Doe",
+ *   "password": "SecurePass123!",
+ *   "phoneNumbers": ["+1 (555) 123-4567", "+84 123 456 789"],
+ *   "status": "Happy",
+ *   "role": "ADMIN"
+ * }
+ */
 export class UpdateUserAdminDTO extends UpdateUserDTO {
     @IsEnum(Role, {
         message: `Role must be one of: ${Object.values(UserStatus).join(", ")}`,

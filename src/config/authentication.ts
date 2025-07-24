@@ -1,6 +1,7 @@
 import express from "express";
 import passport from "passport";
 
+import { Permission } from "@/type/enum/user";
 import { authenticateOptions } from "@/util/jwt.options";
 // src/config/authentication.ts
 // Define supported security types
@@ -92,32 +93,40 @@ function isSupportedSecurityType(
 }
 
 /**
- * Validate user scopes (implement based on your business logic)
+ * Validate user permissions (scopes)
  */
 function validateScopes(
     user: Express.User,
     requiredScopes: string[],
 ): { isValid: boolean; message?: string } {
-    // TODO: Implement actual scope validation logic
-    // This is a placeholder - implement based on your user model and scope requirements
+    // Convert string scopes to Permission enum values
+    const requiredPermissions = requiredScopes.filter((scope) =>
+        Object.values(Permission).includes(scope as Permission),
+    ) as Permission[];
 
-    const userId = user.id;
-    const userRole = user.role;
+    // If no valid permissions required, allow access
+    if (requiredPermissions.length === 0) {
+        return { isValid: true };
+    }
 
-    console.log("Scope validation required but not yet implemented:", {
-        requiredScopes,
-        userId,
-        userRole,
-    });
+    // Check if user has permissions
+    const userPermissions: Permission[] = user.permissions;
 
-    // For now, always return valid - replace with actual logic
+    // Check if user has all required permissions
+    const hasAllPermissions = requiredPermissions.every((permission) =>
+        userPermissions.includes(permission),
+    );
+
+    if (!hasAllPermissions) {
+        const missingPermissions = requiredPermissions.filter(
+            (permission) => !userPermissions.includes(permission),
+        );
+
+        return {
+            isValid: false,
+            message: `Missing permissions: ${missingPermissions.join(", ")}`,
+        };
+    }
+
     return { isValid: true };
-
-    // Example implementation might look like:
-    // const userScopes = getUserScopes(user); // Get user's scopes/permissions
-    // const hasAllScopes = requiredScopes.every(scope => userScopes.includes(scope));
-    // return {
-    //     isValid: hasAllScopes,
-    //     message: hasAllScopes ? undefined : `Missing scopes: ${requiredScopes.join(', ')}`
-    // };
 }

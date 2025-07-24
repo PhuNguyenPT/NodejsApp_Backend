@@ -2,7 +2,7 @@
 import { DataSource } from "typeorm";
 
 import { PostEntity } from "@/entity/post.js";
-import UserEntity from "@/entity/user.js";
+import { UserEntity } from "@/entity/user.js";
 
 export const AppDataSource = new DataSource({
     database: process.env.POSTGRES_DB,

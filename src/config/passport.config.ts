@@ -87,6 +87,7 @@ export class PassportConfig {
                                 iat: payload.iat,
                                 id: user.id,
                                 name: user.name,
+                                permissions: user.permissions,
                                 role: user.role,
                                 status: user.status,
                             };
@@ -122,6 +123,7 @@ export class PassportConfig {
                             email: user.email,
                             id: user.id,
                             name: user.name,
+                            permissions: user.permissions,
                             role: user.role,
                             status: user.status,
                         };

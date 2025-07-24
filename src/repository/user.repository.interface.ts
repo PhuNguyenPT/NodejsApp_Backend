@@ -1,9 +1,10 @@
 // src/repository/user.repository.interface.ts
-import { User } from "@/dto/user/user";
-import UserEntity from "@/entity/user.js";
+import { User, UserAdmin } from "@/dto/user/user";
+import { UserEntity } from "@/entity/user.js";
 
 export interface IUserRepository {
     createUser(user: Partial<User>): UserEntity;
+    createUserAdmin(userAdmin: UserAdmin): UserEntity;
     delete(id: string): Promise<void>;
     exists(id: string): Promise<boolean>;
     existsByEmail(email: string): Promise<boolean>;

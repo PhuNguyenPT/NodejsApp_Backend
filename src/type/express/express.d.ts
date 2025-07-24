@@ -1,6 +1,6 @@
 // types/express.d.ts
 
-import { Role, UserStatus } from "@/type/enum/user.js";
+import { Permission, Role, UserStatus } from "@/type/enum/user.js";
 
 declare global {
     namespace Express {
@@ -10,6 +10,7 @@ declare global {
             iat?: number;
             id: string;
             name?: string;
+            permissions: Permission[];
             role: Role;
             status?: UserStatus;
         }

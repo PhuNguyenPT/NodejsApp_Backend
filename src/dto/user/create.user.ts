@@ -60,6 +60,17 @@ export class CreateUserDto {
     status?: UserStatus;
 }
 
+/**
+ * Data Transfer Object for creating a new user
+ * @example {
+ *   "email": "jane.doe@example.com",
+ *   "name": "Jane Doe",
+ *   "password": "SecurePass123!",
+ *   "phoneNumbers": ["+1 (555) 123-4567", "+84 123 456 789"],
+ *   "status": "Happy",
+ *   "role": "USER"
+ * }
+ */
 export class CreateUserAdminDTO extends CreateUserDto {
     @IsEnum(Role, {
         message: `Role must be one of: ${Object.values(UserStatus).join(", ")}`,
