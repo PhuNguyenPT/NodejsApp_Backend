@@ -9,13 +9,18 @@ import { AuthResponse } from "@/dto/auth/auth.response.js";
 import { User } from "@/dto/user/user.js";
 import { UserEntity } from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
-import { CustomJwtPayload, JWTService } from "@/service/jwt.service.js";
+import { JWTService } from "@/service/jwt.service.js";
 import { TYPES } from "@/type/container/types.js";
-import { UserStatus } from "@/type/enum/user.js";
+import {
+    getDefaultPermissionsByRole,
+    Role,
+    UserStatus,
+} from "@/type/enum/user.js";
 import { BadCredentialsException } from "@/type/exception/bad.credentials.exception.js";
 import { EntityExistsException } from "@/type/exception/entity.exists.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { HttpException } from "@/type/exception/http.exception.js";
+import { CustomJwtPayload } from "@/type/interface/jwt";
 import { ILogger } from "@/type/interface/logger.js";
 import { JWT_EXPIRATION_TIME_IN_SECONDS } from "@/util/jwt.options.js";
 
@@ -57,6 +62,8 @@ export class AuthService {
                 email: user.email,
                 id: user.id,
                 name: user.name,
+                permissions: user.permissions,
+                role: user.role,
                 status: user.status,
             };
 
@@ -151,11 +158,13 @@ export class AuthService {
                 throw new HttpException(403, "Account is no longer active");
             }
 
-            // Create new JWT payload with updated data
+            // Create JWT payload
             const jwtPayload: CustomJwtPayload = {
                 email: user.email,
                 id: user.id,
                 name: user.name,
+                permissions: user.permissions,
+                role: user.role,
                 status: user.status,
             };
 
@@ -209,6 +218,8 @@ export class AuthService {
             const newUser = new UserEntity({
                 email,
                 password: hashedPassword,
+                permissions: getDefaultPermissionsByRole(Role.USER),
+                role: Role.USER,
                 status: UserStatus.HAPPY,
             });
 
@@ -219,6 +230,8 @@ export class AuthService {
                 email: savedUser.email,
                 id: savedUser.id,
                 name: savedUser.name,
+                permissions: savedUser.permissions,
+                role: savedUser.role,
                 status: savedUser.status,
             };
 

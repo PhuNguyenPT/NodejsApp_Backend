@@ -11,6 +11,7 @@ import {
     Post,
     Query,
     Route,
+    Security,
     SuccessResponse,
     Tags,
 } from "tsoa";
@@ -18,7 +19,7 @@ import {
 import { CreateUserAdminDTO } from "@/dto/user/create.user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update.user.js";
 import { UserAdmin } from "@/dto/user/user.js";
-import UserEntity from "@/entity/user";
+import { UserEntity } from "@/entity/user";
 import { UserMapper } from "@/mapper/user.mapper";
 import { validateUuidParam } from "@/middleware/uuid.validation.middleware";
 import validateDTO from "@/middleware/validation.middleware.js";
@@ -88,6 +89,7 @@ export class UserController extends Controller {
      * @returns An array of all users.
      */
     @Get()
+    @Security("bearerAuth", ["user:read", "user:list"])
     @SuccessResponse("200", "Successfully retrieved all users")
     public async getAllUsers(): Promise<UserAdmin[]> {
         const userEntities: UserEntity[] = await this.userService.getAll();

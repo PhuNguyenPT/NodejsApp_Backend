@@ -8,14 +8,13 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { Role, UserStatus } from "@/type/enum/user.js";
+import { Permission, Role, UserStatus } from "@/type/enum/user.js";
 
 @Entity({ name: "users" })
-// This composite index will be used for your findByIdAndName query - FASTEST for your specific case
 @Index("idx_user_id_name", ["id", "name"])
-// Additional useful indexes
-@Index("idx_user_email", ["email"]) // Already unique, but explicit index for faster lookups
-@Index("idx_user_status", ["status"]) // If you frequently filter by status
+@Index("idx_user_email", ["email"])
+@Index("idx_user_status", ["status"])
+@Index("idx_user_role", ["role"]) // Add index for role queries
 export class UserEntity {
     @CreateDateColumn({ type: "timestamp with time zone" })
     createdAt!: Date;
@@ -41,6 +40,10 @@ export class UserEntity {
     @Column({ length: 128, type: "varchar" })
     password!: string;
 
+    // Store permissions as an array of strings
+    @Column("simple-array", { nullable: true })
+    permissions!: Permission[];
+
     @Column("simple-array", { nullable: true })
     phoneNumbers?: string[];
 
@@ -63,6 +66,29 @@ export class UserEntity {
             Object.assign(this, user);
         }
     }
-}
 
-export default UserEntity;
+    getPermissions(): Permission[] {
+        return this.permissions;
+    }
+
+    // Helper method to check if user has all specified permissions
+    hasAllPermissions(permissions: Permission[]): boolean {
+        if (this.permissions.length <= 0) return false;
+        return permissions.every((permission) =>
+            this.permissions.includes(permission),
+        );
+    }
+
+    // Helper method to check if user has any of the specified permissions
+    hasAnyPermission(permissions: Permission[]): boolean {
+        if (this.permissions.length <= 0) return false;
+        return permissions.some((permission) =>
+            this.permissions.includes(permission),
+        );
+    }
+
+    // Helper method to check if user has a specific permission
+    hasPermission(permission: Permission): boolean {
+        return this.permissions.includes(permission);
+    }
+}

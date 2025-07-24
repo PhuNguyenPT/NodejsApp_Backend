@@ -2,8 +2,8 @@
 import { Repository } from "typeorm";
 
 import { AppDataSource } from "@/config/data.source.js";
-import { User } from "@/dto/user/user";
-import UserEntity from "@/entity/user.js";
+import { User, UserAdmin } from "@/dto/user/user";
+import { UserEntity } from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { EntityExistsException } from "@/type/exception/entity.exists.exception";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
@@ -18,6 +18,10 @@ export class UserRepository implements IUserRepository {
 
     public createUser(user: User): UserEntity {
         return this.repository.create(user);
+    }
+
+    public createUserAdmin(userAdmin: UserAdmin): UserEntity {
+        return this.repository.create(userAdmin);
     }
 
     public async delete(id: string): Promise<void> {

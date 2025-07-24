@@ -1,11 +1,15 @@
+import { plainToInstance } from "class-transformer";
 // src/service/user.service.ts
 import { inject, injectable } from "inversify";
+import { EntityMetadataNotFoundError } from "typeorm";
 
-import { CreateUserDto } from "@/dto/user/create.user.js";
-import { UpdateUserDTO } from "@/dto/user/update.user.js";
-import UserEntity from "@/entity/user.js";
+import { CreateUserAdminDTO } from "@/dto/user/create.user.js";
+import { UpdateUserAdminDTO } from "@/dto/user/update.user.js";
+import { UserEntity } from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { TYPES } from "@/type/container/types.js";
+import { getDefaultPermissionsByRole } from "@/type/enum/user";
+import { EntityExistsException } from "@/type/exception/entity.exists.exception";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { InvalidArgumentException } from "@/type/exception/invalid.argument.exception";
 import { ILogger } from "@/type/interface/logger.js";
@@ -20,16 +24,24 @@ export class UserService {
         private readonly logger: ILogger, // Now properly typed!
     ) {}
 
-    public async create(createUserDto: CreateUserDto): Promise<UserEntity> {
+    public async create(
+        createUserAdminDTO: CreateUserAdminDTO,
+    ): Promise<UserEntity> {
         try {
             this.logger.info("Creating new user", {
-                email: createUserDto.email,
+                email: createUserAdminDTO.email,
             });
 
             // Hash the password before saving
-            createUserDto.password = await hashPassword(createUserDto.password);
-            const newUser: UserEntity =
-                this.userRepository.createUser(createUserDto);
+            createUserAdminDTO.password = await hashPassword(
+                createUserAdminDTO.password,
+            );
+            const newUser: UserEntity = plainToInstance(
+                UserEntity,
+                createUserAdminDTO,
+            );
+            newUser.permissions = getDefaultPermissionsByRole(newUser.role);
+
             const savedEntity: UserEntity =
                 await this.userRepository.saveUser(newUser);
             this.logger.info("User created successfully", {
@@ -37,11 +49,15 @@ export class UserService {
             });
             return savedEntity;
         } catch (error) {
-            if (error instanceof InvalidArgumentException) {
+            if (
+                error instanceof InvalidArgumentException ||
+                error instanceof EntityMetadataNotFoundError ||
+                error instanceof EntityExistsException
+            ) {
                 throw error;
             }
             this.logger.error("Error creating user", {
-                createUserDto,
+                createUserAdminDTO,
                 error: error instanceof Error ? error.message : String(error),
             });
             throw new Error("Failed to create user");
@@ -56,6 +72,9 @@ export class UserService {
 
             this.logger.info("User deleted successfully", { userId: id });
         } catch (error) {
+            if (error instanceof EntityMetadataNotFoundError) {
+                throw error;
+            }
             this.logger.error("Error deleting user", {
                 error: error instanceof Error ? error.message : String(error),
                 userId: id,
@@ -76,6 +95,9 @@ export class UserService {
             });
             return exists;
         } catch (error) {
+            if (error instanceof EntityMetadataNotFoundError) {
+                throw error;
+            }
             this.logger.error("Error checking user existence", {
                 error: error instanceof Error ? error.message : String(error),
                 userId: id,
@@ -96,8 +118,13 @@ export class UserService {
             });
             return userEntities;
         } catch (error) {
+            if (error instanceof EntityMetadataNotFoundError) {
+                throw error;
+            }
             this.logger.error("Error retrieving all users", {
                 error: error instanceof Error ? error.message : String(error),
+                originalError:
+                    error instanceof Error ? error.name : String(error),
             });
             throw new Error("Failed to retrieve users");
         }
@@ -122,7 +149,10 @@ export class UserService {
             });
             return userEntity;
         } catch (error) {
-            if (error instanceof EntityNotFoundException) {
+            if (
+                error instanceof EntityNotFoundException ||
+                error instanceof EntityMetadataNotFoundError
+            ) {
                 throw error;
             }
 
@@ -159,7 +189,10 @@ export class UserService {
             });
             return userEntity;
         } catch (error) {
-            if (error instanceof EntityNotFoundException) {
+            if (
+                error instanceof EntityNotFoundException ||
+                error instanceof EntityMetadataNotFoundError
+            ) {
                 throw error;
             }
 
@@ -179,7 +212,7 @@ export class UserService {
 
     public async update(
         id: string,
-        updateData: Partial<UpdateUserDTO>,
+        updateData: Partial<UpdateUserAdminDTO>,
     ): Promise<UserEntity> {
         try {
             this.logger.info("Updating user", {
@@ -191,15 +224,26 @@ export class UserService {
                 updateData.password = await hashPassword(updateData.password);
             }
 
+            const userEntity: UserEntity = plainToInstance(
+                UserEntity,
+                updateData,
+            );
+            userEntity.permissions = getDefaultPermissionsByRole(
+                userEntity.role,
+            );
             const updatedEntity: UserEntity = await this.userRepository.update(
                 id,
-                updateData,
+                userEntity,
             );
 
             this.logger.info("User updated successfully", { userId: id });
             return updatedEntity;
         } catch (error) {
-            if (error instanceof InvalidArgumentException) {
+            if (
+                error instanceof InvalidArgumentException ||
+                error instanceof EntityMetadataNotFoundError ||
+                error instanceof EntityExistsException
+            ) {
                 throw error;
             }
             this.logger.error("Error updating user", {

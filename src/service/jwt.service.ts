@@ -4,17 +4,9 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 
 import { KeyStore } from "@/type/class/keystore.js";
 import { TYPES } from "@/type/container/types.js";
-import { UserStatus } from "@/type/enum/user.js";
+import { CustomJwtPayload } from "@/type/interface/jwt";
 import { ILogger } from "@/type/interface/logger.js";
 import { signOptions, verifyOptions } from "@/util/jwt.options.js";
-
-// Extend the standard JwtPayload with our custom claims
-export interface CustomJwtPayload extends JwtPayload {
-    email: string;
-    id: string;
-    name?: string;
-    status: UserStatus;
-}
 
 @injectable()
 export class JWTService {

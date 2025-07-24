@@ -3,6 +3,7 @@ import {
     NotBeforeError,
     TokenExpiredError,
 } from "jsonwebtoken";
+import { EntityMetadataNotFoundError } from "typeorm";
 
 // src/handler/global.exception.handler.ts
 import { ExceptionHandler } from "@/decorator/exception.handler.decorator.js";
@@ -17,6 +18,9 @@ import { ErrorResponse } from "@/type/interface/error.response";
 import { ValidationResponse } from "@/type/interface/validation.response";
 import logger from "@/util/logger";
 // Use a class but instantiate it to avoid ESLint error
+export const internalServerErrorMessage = "Internal Server Error";
+export const internalServerErrorStatus = 500;
+
 class ExceptionHandlers {
     @ExceptionHandler(EntityExistsException)
     handleEntityExistsException(
@@ -35,6 +39,23 @@ class ExceptionHandlers {
             status,
         });
 
+        return { message, response, status };
+    }
+
+    @ExceptionHandler(EntityMetadataNotFoundError)
+    handleEntityMetadataNotFoundError(error: EntityMetadataNotFoundError) {
+        const status = internalServerErrorStatus;
+        const message: string = internalServerErrorMessage;
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
+
+        logger.warn("EntityMetadataNotFoundError", {
+            message: error.message,
+            stack: error.stack,
+            status,
+        });
         return { message, response, status };
     }
 
@@ -59,8 +80,8 @@ class ExceptionHandlers {
     }
 
     handleGenericError(error: Error): ErrorDetails {
-        const status = 500;
-        const message = error.message || "Something went wrong";
+        const status = internalServerErrorStatus;
+        const message = internalServerErrorMessage;
 
         const response: ErrorResponse = {
             message,
@@ -68,7 +89,7 @@ class ExceptionHandlers {
         };
 
         logger.error("Unhandled error", {
-            message,
+            message: error.message,
             originalError: error.name,
             stack: error.stack,
             status,
@@ -79,8 +100,8 @@ class ExceptionHandlers {
 
     @ExceptionHandler(HttpException)
     handleHttpException(exception: HttpException): ErrorDetails {
-        const status = Number(exception.status) || 500;
-        const message = String(exception.message) || "Something went wrong";
+        const status = Number(exception.status) || internalServerErrorStatus;
+        const message = String(exception.message) || internalServerErrorMessage;
 
         const response: ErrorResponse = {
             message,
