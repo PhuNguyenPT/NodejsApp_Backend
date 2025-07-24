@@ -8,22 +8,22 @@ export class AuthResponse {
     accessToken?: string;
 
     @Expose()
-    expiresIn?: string;
+    expiresIn?: number | string;
 
     @Expose()
     message?: string;
 
     @Expose()
-    refreshToken!: string;
+    refreshToken?: string;
 
     @Expose()
-    success!: boolean;
+    success?: boolean;
 
     @Expose()
     tokenType = "Bearer";
 
     @Expose()
-    user!: User;
+    user?: User;
 
     constructor(partial?: Partial<AuthResponse>) {
         if (partial) {

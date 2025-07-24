@@ -19,6 +19,7 @@ import { ExpiredJwtException } from "@/type/exception/expire.jwt.exception";
 import { HttpException } from "@/type/exception/http.exception";
 import { JwtException } from "@/type/exception/jwt.exception";
 import { ILogger } from "@/type/interface/logger";
+import { JWT_EXPIRATION_TIME_IN_SECONDS } from "@/util/jwt.options";
 
 @injectable()
 export class AuthService {
@@ -72,6 +73,7 @@ export class AuthService {
 
             return new AuthResponse({
                 accessToken,
+                expiresIn: JWT_EXPIRATION_TIME_IN_SECONDS,
                 message: "Login successful",
                 success: true,
                 user: userDto,
@@ -115,7 +117,7 @@ export class AuthService {
     async refreshToken(
         refreshToken: string,
         userJwtPayload: Express.User,
-    ): Promise<string> {
+    ): Promise<AuthResponse> {
         try {
             this.logger.debug("Verifying token", {
                 token: refreshToken.substring(0, 50) + "...", // Only log first 50 chars for security
@@ -159,13 +161,17 @@ export class AuthService {
                 status: user.status,
             };
 
-            // Generate new access token (not refresh token)
             const newAccessToken =
                 this.jwtService.generateAccessToken(jwtPayload);
 
             this.logger.info(`Token refreshed for user: ${user.email}`);
 
-            return newAccessToken; // Return access token, not refresh token
+            return new AuthResponse({
+                expiresIn: JWT_EXPIRATION_TIME_IN_SECONDS,
+                message: "Token refresh successful",
+                refreshToken: newAccessToken,
+                success: true,
+            });
         } catch (error) {
             if (error instanceof jwt.TokenExpiredError) {
                 throw new ExpiredJwtException(`JWT token has expired`);
@@ -227,6 +233,7 @@ export class AuthService {
 
             return new AuthResponse({
                 accessToken,
+                expiresIn: JWT_EXPIRATION_TIME_IN_SECONDS,
                 message: "Registration successful",
                 success: true,
                 user: userDto,
