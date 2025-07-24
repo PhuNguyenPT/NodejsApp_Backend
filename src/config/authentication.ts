@@ -2,8 +2,6 @@ import express from "express";
 import passport from "passport";
 
 // src/config/authentication.ts
-import { CustomJwtPayload } from "@/service/jwt.service";
-
 /**
  * TSOA Authentication function for Express.
  * This function is called by the TSOA runtime for each secured route.
@@ -12,7 +10,7 @@ export function expressAuthentication(
     request: express.Request,
     securityName: string,
     scopes?: string[],
-): Promise<CustomJwtPayload> {
+): Promise<Express.User> {
     return new Promise((resolve, reject) => {
         if (securityName === "bearerAuth") {
             const customCallback = (
