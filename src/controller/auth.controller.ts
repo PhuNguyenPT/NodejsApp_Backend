@@ -19,10 +19,9 @@ import { LoginRequest, RegisterRequest } from "@/dto/auth/auth.request.js";
 import { AuthResponse } from "@/dto/auth/auth.response.js";
 import validateDTO from "@/middleware/validation.middleware.js";
 import { AuthService } from "@/service/auth.service.js";
-import { CustomJwtPayload } from "@/service/jwt.service.js";
 import { TYPES } from "@/type/container/types.js";
-import { UserStatus } from "@/type/enum/user.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
+import { AuthenticatedRequest } from "@/type/express/express";
 import { ILogger } from "@/type/interface/logger.js";
 
 @injectable()
@@ -51,18 +50,13 @@ export class AuthController extends Controller {
     @Post("logout")
     @Security("bearerAuth")
     @SuccessResponse("200", "Logout successful")
-    public logout(@Request() request: express.Request): {
+    public logout(@Request() request: AuthenticatedRequest): {
         message: string;
         success: boolean;
     } {
-        // Now request.user is properly typed as JWTPayload
-        const user = request.user as CustomJwtPayload;
+        const user = request.user;
 
-        if (!user.id || !user.email || user.status !== UserStatus.HAPPY) {
-            this.setStatus(401);
-            throw new Error("User not authenticated");
-        }
-
+        // TypeScript now knows user is defined due to the checks above
         this.logger.info(`User logging out: ${user.email} (ID: ${user.id})`);
 
         return {

@@ -1,5 +1,7 @@
 // types/express.d.ts
 
+import { Role, UserStatus } from "@/type/enum/user.js";
+
 declare global {
     namespace Express {
         interface User {
@@ -8,9 +10,12 @@ declare global {
             iat?: number;
             id: string;
             name?: string;
-            status: UserStatus;
+            role: Role;
+            status?: UserStatus;
         }
     }
 }
-
+export interface AuthenticatedRequest extends Express.Request {
+    user: Express.User; // Required, not optional
+}
 export {};
