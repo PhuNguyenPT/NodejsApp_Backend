@@ -34,10 +34,13 @@ interface Config {
     PRIVATE_KEY_PATH: string;
     PUBLIC_KEY_PATH: string;
 
+    // Migration settings
+    RUN_MIGRATIONS_ON_STARTUP: boolean;
+
     // Application config
     SERVER_HOSTNAME: string;
-
     SERVER_PATH: string;
+
     SERVER_PORT: number;
 }
 
@@ -75,6 +78,7 @@ export const config: Config = cleanEnv(process.env, {
     PRIVATE_KEY_PATH: str(),
     PUBLIC_KEY_PATH: str(),
 
+    RUN_MIGRATIONS_ON_STARTUP: bool({ default: false }),
     // Application config
     SERVER_HOSTNAME: str({ default: "localhost" }),
     SERVER_PATH: str({ default: "/api" }),
