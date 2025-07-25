@@ -1,9 +1,12 @@
+// src/config/authentication.ts
+import type { AuthenticateCallback } from "passport";
+
 import express from "express";
 import passport from "passport";
 
 import { Permission } from "@/type/enum/user";
 import { authenticateOptions } from "@/util/jwt.options";
-// src/config/authentication.ts
+
 // Define supported security types
 const SECURITY_TYPES = {
     BEARER_AUTH: "bearerAuth",
@@ -26,6 +29,7 @@ export function expressAuthentication(
             reject(new Error(`Unknown security type: ${securityName}`));
             return;
         }
+
         const customCallback = createJWTCallback(
             request,
             scopes,
@@ -44,23 +48,39 @@ export function expressAuthentication(
 }
 
 /**
- * Create the callback function for JWT authentication
+ * Create the callback function for JWT authentication using the default AuthenticateCallback type
  */
 function createJWTCallback(
     request: express.Request,
     scopes: string[] | undefined,
     resolve: (value: Express.User) => void,
     reject: (reason: Error) => void,
-) {
-    return (err: Error | null, user: Express.User | false, info: unknown) => {
+): AuthenticateCallback {
+    return (err, user, info, status) => {
         if (err) {
-            reject(err);
+            reject(err instanceof Error ? err : new Error(String(err)));
             return;
         }
 
         if (!user) {
-            const error =
-                info instanceof Error ? info : new Error("Unauthorized");
+            let error: Error;
+
+            if (info instanceof Error) {
+                error = info;
+            } else if (typeof info === "string") {
+                error = new Error(info);
+            } else if (Array.isArray(info) && info.length > 0) {
+                error = new Error(info.filter(Boolean).join(", "));
+            } else {
+                error = new Error("Unauthorized");
+            }
+
+            // Include status code if available
+            if (status) {
+                const statusCode = Array.isArray(status) ? status[0] : status;
+                error.message += ` (Status: ${String(statusCode)})`;
+            }
+
             reject(error);
             return;
         }
