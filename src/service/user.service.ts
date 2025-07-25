@@ -228,9 +228,19 @@ export class UserService {
                 UserEntity,
                 updateData,
             );
-            userEntity.permissions = getDefaultPermissionsByRole(
-                userEntity.role,
-            );
+
+            // Only update permissions if role is explicitly provided in update data
+            if (updateData.role !== undefined) {
+                userEntity.permissions = getDefaultPermissionsByRole(
+                    updateData.role,
+                );
+                this.logger.info("Role updated, refreshing permissions", {
+                    newPermissions: userEntity.permissions,
+                    newRole: updateData.role,
+                    userId: id,
+                });
+            }
+
             const updatedEntity: UserEntity = await this.userRepository.update(
                 id,
                 userEntity,
