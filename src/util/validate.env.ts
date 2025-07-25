@@ -7,8 +7,12 @@ const commaSeparatedString = makeValidator((x) =>
 
 // Define the configuration interface
 interface Config {
-    CORS_CREDENTIALS: boolean;
+    ADMIN_EMAIL: string;
+    ADMIN_NAME: string;
+    ADMIN_PASSWORD: string;
+
     // CORS Configuration
+    CORS_CREDENTIALS: boolean;
     CORS_ORIGIN: string[];
 
     // Database connection settings
@@ -40,16 +44,19 @@ interface Config {
     // Application config
     SERVER_HOSTNAME: string;
     SERVER_PATH: string;
-
     SERVER_PORT: number;
 }
 
 // Validate and export the typed config object
 export const config: Config = cleanEnv(process.env, {
-    CORS_CREDENTIALS: bool({ default: true }), // Use bool validator
+    ADMIN_EMAIL: str(),
+    ADMIN_NAME: str(),
+    ADMIN_PASSWORD: str(),
 
     // CORS Configuration
+    CORS_CREDENTIALS: bool({ default: true }), // Use bool validator
     CORS_ORIGIN: commaSeparatedString({ default: ["http://localhost:3000"] }),
+
     // Database connection settings
     DB_LOGGING: bool({ default: false }),
     DB_SYNCHRONIZE: bool({ default: false }),
@@ -70,15 +77,15 @@ export const config: Config = cleanEnv(process.env, {
     // Database config
     POSTGRES_DB: str(),
     POSTGRES_HOST: str(),
-
     POSTGRES_PASSWORD: str(),
     POSTGRES_PORT: port({ default: 5432 }),
     POSTGRES_USER: str(),
+
     // JWT RSA Keys
     PRIVATE_KEY_PATH: str(),
     PUBLIC_KEY_PATH: str(),
-
     RUN_MIGRATIONS_ON_STARTUP: bool({ default: false }),
+
     // Application config
     SERVER_HOSTNAME: str({ default: "localhost" }),
     SERVER_PATH: str({ default: "/api" }),
@@ -86,7 +93,7 @@ export const config: Config = cleanEnv(process.env, {
 });
 
 function validateEnv(): void {
-    console.log("Environment validation completed");
+    console.info("Environment validation completed");
 }
 
 export default validateEnv;
