@@ -47,6 +47,7 @@ export class UserController extends Controller {
      */
     @Get("{userId}/exists")
     @Middlewares(validateUuidParam("userId"))
+    @Security("bearerAuth", ["user:read"])
     @SuccessResponse("200", "Successfully checked user existence")
     public async checkUserExists(
         @Path() userId: string,
@@ -62,6 +63,7 @@ export class UserController extends Controller {
      */
     @Middlewares(validateDTO(CreateUserAdminDTO))
     @Post()
+    @Security("bearerAuth", ["user:create"])
     @SuccessResponse("201", "Created")
     public async createUser(
         @Body() requestBody: CreateUserAdminDTO,
@@ -79,6 +81,7 @@ export class UserController extends Controller {
      */
     @Delete("{userId}")
     @Middlewares(validateUuidParam("userId"))
+    @Security("bearerAuth", ["user:delete"])
     @SuccessResponse("204", "Successfully deleted user")
     public async deleteUser(@Path() userId: string): Promise<void> {
         await this.userService.delete(userId);
@@ -106,6 +109,7 @@ export class UserController extends Controller {
      */
     @Get("{userId}/search")
     @Middlewares(validateUuidParam("userId"))
+    @Security("bearerAuth", ["user:read"])
     @SuccessResponse("200", "Successfully retrieved user")
     public async getUser(
         @Path() userId: string,
@@ -125,6 +129,7 @@ export class UserController extends Controller {
      */
     @Get("{userId}")
     @Middlewares(validateUuidParam("userId"))
+    @Security("bearerAuth", ["user:read"])
     @SuccessResponse("200", "Successfully retrieved user")
     public async getUserById(@Path() userId: string): Promise<UserAdmin> {
         const userEntity: UserEntity = await this.userService.getById(userId);
@@ -140,6 +145,7 @@ export class UserController extends Controller {
      */
     @Middlewares(validateUuidParam("userId"), validateDTO(UpdateUserAdminDTO))
     @Patch("{userId}")
+    @Security("bearerAuth", ["user:update"])
     @SuccessResponse("200", "Successfully updated user")
     public async updateUser(
         @Path() userId: string,

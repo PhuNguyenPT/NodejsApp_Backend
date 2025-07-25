@@ -5,8 +5,8 @@ import { IsEmail, IsString, Length, Matches } from "class-validator";
  *
  * @example
  * {
- *   "email": "user@example.com",
- *   "password": "StrongPassw0rd!"
+ *   "email": "jane.doe@example.com",
+ *   "password": "SecurePass123!"
  * }
  */
 export class LoginRequest {
@@ -45,8 +45,8 @@ export class RefreshTokenRequest {
  *
  * @example
  * {
- *   "email": "newuser@example.com",
- *   "password": "SecureP@ss123"
+ *   "email": "jane.doe@example.com",
+ *   "password": "SecurePass123!"
  * }
  */
 export class RegisterRequest {

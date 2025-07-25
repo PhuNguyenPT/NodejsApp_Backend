@@ -75,7 +75,7 @@ export class UpdateUserDTO {
  */
 export class UpdateUserAdminDTO extends UpdateUserDTO {
     @IsEnum(Role, {
-        message: `Role must be one of: ${Object.values(UserStatus).join(", ")}`,
+        message: `Role must be one of: ${Object.values(Role).join(", ")}`,
     })
     @IsOptional()
     role?: Role;

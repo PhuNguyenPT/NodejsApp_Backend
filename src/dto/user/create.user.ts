@@ -73,7 +73,7 @@ export class CreateUserDto {
  */
 export class CreateUserAdminDTO extends CreateUserDto {
     @IsEnum(Role, {
-        message: `Role must be one of: ${Object.values(UserStatus).join(", ")}`,
+        message: `Role must be one of: ${Object.values(Role).join(", ")}`,
     })
     @IsOptional()
     role?: Role;

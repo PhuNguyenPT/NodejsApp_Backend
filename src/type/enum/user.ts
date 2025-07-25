@@ -6,21 +6,17 @@ export enum Permission {
     API_DELETE = "api:delete",
     // API access
     API_READ = "api:read",
-
     API_WRITE = "api:write",
     PROFILE_READ_ANY = "profile:read:any",
     PROFILE_UPDATE_ANY = "profile:update:any",
-
     // Profile management
     PROFILE_UPDATE_OWN = "profile:update:own",
     // User management
     USER_CREATE = "user:create",
     USER_DELETE = "user:delete",
-
     USER_LIST = "user:list",
     USER_READ = "user:read",
     USER_UPDATE = "user:update",
-
     // Add more permissions as needed for your application
 }
 
@@ -29,7 +25,6 @@ export enum Role {
     ADMIN = "ADMIN",
     ANONYMOUS = "ANONYMOUS",
     MODERATOR = "MODERATOR",
-    SUPER_ADMIN = "SUPER_ADMIN",
     USER = "USER",
 }
 
@@ -58,6 +53,8 @@ export function getDefaultPermissionsByRole(role: Role): Permission[] {
                 Permission.API_WRITE,
                 Permission.API_DELETE,
             ];
+        case Role.ANONYMOUS:
+            return [Permission.API_READ];
         case Role.MODERATOR:
             return [
                 Permission.USER_READ,
@@ -69,7 +66,9 @@ export function getDefaultPermissionsByRole(role: Role): Permission[] {
                 Permission.API_WRITE,
             ];
         case Role.USER:
-        default:
             return [Permission.PROFILE_UPDATE_OWN, Permission.API_READ];
+        default:
+            // Fallback to most restrictive permissions
+            return [];
     }
 }
