@@ -3,6 +3,7 @@ import {
     NotBeforeError,
     TokenExpiredError,
 } from "jsonwebtoken";
+import { ValidateError } from "tsoa";
 import { EntityMetadataNotFoundError } from "typeorm";
 
 // src/handler/global.exception.handler.ts
@@ -223,6 +224,26 @@ class ExceptionHandlers {
             expiredAt: error.expiredAt,
             message: error.message,
             originalError: error.name,
+            status,
+        });
+
+        return { message, response, status };
+    }
+
+    @ExceptionHandler(ValidateError)
+    handleValidateError(error: ValidateError): ErrorDetails {
+        const status = internalServerErrorStatus;
+        const message = internalServerErrorMessage;
+
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
+
+        logger.error("Unhandled error", {
+            message: error.message,
+            originalError: error.name,
+            stack: error.stack,
             status,
         });
 
