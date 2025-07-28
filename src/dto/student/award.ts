@@ -1,6 +1,6 @@
 import { Type } from "class-transformer";
 import {
-    IsDateString,
+    IsDate,
     IsNotEmpty,
     IsOptional,
     IsString,
@@ -22,7 +22,7 @@ import {
  * }
  */
 export class AwardDTO {
-    @IsDateString({}, { message: "Award date must be a valid date" })
+    @IsDate({ message: "Award date must be a valid date" })
     @IsNotEmpty({ message: "Award date is required" })
     @Type(() => Date)
     awardDate!: Date;

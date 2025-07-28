@@ -14,6 +14,7 @@ import {
 import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
 import { UserEntity } from "@/entity/user.js";
+import { Role } from "@/type/enum/user";
 
 @Entity({ name: "students" })
 @Index("idx_student_user_id", ["userId"])
@@ -39,7 +40,12 @@ export class StudentEntity {
     @CreateDateColumn({ type: "timestamp with time zone" })
     createdAt!: Date;
 
-    @Column({ length: 255, nullable: true, type: "varchar" })
+    @Column({
+        default: Role.ANONYMOUS,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+    })
     createdBy?: string;
 
     @PrimaryGeneratedColumn("uuid")
@@ -60,15 +66,22 @@ export class StudentEntity {
     @UpdateDateColumn({ type: "timestamp with time zone" })
     modifiedAt!: Date;
 
-    @Column({ length: 255, nullable: true, type: "varchar" })
+    @Column({
+        default: Role.ANONYMOUS,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+    })
     modifiedBy?: string;
 
+    // Made the relationship nullable
     @JoinColumn({ name: "userId" })
-    @OneToOne(() => UserEntity, { onDelete: "CASCADE" })
-    user!: UserEntity;
+    @OneToOne(() => UserEntity, { nullable: true, onDelete: "SET NULL" })
+    user?: UserEntity; // Changed from ! to ?
 
-    @Column({ type: "uuid", unique: true })
-    userId!: string;
+    // Made userId nullable as well
+    @Column({ nullable: true, type: "uuid", unique: true })
+    userId?: string; // Changed from ! to ?
 
     constructor(student?: Partial<StudentEntity>) {
         if (student) {
@@ -115,6 +128,16 @@ export class StudentEntity {
         cutoffDate.setDate(cutoffDate.getDate() - days);
 
         return this.awards.filter((award) => award.awardDate >= cutoffDate);
+    }
+
+    // Helper method to get user email safely
+    getUserEmail(): null | string {
+        return this.user?.email ?? null;
+    }
+
+    // Helper method to check if user is associated
+    hasUser(): boolean {
+        return !!this.userId && !!this.user;
     }
 
     // Helper method to check if budget range is valid

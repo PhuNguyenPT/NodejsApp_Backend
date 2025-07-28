@@ -8,8 +8,6 @@ import { ValidationException } from "@/type/exception/validation.exception.js";
 /**
  * Recursively formats validation errors from class-validator into a simple
  * key-value object. Handles nested DTOs by creating dot-notation keys.
- * @param errors The array of ValidationError objects.
- * @returns A record of field names to error messages.
  */
 const formatValidationErrors = (
     errors: ValidationError[],
@@ -17,14 +15,12 @@ const formatValidationErrors = (
     const formattedErrors: Record<string, string> = {};
 
     for (const error of errors) {
-        // Handle nested errors (e.g., for a nested DTO)
         if (error.children && error.children.length > 0) {
             const nestedErrors = formatValidationErrors(error.children);
             for (const key in nestedErrors) {
                 formattedErrors[`${error.property}.${key}`] = nestedErrors[key];
             }
         } else if (error.constraints) {
-            // Handle top-level errors
             formattedErrors[error.property] = Object.values(
                 error.constraints,
             ).join(", ");
@@ -34,36 +30,43 @@ const formatValidationErrors = (
 };
 
 /**
- * Creates an Express middleware to validate and transform the request body
- * against a given DTO class.
- * @param type The DTO class to validate against.
+ * Creates a validation middleware that actually works with TSOA.
+ * This properly handles async validation and prevents invalid data from passing through.
  */
 function validateDTO<T extends object>(type: ClassConstructor<T>) {
-    // This function is no longer async
     return (req: Request, res: Response, next: NextFunction): void => {
-        // Transform the plain request body to an instance of the DTO class
-        const dto = plainToInstance(type, req.body);
+        // Use an async IIFE to handle the validation - explicitly void it to satisfy ESLint
+        void (async () => {
+            try {
+                // Transform the plain request body to an instance of the DTO class
+                const dto = plainToInstance(type, req.body, {
+                    enableImplicitConversion: true,
+                    excludeExtraneousValues: false,
+                });
 
-        // Validate the DTO instance and handle the promise
-        validate(dto, {
-            forbidNonWhitelisted: true,
-            whitelist: true,
-        })
-            .then((errors) => {
+                // Validate the DTO instance with strict settings
+                const errors: ValidationError[] = await validate(dto, {
+                    forbidNonWhitelisted: true,
+                    skipMissingProperties: false,
+                    skipNullProperties: false,
+                    skipUndefinedProperties: false,
+                    stopAtFirstError: false,
+                    whitelist: true,
+                });
+
                 if (errors.length > 0) {
                     const formattedErrors = formatValidationErrors(errors);
-                    // Pass a structured validation error to the global error handler
-                    next(new ValidationException(formattedErrors));
-                } else {
-                    // The DTO is valid, replace req.body with the validated instance
-                    req.body = dto;
-                    next();
+
+                    // Throw the validation exception to stop the request
+                    throw new ValidationException(formattedErrors);
                 }
-            })
-            .catch((error: unknown) => {
-                // Forward any other unexpected errors
+
+                // Don't modify req.body - let TSOA handle the transformation
+                next();
+            } catch (error: unknown) {
                 next(error);
-            });
+            }
+        })();
     };
 }
 

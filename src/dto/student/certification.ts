@@ -1,6 +1,6 @@
 import { Type } from "class-transformer";
 import {
-    IsDateString,
+    IsDate,
     IsNotEmpty,
     IsNumber,
     IsOptional,
@@ -38,7 +38,7 @@ export class CertificationDTO {
      * Date when the certification expires (optional)
      * @example "2026-12-31"
      */
-    @IsDateString({}, { message: "Expiration date must be a valid date" })
+    @IsDate({ message: "Expiration date must be a valid date" })
     @IsOptional()
     @Type(() => Date)
     expirationDate?: Date;
@@ -47,7 +47,7 @@ export class CertificationDTO {
      * Date when the certification was issued
      * @example "2023-01-15"
      */
-    @IsDateString({}, { message: "Issue date must be a valid date" })
+    @IsDate({ message: "Issue date must be a valid date" })
     @IsNotEmpty({ message: "Issue date is required" })
     @Type(() => Date)
     issueDate!: Date;
