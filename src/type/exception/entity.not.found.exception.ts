@@ -1,3 +1,4 @@
+import { HttpStatus } from "@/type/enum/http.status";
 import { HttpException } from "@/type/exception/http.exception.js";
 
 /**
@@ -9,6 +10,6 @@ export class EntityNotFoundException extends HttpException {
      * @param message - A message specifying which entity was not found.
      */
     constructor(message = "Entity not found") {
-        super(404, message, "EntityNotFoundException");
+        super(HttpStatus.NOT_FOUND, message, "EntityNotFoundException");
     }
 }

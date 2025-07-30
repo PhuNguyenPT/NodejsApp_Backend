@@ -4,11 +4,14 @@ import {
     CreateDateColumn,
     Entity,
     Index,
+    OneToMany,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from "typeorm";
 
 import { Permission, Role, UserStatus } from "@/type/enum/user.js";
+
+import { StudentEntity } from "./student";
 
 @Entity({ name: "users" })
 @Index("idx_user_id_name", ["id", "name"])
@@ -60,6 +63,11 @@ export class UserEntity {
         type: "enum",
     })
     status!: UserStatus;
+
+    @OneToMany(() => StudentEntity, (student) => student.user, {
+        lazy: true,
+    })
+    studentEntities?: Promise<StudentEntity[]>;
 
     constructor(user?: Partial<UserEntity>) {
         if (user) {

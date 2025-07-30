@@ -8,21 +8,63 @@ import { EntityMetadataNotFoundError } from "typeorm";
 
 // src/handler/global.exception.handler.ts
 import { ExceptionHandler } from "@/decorator/exception.handler.decorator.js";
+import { HttpStatus } from "@/type/enum/http.status";
+import { AccessDeniedException } from "@/type/exception/access.denied.exception";
+import { AuthenticationException } from "@/type/exception/authentication.exception";
 import { EntityExistsException } from "@/type/exception/entity.exists.exception";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
 import { HttpException } from "@/type/exception/http.exception";
-import { InvalidArgumentException } from "@/type/exception/invalid.argument.exception";
+import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception";
 import { InvalidUuidException } from "@/type/exception/invalid.uuid.exception";
 import { ValidationException } from "@/type/exception/validation.exception";
 import { ErrorDetails } from "@/type/interface/error.details";
 import { ErrorResponse } from "@/type/interface/error.response";
 import { ValidationResponse } from "@/type/interface/validation.response";
 import logger from "@/util/logger";
-// Use a class but instantiate it to avoid ESLint error
+
 export const internalServerErrorMessage = "Internal Server Error";
-export const internalServerErrorStatus = 500;
 
 class ExceptionHandlers {
+    @ExceptionHandler(AccessDeniedException)
+    handleAccessDeniedException(
+        exception: AccessDeniedException,
+    ): ErrorDetails {
+        const status: number = exception.status;
+        const message: string = exception.message;
+
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
+
+        logger.warn("EntityExistsException", {
+            message,
+            status,
+        });
+
+        return { message, response, status };
+    }
+
+    @ExceptionHandler(AuthenticationException)
+    handleAuthenticationException(
+        exception: AuthenticationException,
+    ): ErrorDetails {
+        const status: number = exception.status;
+        const message: string = exception.message;
+
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
+
+        logger.warn("EntityExistsException", {
+            message,
+            status,
+        });
+
+        return { message, response, status };
+    }
+
     @ExceptionHandler(EntityExistsException)
     handleEntityExistsException(
         exception: EntityExistsException,
@@ -44,8 +86,10 @@ class ExceptionHandlers {
     }
 
     @ExceptionHandler(EntityMetadataNotFoundError)
-    handleEntityMetadataNotFoundError(error: EntityMetadataNotFoundError) {
-        const status = internalServerErrorStatus;
+    handleEntityMetadataNotFoundError(
+        error: EntityMetadataNotFoundError,
+    ): ErrorDetails {
+        const status = HttpStatus.INTERNAL_SERVER_ERROR;
         const message: string = internalServerErrorMessage;
         const response: ErrorResponse = {
             message,
@@ -81,7 +125,7 @@ class ExceptionHandlers {
     }
 
     handleGenericError(error: Error): ErrorDetails {
-        const status = internalServerErrorStatus;
+        const status = HttpStatus.INTERNAL_SERVER_ERROR;
         const message = internalServerErrorMessage;
 
         const response: ErrorResponse = {
@@ -101,7 +145,8 @@ class ExceptionHandlers {
 
     @ExceptionHandler(HttpException)
     handleHttpException(exception: HttpException): ErrorDetails {
-        const status = Number(exception.status) || internalServerErrorStatus;
+        const status =
+            Number(exception.status) || HttpStatus.INTERNAL_SERVER_ERROR;
         const message = String(exception.message) || internalServerErrorMessage;
 
         const response: ErrorResponse = {
@@ -118,8 +163,8 @@ class ExceptionHandlers {
         return { message, response, status };
     }
 
-    @ExceptionHandler(InvalidArgumentException)
-    handleInvalidArgumentException(exception: InvalidArgumentException) {
+    @ExceptionHandler(IllegalArgumentException)
+    handleIllegalArgumentException(exception: IllegalArgumentException) {
         const status = exception.status;
         const message = exception.message;
 
@@ -127,7 +172,7 @@ class ExceptionHandlers {
             message,
             status,
         };
-        logger.warn("InvalidArgumentException", {
+        logger.warn("IllegalArgumentException", {
             message,
             status,
         });
@@ -232,7 +277,7 @@ class ExceptionHandlers {
 
     @ExceptionHandler(ValidateError)
     handleValidateError(error: ValidateError): ErrorDetails {
-        const status = internalServerErrorStatus;
+        const status = HttpStatus.INTERNAL_SERVER_ERROR;
         const message = internalServerErrorMessage;
 
         const response: ErrorResponse = {

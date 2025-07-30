@@ -11,7 +11,7 @@ import { TYPES } from "@/type/container/types.js";
 import { getDefaultPermissionsByRole } from "@/type/enum/user";
 import { EntityExistsException } from "@/type/exception/entity.exists.exception";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
-import { InvalidArgumentException } from "@/type/exception/invalid.argument.exception";
+import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception";
 import { ILogger } from "@/type/interface/logger.js";
 import { hashPassword } from "@/util/bcrypt";
 
@@ -50,7 +50,7 @@ export class UserService {
             return savedEntity;
         } catch (error) {
             if (
-                error instanceof InvalidArgumentException ||
+                error instanceof IllegalArgumentException ||
                 error instanceof EntityMetadataNotFoundError ||
                 error instanceof EntityExistsException
             ) {
@@ -250,7 +250,7 @@ export class UserService {
             return updatedEntity;
         } catch (error) {
             if (
-                error instanceof InvalidArgumentException ||
+                error instanceof IllegalArgumentException ||
                 error instanceof EntityMetadataNotFoundError ||
                 error instanceof EntityExistsException
             ) {
