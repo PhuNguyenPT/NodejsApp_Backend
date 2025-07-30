@@ -23,7 +23,7 @@ export class StudentService {
     public async createStudentProfile(
         studentInfoDTO: StudentInfoDTO,
     ): Promise<StudentEntity> {
-        if (studentInfoDTO.budget.minBudget > studentInfoDTO.budget.maxBudget) {
+        if (studentInfoDTO.minBudget > studentInfoDTO.maxBudget) {
             throw new ValidationException({
                 "budget.minBudget":
                     "Min budget cannot be greater than max budget",
@@ -33,8 +33,8 @@ export class StudentService {
         const studentEntity: StudentEntity = new StudentEntity({
             location: studentInfoDTO.location,
             major: studentInfoDTO.major,
-            maxBudget: studentInfoDTO.budget.maxBudget,
-            minBudget: studentInfoDTO.budget.minBudget,
+            maxBudget: studentInfoDTO.maxBudget,
+            minBudget: studentInfoDTO.minBudget,
         });
 
         const savedStudent: StudentEntity =

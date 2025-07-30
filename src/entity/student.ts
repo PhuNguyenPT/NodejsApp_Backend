@@ -57,10 +57,10 @@ export class StudentEntity {
     @Column({ length: 200, type: "varchar" })
     major!: string;
 
-    @Column({ precision: 12, scale: 2, type: "decimal" })
+    @Column({ precision: 14, scale: 2, type: "decimal" })
     maxBudget!: number;
 
-    @Column({ precision: 12, scale: 2, type: "decimal" })
+    @Column({ precision: 14, scale: 2, type: "decimal" })
     minBudget!: number;
 
     @UpdateDateColumn({ type: "timestamp with time zone" })
@@ -94,9 +94,7 @@ export class StudentEntity {
         if (!this.certifications) return [];
 
         const now = new Date();
-        return this.certifications.filter(
-            (cert) => !cert.expirationDate || cert.expirationDate > now,
-        );
+        return this.certifications.filter((cert) => cert.expirationDate > now);
     }
 
     // Helper method to get awards by category
@@ -115,9 +113,7 @@ export class StudentEntity {
         if (!this.certifications) return [];
 
         const now = new Date();
-        return this.certifications.filter(
-            (cert) => cert.expirationDate && cert.expirationDate <= now,
-        );
+        return this.certifications.filter((cert) => cert.expirationDate <= now);
     }
 
     // Helper method to get recent awards (within specified days)

@@ -1,13 +1,9 @@
 // src/decorator/exception.handler.decorator.ts
 
+import { ErrorDetails } from "@/type/interface/error.details";
+
 // Use a more flexible constructor type that doesn't constrain parameters
 type ErrorConstructor = abstract new (...args: never[]) => Error;
-
-interface ErrorDetails {
-    message: string;
-    response: unknown;
-    status: number;
-}
 
 type ExceptionHandlerFn = (error: Error) => ErrorDetails;
 

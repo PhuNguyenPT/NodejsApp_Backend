@@ -1,11 +1,10 @@
-// src/migration/1753416703810-CreateDefaultAdminUser.ts
+// src/migration/1753848605048-CreateDefaultAdminUser.ts
 import { MigrationInterface, QueryRunner } from "typeorm";
 import * as bcrypt from "bcrypt";
 import { Role, getDefaultPermissionsByRole } from "@/type/enum/user.js";
 import { config } from "@/util/validate.env.js";
-
-export class CreateDefaultAdminUser1753416703810 implements MigrationInterface {
-    name = "CreateDefaultAdminUser1753416703810";
+export class CreateDefaultAdminUser1753848605048 implements MigrationInterface {
+    name = "CreateDefaultAdminUser1753848605048";
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Get admin credentials from environment variables
