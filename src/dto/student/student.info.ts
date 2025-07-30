@@ -1,33 +1,53 @@
 // src/dto/student.info.ts
-import { Type } from "class-transformer";
+import { Expose, Type } from "class-transformer";
 import {
     IsArray,
     IsNotEmpty,
+    IsNumber,
     IsOptional,
     IsString,
     MaxLength,
+    Min,
     MinLength,
     ValidateNested,
 } from "class-validator";
 
 import { AwardDTO } from "@/dto/student/award.js";
-import { BudgetDTO } from "@/dto/student/budget.js";
 import { CertificationDTO } from "@/dto/student/certification.js";
 
 /**
  * Data Transfer Object for creating or updating student profile information.
  * Contains all necessary data to establish a comprehensive student profile including
  * academic background, budget preferences, achievements, and certifications.
- *
  * @example
- * ```json
+ * {
+ *   "location": "Thành phố Hồ Chí Minh, Việt Nam",
+ *   "major": "Khoa học Máy tính",
+ *   "minBudget": 10000000,
+ *   "maxBudget": 20000000,
+ *   "awards": [
+ *     {
+ *       "awardDate": "2023-12-15",
+ *       "category": "Tiếng Anh",
+ *       "level": "Hạng Nhất",
+ *       "name": "Học sinh giỏi cấp quốc gia"
+ *     }
+ *   ],
+ *   "certifications": [
+ *     {
+ *       "issueDate": "2023-01-15"",
+ *       "expirationDate": "2025-01-15",
+ *       "level": "6.5",
+ *       "name": "IELTS"
+ *     }
+ *   ]
+ * }
+ * @example
  * {
  *   "location": "Ho Chi Minh City, Vietnam",
  *   "major": "Computer Science",
- *   "budget": {
- *     "minBudget": 5000000,
- *     "maxBudget": 20000000
- *   },
+ *   "minBudget": 5000000,
+ *   "maxBudget": 20000000,
  *   "awards": [
  *     {
  *       "name": "Dean's List Award",
@@ -45,7 +65,6 @@ import { CertificationDTO } from "@/dto/student/certification.js";
  *     }
  *   ]
  * }
- * ```
  */
 export class StudentInfoDTO {
     /**
@@ -57,25 +76,12 @@ export class StudentInfoDTO {
      * @optional
      * @see AwardDTO for detailed structure and validation rules
      */
+    @Expose()
     @IsArray({ message: "Awards must be an array" })
     @IsOptional()
     @Type(() => AwardDTO)
     @ValidateNested({ each: true })
     awards?: AwardDTO[];
-
-    /**
-     * Budget range preferences for the student in Vietnamese Dong (VND).
-     * Defines the minimum and maximum budget constraints for various purposes
-     * such as accommodation, study materials, or program costs.
-     *
-     * @type {BudgetDTO}
-     * @required
-     * @see BudgetDTO for detailed structure and validation rules
-     */
-    @IsNotEmpty({ message: "Budget is required" })
-    @Type(() => BudgetDTO)
-    @ValidateNested()
-    budget!: BudgetDTO;
 
     /**
      * List of professional certifications earned by the student.
@@ -86,6 +92,7 @@ export class StudentInfoDTO {
      * @optional
      * @see CertificationDTO for detailed structure and validation rules
      */
+    @Expose()
     @IsArray({ message: "Certifications must be an array" })
     @IsOptional()
     @Type(() => CertificationDTO)
@@ -101,12 +108,14 @@ export class StudentInfoDTO {
      * @required
      * @minLength 1
      * @maxLength 500
+     * @example "Thành phố Hồ Chí Minh, Việt Nam"
      * @example "Ho Chi Minh City, Vietnam"
      * @example "Hanoi, Vietnam"
      * @example "Da Nang, Vietnam"
      * @example "Can Tho, Vietnam"
      * @example "Nha Trang, Khanh Hoa, Vietnam"
      */
+    @Expose()
     @IsNotEmpty({ message: "Location is required" })
     @IsString({ message: "Location must be a string" })
     @MaxLength(500, { message: "Location cannot exceed 500 characters" })
@@ -122,6 +131,7 @@ export class StudentInfoDTO {
      * @required
      * @minLength 1
      * @maxLength 200
+     * @example "Khoa học Máy tính"
      * @example "Computer Science"
      * @example "Software Engineering"
      * @example "Information Technology"
@@ -133,9 +143,50 @@ export class StudentInfoDTO {
      * @example "Economics"
      * @example "Finance and Banking"
      */
+    @Expose()
     @IsNotEmpty({ message: "Major is required" })
     @IsString({ message: "Major must be a string" })
     @MaxLength(200, { message: "Major cannot exceed 200 characters" })
     @MinLength(1, { message: "Major must be at least 1 character long" })
     major!: string;
+
+    /**
+     * Maximum budget amount that the student is willing or able to spend.
+     * Represents the upper limit of the budget range in Vietnamese Dong (VND).
+     *
+     * @type {number}
+     * @required
+     * @minimum 1
+     * @example 20000000
+     * @validation
+     * - Required field (cannot be null or undefined)
+     * - Must be a valid number
+     * - Must be greater than 0
+     */
+    @Expose()
+    @IsNotEmpty({ message: "Max budget is required" })
+    @IsNumber({}, { message: "Max budget must be a number" })
+    @Min(1, { message: "Max budget must be greater than 0" })
+    maxBudget!: number;
+
+    /**
+     * Minimum budget amount that the student requires or prefers to spend.
+     * Represents the lower limit of the budget range in Vietnamese Dong (VND).
+     *
+     * @type {number}
+     * @required
+     * @minimum 1
+     * @example 10000000
+     * @validation
+     * - Required field (cannot be null or undefined)
+     * - Must be a valid number
+     * - Must be greater than 0
+     *
+     * Note: The relationship validation (minBudget <= maxBudget) is handled in the service layer
+     */
+    @Expose()
+    @IsNotEmpty({ message: "Min budget is required" })
+    @IsNumber({}, { message: "Min budget must be a number" })
+    @Min(1, { message: "Min budget must be greater than 0" })
+    minBudget!: number;
 }

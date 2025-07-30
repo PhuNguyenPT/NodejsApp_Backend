@@ -27,8 +27,8 @@ export class CertificationEntity {
     @Column({ length: 100, nullable: true, type: "varchar" })
     credentialId?: string;
 
-    @Column({ nullable: true, type: "date" })
-    expirationDate?: Date;
+    @Column({ type: "date" })
+    expirationDate!: Date;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
@@ -36,11 +36,11 @@ export class CertificationEntity {
     @Column({ type: "date" })
     issueDate!: Date;
 
-    @Column({ length: 200, type: "varchar" })
-    issuingOrganization!: string;
+    @Column({ length: 200, nullable: true, type: "varchar" })
+    issuingOrganization?: string;
 
-    @Column({ nullable: true, type: "integer" })
-    level?: number;
+    @Column({ length: 50, type: "varchar" })
+    level!: string;
 
     @Column({ length: 100, nullable: true, type: "varchar" })
     levelDescription?: string;
