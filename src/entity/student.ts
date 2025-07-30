@@ -5,8 +5,8 @@ import {
     Entity,
     Index,
     JoinColumn,
+    ManyToOne,
     OneToMany,
-    OneToOne,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from "typeorm";
@@ -74,14 +74,16 @@ export class StudentEntity {
     })
     modifiedBy?: string;
 
-    // Made the relationship nullable
     @JoinColumn({ name: "userId" })
-    @OneToOne(() => UserEntity, { nullable: true, onDelete: "SET NULL" })
-    user?: UserEntity; // Changed from ! to ?
+    @ManyToOne(() => UserEntity, (user) => user.studentEntities, {
+        eager: false,
+        nullable: true,
+        onDelete: "SET NULL",
+    })
+    user?: UserEntity;
 
-    // Made userId nullable as well
-    @Column({ nullable: true, type: "uuid", unique: true })
-    userId?: string; // Changed from ! to ?
+    @Column({ nullable: true, type: "uuid" })
+    userId?: string;
 
     constructor(student?: Partial<StudentEntity>) {
         if (student) {

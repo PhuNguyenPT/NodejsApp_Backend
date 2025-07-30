@@ -1,3 +1,4 @@
+import { HttpStatus } from "@/type/enum/http.status";
 import { HttpException } from "@/type/exception/http.exception.js";
 
 /**
@@ -11,7 +12,11 @@ export class ValidationException extends HttpException {
      * @param validationErrors - An object mapping field names to error messages.
      */
     constructor(validationErrors: Record<string, string>) {
-        super(400, "Validation failed", "ValidationException");
+        super(
+            HttpStatus.BAD_REQUEST,
+            "Validation failed",
+            "ValidationException",
+        );
         this.validationErrors = validationErrors;
     }
 }

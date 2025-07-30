@@ -7,7 +7,7 @@ import { UserEntity } from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { EntityExistsException } from "@/type/exception/entity.exists.exception";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
-import { InvalidArgumentException } from "@/type/exception/invalid.argument.exception";
+import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception";
 
 export class UserRepository implements IUserRepository {
     private repository: Repository<UserEntity>;
@@ -46,7 +46,7 @@ export class UserRepository implements IUserRepository {
 
     public async findByEmail(email: string): Promise<UserEntity> {
         if (!email) {
-            throw new InvalidArgumentException(`Invalid email ${email}`);
+            throw new IllegalArgumentException(`Invalid email ${email}`);
         }
 
         const userEntity: null | UserEntity = await this.repository.findOneBy({
@@ -101,7 +101,7 @@ export class UserRepository implements IUserRepository {
         if (updateData.email) {
             const emailExists = await this.existsByEmail(updateData.email);
             if (emailExists) {
-                throw new InvalidArgumentException(
+                throw new IllegalArgumentException(
                     `Email ${updateData.email} already exists`,
                 );
             }

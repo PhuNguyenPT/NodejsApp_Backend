@@ -1,4 +1,5 @@
 // src/type/exception/invalid.uuid.exception.ts
+import { HttpStatus } from "@/type/enum/http.status";
 import { HttpException } from "@/type/exception/http.exception";
 
 /**
@@ -7,6 +8,10 @@ import { HttpException } from "@/type/exception/http.exception";
  */
 export class InvalidUuidException extends HttpException {
     constructor() {
-        super(400, "Invalid UUID format", "InvalidUuidException");
+        super(
+            HttpStatus.BAD_REQUEST,
+            "Invalid UUID format",
+            "InvalidUuidException",
+        );
     }
 }

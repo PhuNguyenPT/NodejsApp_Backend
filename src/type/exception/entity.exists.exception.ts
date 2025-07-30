@@ -1,7 +1,8 @@
-import { HttpException } from "./http.exception";
+import { HttpStatus } from "@/type/enum/http.status";
+import { HttpException } from "@/type/exception/http.exception";
 
 export class EntityExistsException extends HttpException {
     constructor(message = "Entity already exists") {
-        super(409, message, "EntityExistsException");
+        super(HttpStatus.CONFLICT, message, "EntityExistsException");
     }
 }
