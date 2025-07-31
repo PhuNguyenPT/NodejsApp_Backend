@@ -7,8 +7,11 @@ import { AwardEntity } from "@/entity/award";
 import { CertificationEntity } from "@/entity/certification";
 import { StudentEntity } from "@/entity/student";
 import { TYPES } from "@/type/container/types";
+import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
 import { ValidationException } from "@/type/exception/validation.exception";
 import { ILogger } from "@/type/interface/logger";
+import { Page } from "@/type/pagination/page";
+import { Pageable } from "@/type/pagination/pageable";
 
 @injectable() // ← Missing decorator
 export class StudentService {
@@ -23,7 +26,7 @@ export class StudentService {
         private logger: ILogger,
     ) {}
 
-    public async createStudentProfile(
+    public async createStudentEntity(
         studentInfoDTO: StudentInfoDTO,
     ): Promise<StudentEntity> {
         if (studentInfoDTO.minBudget > studentInfoDTO.maxBudget) {
@@ -83,7 +86,7 @@ export class StudentService {
         );
     }
 
-    public async createStudentProfileByUserId(
+    public async createStudentEntityByUserId(
         studentInfoDTO: StudentInfoDTO,
         userId: string,
     ): Promise<StudentEntity> {
@@ -143,5 +146,73 @@ export class StudentService {
                 where: { id: savedStudent.id, userId: userId },
             })) ?? savedStudent
         );
+    }
+
+    public async getAllStudentEntitiesByUserId(
+        userId: string,
+        pageable: Pageable,
+    ): Promise<Page<StudentEntity>> {
+        const queryBuilder = this.studentRepository
+            .createQueryBuilder("student")
+            .leftJoinAndSelect("student.awards", "awards")
+            .leftJoinAndSelect("student.certifications", "certifications")
+            .where("student.userId = :userId", { userId });
+
+        // Add sorting
+        const sortConfig = pageable.getParsedSort();
+        if (sortConfig) {
+            // Map common sort fields to entity fields
+            const fieldMapping: Record<string, string> = {
+                createdAt: "student.createdAt",
+                location: "student.location",
+                major: "student.major",
+                maxBudget: "student.maxBudget",
+                minBudget: "student.minBudget",
+                modifiedAt: "student.modifiedAt",
+            };
+
+            const sortField =
+                fieldMapping[sortConfig.field] || `student.${sortConfig.field}`;
+            queryBuilder.orderBy(sortField, sortConfig.direction);
+        } else {
+            // Default sorting by creation date
+            queryBuilder.orderBy("student.createdAt", "DESC");
+        }
+
+        // Get total count for pagination info
+        const totalElements = await queryBuilder.getCount();
+
+        // Apply pagination
+        const entities = await queryBuilder
+            .skip(pageable.getOffset())
+            .take(pageable.getLimit())
+            .getMany();
+
+        return new Page<StudentEntity>(
+            entities,
+            pageable.page ?? 0,
+            pageable.size ?? 10,
+            totalElements,
+        );
+    }
+
+    public async getStudentEntityByUserId(
+        profileId: string,
+        userId: string,
+    ): Promise<StudentEntity> {
+        const studentEntity: null | StudentEntity =
+            await this.studentRepository.findOne({
+                relations: ["awards", "certifications"],
+                where: {
+                    id: profileId,
+                    userId: userId,
+                },
+            });
+        if (!studentEntity) {
+            throw new EntityNotFoundException(
+                `Student profile with user id: ${userId} not found`,
+            );
+        }
+        return studentEntity;
     }
 }
