@@ -1,11 +1,14 @@
 // src/dto/student.info.ts
 import { Expose, Type } from "class-transformer";
 import {
+    ArrayMaxSize,
+    ArrayMinSize,
     IsArray,
     IsNotEmpty,
     IsNumber,
     IsOptional,
     IsString,
+    Max,
     MaxLength,
     Min,
     MinLength,
@@ -15,16 +18,15 @@ import {
 import { AwardDTO } from "@/dto/student/award.js";
 import { CertificationDTO } from "@/dto/student/certification.js";
 
+import { ExamSubject } from "./exam";
+
 /**
  * Data Transfer Object for creating or updating student profile information.
  * Contains all necessary data to establish a comprehensive student profile including
  * academic background, budget preferences, achievements, and certifications.
  * @example
  * {
- *   "location": "Thành phố Hồ Chí Minh, Việt Nam",
- *   "major": "Khoa học Máy tính",
- *   "minBudget": 10000000,
- *   "maxBudget": 20000000,
+ *   "aptitudeTestScore": 700,
  *   "awards": [
  *     {
  *       "awardDate": "2023-12-15",
@@ -35,19 +37,27 @@ import { CertificationDTO } from "@/dto/student/certification.js";
  *   ],
  *   "certifications": [
  *     {
- *       "issueDate": "2023-01-15"",
+ *       "issueDate": "2023-01-15",
  *       "expirationDate": "2025-01-15",
  *       "level": "6.5",
  *       "name": "IELTS"
  *     }
- *   ]
+ *   ],
+ *   "location": "Thành phố Hồ Chí Minh, Việt Nam",
+ *   "major": "Khoa học Máy tính",
+ *   "maxBudget": 20000000,
+ *   "minBudget": 10000000,
+ *   "subjectCombination": [
+ *     { "name": "Toán", "score": 8.0 },
+ *     { "name": "Ngữ Văn", "score": 7.0 },
+ *     { "name": "Tiếng Anh", "score": 9.5 },
+ *     { "name": "Vật Lý", "score": 8.75 }
+ *   ],
+ *   "vsatScore": 85
  * }
  * @example
  * {
- *   "location": "Ho Chi Minh City, Vietnam",
- *   "major": "Computer Science",
- *   "minBudget": 5000000,
- *   "maxBudget": 20000000,
+ *   "aptitudeTestScore": 700,
  *   "awards": [
  *     {
  *       "name": "Dean's List Award",
@@ -64,9 +74,30 @@ import { CertificationDTO } from "@/dto/student/certification.js";
  *       "expirationDate": "2026-06-01"
  *     }
  *   ]
+ *   "location": "Ho Chi Minh City, Vietnam",
+ *   "major": "Computer Science",
+ *   "maxBudget": 20000000,
+ *   "minBudget": 5000000,
+ *   "subjectCombination": [
+ *     { "name": "Math", "score": 8.0 },
+ *     { "name": "Literature", "score": 7.0 },
+ *     { "name": "English", "score": 9.5 },
+ *     { "name": "Physics", "score": 8.75 }
+ *   ],
+ *   "vsatScore": 85
  * }
  */
 export class StudentInfoDTO {
+    /**
+     * Aptitude test score (Điểm ĐGNL - Đánh giá năng lực)
+     * @example 700
+     */
+    @IsNumber({}, { message: "Aptitude Test Score must be a number" })
+    @IsOptional()
+    @Max(1200)
+    @Min(0)
+    aptitudeTestScore?: number;
+
     /**
      * List of awards and recognitions received by the student.
      * Optional field that can contain multiple award entries.
@@ -189,4 +220,29 @@ export class StudentInfoDTO {
     @IsNumber({}, { message: "Min budget must be a number" })
     @Min(1, { message: "Min budget must be greater than 0" })
     minBudget!: number;
+
+    /**
+     * Array of exactly 4 exam subjects
+     * @example [{ "name": "Toán", "score": 8.0 }, { "name": "Ngữ Văn", "score": 7.0 }, { "name": "Tiếng Anh", "score": 9.5 }, { "name": "Vật Lý", "score": 8.75 }]
+     */
+    @ArrayMaxSize(4, {
+        message: "Exam Subjects must contain at most 4 subjects",
+    })
+    @ArrayMinSize(4, {
+        message: "Exam Subjects must contain at least 4 subjects",
+    })
+    @IsArray()
+    @Type(() => ExamSubject)
+    @ValidateNested({ each: true })
+    subjectCombination!: ExamSubject[];
+
+    /**
+     * VSAT score (Vietnamese Scholastic Aptitude Test)
+     * @example 85
+     */
+    @IsNumber({ maxDecimalPlaces: 2 })
+    @IsOptional()
+    @Max(150)
+    @Min(0)
+    vsatScore?: number;
 }

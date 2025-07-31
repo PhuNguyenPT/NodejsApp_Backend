@@ -37,10 +37,13 @@ export class StudentService {
         }
 
         const studentEntity: StudentEntity = new StudentEntity({
+            aptitudeTestScore: studentInfoDTO.aptitudeTestScore,
             location: studentInfoDTO.location,
             major: studentInfoDTO.major,
             maxBudget: studentInfoDTO.maxBudget,
             minBudget: studentInfoDTO.minBudget,
+            subjectCombination: studentInfoDTO.subjectCombination,
+            vsatScore: studentInfoDTO.vsatScore,
         });
 
         const savedStudent: StudentEntity =
@@ -98,11 +101,14 @@ export class StudentService {
         }
 
         const studentEntity: StudentEntity = new StudentEntity({
+            aptitudeTestScore: studentInfoDTO.aptitudeTestScore,
             location: studentInfoDTO.location,
             major: studentInfoDTO.major,
             maxBudget: studentInfoDTO.maxBudget,
             minBudget: studentInfoDTO.minBudget,
+            subjectCombination: studentInfoDTO.subjectCombination,
             userId: userId,
+            vsatScore: studentInfoDTO.vsatScore,
         });
 
         const savedStudent: StudentEntity =
