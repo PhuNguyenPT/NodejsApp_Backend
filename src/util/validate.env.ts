@@ -1,5 +1,5 @@
 // src/util/validate.env.ts
-import { bool, cleanEnv, makeValidator, port, str } from "envalid";
+import { bool, cleanEnv, makeValidator, num, port, str } from "envalid";
 
 const commaSeparatedString = makeValidator((x) =>
     x.split(",").map((s) => s.trim()),
@@ -26,6 +26,12 @@ interface Config {
 
     // Environment config
     NODE_ENV: "development" | "production" | "staging";
+
+    // Pagination Configuration (Spring Boot style)
+    PAGINATION_DEFAULT_PAGE: number;
+    PAGINATION_DEFAULT_SIZE: number;
+    PAGINATION_MAX_SIZE: number;
+    PAGINATION_MIN_SIZE: number;
 
     // Database config
     POSTGRES_DB: string;
@@ -73,6 +79,12 @@ export const config: Config = cleanEnv(process.env, {
     NODE_ENV: str({
         choices: ["development", "production", "staging"],
     }),
+
+    // Pagination Configuration (Spring Boot style)
+    PAGINATION_DEFAULT_PAGE: num({ default: 0 }),
+    PAGINATION_DEFAULT_SIZE: num({ default: 20 }),
+    PAGINATION_MAX_SIZE: num({ default: 2000 }),
+    PAGINATION_MIN_SIZE: num({ default: 1 }),
 
     // Database config
     POSTGRES_DB: str(),
