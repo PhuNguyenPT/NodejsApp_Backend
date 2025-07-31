@@ -81,7 +81,7 @@ export const config: Config = cleanEnv(process.env, {
     }),
 
     // Pagination Configuration (Spring Boot style)
-    PAGINATION_DEFAULT_PAGE: num({ default: 0 }),
+    PAGINATION_DEFAULT_PAGE: num({ default: 1 }),
     PAGINATION_DEFAULT_SIZE: num({ default: 20 }),
     PAGINATION_MAX_SIZE: num({ default: 2000 }),
     PAGINATION_MIN_SIZE: num({ default: 1 }),

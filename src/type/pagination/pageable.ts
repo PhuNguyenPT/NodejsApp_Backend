@@ -1,3 +1,4 @@
+//src/type/pagination/pageable.ts
 import { Expose, Transform, Type } from "class-transformer";
 import { IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
@@ -5,18 +6,22 @@ import { defaultPaginationConfig } from "@/config/pagination.config";
 
 export class Pageable {
     /**
-     * Page number (0-based)
-     * @example 0
+     * Page number. Accepts 0 but is treated as 1 in the application.
+     * @example 1
      */
     @Expose()
     @IsInt()
     @IsOptional()
     @Min(0)
-    @Transform(({ value }) =>
-        value !== undefined
-            ? parseInt(String(value), 10)
-            : defaultPaginationConfig.defaultPage,
-    )
+    @Transform(({ value }) => {
+        const pageNumber = parseInt(String(value), 10);
+
+        // If the page number is 0 or less, it becomes 1.
+        if (isNaN(pageNumber) || pageNumber < 1) {
+            return defaultPaginationConfig.defaultPage;
+        }
+        return pageNumber;
+    })
     @Type(() => Number)
     page?: number = defaultPaginationConfig.defaultPage;
 
@@ -61,7 +66,8 @@ export class Pageable {
     // Helper method to get offset
     getOffset(): number {
         const currentPage = this.page ?? defaultPaginationConfig.defaultPage;
-        return currentPage * this.getLimit();
+        // CHANGE: The offset for DB queries must be 0-based. (page 1 -> offset 0)
+        return (currentPage - 1) * this.getLimit();
     }
 
     // Helper method to parse sort with default fallback
@@ -109,8 +115,8 @@ export class Pageable {
         const currentPage = this.page ?? defaultPaginationConfig.defaultPage;
         const currentSize = this.size ?? defaultPaginationConfig.defaultSize;
 
-        if (currentPage < 0) {
-            errors.page = "Page number must be 0 or greater";
+        if (currentPage < 1) {
+            errors.page = "Page number must be 1 or greater";
         }
 
         if (currentSize < defaultPaginationConfig.minPageSize) {

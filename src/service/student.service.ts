@@ -2,6 +2,7 @@ import { plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
+import { defaultPaginationConfig } from "@/config/pagination.config";
 import { StudentInfoDTO } from "@/dto/student/student.info";
 import { AwardEntity } from "@/entity/award";
 import { CertificationEntity } from "@/entity/certification";
@@ -12,7 +13,6 @@ import { ValidationException } from "@/type/exception/validation.exception";
 import { ILogger } from "@/type/interface/logger";
 import { Page } from "@/type/pagination/page";
 import { Pageable } from "@/type/pagination/pageable";
-
 @injectable() // ← Missing decorator
 export class StudentService {
     constructor(
@@ -158,10 +158,23 @@ export class StudentService {
             .leftJoinAndSelect("student.certifications", "certifications")
             .where("student.userId = :userId", { userId });
 
-        // Add sorting
+        const totalElements = await queryBuilder.getCount();
+
+        const page = pageable.page ?? defaultPaginationConfig.defaultPage;
+        const size = pageable.getLimit();
+
+        if (totalElements === 0) {
+            return new Page<StudentEntity>([], page, size, 0);
+        }
+
+        const totalPages = Math.ceil(totalElements / size);
+
+        if (page > totalPages) {
+            return new Page<StudentEntity>([], page, size, totalElements);
+        }
+
         const sortConfig = pageable.getParsedSort();
         if (sortConfig) {
-            // Map common sort fields to entity fields
             const fieldMapping: Record<string, string> = {
                 createdAt: "student.createdAt",
                 location: "student.location",
@@ -170,30 +183,19 @@ export class StudentService {
                 minBudget: "student.minBudget",
                 modifiedAt: "student.modifiedAt",
             };
-
             const sortField =
                 fieldMapping[sortConfig.field] || `student.${sortConfig.field}`;
             queryBuilder.orderBy(sortField, sortConfig.direction);
         } else {
-            // Default sorting by creation date
             queryBuilder.orderBy("student.createdAt", "DESC");
         }
 
-        // Get total count for pagination info
-        const totalElements = await queryBuilder.getCount();
-
-        // Apply pagination
         const entities = await queryBuilder
             .skip(pageable.getOffset())
-            .take(pageable.getLimit())
+            .take(size)
             .getMany();
 
-        return new Page<StudentEntity>(
-            entities,
-            pageable.page ?? 0,
-            pageable.size ?? 10,
-            totalElements,
-        );
+        return new Page<StudentEntity>(entities, page, size, totalElements);
     }
 
     public async getStudentEntityByUserId(
