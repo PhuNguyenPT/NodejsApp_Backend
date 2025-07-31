@@ -1,3 +1,5 @@
+import { config } from "@/util/validate.env";
+
 // src/config/pagination.config.ts
 export interface PaginationConfig {
     defaultPage: number;
@@ -10,11 +12,11 @@ export interface PaginationConfig {
 
 // Default pagination configuration (similar to Spring Boot defaults)
 export const defaultPaginationConfig: PaginationConfig = {
-    defaultPage: 0, // Spring Boot default: page 0
-    defaultSize: 20, // Spring Boot default: size 20
+    defaultPage: config.PAGINATION_DEFAULT_PAGE, // Set default page to 1
+    defaultSize: config.PAGINATION_DEFAULT_SIZE, // Spring Boot default: size 20
     defaultSortDirection: "ASC", // Default sort direction
-    maxPageSize: 2000, // Spring Boot default: max 2000
-    minPageSize: 1, // Minimum page size
+    maxPageSize: config.PAGINATION_MAX_SIZE, // Spring Boot default: max 2000
+    minPageSize: config.PAGINATION_MIN_SIZE, // Minimum page size: 1
 };
 
 export const paginationConfigs = {

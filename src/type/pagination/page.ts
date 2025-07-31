@@ -1,4 +1,4 @@
-// src/dto/common/page.response.ts
+// src/type/pagination/page.ts
 import { Expose } from "class-transformer";
 
 export class Page<T> {
@@ -36,9 +36,9 @@ export class Page<T> {
         this.page = page;
         this.size = size;
         this.totalElements = totalElements;
-        this.totalPages = Math.ceil(totalElements / size);
-        this.first = page === 0;
-        this.last = page >= this.totalPages - 1;
+        this.totalPages = size > 0 ? Math.ceil(totalElements / size) : 0;
+        this.first = page === 1;
+        this.last = page >= this.totalPages;
         this.numberOfElements = content.length;
     }
 }
