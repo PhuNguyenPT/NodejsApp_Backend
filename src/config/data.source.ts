@@ -3,6 +3,7 @@ import { DataSource } from "typeorm";
 
 import { AwardEntity } from "@/entity/award";
 import { CertificationEntity } from "@/entity/certification";
+import { FileEntity } from "@/entity/file";
 import { PostEntity } from "@/entity/post.js";
 import { StudentEntity } from "@/entity/student";
 import { UserEntity } from "@/entity/user.js";
@@ -16,6 +17,7 @@ export const AppDataSource = new DataSource({
         CertificationEntity,
         AwardEntity,
         StudentEntity,
+        FileEntity,
     ],
     host: config.POSTGRES_HOST,
     logging: config.DB_LOGGING,

@@ -5,14 +5,17 @@ import { Repository } from "typeorm";
 import { AppDataSource } from "@/config/data.source";
 import { PassportConfig } from "@/config/passport.config";
 import { AuthController } from "@/controller/auth.controller";
+import { FileController } from "@/controller/file.controller";
 import { StudentController } from "@/controller/student.controller.js";
 import { UserController } from "@/controller/user.controller.js";
 import { AwardEntity } from "@/entity/award";
 import { CertificationEntity } from "@/entity/certification";
+import { FileEntity } from "@/entity/file";
 import { StudentEntity } from "@/entity/student";
 import { UserRepository } from "@/repository/impl/user.repository.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { AuthService } from "@/service/auth.service";
+import { FileService } from "@/service/file.service";
 import { JWTService } from "@/service/jwt.service.js";
 import { StudentService } from "@/service/student.service";
 import { UserService } from "@/service/user.service.js";
@@ -49,6 +52,11 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
+    .bind<Repository<FileEntity>>(TYPES.FileRepository)
+    .toDynamicValue(() => AppDataSource.getRepository(FileEntity))
+    .inSingletonScope();
+
+iocContainer
     .bind<UserService>(TYPES.UserService)
     .to(UserService)
     .inSingletonScope();
@@ -69,9 +77,15 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
+    .bind<FileService>(TYPES.FileService)
+    .to(FileService)
+    .inSingletonScope();
+
+iocContainer
     .bind<PassportConfig>(TYPES.PassportConfig)
     .to(PassportConfig)
     .inSingletonScope();
+
 iocContainer.bind<KeyStore>(TYPES.KeyStore).to(KeyStore).inSingletonScope();
 
 iocContainer.bind<UserController>(UserController).toSelf().inRequestScope();
@@ -82,5 +96,7 @@ iocContainer
     .bind<StudentController>(StudentController)
     .toSelf()
     .inRequestScope();
+
+iocContainer.bind<FileController>(FileController).toSelf().inRequestScope();
 
 export { iocContainer };

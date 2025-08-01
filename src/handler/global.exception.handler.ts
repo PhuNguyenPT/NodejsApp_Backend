@@ -313,19 +313,38 @@ class ExceptionHandlers {
 
     @ExceptionHandler(ValidateError)
     handleValidateError(error: ValidateError): ErrorDetails {
-        const status = HttpStatus.INTERNAL_SERVER_ERROR;
-        const message = internalServerErrorMessage;
+        const status = 400; // Bad Request for validation errors
+        const message = "Validation failed";
 
-        const response: ErrorResponse = {
+        // Extract validation errors from TSOA ValidateError
+        const validationErrors: Record<string, string> = {};
+
+        // TSOA ValidateError has a 'fields' property containing validation details
+        if (typeof error.fields === "object") {
+            Object.keys(error.fields).forEach((field) => {
+                const fieldError = error.fields[field];
+                if (fieldError.message) {
+                    validationErrors[field] = fieldError.message;
+                } else if (typeof fieldError === "string") {
+                    validationErrors[field] = fieldError;
+                } else {
+                    validationErrors[field] = `Invalid value for ${field}`;
+                }
+            });
+        }
+
+        const response: ValidationResponse = {
             message,
             status,
+            validationErrors,
         };
 
-        logger.error("Unhandled error", {
-            message: error.message,
+        logger.warn("ValidateError", {
+            message,
             originalError: error.name,
             stack: error.stack,
             status,
+            validationErrors,
         });
 
         return { message, response, status };

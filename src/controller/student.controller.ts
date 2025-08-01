@@ -133,4 +133,21 @@ export class StudentController extends Controller {
             );
         return StudentMapper.toStudentProfileResponse(studentEntity);
     }
+
+    @Get("profiles/{profileId}/with-files")
+    @Middlewares(validateUuidParam("profileId"))
+    @Security("bearerAuth", ["profile:read:own"])
+    @SuccessResponse(
+        HttpStatus.OK,
+        "Successfully retrieve student profile with files",
+    )
+    public async getStudentProfileWithFiles(
+        @Path() profileId: string,
+        @Request() request: AuthenticatedRequest,
+    ): Promise<StudentProfileResponse> {
+        const user: Express.User = request.user;
+        const studentEntity: StudentEntity =
+            await this.studentService.getStudentWithFiles(profileId, user.id);
+        return StudentMapper.toStudentProfileWithFilesResponse(studentEntity);
+    }
 }

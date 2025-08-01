@@ -5,6 +5,8 @@ import { StudentProfileResponse } from "@/dto/student/student.profile.response";
 import { StudentEntity } from "@/entity/student";
 import { Page } from "@/type/pagination/page";
 
+import { FileMapper } from "./file.mapper";
+
 export const StudentMapper = {
     toStudentProfileResponse(
         studentEntity: StudentEntity,
@@ -20,6 +22,23 @@ export const StudentMapper = {
         return studentEntities.map((studentEntity) =>
             this.toStudentProfileResponse(studentEntity),
         );
+    },
+
+    toStudentProfileWithFilesResponse(
+        studentEntity: StudentEntity,
+    ): StudentProfileResponse {
+        const studentProfileResponse: StudentProfileResponse = plainToInstance(
+            StudentProfileResponse,
+            studentEntity,
+            {
+                excludeExtraneousValues: true,
+            },
+        );
+        if (studentEntity.files) {
+            studentProfileResponse.fileResponses =
+                FileMapper.toFileResponseList(studentEntity.files);
+        }
+        return studentProfileResponse;
     },
 
     toStudentResponse(studentEntity: StudentEntity): StudentResponse {

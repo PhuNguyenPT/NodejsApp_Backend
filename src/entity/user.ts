@@ -19,10 +19,11 @@ import { StudentEntity } from "./student";
 @Index("idx_user_status", ["status"])
 @Index("idx_user_role", ["role"]) // Add index for role queries
 @Index("idx_user_account_status", [
+    "enabled",
+    "credentialsNonExpired",
     "accountNonExpired",
     "accountNonLocked",
-    "enabled",
-]) // Index for account status queries
+])
 export class UserEntity {
     @Column({ default: true, type: "boolean" })
     accountNonExpired = true;

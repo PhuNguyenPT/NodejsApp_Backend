@@ -1,8 +1,9 @@
 // src/dto/student.info.ts
-import { Expose, Type } from "class-transformer";
+import { Expose, Transform, Type } from "class-transformer";
 
 import { AwardResponse } from "@/dto/student/award.response.js";
 
+import { FileResponse } from "../file/file.response";
 import { CertificationResponse } from "./certification.response";
 import { ExamSubject } from "./exam";
 
@@ -75,6 +76,7 @@ import { ExamSubject } from "./exam";
  */
 export class StudentProfileResponse {
     @Expose()
+    @Transform(({ value }) => (value ? parseInt(String(value)) : undefined))
     aptitudeTestScore?: number;
 
     /**
@@ -104,6 +106,10 @@ export class StudentProfileResponse {
     certifications?: CertificationResponse[];
 
     @Expose()
+    @Type(() => FileResponse)
+    fileResponses!: FileResponse[];
+
+    @Expose()
     id!: string;
 
     @Expose()
@@ -113,9 +119,11 @@ export class StudentProfileResponse {
     major!: string;
 
     @Expose()
+    @Transform(({ value }) => (value ? parseInt(String(value)) : undefined))
     maxBudget!: number;
 
     @Expose()
+    @Transform(({ value }) => (value ? parseInt(String(value)) : undefined))
     minBudget!: number;
 
     /**
@@ -133,5 +141,6 @@ export class StudentProfileResponse {
     userId!: string;
 
     @Expose()
+    @Transform(({ value }) => (value ? parseInt(String(value)) : undefined))
     vsatScore?: number;
 }
