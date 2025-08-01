@@ -18,15 +18,33 @@ import { StudentEntity } from "./student";
 @Index("idx_user_email", ["email"])
 @Index("idx_user_status", ["status"])
 @Index("idx_user_role", ["role"]) // Add index for role queries
+@Index("idx_user_account_status", [
+    "enabled",
+    "credentialsNonExpired",
+    "accountNonExpired",
+    "accountNonLocked",
+])
 export class UserEntity {
+    @Column({ default: true, type: "boolean" })
+    accountNonExpired = true;
+
+    @Column({ default: true, type: "boolean" })
+    accountNonLocked = true;
+
     @CreateDateColumn({ type: "timestamp with time zone" })
     createdAt!: Date;
 
     @Column({ length: 255, nullable: true, type: "varchar" })
     createdBy?: string;
 
+    @Column({ default: true, type: "boolean" })
+    credentialsNonExpired = true;
+
     @Column({ length: 255, type: "varchar", unique: true })
     email!: string;
+
+    @Column({ default: true, type: "boolean" })
+    enabled = true;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
@@ -75,6 +93,22 @@ export class UserEntity {
         }
     }
 
+    disableAccount(): void {
+        this.enabled = false;
+    }
+
+    enableAccount(): void {
+        this.enabled = true;
+    }
+
+    expireAccount(): void {
+        this.accountNonExpired = false;
+    }
+
+    expireCredentials(): void {
+        this.credentialsNonExpired = false;
+    }
+
     getPermissions(): Permission[] {
         return this.permissions;
     }
@@ -98,5 +132,40 @@ export class UserEntity {
     // Helper method to check if user has a specific permission
     hasPermission(permission: Permission): boolean {
         return this.permissions.includes(permission);
+    }
+
+    // Helper method to check if account is fully active
+    isAccountActive(): boolean {
+        return (
+            this.accountNonExpired &&
+            this.accountNonLocked &&
+            this.credentialsNonExpired &&
+            this.enabled
+        );
+    }
+
+    isAccountNonExpired(): boolean {
+        return this.accountNonExpired;
+    }
+
+    isAccountNonLocked(): boolean {
+        return this.accountNonLocked;
+    }
+
+    isCredentialsNonExpired(): boolean {
+        return this.credentialsNonExpired;
+    }
+
+    isEnabled(): boolean {
+        return this.enabled;
+    }
+
+    // Helper methods for account management
+    lockAccount(): void {
+        this.accountNonLocked = false;
+    }
+
+    unlockAccount(): void {
+        this.accountNonLocked = true;
     }
 }

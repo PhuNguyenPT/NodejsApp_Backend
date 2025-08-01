@@ -17,6 +17,8 @@ import { CertificationEntity } from "@/entity/certification.js";
 import { UserEntity } from "@/entity/user.js";
 import { Role } from "@/type/enum/user";
 
+import { FileEntity, FileType } from "./file";
+
 export interface ExamSubjectData {
     name: string;
     score: number;
@@ -56,6 +58,12 @@ export class StudentEntity {
         type: "varchar",
     })
     createdBy?: string;
+
+    @OneToMany(() => FileEntity, (file) => file.student, {
+        cascade: true,
+        eager: false,
+    })
+    files?: FileEntity[];
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
@@ -114,6 +122,12 @@ export class StudentEntity {
         return this.certifications.filter((cert) => cert.expirationDate > now);
     }
 
+    // Helper method to get active files only
+    getActiveFiles(): FileEntity[] {
+        if (!this.files) return [];
+        return this.files.filter((file) => file.isActive());
+    }
+
     // Helper method to get awards by category
     getAwardsByCategory(category: string): AwardEntity[] {
         if (!this.awards) return [];
@@ -124,7 +138,6 @@ export class StudentEntity {
     getBudgetRangeString(): string {
         return `$${this.minBudget.toLocaleString()} - $${this.maxBudget.toLocaleString()}`;
     }
-
     getExamProfile(): ExamProfile | null {
         if (!this.subjectCombination) return null;
 
@@ -138,12 +151,47 @@ export class StudentEntity {
             this.vsatScore,
         );
     }
+
     // Helper method to get expired certifications
     getExpiredCertifications(): CertificationEntity[] {
         if (!this.certifications) return [];
 
         const now = new Date();
         return this.certifications.filter((cert) => cert.expirationDate <= now);
+    }
+
+    // Helper method to get files by type
+    getFilesByType(fileType: FileType): FileEntity[] {
+        if (!this.files) return [];
+        return this.files.filter(
+            (file) => file.fileType === fileType && file.isActive(),
+        );
+    }
+
+    // Helper method to get files count by type
+    getFilesCountByType(): Record<FileType, number> {
+        // Initialize an object with all FileType keys set to 0.
+        // We use `as Record<FileType, number>` to assert the type of the initial
+        // empty object `{}`, resolving the TypeScript error.
+        const initialCounts = Object.values(FileType).reduce(
+            (acc, type) => {
+                acc[type] = 0;
+                return acc;
+            },
+            {} as Record<FileType, number>,
+        );
+
+        if (!this.files) {
+            return initialCounts;
+        }
+
+        // The second reduce call correctly uses the pre-populated `initialCounts` object.
+        return this.files.reduce((counts, file) => {
+            if (file.isActive()) {
+                counts[file.fileType]++;
+            }
+            return counts;
+        }, initialCounts);
     }
 
     // Helper method to get recent awards (within specified days)
@@ -156,6 +204,18 @@ export class StudentEntity {
         return this.awards.filter((award) => award.awardDate >= cutoffDate);
     }
 
+    // Helper method to get recent files (within specified days)
+    getRecentFiles(days = 30): FileEntity[] {
+        if (!this.files) return [];
+
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - days);
+
+        return this.files.filter(
+            (file) => file.isActive() && file.createdAt >= cutoffDate,
+        );
+    }
+
     getSubjectScore(subjectName: string): null | number {
         if (!this.subjectCombination) return null;
 
@@ -164,6 +224,15 @@ export class StudentEntity {
         );
         return subject?.score ?? null;
     }
+
+    // Helper method to get total file size
+    getTotalFileSize(): number {
+        if (!this.files) return 0;
+        return this.files
+            .filter((file) => file.isActive())
+            .reduce((total, file) => total + Number(file.fileSize), 0);
+    }
+
     getTotalSubjectScore(): number {
         if (!this.subjectCombination) return 0;
         return this.subjectCombination.reduce(
@@ -175,6 +244,11 @@ export class StudentEntity {
     // Helper method to get user email safely
     getUserEmail(): null | string {
         return this.user?.email ?? null;
+    }
+
+    // Helper method to check if student has specific file type
+    hasFileType(fileType: FileType): boolean {
+        return this.getFilesByType(fileType).length > 0;
     }
 
     // Helper method to check if user is associated

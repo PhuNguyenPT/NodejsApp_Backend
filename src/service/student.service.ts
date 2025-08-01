@@ -223,4 +223,36 @@ export class StudentService {
         }
         return studentEntity;
     }
+
+    async getStudentWithFiles(
+        studentId: string,
+        userId?: string,
+    ): Promise<StudentEntity> {
+        const queryBuilder = this.studentRepository
+            .createQueryBuilder("student")
+            .leftJoinAndSelect(
+                "student.files",
+                "files",
+                "files.status = :status",
+                { status: "active" },
+            )
+            .leftJoinAndSelect("student.awards", "awards")
+            .leftJoinAndSelect("student.certifications", "certifications")
+            .leftJoinAndSelect("student.user", "user")
+            .where("student.id = :studentId", { studentId });
+
+        if (userId) {
+            queryBuilder.andWhere("student.userId = :userId", { userId });
+        }
+
+        const student = await queryBuilder.getOne();
+
+        if (!student) {
+            throw new EntityNotFoundException(
+                `Student with ID ${studentId} not found`,
+            );
+        }
+
+        return student;
+    }
 }
