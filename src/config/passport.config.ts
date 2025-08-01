@@ -6,9 +6,9 @@ import { Strategy as JwtStrategy } from "passport-jwt";
 
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { TYPES } from "@/type/container/types.js";
-import { UserStatus } from "@/type/enum/user.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { strategyOptionsWithRequest } from "@/util/jwt.options.js";
+import { config } from "@/util/validate.env";
 
 @injectable()
 export class PassportConfig {
@@ -45,28 +45,49 @@ export class PassportConfig {
                             );
 
                             if (!user) {
+                                this.logger.warn(
+                                    `User not found for ID: ${payload.id}`,
+                                );
                                 done(null, false, {
                                     message: "User not found",
                                 });
                                 return;
                             }
 
-                            if (user.status !== UserStatus.HAPPY) {
-                                done(null, false, {
-                                    message: "Account is not active",
-                                });
+                            // Check account status
+                            if (!user.isAccountActive()) {
+                                this.logger.warn(
+                                    `Inactive account access attempt for user: ${user.id}`,
+                                );
+
+                                // Provide specific error messages based on account status
+                                let message = "Account is not active";
+                                if (!user.isEnabled()) {
+                                    message = "Account is disabled";
+                                } else if (!user.isAccountNonLocked()) {
+                                    message = "Account is locked";
+                                } else if (!user.isAccountNonExpired()) {
+                                    message = "Account has expired";
+                                } else if (!user.isCredentialsNonExpired()) {
+                                    message = "Credentials have expired";
+                                }
+
+                                done(null, false, { message });
                                 return;
                             }
 
+                            // Verify token payload matches user data
                             if (user.email !== payload.email) {
+                                this.logger.warn(
+                                    `Token payload mismatch for user: ${user.id}`,
+                                );
                                 done(null, false, {
                                     message: "Token payload mismatch",
                                 });
                                 return;
                             }
 
-                            // Example: Additional security checks using request data
-                            // Check for suspicious IP patterns
+                            // Additional security checks using request data
                             if (this.isSuspiciousIP(clientIP)) {
                                 this.logger.warn(
                                     `Suspicious login attempt from IP: ${clientIP} for user: ${user.id}`,
@@ -75,9 +96,18 @@ export class PassportConfig {
                                 return;
                             }
 
-                            // Example: Log authentication for audit purposes
+                            // Check for additional security constraints
+                            if (this.isUserAgentSuspicious(userAgent)) {
+                                this.logger.warn(
+                                    `Suspicious user agent: ${userAgent} for user: ${user.id}`,
+                                );
+                                done(null, false, { message: "Access denied" });
+                                return;
+                            }
+
+                            // Log successful authentication for audit purposes
                             this.logger.info(
-                                `User ${user.id} authenticated from IP: ${clientIP} - ${userAgent}`,
+                                `User ${user.id} authenticated successfully from IP: ${clientIP} - ${userAgent}`,
                             );
 
                             // Return user that conforms to Express.User (which extends JWTPayload)
@@ -95,10 +125,12 @@ export class PassportConfig {
                             done(null, userPayload);
                         } catch (error) {
                             this.logger.error("JWT Strategy Error:", {
+                                clientIP: req.ip,
                                 error:
                                     error instanceof Error
                                         ? error.message
                                         : String(error),
+                                userId: payload.id,
                             });
                             done(error, false);
                         }
@@ -118,20 +150,40 @@ export class PassportConfig {
                 try {
                     const user = await this.userRepository.findById(id);
 
-                    if (user) {
-                        const userPayload: Express.User = {
-                            email: user.email,
-                            id: user.id,
-                            name: user.name,
-                            permissions: user.permissions,
-                            role: user.role,
-                            status: user.status,
-                        };
-                        done(null, userPayload);
-                    } else {
+                    if (!user) {
+                        this.logger.warn(
+                            `User not found during deserialization: ${id}`,
+                        );
                         done(null, null);
+                        return;
                     }
+
+                    // Check if user is still active during deserialization
+                    if (!user.isAccountActive()) {
+                        this.logger.warn(
+                            `Inactive user during deserialization: ${id}`,
+                        );
+                        done(null, null);
+                        return;
+                    }
+
+                    const userPayload: Express.User = {
+                        email: user.email,
+                        id: user.id,
+                        name: user.name,
+                        permissions: user.permissions,
+                        role: user.role,
+                        status: user.status,
+                    };
+                    done(null, userPayload);
                 } catch (error) {
+                    this.logger.error("User deserialization error:", {
+                        error:
+                            error instanceof Error
+                                ? error.message
+                                : String(error),
+                        userId: id,
+                    });
                     done(error, null);
                 }
             })();
@@ -141,8 +193,7 @@ export class PassportConfig {
     }
 
     /**
-     * Example method to check for suspicious IPs
-     * You can implement your own logic here
+     * Check for suspicious IPs
      */
     private isSuspiciousIP(ip: string): boolean {
         // Handle the case where IP might be 'unknown'
@@ -150,21 +201,78 @@ export class PassportConfig {
             return false; // or true, depending on your security policy
         }
 
+        // In development, allow localhost/loopback addresses
+        const isDevelopment = config.NODE_ENV === "development";
+        const isLocalhost =
+            ip === "127.0.0.1" ||
+            ip === "::1" ||
+            ip.startsWith("127.") ||
+            ip === "localhost";
+
+        if (isDevelopment && isLocalhost) {
+            this.logger.debug(
+                `Allowing localhost access in development mode: ${ip}`,
+            );
+            return false;
+        }
+
         // Example: Block certain IP ranges or known bad IPs
         const blockedIPs = [
+            "127.0.0.1", // IPv4 localhost (blocked in production)
+            "::1", // IPv6 localhost (blocked in production)
+            "0.0.0.0", // IPv4 any address
+            "::", // IPv6 any address
             "192.168.1.100", // Example blocked IP
             // Add more as needed
         ];
 
         const suspiciousPatterns = [
-            /^10\.0\.0\./, // Block certain IP patterns
+            /^127\./, // Block all 127.x.x.x (IPv4 loopback range) in production
+            /^::1$/, // IPv6 localhost in production
+            /^::ffff:127\./, // IPv4-mapped IPv6 localhost in production
+            /^10\./, // Private network 10.x.x.x (uncomment if needed)
+            /^192\.168\./, // Private network 192.168.x.x (uncomment if needed)
+            /^172\.(1[6-9]|2[0-9]|3[01])\./, // Private network 172.16-31.x.x (uncomment if needed)
             // Add more patterns as needed
         ];
 
-        if (blockedIPs.includes(ip)) {
-            return true;
+        // In production/staging, block localhost and private networks
+        if (config.NODE_ENV === "production" || config.NODE_ENV === "staging") {
+            if (blockedIPs.includes(ip)) {
+                return true;
+            }
+
+            if (suspiciousPatterns.some((pattern) => pattern.test(ip))) {
+                return true;
+            }
         }
 
-        return suspiciousPatterns.some((pattern) => pattern.test(ip));
+        // Additional custom blocked IPs that apply to all environments
+        const alwaysBlockedIPs: string[] = [
+            // Add IPs that should be blocked in all environments
+        ];
+
+        return alwaysBlockedIPs.includes(ip);
+    }
+
+    /**
+     * Check for suspicious user agents
+     */
+    private isUserAgentSuspicious(userAgent: string): boolean {
+        if (userAgent === "unknown" || !userAgent) {
+            return true; // Block requests without user agent
+        }
+
+        const suspiciousPatterns = [
+            /bot/i, // Generic bot pattern
+            /crawler/i, // Web crawlers
+            /spider/i, // Web spiders
+            /curl/i, // Command line tools
+            /wget/i, // Command line tools
+            /postman/i, // API testing tools (uncomment if needed)
+            // Add more patterns as needed
+        ];
+
+        return suspiciousPatterns.some((pattern) => pattern.test(userAgent));
     }
 }

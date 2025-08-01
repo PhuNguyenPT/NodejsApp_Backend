@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitialSchema1753848593696 implements MigrationInterface {
-    name = "InitialSchema1753848593696";
+export class InitialSchema1754015122938 implements MigrationInterface {
+    name = "InitialSchema1754015122938";
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(
@@ -26,7 +26,10 @@ export class InitialSchema1753848593696 implements MigrationInterface {
             `CREATE TYPE "public"."users_status_enum" AS ENUM('Happy', 'Sad')`,
         );
         await queryRunner.query(
-            `CREATE TABLE "users" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "email" character varying(255) NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(255), "password" character varying(128) NOT NULL, "permissions" text, "phoneNumbers" text, "role" "public"."users_role_enum" NOT NULL DEFAULT 'USER', "status" "public"."users_status_enum" NOT NULL DEFAULT 'Happy', CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "users" ("accountNonExpired" boolean NOT NULL DEFAULT true, "accountNonLocked" boolean NOT NULL DEFAULT true, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "credentialsNonExpired" boolean NOT NULL DEFAULT true, "email" character varying(255) NOT NULL, "enabled" boolean NOT NULL DEFAULT true, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(255), "password" character varying(128) NOT NULL, "permissions" text, "phoneNumbers" text, "role" "public"."users_role_enum" NOT NULL DEFAULT 'USER', "status" "public"."users_status_enum" NOT NULL DEFAULT 'Happy', CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_user_account_status" ON "users" ("accountNonExpired", "accountNonLocked", "enabled") `,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_user_role" ON "users" ("role") `,
@@ -41,7 +44,7 @@ export class InitialSchema1753848593696 implements MigrationInterface {
             `CREATE INDEX "idx_user_id_name" ON "users" ("id", "name") `,
         );
         await queryRunner.query(
-            `CREATE TABLE "students" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255) DEFAULT 'ANONYMOUS', "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "location" character varying(500) NOT NULL, "major" character varying(200) NOT NULL, "maxBudget" numeric(14,2) NOT NULL, "minBudget" numeric(14,2) NOT NULL, "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255) DEFAULT 'ANONYMOUS', "userId" uuid, CONSTRAINT "UQ_e0208b4f964e609959aff431bf9" UNIQUE ("userId"), CONSTRAINT "REL_e0208b4f964e609959aff431bf" UNIQUE ("userId"), CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "students" ("aptitudeTestScore" numeric(5,2), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255) DEFAULT 'ANONYMOUS', "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "location" character varying(500) NOT NULL, "major" character varying(200) NOT NULL, "maxBudget" numeric(14,2) NOT NULL, "minBudget" numeric(14,2) NOT NULL, "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255) DEFAULT 'ANONYMOUS', "subjectCombination" json, "userId" uuid, "vsatScore" numeric(5,2), CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_student_location" ON "students" ("location") `,
@@ -101,6 +104,9 @@ export class InitialSchema1753848593696 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "public"."idx_user_email"`);
         await queryRunner.query(`DROP INDEX "public"."idx_user_status"`);
         await queryRunner.query(`DROP INDEX "public"."idx_user_role"`);
+        await queryRunner.query(
+            `DROP INDEX "public"."idx_user_account_status"`,
+        );
         await queryRunner.query(`DROP TABLE "users"`);
         await queryRunner.query(`DROP TYPE "public"."users_status_enum"`);
         await queryRunner.query(`DROP TYPE "public"."users_role_enum"`);
