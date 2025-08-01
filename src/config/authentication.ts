@@ -1,10 +1,14 @@
-// src/config/authentication.ts
+// src/config/authentication.ts - Updated version
 import type { AuthenticateCallback } from "passport";
 
 import express from "express";
 import passport from "passport";
 
 import { Permission } from "@/type/enum/user";
+import { AccessDeniedException } from "@/type/exception/access.denied.exception";
+import { AuthenticationException } from "@/type/exception/authentication.exception";
+import { ExpiredJwtException } from "@/type/exception/expired.jwt.exception";
+import { JwtException } from "@/type/exception/jwt.exception";
 import { authenticateOptions } from "@/util/jwt.options";
 
 // Define supported security types
@@ -26,25 +30,87 @@ export function expressAuthentication(
 ): Promise<Express.User> {
     return new Promise((resolve, reject) => {
         if (!isSupportedSecurityType(securityName)) {
-            reject(new Error(`Unknown security type: ${securityName}`));
+            reject(
+                new AuthenticationException(
+                    `Unknown security type: ${securityName}`,
+                ),
+            );
             return;
         }
 
-        const customCallback = createJWTCallback(
-            request,
-            scopes,
-            resolve,
-            reject,
-        );
+        try {
+            const customCallback = createJWTCallback(
+                request,
+                scopes,
+                resolve,
+                reject,
+            );
 
-        const authenticator = passport.authenticate(
-            "jwt",
-            authenticateOptions,
-            customCallback,
-        ) as (req: express.Request) => void;
+            const authenticator = passport.authenticate(
+                "jwt",
+                authenticateOptions,
+                customCallback,
+            ) as (req: express.Request) => void;
 
-        authenticator(request);
+            authenticator(request);
+        } catch (error) {
+            // Convert any unexpected errors to AuthenticationException
+            const authError =
+                error instanceof Error
+                    ? new AuthenticationException(error.message)
+                    : new AuthenticationException("Authentication failed");
+            reject(authError);
+        }
     });
+}
+
+/**
+ * Create appropriate authentication error based on the error/info received
+ */
+function createAuthenticationError(errorOrInfo: unknown): Error {
+    if (errorOrInfo instanceof Error) {
+        // Parse common JWT error messages to throw appropriate exceptions
+        const infoLower = errorOrInfo.message.toLowerCase();
+
+        if (infoLower.includes("expired") || infoLower.includes("exp")) {
+            return new ExpiredJwtException(errorOrInfo.message);
+        } else if (
+            infoLower.includes("no auth token") ||
+            infoLower.includes("missing token")
+        ) {
+            return new AuthenticationException(
+                "Authentication token is required",
+            );
+        } else if (
+            infoLower.includes("invalid signature") ||
+            infoLower.includes("signature")
+        ) {
+            return new JwtException("Invalid token signature");
+        } else if (
+            infoLower.includes("malformed") ||
+            infoLower.includes("invalid token format")
+        ) {
+            return new JwtException("Malformed token");
+        } else if (
+            infoLower.includes("invalid algorithm") ||
+            infoLower.includes("algorithm")
+        ) {
+            return new JwtException("Invalid token algorithm");
+        } else if (
+            infoLower.includes("invalid") ||
+            infoLower.includes("token")
+        ) {
+            return new JwtException(errorOrInfo.message);
+        } else {
+            return new AuthenticationException(errorOrInfo.message);
+        }
+    } else if (Array.isArray(errorOrInfo) && errorOrInfo.length > 0) {
+        const message = errorOrInfo.filter(Boolean).join(", ");
+        return new AuthenticationException(message);
+    } else {
+        // Default case - no specific info provided
+        return new AuthenticationException("Authentication failed");
+    }
 }
 
 /**
@@ -56,50 +122,52 @@ function createJWTCallback(
     resolve: (value: Express.User) => void,
     reject: (reason: Error) => void,
 ): AuthenticateCallback {
-    return (err, user, info, status) => {
-        if (err) {
-            reject(err instanceof Error ? err : new Error(String(err)));
-            return;
-        }
-
-        if (!user) {
-            let error: Error;
-
-            if (info instanceof Error) {
-                error = info;
-            } else if (typeof info === "string") {
-                error = new Error(info);
-            } else if (Array.isArray(info) && info.length > 0) {
-                error = new Error(info.filter(Boolean).join(", "));
-            } else {
-                error = new Error("Unauthorized");
-            }
-
-            // Include status code if available
-            if (status) {
-                const statusCode = Array.isArray(status) ? status[0] : status;
-                error.message += ` (Status: ${String(statusCode)})`;
-            }
-
-            reject(error);
-            return;
-        }
-
-        // Attach user to request for controller access via @Request()
-        request.user = user;
-
-        // Handle scope validation if needed
-        if (scopes && scopes.length > 0) {
-            const scopeValidationResult = validateScopes(user, scopes);
-            if (!scopeValidationResult.isValid) {
-                const message =
-                    scopeValidationResult.message ?? "Access denied";
-                reject(new Error(`Insufficient permissions: ${message}`));
+    return (err, user, info) => {
+        try {
+            // Handle authentication errors (network issues, malformed requests, etc.)
+            if (err) {
+                // Convert generic errors to appropriate authentication exceptions
+                const authError = createAuthenticationError(err);
+                reject(authError);
                 return;
             }
-        }
 
-        resolve(user);
+            // Handle cases where authentication failed (no user returned)
+            if (!user) {
+                const authError = createAuthenticationError(info);
+                reject(authError);
+                return;
+            }
+
+            // Attach user to request for controller access via @Request()
+            request.user = user;
+
+            // Handle scope validation if needed
+            if (scopes && scopes.length > 0) {
+                const scopeValidationResult = validateScopes(user, scopes);
+                if (!scopeValidationResult.isValid) {
+                    const message =
+                        scopeValidationResult.message ?? "Access denied";
+                    reject(
+                        new AccessDeniedException(
+                            `Insufficient permissions: ${message}`,
+                        ),
+                    );
+                    return;
+                }
+            }
+
+            resolve(user);
+        } catch (error) {
+            // Catch any unexpected errors in the callback itself
+            const authError =
+                error instanceof Error
+                    ? new AuthenticationException(error.message)
+                    : new AuthenticationException(
+                          "Authentication callback failed",
+                      );
+            reject(authError);
+        }
     };
 }
 
