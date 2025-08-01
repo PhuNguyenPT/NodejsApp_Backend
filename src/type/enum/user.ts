@@ -1,3 +1,4 @@
+// src/type/enum/user.ts
 export enum Permission {
     // Admin functions
     ADMIN_ACCESS = "admin:access",
@@ -8,6 +9,12 @@ export enum Permission {
     API_DELETE = "api:delete",
     API_READ = "api:read",
     API_WRITE = "api:write",
+
+    // File management - ADD THESE
+    FILE_CREATE = "file:create",
+    FILE_DELETE = "file:delete",
+    FILE_READ = "file:read",
+    FILE_UPDATE = "file:update",
 
     // Profile management
     PROFILE_CREATE_OWN = "profile:create:own",
@@ -22,10 +29,8 @@ export enum Permission {
     USER_LIST = "user:list",
     USER_READ = "user:read",
     USER_UPDATE = "user:update",
-    // Add more permissions as needed for your application
 }
 
-// src/type/enum/user.ts
 export enum Role {
     ADMIN = "ADMIN",
     ANONYMOUS = "ANONYMOUS",
@@ -59,6 +64,11 @@ export function getDefaultPermissionsByRole(role: Role): Permission[] {
                 Permission.API_READ,
                 Permission.API_WRITE,
                 Permission.API_DELETE,
+                // Add file permissions for admin
+                Permission.FILE_CREATE,
+                Permission.FILE_READ,
+                Permission.FILE_UPDATE,
+                Permission.FILE_DELETE,
             ];
         case Role.ANONYMOUS:
             return [Permission.API_READ];
@@ -71,6 +81,9 @@ export function getDefaultPermissionsByRole(role: Role): Permission[] {
                 Permission.PROFILE_READ_ANY,
                 Permission.API_READ,
                 Permission.API_WRITE,
+                // Add some file permissions for moderator
+                Permission.FILE_READ,
+                Permission.FILE_UPDATE,
             ];
         case Role.USER:
             return [
@@ -78,6 +91,10 @@ export function getDefaultPermissionsByRole(role: Role): Permission[] {
                 Permission.PROFILE_UPDATE_OWN,
                 Permission.PROFILE_CREATE_OWN,
                 Permission.API_READ,
+                // Add file permissions for user
+                Permission.FILE_CREATE,
+                Permission.FILE_READ,
+                Permission.FILE_UPDATE,
             ];
         default:
             // Fallback to most restrictive permissions

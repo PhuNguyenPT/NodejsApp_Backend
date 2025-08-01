@@ -66,7 +66,7 @@ export class FileController extends Controller {
     @SuccessResponse(HttpStatus.OK, "File retrieved successfully")
     public async getFileById(@Path() fileId: string): Promise<FileResponse> {
         const file: FileEntity = await this.fileService.getFileById(fileId);
-        return this.fileService.toFileResponse(file);
+        return FileMapper.toFileResponse(file);
     }
 
     /**
@@ -95,6 +95,31 @@ export class FileController extends Controller {
         @Path() fileId: string,
         @Body() updateFileDTO: UpdateFileDTO,
     ): Promise<FileResponse> {
+        if (
+            updateFileDTO.fileName !== undefined &&
+            updateFileDTO.fileName.trim() === ""
+        ) {
+            throw new ValidationException({
+                fileName: "fileName cannot be an empty string",
+            });
+        }
+        if (
+            updateFileDTO.description !== undefined &&
+            updateFileDTO.description.trim() === ""
+        ) {
+            throw new ValidationException({
+                description: "description cannot be an empty string",
+            });
+        }
+        if (
+            updateFileDTO.tags !== undefined &&
+            updateFileDTO.tags.trim() === ""
+        ) {
+            throw new ValidationException({
+                tags: "tags cannot be an empty string",
+            });
+        }
+
         const file: FileEntity = await this.fileService.updateFile(
             fileId,
             updateFileDTO,
