@@ -202,8 +202,8 @@ export class PassportConfig {
         }
 
         // In development, allow localhost/loopback addresses
-        const isDevelopment = config.NODE_ENV === "development";
-        const isLocalhost =
+        const isDevelopment: boolean = config.NODE_ENV === "development";
+        const isLocalhost: boolean =
             ip === "127.0.0.1" ||
             ip === "::1" ||
             ip.startsWith("127.") ||
@@ -217,7 +217,7 @@ export class PassportConfig {
         }
 
         // Example: Block certain IP ranges or known bad IPs
-        const blockedIPs = [
+        const blockedIPs: string[] = [
             "127.0.0.1", // IPv4 localhost (blocked in production)
             "::1", // IPv6 localhost (blocked in production)
             "0.0.0.0", // IPv4 any address
@@ -226,7 +226,7 @@ export class PassportConfig {
             // Add more as needed
         ];
 
-        const suspiciousPatterns = [
+        const suspiciousPatterns: RegExp[] = [
             /^127\./, // Block all 127.x.x.x (IPv4 loopback range) in production
             /^::1$/, // IPv6 localhost in production
             /^::ffff:127\./, // IPv4-mapped IPv6 localhost in production
@@ -263,7 +263,7 @@ export class PassportConfig {
             return true; // Block requests without user agent
         }
 
-        const suspiciousPatterns = [
+        const suspiciousPatterns: RegExp[] = [
             /bot/i, // Generic bot pattern
             /crawler/i, // Web crawlers
             /spider/i, // Web spiders
