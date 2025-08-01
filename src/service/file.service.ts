@@ -3,7 +3,6 @@ import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
 import { CreateFileDTO } from "@/dto/file/create.file";
-import { FileResponse } from "@/dto/file/file.response.js";
 import { UpdateFileDTO } from "@/dto/file/update.file";
 import { FileEntity, FileStatus, FileType } from "@/entity/file.js";
 import { StudentEntity } from "@/entity/student.js";
@@ -45,8 +44,6 @@ export class FileService {
 
         // Soft delete - mark as deleted instead of actually removing
         file.status = FileStatus.DELETED;
-        file.modifiedAt = new Date();
-
         await this.fileRepository.save(file);
         logger.info(`File soft deleted with ID: ${fileId}`);
     }
@@ -123,35 +120,46 @@ export class FileService {
         logger.info(`File permanently deleted with ID: ${fileId}`);
     }
 
-    // Helper method to convert entity to response DTO
-    toFileResponse(file: FileEntity): FileResponse {
-        return {
-            createdAt: file.createdAt,
-            description: file.description,
-            fileName: file.fileName,
-            fileSize: file.getHumanReadableFileSize(),
-            fileType: file.fileType,
-            id: file.id,
-            metadata: file.metadata,
-            mimeType: file.mimeType,
-            modifiedAt: file.modifiedAt,
-            originalFileName: file.originalFileName,
-            status: file.status,
-            tags: file.tags,
-            uploadedBy: file.uploader?.email,
-        };
-    }
-
     async updateFile(
         fileId: string,
         updateFileDTO: UpdateFileDTO,
     ): Promise<FileEntity> {
         const file = await this.getFileById(fileId);
 
-        Object.assign(file, updateFileDTO);
-        file.modifiedAt = new Date();
+        // Handle each field explicitly, including null values for clearing
+        if (
+            updateFileDTO.description !== undefined &&
+            updateFileDTO.description.trim() !== ""
+        ) {
+            file.description = updateFileDTO.description;
+        }
 
-        const updatedFile = await this.fileRepository.save(file);
+        if (
+            updateFileDTO.fileName !== undefined &&
+            updateFileDTO.fileName.trim() !== ""
+        ) {
+            file.fileName = updateFileDTO.fileName;
+        }
+
+        if (
+            updateFileDTO.fileType !== undefined &&
+            updateFileDTO.fileType.trim() !== ""
+        ) {
+            file.fileType = updateFileDTO.fileType;
+        }
+
+        if (updateFileDTO.metadata !== undefined) {
+            file.metadata = updateFileDTO.metadata;
+        }
+
+        if (
+            updateFileDTO.tags !== undefined &&
+            updateFileDTO.tags.trim() !== ""
+        ) {
+            file.tags = updateFileDTO.tags;
+        }
+
+        const updatedFile: FileEntity = await this.fileRepository.save(file);
         logger.info(`File updated successfully with ID: ${updatedFile.id}`);
         return updatedFile;
     }

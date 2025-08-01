@@ -181,18 +181,28 @@ function isSupportedSecurityType(
 }
 
 /**
- * Validate user permissions (scopes)
+ * Validate user permissions (scopes) - IMPROVED VERSION
  */
 function validateScopes(
     user: Express.User,
     requiredScopes: string[],
 ): { isValid: boolean; message?: string } {
-    // Convert string scopes to Permission enum values
-    const requiredPermissions = requiredScopes.filter((scope) =>
-        Object.values(Permission).includes(scope as Permission),
-    ) as Permission[];
+    // Check if any required scopes are unknown/invalid
+    const invalidScopes = requiredScopes.filter(
+        (scope) => !Object.values(Permission).includes(scope as Permission),
+    );
 
-    // If no valid permissions required, allow access
+    if (invalidScopes.length > 0) {
+        return {
+            isValid: false,
+            message: `Unknown permissions: ${invalidScopes.join(", ")}`,
+        };
+    }
+
+    // Convert string scopes to Permission enum values
+    const requiredPermissions = requiredScopes as Permission[];
+
+    // If no permissions required, allow access
     if (requiredPermissions.length === 0) {
         return { isValid: true };
     }
