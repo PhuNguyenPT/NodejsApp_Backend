@@ -13,9 +13,11 @@ import { AccessDeniedException } from "@/type/exception/access.denied.exception"
 import { AuthenticationException } from "@/type/exception/authentication.exception";
 import { EntityExistsException } from "@/type/exception/entity.exists.exception";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
+import { ExpiredJwtException } from "@/type/exception/expired.jwt.exception";
 import { HttpException } from "@/type/exception/http.exception";
 import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception";
 import { InvalidUuidException } from "@/type/exception/invalid.uuid.exception";
+import { JwtException } from "@/type/exception/jwt.exception";
 import { ValidationException } from "@/type/exception/validation.exception";
 import { ErrorDetails } from "@/type/interface/error.details";
 import { ErrorResponse } from "@/type/interface/error.response";
@@ -37,14 +39,13 @@ class ExceptionHandlers {
             status,
         };
 
-        logger.warn("EntityExistsException", {
+        logger.warn("AccessDeniedException", {
             message,
             status,
         });
 
         return { message, response, status };
     }
-
     @ExceptionHandler(AuthenticationException)
     handleAuthenticationException(
         exception: AuthenticationException,
@@ -57,7 +58,7 @@ class ExceptionHandlers {
             status,
         };
 
-        logger.warn("EntityExistsException", {
+        logger.warn("AuthenticationException", {
             message,
             status,
         });
@@ -84,7 +85,6 @@ class ExceptionHandlers {
 
         return { message, response, status };
     }
-
     @ExceptionHandler(EntityMetadataNotFoundError)
     handleEntityMetadataNotFoundError(
         error: EntityMetadataNotFoundError,
@@ -117,6 +117,24 @@ class ExceptionHandlers {
         };
 
         logger.warn("EntityNotFoundException", {
+            message,
+            status,
+        });
+
+        return { message, response, status };
+    }
+
+    @ExceptionHandler(ExpiredJwtException)
+    handleExpiredJwtException(exception: ExpiredJwtException): ErrorDetails {
+        const status: number = exception.status;
+        const message: string = exception.message;
+
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
+
+        logger.warn("ExpiredJwtException", {
             message,
             status,
         });
@@ -210,6 +228,24 @@ class ExceptionHandlers {
         logger.warn("JsonWebTokenError", {
             message: error.message,
             originalError: error.name,
+            status,
+        });
+
+        return { message, response, status };
+    }
+
+    @ExceptionHandler(JwtException)
+    handleJwtException(exception: JwtException): ErrorDetails {
+        const status: number = exception.status;
+        const message: string = exception.message;
+
+        const response: ErrorResponse = {
+            message,
+            status,
+        };
+
+        logger.warn("JwtException", {
+            message,
             status,
         });
 
