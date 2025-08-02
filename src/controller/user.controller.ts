@@ -9,6 +9,7 @@ import {
     Patch,
     Path,
     Post,
+    Produces,
     Query,
     Route,
     Security,
@@ -47,6 +48,7 @@ export class UserController extends Controller {
      */
     @Get("{userId}/exists")
     @Middlewares(validateUuidParam("userId"))
+    @Produces("application/json")
     @Security("bearerAuth", ["user:read"])
     @SuccessResponse("200", "Successfully checked user existence")
     public async checkUserExists(
@@ -63,6 +65,7 @@ export class UserController extends Controller {
      */
     @Middlewares(validateDTO(CreateUserAdminDTO))
     @Post()
+    @Produces("application/json")
     @Security("bearerAuth", ["user:create"])
     @SuccessResponse("201", "Created")
     public async createUser(
@@ -92,6 +95,7 @@ export class UserController extends Controller {
      * @returns An array of all users.
      */
     @Get()
+    @Produces("application/json")
     @Security("bearerAuth", ["user:read", "user:list"])
     @SuccessResponse("200", "Successfully retrieved all users")
     public async getAllUsers(): Promise<UserAdmin[]> {
@@ -109,6 +113,7 @@ export class UserController extends Controller {
      */
     @Get("{userId}/search")
     @Middlewares(validateUuidParam("userId"))
+    @Produces("application/json")
     @Security("bearerAuth", ["user:read"])
     @SuccessResponse("200", "Successfully retrieved user")
     public async getUser(
@@ -129,6 +134,7 @@ export class UserController extends Controller {
      */
     @Get("{userId}")
     @Middlewares(validateUuidParam("userId"))
+    @Produces("application/json")
     @Security("bearerAuth", ["user:read"])
     @SuccessResponse("200", "Successfully retrieved user")
     public async getUserById(@Path() userId: string): Promise<UserAdmin> {
@@ -145,6 +151,7 @@ export class UserController extends Controller {
      */
     @Middlewares(validateUuidParam("userId"), validateDTO(UpdateUserAdminDTO))
     @Patch("{userId}")
+    @Produces("application/json")
     @Security("bearerAuth", ["user:update"])
     @SuccessResponse("200", "Successfully updated user")
     public async updateUser(

@@ -7,6 +7,7 @@ import {
     Middlewares,
     Path,
     Post,
+    Produces,
     Queries,
     Request,
     Response,
@@ -47,6 +48,7 @@ export class StudentController extends Controller {
      */
     @Middlewares(validateDTO(StudentInfoDTO))
     @Post()
+    @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @SuccessResponse(HttpStatus.CREATED, "Successfully create student")
     public async createStudentProfile(
@@ -63,6 +65,7 @@ export class StudentController extends Controller {
      */
     @Middlewares(validateDTO(StudentInfoDTO))
     @Post("profiles")
+    @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
     @Security("bearerAuth", ["profile:create:own"])
@@ -87,6 +90,7 @@ export class StudentController extends Controller {
      * No userId path parameter needed - user is identified through JWT
      */
     @Get("profiles")
+    @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
     @Security("bearerAuth", ["profile:read:own"])
@@ -117,6 +121,7 @@ export class StudentController extends Controller {
      */
     @Get("profiles/{profileId}")
     @Middlewares(validateUuidParam("profileId"))
+    @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
     @Security("bearerAuth", ["profile:read:own"])
@@ -136,6 +141,7 @@ export class StudentController extends Controller {
 
     @Get("profiles/{profileId}/with-files")
     @Middlewares(validateUuidParam("profileId"))
+    @Produces("application/json")
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(
         HttpStatus.OK,

@@ -7,6 +7,7 @@ import {
     Controller,
     Middlewares,
     Post,
+    Produces,
     Request,
     Response,
     Route,
@@ -37,6 +38,7 @@ export class AuthController extends Controller {
 
     @Middlewares(validateDTO(LoginRequest))
     @Post("login")
+    @Produces("application/json")
     @Response("400", "Validation error")
     @Response("401", "Invalid credentials")
     @SuccessResponse("200", "Login successful")
@@ -48,6 +50,7 @@ export class AuthController extends Controller {
     }
 
     @Post("logout")
+    @Produces("application/json")
     @Security("bearerAuth")
     @SuccessResponse("200", "Logout successful")
     public logout(@Request() request: AuthenticatedRequest): {
@@ -66,6 +69,7 @@ export class AuthController extends Controller {
     }
 
     @Post("refresh")
+    @Produces("application/json")
     @Response("401", "Invalid refresh token")
     @Security("bearerAuth") // Add this security decorator
     @SuccessResponse("200", "Token refresh successful")
@@ -93,6 +97,7 @@ export class AuthController extends Controller {
 
     @Middlewares(validateDTO(RegisterRequest))
     @Post("register")
+    @Produces("application/json")
     @Response("400", "Validation error")
     @Response("409", "User already exists")
     @SuccessResponse("201", "Registration successful")
