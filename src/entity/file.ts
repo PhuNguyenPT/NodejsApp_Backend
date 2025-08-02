@@ -14,6 +14,10 @@ import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
 import { Role } from "@/type/enum/user";
 
+/**
+ * File status - must be one of: active, archived, deleted
+ * @example "active"
+ */
 export enum FileStatus {
     ACTIVE = "active",
     ARCHIVED = "archived",
@@ -22,7 +26,7 @@ export enum FileStatus {
 
 /**
  * File type - must be one of: certificate, document, image, other, portfolio, resume, transcript
- * @example "document"
+ * @example "transcript"
  */
 export enum FileType {
     CERTIFICATE = "certificate",

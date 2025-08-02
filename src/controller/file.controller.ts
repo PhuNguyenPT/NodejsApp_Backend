@@ -50,9 +50,16 @@ export class FileController extends Controller {
 
     /**
      * Delete file (soft delete)
+     * @summary Delete a file
+     * @param fileId UUID of the file to delete
+     * @returns No content on successful deletion
      */
     @Delete("{fileId}")
     @Middlewares(validateUuidParam("fileId"))
+    @Response(HttpStatus.BAD_REQUEST, "Invalid file ID format")
+    @Response(HttpStatus.NOT_FOUND, "File not found")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
+    @Response(HttpStatus.UNAUTHORIZED, "Unauthorized")
     @Security("bearerAuth", ["file:delete"])
     @SuccessResponse(HttpStatus.NO_CONTENT, "File deleted successfully")
     public async deleteFile(@Path() fileId: string): Promise<void> {
@@ -61,12 +68,21 @@ export class FileController extends Controller {
 
     /**
      * Download file content
-     * @summary Download a file
-     * @returns Binary file content
+     * @summary Download a file as attachment
+     * @param fileId UUID of the file to download
+     * @returns Binary file content with secure headers
+     * @description Downloads the file with appropriate security headers including:
+     * - Content-Disposition: attachment (forces download)
+     * - Content-Security-Policy: default-src 'none' (prevents script execution)
+     * - Cache-Control: no-cache (prevents caching of sensitive files)
+     * - X-Content-Type-Options: nosniff (prevents MIME sniffing attacks)
      */
     @Get("{fileId}/download")
     @Middlewares(validateUuidParam("fileId"))
     @Produces("application/octet-stream")
+    @Response(HttpStatus.BAD_REQUEST, "Invalid file ID or corrupted file")
+    @Response(HttpStatus.NOT_FOUND, "File not found")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "File downloaded successfully", "file")
     public async downloadFile(
@@ -115,11 +131,18 @@ export class FileController extends Controller {
     }
 
     /**
-     * Get file by ID
+     * Get file metadata by ID
+     * @summary Retrieve file information
+     * @param fileId UUID of the file to retrieve
+     * @returns File metadata including name, size, type, and upload information
      */
     @Get("{fileId}")
     @Middlewares(validateUuidParam("fileId"))
     @Produces("application/json")
+    @Response(HttpStatus.BAD_REQUEST, "Invalid file ID format")
+    @Response(HttpStatus.NOT_FOUND, "File not found")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
+    @Response(HttpStatus.UNAUTHORIZED, "Unauthorized")
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "File retrieved successfully")
     public async getFileById(@Path() fileId: string): Promise<FileResponse> {
@@ -129,10 +152,16 @@ export class FileController extends Controller {
 
     /**
      * Get all files for a student
+     * @summary Retrieve all files associated with a student
+     * @param studentId UUID of the student
+     * @returns Array of file metadata for the specified student
      */
     @Get("student/{studentId}")
     @Middlewares(validateUuidParam("studentId"))
     @Produces("application/json")
+    @Response(HttpStatus.BAD_REQUEST, "Invalid student ID format")
+    @Response(HttpStatus.NOT_FOUND, "Student not found")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Files retrieved successfully")
     public async getFilesByStudentId(
@@ -145,12 +174,19 @@ export class FileController extends Controller {
 
     /**
      * Get file preview (for images)
-     * @summary Preview an image file
-     * @returns Binary image content
+     * @summary Preview an image file inline
+     * @param fileId UUID of the image file to preview
+     * @returns Binary image content with inline display headers
+     * @description Displays the image inline in the browser with caching enabled for better performance.
+     * Only works with image files. Includes security headers to prevent MIME sniffing attacks.
      */
     @Get("{fileId}/preview")
     @Middlewares(validateUuidParam("fileId"))
     @Produces("image/*")
+    @Response(HttpStatus.BAD_REQUEST, "Invalid file ID or file is not an image")
+    @Response(HttpStatus.NOT_FOUND, "File not found")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
+    @Response(HttpStatus.UNAUTHORIZED, "Unauthorized")
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Image preview retrieved successfully")
     public async previewFile(
@@ -192,10 +228,20 @@ export class FileController extends Controller {
 
     /**
      * Update file metadata
+     * @summary Update file information
+     * @param fileId UUID of the file to update
+     * @param updateFileDTO File metadata to update
+     * @returns Updated file metadata
+     * @description Updates file metadata such as name, description, and tags.
+     * Validates that string fields are not empty when provided.
      */
     @Middlewares(validateUuidParam("fileId"), validateDTO(UpdateFileDTO))
     @Produces("application/json")
     @Put("{fileId}")
+    @Response(HttpStatus.BAD_REQUEST, "Validation error or invalid file ID")
+    @Response(HttpStatus.NOT_FOUND, "File not found")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
+    @Response(HttpStatus.UNAUTHORIZED, "Unauthorized")
     @Security("bearerAuth", ["file:update"])
     @SuccessResponse(HttpStatus.OK, "File updated successfully")
     public async updateFile(
@@ -218,12 +264,37 @@ export class FileController extends Controller {
 
     /**
      * Upload a file for a student
+     * @summary Upload and associate a file with a student
+     * @param studentId UUID of the student to associate the file with
+     * @param file The file to upload (multipart/form-data)
+     * @param fileType Type of file being uploaded
+     * @param fileName Optional custom filename (will use original if not provided)
+     * @param description Optional description of the file
+     * @param tags Optional comma-separated tags for categorization
+     * @returns Upload confirmation with file metadata
+     * @description Securely uploads a file with comprehensive validation:
+     * - Filename validation (blocks dangerous characters, control characters, directory traversal)
+     * - File extension validation (blocks executable and dangerous file types)
+     * - MIME type validation (warns on mismatches)
+     * - String field validation (prevents empty strings)
+     *
+     * Security features:
+     * - Blocks files with dangerous extensions (.exe, .bat, .php, etc.)
+     * - Prevents directory traversal attacks (../, ..\)
+     * - Sanitizes filenames to remove control characters
+     * - Validates against Windows reserved names (CON, PRN, etc.)
+     * - Logs suspicious patterns for security monitoring
      */
     @Middlewares(validateUuidParam("studentId"))
     @Post("upload/{studentId}")
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
+    @Response(
+        HttpStatus.BAD_REQUEST,
+        "Validation error - invalid filename, dangerous file type, or invalid student ID",
+    )
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
+    @Response(HttpStatus.PAYLOAD_TOO_LARGE, "File size exceeds limit")
     @Security("bearerAuth", ["file:create"])
     @SuccessResponse(HttpStatus.CREATED, "File uploaded successfully")
     public async uploadFile(
@@ -298,7 +369,11 @@ export class FileController extends Controller {
 
     /**
      * Sanitize filename to prevent directory traversal and special characters
-     * (Keep this for download sanitization only)
+     * @param filename The filename to sanitize
+     * @returns Sanitized filename safe for filesystem operations
+     * @description Used for download sanitization only. Replaces dangerous characters with underscores
+     * and ensures the filename is safe for serving to clients. This is a fallback security measure
+     * for files that may have been uploaded before strict validation was implemented.
      */
     private sanitizeFilename(filename: string): string {
         return filename
@@ -324,6 +399,15 @@ export class FileController extends Controller {
 
     /**
      * Set headers for file downloads with security measures
+     * @param response Express response object
+     * @param mimeType MIME type of the file
+     * @param filename Sanitized filename for the download
+     * @param contentLength Size of the file in bytes
+     * @description Sets secure headers for file downloads including:
+     * - Content-Disposition: attachment (forces download)
+     * - Cache-Control: no-cache (prevents caching of sensitive files)
+     * - Content-Security-Policy: default-src 'none' (prevents script execution)
+     * - X-Content-Type-Options: nosniff (prevents MIME sniffing attacks)
      */
     private setDownloadHeaders(
         response: express.Response,
@@ -354,6 +438,15 @@ export class FileController extends Controller {
 
     /**
      * Set headers for file previews with appropriate caching
+     * @param response Express response object
+     * @param mimeType MIME type of the file (should be image/*)
+     * @param filename Sanitized filename for the preview
+     * @param contentLength Size of the file in bytes
+     * @description Sets headers optimized for image previews including:
+     * - Content-Disposition: inline (displays in browser)
+     * - Cache-Control: public, max-age=3600 (1 hour caching for performance)
+     * - ETag for cache validation
+     * - X-Content-Type-Options: nosniff (prevents MIME sniffing attacks)
      */
     private setPreviewHeaders(
         response: express.Response,
@@ -379,6 +472,14 @@ export class FileController extends Controller {
 
     /**
      * Validate file extension against MIME type for security
+     * @param filename The filename to validate
+     * @param mimeType The MIME type reported by the client
+     * @throws ValidationException if file extension is dangerous
+     * @description Validates file extensions to prevent:
+     * - Executable file uploads (.exe, .bat, .php, etc.)
+     * - Script file uploads (.js, .vbs, .sh, etc.)
+     * - Server-side code uploads (.asp, .jsp, .py, etc.)
+     * Also logs warnings when MIME type doesn't match file extension.
      */
     private validateFileExtension(filename: string, mimeType: string): void {
         const extension = filename.toLowerCase().split(".").pop();
@@ -454,9 +555,9 @@ export class FileController extends Controller {
         if (invalidChars.test(filename)) {
             const match = invalidChars.exec(filename);
             if (match) {
-                // match[0] is guaranteed to exist since we're inside the if block
+                const position = filename.indexOf(match[0]);
                 throw new ValidationException({
-                    fileName: `Filename contains invalid character: '${match[0]}'...`,
+                    fileName: `Filename contains invalid character: '${match[0]}' at position ${position.toString()}. Invalid characters: < > : " / \\ | ? *`,
                 });
             }
         }
@@ -528,6 +629,10 @@ export class FileController extends Controller {
 
     /**
      * Validate string fields to ensure they're not empty strings
+     * @param fields Record of field names and their values to validate
+     * @throws ValidationException if any field is an empty string
+     * @description Validates that optional string fields, when provided, are not empty strings.
+     * This prevents accidentally saving empty strings instead of null/undefined values.
      */
     private validateStringFields(
         fields: Record<string, string | undefined>,
