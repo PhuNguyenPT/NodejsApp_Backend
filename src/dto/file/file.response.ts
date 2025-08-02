@@ -4,6 +4,7 @@ import { FileType } from "@/entity/file";
 export class FileResponse {
     createdAt!: Date;
     description?: string;
+    downloadUrl?: string;
     fileName!: string;
     fileSize!: string;
     fileType!: FileType;
@@ -12,6 +13,7 @@ export class FileResponse {
     mimeType!: string;
     modifiedAt!: Date;
     originalFileName!: string;
+    previewUrl?: string; // Only for images
     status!: string;
     tags?: string;
     uploadedBy?: string;

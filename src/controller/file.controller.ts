@@ -1,4 +1,5 @@
 // src/controller/file.controller.ts
+import express from "express";
 import { inject, injectable } from "inversify";
 import {
     Body,
@@ -9,6 +10,7 @@ import {
     Middlewares,
     Path,
     Post,
+    Produces,
     Put,
     Request,
     Response,
@@ -58,6 +60,74 @@ export class FileController extends Controller {
     }
 
     /**
+     * Download file content
+     * @summary Download a file
+     * @returns Binary file content
+     */
+    @Get("{fileId}/download")
+    @Middlewares(validateUuidParam("fileId"))
+    @Produces("application/octet-stream")
+    @Security("bearerAuth", ["file:read"])
+    @SuccessResponse(HttpStatus.OK, "File downloaded successfully", "file")
+    public async downloadFile(
+        @Path() fileId: string,
+        @Request() request: express.Request,
+    ): Promise<void> {
+        const file: FileEntity = await this.fileService.getFileById(fileId);
+
+        // Log buffer info for debugging
+        this.logger.info(
+            `File download - Size: ${file.fileSize.toString()}, Buffer length: ${file.fileContent.length.toString()}, MIME: ${file.mimeType}`,
+        );
+
+        // Verify buffer is valid
+        if (file.fileContent.length === 0) {
+            throw new ValidationException({
+                file: "File content is empty or corrupted",
+            });
+        }
+        // Check if response object exists
+        if (!request.res) {
+            throw new Error("Response object not available");
+        }
+
+        // Get response object from request
+        const response = request.res;
+
+        // Set headers directly on response object to bypass middleware
+        response.setHeader("Content-Type", file.mimeType); // Pure MIME type, no charset
+        response.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${file.fileName}"`,
+        );
+        response.setHeader(
+            "Content-Length",
+            file.fileContent.length.toString(),
+        );
+        response.setHeader(
+            "Cache-Control",
+            "no-cache, no-store, must-revalidate",
+        );
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Expires", "0");
+
+        // Log what we're actually setting
+        this.logger.info("Response headers set:", {
+            "Content-Disposition": response.getHeader("Content-Disposition"),
+            "Content-Length": response.getHeader("Content-Length"),
+            "Content-Type": response.getHeader("Content-Type"),
+        });
+
+        // Send binary data directly and end the response
+        response.end(file.fileContent);
+
+        this.logger.info("File download completed successfully", {
+            bytesSent: file.fileContent.length,
+            fileId,
+        });
+    }
+
+    /**
      * Get file by ID
      */
     @Get("{fileId}")
@@ -84,6 +154,61 @@ export class FileController extends Controller {
         return FileMapper.toFileResponseList(files);
     }
 
+    /**
+     * Get file preview (for images)
+     * @summary Preview an image file
+     * @returns Binary image content
+     */
+    @Get("{fileId}/preview")
+    @Middlewares(validateUuidParam("fileId"))
+    @Produces("image/*")
+    @Security("bearerAuth", ["file:read"])
+    @SuccessResponse(HttpStatus.OK, "Image preview retrieved successfully")
+    public async previewFile(
+        @Path() fileId: string,
+        @Request() request: express.Request,
+    ): Promise<void> {
+        const file: FileEntity = await this.fileService.getFileById(fileId);
+
+        if (!file.isImage()) {
+            throw new ValidationException({ fileType: "File is not an image" });
+        }
+
+        // Check if response object exists
+        if (!request.res) {
+            throw new Error("Response object not available");
+        }
+
+        // Get response object from request
+        const response = request.res;
+
+        // Set headers directly on response object to bypass middleware
+        response.setHeader("Content-Type", file.mimeType); // Pure MIME type, no charset
+        response.setHeader(
+            "Content-Disposition",
+            `inline; filename="${file.fileName}"`,
+        );
+        response.setHeader(
+            "Content-Length",
+            file.fileContent.length.toString(),
+        );
+
+        // Log what we're actually setting
+        this.logger.info("Preview headers set:", {
+            "Cache-Control": response.getHeader("Cache-Control"),
+            "Content-Disposition": response.getHeader("Content-Disposition"),
+            "Content-Length": response.getHeader("Content-Length"),
+            "Content-Type": response.getHeader("Content-Type"),
+        });
+
+        // Send binary data directly and end the response
+        response.end(file.fileContent);
+
+        this.logger.info("File preview completed successfully", {
+            bytesSent: file.fileContent.length,
+            fileId,
+        });
+    }
     /**
      * Update file metadata
      */

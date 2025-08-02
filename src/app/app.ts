@@ -29,7 +29,7 @@ class App {
         this.basePath = config.SERVER_PATH;
 
         this.initializeDatabaseConnection();
-        this.initializePassportStrategies(); // Initialize passport before other middleware
+        this.initializePassportStrategies();
         this.initializeCors();
         this.initializeMiddleware();
         this.initializeRoutes();
@@ -96,8 +96,27 @@ class App {
     }
 
     private initializeMiddleware(): void {
-        this.express.use(helmet());
-        // Request tracking (must come before Morgan)
+        // Configure helmet with updated CSP for Swagger UI and file downloads
+        this.express.use(
+            helmet({
+                contentSecurityPolicy: {
+                    directives: {
+                        defaultSrc: ["'self'"],
+                        fontSrc: ["'self'", "https:", "data:"],
+                        formAction: ["'self'"],
+                        frameAncestors: ["'self'"],
+                        imgSrc: ["'self'", "data:", "blob:"], // Add blob: for Swagger UI image previews
+                        objectSrc: ["'none'"],
+                        scriptSrc: ["'self'", "'unsafe-inline'"], // Swagger UI needs inline scripts
+                        scriptSrcAttr: ["'none'"],
+                        styleSrc: ["'self'", "https:", "'unsafe-inline'"], // Swagger UI needs inline styles
+                        upgradeInsecureRequests: [],
+                    },
+                },
+                crossOriginOpenerPolicy: { policy: "same-origin" },
+                crossOriginResourcePolicy: { policy: "same-origin" },
+            }),
+        ); // Request tracking (must come before Morgan)
         this.initializeRequestTracking();
         this.initializeMorganLogging();
         this.express.use(express.json({ limit: "10mb" })); // Added size limit
