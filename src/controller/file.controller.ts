@@ -86,37 +86,24 @@ export class FileController extends Controller {
                 file: "File content is empty or corrupted",
             });
         }
+
         // Check if response object exists
         if (!request.res) {
             throw new Error("Response object not available");
         }
 
-        // Get response object from request
         const response = request.res;
 
-        // Set headers directly on response object to bypass middleware
-        response.setHeader("Content-Type", file.mimeType); // Pure MIME type, no charset
-        response.setHeader(
-            "Content-Disposition",
-            `attachment; filename="${file.fileName}"`,
-        );
-        response.setHeader(
-            "Content-Length",
-            file.fileContent.length.toString(),
-        );
-        response.setHeader(
-            "Cache-Control",
-            "no-cache, no-store, must-revalidate",
-        );
-        response.setHeader("Pragma", "no-cache");
-        response.setHeader("Expires", "0");
+        // Sanitize filename for security
+        const sanitizedFileName = this.sanitizeFilename(file.fileName);
 
-        // Log what we're actually setting
-        this.logger.info("Response headers set:", {
-            "Content-Disposition": response.getHeader("Content-Disposition"),
-            "Content-Length": response.getHeader("Content-Length"),
-            "Content-Type": response.getHeader("Content-Type"),
-        });
+        // Set security and download headers
+        this.setDownloadHeaders(
+            response,
+            file.mimeType,
+            sanitizedFileName,
+            file.fileContent.length,
+        );
 
         // Send binary data directly and end the response
         response.end(file.fileContent);
@@ -181,27 +168,18 @@ export class FileController extends Controller {
             throw new Error("Response object not available");
         }
 
-        // Get response object from request
         const response = request.res;
 
-        // Set headers directly on response object to bypass middleware
-        response.setHeader("Content-Type", file.mimeType); // Pure MIME type, no charset
-        response.setHeader(
-            "Content-Disposition",
-            `inline; filename="${file.fileName}"`,
-        );
-        response.setHeader(
-            "Content-Length",
-            file.fileContent.length.toString(),
-        );
+        // Sanitize filename for security
+        const sanitizedFileName = this.sanitizeFilename(file.fileName);
 
-        // Log what we're actually setting
-        this.logger.info("Preview headers set:", {
-            "Cache-Control": response.getHeader("Cache-Control"),
-            "Content-Disposition": response.getHeader("Content-Disposition"),
-            "Content-Length": response.getHeader("Content-Length"),
-            "Content-Type": response.getHeader("Content-Type"),
-        });
+        // Set preview headers with caching
+        this.setPreviewHeaders(
+            response,
+            file.mimeType,
+            sanitizedFileName,
+            file.fileContent.length,
+        );
 
         // Send binary data directly and end the response
         response.end(file.fileContent);
@@ -211,6 +189,7 @@ export class FileController extends Controller {
             fileId,
         });
     }
+
     /**
      * Update file metadata
      */
@@ -223,30 +202,12 @@ export class FileController extends Controller {
         @Path() fileId: string,
         @Body() updateFileDTO: UpdateFileDTO,
     ): Promise<FileResponse> {
-        if (
-            updateFileDTO.fileName !== undefined &&
-            updateFileDTO.fileName.trim() === ""
-        ) {
-            throw new ValidationException({
-                fileName: "fileName cannot be an empty string",
-            });
-        }
-        if (
-            updateFileDTO.description !== undefined &&
-            updateFileDTO.description.trim() === ""
-        ) {
-            throw new ValidationException({
-                description: "description cannot be an empty string",
-            });
-        }
-        if (
-            updateFileDTO.tags !== undefined &&
-            updateFileDTO.tags.trim() === ""
-        ) {
-            throw new ValidationException({
-                tags: "tags cannot be an empty string",
-            });
-        }
+        // Validate string fields using helper method
+        this.validateStringFields({
+            description: updateFileDTO.description,
+            fileName: updateFileDTO.fileName,
+            tags: updateFileDTO.tags,
+        });
 
         const file: FileEntity = await this.fileService.updateFile(
             fileId,
@@ -287,25 +248,28 @@ export class FileController extends Controller {
         @FormField("tags") tags?: string,
     ): Promise<FileUploadResponse> {
         const user = request.user;
-        if (fileName !== undefined && fileName.trim() === "") {
-            throw new ValidationException({
-                fileName: "fileName cannot be an empty string",
-            });
-        }
-        if (description !== undefined && description.trim() === "") {
-            throw new ValidationException({
-                description: "description cannot be an empty string",
-            });
-        }
-        if (tags !== undefined && tags.trim() === "") {
-            throw new ValidationException({
-                tags: "tags cannot be an empty string",
-            });
-        }
+
+        // Validate string fields using helper method
+        this.validateStringFields({
+            description,
+            fileName,
+            tags,
+        });
+
+        // Validate filenames for security (block dangerous patterns)
+        this.validateFilename(fileName ?? file.originalname, user);
+        this.validateFilename(file.originalname, user);
+
+        // Use original filenames since they passed validation
+        const finalFileName = fileName ?? file.originalname;
+
+        // Validate file extension for security
+        this.validateFileExtension(finalFileName, file.mimetype);
+
         const createFileDTO: CreateFileDTO = {
             description: description,
             fileContent: file.buffer,
-            fileName: fileName ?? file.originalname,
+            fileName: finalFileName,
             filePath: file.path,
             fileSize: file.size,
             fileType: fileType,
@@ -328,5 +292,252 @@ export class FileController extends Controller {
             message: "File uploaded successfully",
             originalFileName: fileEntity.originalFileName,
         };
+    }
+
+    // Private helper methods
+
+    /**
+     * Sanitize filename to prevent directory traversal and special characters
+     * (Keep this for download sanitization only)
+     */
+    private sanitizeFilename(filename: string): string {
+        return filename
+            .split("") // Split into characters
+            .map((char) => {
+                const code = char.charCodeAt(0);
+                // Replace control characters (0-31, 127-159) and invalid filesystem chars
+                if (
+                    code < 32 ||
+                    (code >= 127 && code < 160) ||
+                    /[<>:"/\\|?*]/.test(char)
+                ) {
+                    return "_";
+                }
+                return char;
+            })
+            .join("")
+            .replace(/^\.+/, "") // Remove leading dots
+            .replace(/\.+$/, "") // Remove trailing dots
+            .trim() // Remove leading/trailing whitespace
+            .substring(0, 255); // Limit length
+    }
+
+    /**
+     * Set headers for file downloads with security measures
+     */
+    private setDownloadHeaders(
+        response: express.Response,
+        mimeType: string,
+        filename: string,
+        contentLength: number,
+    ): void {
+        // Content headers
+        response.setHeader("Content-Type", mimeType);
+        response.setHeader("Content-Length", contentLength.toString());
+        response.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${filename}"`,
+        );
+
+        // Security headers for downloads
+        response.setHeader(
+            "Cache-Control",
+            "no-cache, no-store, must-revalidate",
+        );
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Expires", "0");
+
+        // Additional security
+        response.setHeader("X-Content-Type-Options", "nosniff");
+        response.setHeader("Content-Security-Policy", "default-src 'none'");
+    }
+
+    /**
+     * Set headers for file previews with appropriate caching
+     */
+    private setPreviewHeaders(
+        response: express.Response,
+        mimeType: string,
+        filename: string,
+        contentLength: number,
+    ): void {
+        // Content headers
+        response.setHeader("Content-Type", mimeType);
+        response.setHeader("Content-Length", contentLength.toString());
+        response.setHeader(
+            "Content-Disposition",
+            `inline; filename="${filename}"`,
+        );
+
+        // Caching for previews (images can be cached)
+        response.setHeader("Cache-Control", "public, max-age=3600"); // 1 hour cache
+        response.setHeader("ETag", `"${filename}-${contentLength.toString()}"`);
+
+        // Security headers
+        response.setHeader("X-Content-Type-Options", "nosniff");
+    }
+
+    /**
+     * Validate file extension against MIME type for security
+     */
+    private validateFileExtension(filename: string, mimeType: string): void {
+        const extension = filename.toLowerCase().split(".").pop();
+
+        // Common dangerous extensions that should be blocked
+        const dangerousExtensions = [
+            "exe",
+            "bat",
+            "cmd",
+            "com",
+            "pif",
+            "scr",
+            "vbs",
+            "js",
+            "jar",
+            "sh",
+            "php",
+            "asp",
+            "aspx",
+            "jsp",
+            "py",
+            "rb",
+            "pl",
+        ];
+
+        if (extension && dangerousExtensions.includes(extension)) {
+            throw new ValidationException({
+                fileName: `File extension '.${extension}' is not allowed for security reasons`,
+            });
+        }
+
+        // Optional: Validate that extension matches MIME type
+        const mimeToExtension: Record<string, string[]> = {
+            "application/msword": ["doc"],
+            "application/pdf": ["pdf"],
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                ["docx"],
+            "image/gif": ["gif"],
+            "image/jpeg": ["jpg", "jpeg"],
+            "image/png": ["png"],
+            "text/plain": ["txt"],
+        };
+
+        const expectedExtensions = mimeToExtension[mimeType];
+        if (extension && !expectedExtensions.includes(extension)) {
+            this.logger.warn(
+                `MIME type '${mimeType}' doesn't match extension '.${extension}'`,
+                {
+                    extension,
+                    filename,
+                    mimeType,
+                },
+            );
+        }
+    }
+
+    /**
+     * Validate filename for dangerous patterns and block them
+     */
+    private validateFilename(filename: string, user: Express.User): void {
+        // Check for control characters
+        for (let i = 0; i < filename.length; i++) {
+            const code = filename.charCodeAt(i);
+            if (code < 32 || (code >= 127 && code < 160)) {
+                throw new ValidationException({
+                    fileName: `Filename contains invalid control characters. Character code: ${code.toString()} at position ${i.toString()}`,
+                });
+            }
+        }
+
+        // Check for invalid filesystem characters
+        const invalidChars = /[<>:"/\\|?*]/;
+        if (invalidChars.test(filename)) {
+            const match = invalidChars.exec(filename);
+            if (match) {
+                // match[0] is guaranteed to exist since we're inside the if block
+                throw new ValidationException({
+                    fileName: `Filename contains invalid character: '${match[0]}'...`,
+                });
+            }
+        }
+
+        // Check for directory traversal patterns
+        if (
+            filename.includes("..") ||
+            filename.includes("./") ||
+            filename.includes(".\\")
+        ) {
+            throw new ValidationException({
+                fileName:
+                    "Filename cannot contain directory traversal patterns (.. ./ .\\)",
+            });
+        }
+
+        // Check for leading/trailing dots or spaces
+        if (/^\.+/.test(filename) || /\.+$/.test(filename)) {
+            throw new ValidationException({
+                fileName: "Filename cannot start or end with dots",
+            });
+        }
+
+        if (filename.trim() !== filename) {
+            throw new ValidationException({
+                fileName: "Filename cannot have leading or trailing whitespace",
+            });
+        }
+
+        // Check filename length
+        if (filename.length === 0) {
+            throw new ValidationException({
+                fileName: "Filename cannot be empty",
+            });
+        }
+
+        if (filename.length > 255) {
+            throw new ValidationException({
+                fileName: `Filename too long. Maximum 255 characters, got ${filename.length.toString()}`,
+            });
+        }
+
+        // Check for Windows reserved names
+        const windowsReserved = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\.|$)/i;
+        if (windowsReserved.test(filename)) {
+            throw new ValidationException({
+                fileName: `Filename '${filename}' is a reserved Windows system name`,
+            });
+        }
+
+        // Log suspicious patterns for security monitoring
+        const suspiciousPatterns = [
+            /\.(exe|bat|cmd|com|pif|scr|vbs|jar)$/i,
+            /script/i,
+            /%[0-9a-f]{2}/i, // URL encoded characters
+            /\\x[0-9a-f]{2}/i, // Hex encoded characters
+        ];
+
+        for (const pattern of suspiciousPatterns) {
+            if (pattern.test(filename)) {
+                this.logger.warn("Suspicious filename pattern detected", {
+                    filename,
+                    pattern: pattern.toString(),
+                    userId: user.id,
+                });
+            }
+        }
+    }
+
+    /**
+     * Validate string fields to ensure they're not empty strings
+     */
+    private validateStringFields(
+        fields: Record<string, string | undefined>,
+    ): void {
+        for (const [fieldName, value] of Object.entries(fields)) {
+            if (value !== undefined && value.trim() === "") {
+                throw new ValidationException({
+                    [fieldName]: `${fieldName} cannot be an empty string`,
+                });
+            }
+        }
     }
 }
