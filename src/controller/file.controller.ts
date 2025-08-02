@@ -267,7 +267,7 @@ export class FileController extends Controller {
      * @summary Upload and associate a file with a student
      * @param studentId UUID of the student to associate the file with
      * @param file The file to upload (multipart/form-data)
-     * @param fileType Type of file being uploaded
+     * @param fileType File type - must be one of: certificate, document, image, other, portfolio, resume, transcript
      * @param fileName Optional custom filename (will use original if not provided)
      * @param description Optional description of the file
      * @param tags Optional comma-separated tags for categorization
@@ -303,9 +303,13 @@ export class FileController extends Controller {
         @UploadedFile("file") file: Express.Multer.File,
         /**
          * File type - must be one of: certificate, document, image, other, portfolio, resume, transcript
-         * @example "document"
+         * @example "transcript"
          */
         @FormField("fileType") fileType: FileType,
+        /**
+         * Optional custom filename (will use original if not provided)
+         * @example "john_doe_transcript.pdf"
+         */
         @FormField("fileName") fileName?: string,
         /**
          * Optional description of the file
@@ -313,7 +317,7 @@ export class FileController extends Controller {
          */
         @FormField("description") description?: string,
         /**
-         * Optional comma-separated tags
+         * Optional comma-separated tags for categorization
          * @example "academic,transcript,2024"
          */
         @FormField("tags") tags?: string,
