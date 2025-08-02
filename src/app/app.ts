@@ -96,7 +96,6 @@ class App {
     }
 
     private initializeMiddleware(): void {
-        // Configure helmet with updated CSP for Swagger UI and file downloads
         this.express.use(
             helmet({
                 contentSecurityPolicy: {
@@ -116,7 +115,7 @@ class App {
                 crossOriginOpenerPolicy: { policy: "same-origin" },
                 crossOriginResourcePolicy: { policy: "same-origin" },
             }),
-        ); // Request tracking (must come before Morgan)
+        );
         this.initializeRequestTracking();
         this.initializeMorganLogging();
         this.express.use(express.json({ limit: "10mb" })); // Added size limit

@@ -122,7 +122,7 @@ export class FileController extends Controller {
         response.end(file.fileContent);
 
         this.logger.info("File download completed successfully", {
-            bytesSent: file.fileContent.length,
+            bytesSent: file.getHumanReadableFileSize(),
             fileId,
         });
     }
@@ -132,6 +132,7 @@ export class FileController extends Controller {
      */
     @Get("{fileId}")
     @Middlewares(validateUuidParam("fileId"))
+    @Produces("application/json")
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "File retrieved successfully")
     public async getFileById(@Path() fileId: string): Promise<FileResponse> {
@@ -144,6 +145,7 @@ export class FileController extends Controller {
      */
     @Get("student/{studentId}")
     @Middlewares(validateUuidParam("studentId"))
+    @Produces("application/json")
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Files retrieved successfully")
     public async getFilesByStudentId(
@@ -205,7 +207,7 @@ export class FileController extends Controller {
         response.end(file.fileContent);
 
         this.logger.info("File preview completed successfully", {
-            bytesSent: file.fileContent.length,
+            bytesSent: file.getHumanReadableFileSize(),
             fileId,
         });
     }
@@ -213,6 +215,7 @@ export class FileController extends Controller {
      * Update file metadata
      */
     @Middlewares(validateUuidParam("fileId"), validateDTO(UpdateFileDTO))
+    @Produces("application/json")
     @Put("{fileId}")
     @Security("bearerAuth", ["file:update"])
     @SuccessResponse(HttpStatus.OK, "File updated successfully")
@@ -257,6 +260,7 @@ export class FileController extends Controller {
      */
     @Middlewares(validateUuidParam("studentId"))
     @Post("upload/{studentId}")
+    @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
     @Security("bearerAuth", ["file:create"])
