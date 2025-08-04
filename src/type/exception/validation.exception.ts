@@ -13,7 +13,7 @@ export class ValidationException extends HttpException {
      */
     constructor(validationErrors: Record<string, string>) {
         super(
-            HttpStatus.BAD_REQUEST,
+            HttpStatus.UNPROCESSABLE_ENTITY,
             "Validation failed",
             "ValidationException",
         );
