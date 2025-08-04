@@ -6,9 +6,12 @@ import helmet from "helmet";
 import passport from "passport";
 
 import { iocContainer } from "@/app/ioc.container.js";
+import { corsOptions } from "@/config/cors";
 import { AppDataSource } from "@/config/data.source.js";
+import { helmetOptions } from "@/config/helmet";
 import { getMorganConfig, setupRequestTracking } from "@/config/morgan.js";
 import { PassportConfig } from "@/config/passport.config.js";
+import swaggerDocs from "@/config/swagger";
 import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
 import { TYPES } from "@/type/container/types.js";
@@ -32,7 +35,7 @@ class App {
         this.initializePassportStrategies();
         this.initializeCors();
         this.initializeMiddleware();
-        this.initializeRoutes();
+        this.initializeRoutesAndDocs();
         this.initializeErrorHandling();
         this.initializeKeyStore();
     }
@@ -49,30 +52,8 @@ class App {
         });
     }
 
-    private getCorsOptions() {
-        const corsOptions = {
-            allowedHeaders: [
-                "Origin",
-                "X-Requested-With",
-                "Content-Type",
-                "Accept",
-                "Authorization",
-                "Cache-Control",
-                "Pragma",
-            ],
-            credentials: config.CORS_CREDENTIALS,
-            exposedHeaders: ["Authorization", "X-Total-Count", "X-Request-ID"],
-            maxAge: 86400,
-            methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-            origin: config.CORS_ORIGIN,
-        };
-
-        logger.info("CORS Configuration:", corsOptions);
-        return corsOptions;
-    }
-
     private initializeCors(): void {
-        this.express.use(cors(this.getCorsOptions()));
+        this.express.use(cors(corsOptions));
     }
 
     private initializeDatabaseConnection(): void {
@@ -96,29 +77,9 @@ class App {
     }
 
     private initializeMiddleware(): void {
-        this.express.use(
-            helmet({
-                contentSecurityPolicy: {
-                    directives: {
-                        defaultSrc: ["'self'"],
-                        fontSrc: ["'self'", "https:", "data:"],
-                        formAction: ["'self'"],
-                        frameAncestors: ["'self'"],
-                        imgSrc: ["'self'", "data:", "blob:"], // Add blob: for Swagger UI image previews
-                        objectSrc: ["'none'"],
-                        scriptSrc: ["'self'", "'unsafe-inline'"], // Swagger UI needs inline scripts
-                        scriptSrcAttr: ["'none'"],
-                        styleSrc: ["'self'", "https:", "'unsafe-inline'"], // Swagger UI needs inline styles
-                        upgradeInsecureRequests: [],
-                    },
-                },
-                crossOriginOpenerPolicy: { policy: "same-origin" },
-                crossOriginResourcePolicy: { policy: "same-origin" },
-            }),
-        );
         this.initializeRequestTracking();
         this.initializeMorganLogging();
-        this.express.use(express.json({ limit: "10mb" })); // Added size limit
+        this.express.use(express.json({ limit: "10mb" }));
         this.express.use(
             express.urlencoded({ extended: false, limit: "10mb" }),
         );
@@ -152,14 +113,23 @@ class App {
         this.express.use(setupRequestTracking());
     }
 
-    private initializeRoutes(): void {
-        // Create a router for the API base path
+    private initializeRoutesAndDocs(): void {
+        if (config.NODE_ENV !== "production") {
+            try {
+                logger.info("Setting up Swagger documentation...");
+                swaggerDocs(this.express, this.getServerUrl());
+                logger.info("Swagger documentation setup completed");
+            } catch (error) {
+                logger.error("Error setting up Swagger documentation:", error);
+            }
+        }
+
         const apiRouter: Router = express.Router();
 
-        // Register TSOA routes to the API router
+        apiRouter.use(helmet(helmetOptions));
+
         RegisterRoutes(apiRouter);
 
-        // Mount the API router at the base path
         this.express.use(this.basePath, apiRouter);
 
         this.express.get("/health", (req, res) => {
