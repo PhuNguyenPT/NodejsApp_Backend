@@ -217,7 +217,7 @@ class ExceptionHandlers {
 
     @ExceptionHandler(JsonWebTokenError)
     handleJsonWebTokenError(error: JsonWebTokenError): ErrorDetails {
-        const status = 401;
+        const status = HttpStatus.UNAUTHORIZED;
         const message = "Invalid token";
 
         const response: ErrorResponse = {
@@ -254,7 +254,7 @@ class ExceptionHandlers {
 
     @ExceptionHandler(NotBeforeError)
     handleNotBeforeError(error: NotBeforeError): ErrorDetails {
-        const status = 401;
+        const status = HttpStatus.UNAUTHORIZED;
         const message = "Token not active yet";
 
         const response: ErrorResponse = {
@@ -274,7 +274,7 @@ class ExceptionHandlers {
 
     @ExceptionHandler(SyntaxError)
     handleSyntaxError(error: SyntaxError): ErrorDetails {
-        const status = 400;
+        const status = HttpStatus.BAD_REQUEST;
         const message = "Invalid request format or malformed data";
 
         const response: ErrorResponse = {
@@ -293,7 +293,7 @@ class ExceptionHandlers {
 
     @ExceptionHandler(TokenExpiredError)
     handleTokenExpiredError(error: TokenExpiredError): ErrorDetails {
-        const status = 401;
+        const status = HttpStatus.UNAUTHORIZED;
         const message = "Token has expired";
 
         const response: ErrorResponse = {
@@ -313,7 +313,7 @@ class ExceptionHandlers {
 
     @ExceptionHandler(ValidateError)
     handleValidateError(error: ValidateError): ErrorDetails {
-        const status = 400; // Bad Request for validation errors
+        const status = HttpStatus.UNPROCESSABLE_ENTITY; // Bad Request for validation errors
         const message = "Validation failed";
 
         // Extract validation errors from TSOA ValidateError
