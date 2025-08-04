@@ -1,6 +1,5 @@
 // src/app/index.ts
 import App from "@/app/app.js";
-import swaggerDocs from "@/config/swagger.js";
 import logger from "@/util/logger.js";
 import validateEnv, { config } from "@/util/validate.env.js";
 
@@ -28,18 +27,6 @@ logger.info("Starting application", {
 
 // Create the app with environment variables
 const app = new App();
-
-// Setup Swagger documentation in non-production environments BEFORE starting the server
-if (process.env.NODE_ENV !== "production") {
-    try {
-        logger.info("Setting up Swagger documentation...");
-        swaggerDocs(app.express, app.getServerUrl());
-        logger.info("Swagger documentation setup completed");
-    } catch (error) {
-        logger.error("Error setting up Swagger documentation:", error);
-        // Continue without Swagger if it fails
-    }
-}
 
 // Log the complete server URL
 logger.info(`Server will be available at: ${app.getServerUrl()}`);
