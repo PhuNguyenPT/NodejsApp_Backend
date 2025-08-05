@@ -16,6 +16,7 @@ import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
 import { UserEntity } from "@/entity/user.js";
 import { Role } from "@/type/enum/user";
+import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces";
 
 import { FileEntity, FileType } from "./file";
 
@@ -28,6 +29,12 @@ export interface ExamSubjectData {
 @Index("idx_student_user_id", ["userId"])
 @Index("idx_student_major", ["major"])
 @Index("idx_student_location", ["location"])
+@Index("idx_student_province", ["province"])
+@Index("idx_student_budget", ["minBudget", "maxBudget"])
+@Index("idx_student_created_at", ["createdAt"])
+@Index("idx_student_modified_at", ["modifiedAt"])
+@Index("idx_student_aptitude_test_score", ["aptitudeTestScore"])
+@Index("idx_student_vsat_score", ["vsatScore"])
 export class StudentEntity {
     @Column({ nullable: true, precision: 5, scale: 2, type: "decimal" })
     aptitudeTestScore?: number;
@@ -68,17 +75,17 @@ export class StudentEntity {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ length: 500, type: "varchar" })
-    location!: string;
+    @Column({ length: 500, nullable: true, type: "varchar" })
+    location?: string;
 
-    @Column({ length: 200, type: "varchar" })
-    major!: string;
+    @Column({ length: 200, nullable: true, type: "varchar" })
+    major?: string;
 
-    @Column({ precision: 14, scale: 2, type: "decimal" })
-    maxBudget!: number;
+    @Column({ nullable: true, precision: 14, scale: 2, type: "decimal" })
+    maxBudget?: number;
 
-    @Column({ precision: 14, scale: 2, type: "decimal" })
-    minBudget!: number;
+    @Column({ nullable: true, precision: 14, scale: 2, type: "decimal" })
+    minBudget?: number;
 
     @UpdateDateColumn({ type: "timestamp with time zone" })
     modifiedAt!: Date;
@@ -90,6 +97,14 @@ export class StudentEntity {
         type: "varchar",
     })
     modifiedBy?: string;
+
+    @Column({
+        enum: VietnamSouthernProvinces,
+        length: 50,
+        nullable: true,
+        type: "varchar",
+    })
+    province?: VietnamSouthernProvinces;
 
     @Column({ nullable: true, type: "json" })
     subjectCombination?: ExamSubjectData[];
@@ -136,6 +151,9 @@ export class StudentEntity {
 
     // Helper method to get budget range as string
     getBudgetRangeString(): string {
+        if (this.minBudget === undefined || this.maxBudget === undefined) {
+            return "No budget set";
+        }
         return `$${this.minBudget.toLocaleString()} - $${this.maxBudget.toLocaleString()}`;
     }
     getExamProfile(): ExamProfile | null {
@@ -265,11 +283,24 @@ export class StudentEntity {
 
     // Helper method to check if budget range is valid
     isBudgetRangeValid(): boolean {
+        if (this.minBudget === undefined || this.maxBudget === undefined) {
+            return false; // No budget set
+        }
         return this.minBudget <= this.maxBudget;
     }
 
     // Helper method to check if a value is within budget range
     isWithinBudget(amount: number): boolean {
+        if (this.minBudget === undefined || this.maxBudget === undefined) {
+            return false; // No budget set
+        }
+        if (typeof amount !== "number" || isNaN(amount)) {
+            return false; // Invalid amount
+        }
+        // Check if amount is within the defined budget range
+        if (amount < 0) {
+            return false; // Negative amounts are not allowed
+        }
         return amount >= this.minBudget && amount <= this.maxBudget;
     }
 

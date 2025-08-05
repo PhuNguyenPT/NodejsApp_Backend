@@ -17,6 +17,10 @@ import { StudentEntity } from "@/entity/student.js";
 @Index("idx_certification_issue_date", ["issueDate"])
 @Index("idx_certification_expiration_date", ["expirationDate"])
 @Index("idx_certification_issuing_org", ["issuingOrganization"])
+@Index("idx_certification_name", ["name"])
+@Index("idx_certification_level", ["level"])
+@Index("idx_certification_created_at", ["createdAt"])
+@Index("idx_certification_modified_at", ["modifiedAt"])
 export class CertificationEntity {
     @CreateDateColumn({ type: "timestamp with time zone" })
     createdAt!: Date;

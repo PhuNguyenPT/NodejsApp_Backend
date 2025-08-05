@@ -94,11 +94,27 @@ export class UserRepository implements IUserRepository {
         return await this.repository.save(userEntity);
     }
 
+    /**
+     * Updates a user entity.
+     * This method uses a "read-modify-save" pattern to prevent type errors
+     * with TypeORM's `update` method when dealing with entity relations.
+     * @param id The ID of the user to update.
+     * @param updateData A partial object of the user entity with fields to update.
+     * @returns The updated user entity.
+     */
     public async update(
         id: string,
         updateData: Partial<UserEntity>,
     ): Promise<UserEntity> {
-        if (updateData.email) {
+        // First, find the existing entity to ensure it exists.
+        const userToUpdate = await this.findById(id);
+        if (!userToUpdate) {
+            throw new EntityNotFoundException(`User with id ${id} not found`);
+        }
+
+        // If the email is part of the update, check if the new email already exists
+        // for a *different* user.
+        if (updateData.email && updateData.email !== userToUpdate.email) {
             const emailExists = await this.existsByEmail(updateData.email);
             if (emailExists) {
                 throw new IllegalArgumentException(
@@ -106,11 +122,13 @@ export class UserRepository implements IUserRepository {
                 );
             }
         }
-        await this.repository.update(id, updateData);
-        const updatedUser = await this.findById(id);
-        if (!updatedUser) {
-            throw new Error(`User with id ${id} not found after update`);
-        }
-        return updatedUser;
+
+        // Use TypeORM's `merge` to safely apply the partial changes
+        // to the fetched entity. This correctly handles relations.
+        this.repository.merge(userToUpdate, updateData);
+
+        // Save the merged entity. TypeORM will issue an UPDATE query
+        // because the entity has an existing ID.
+        return this.repository.save(userToUpdate);
     }
 }

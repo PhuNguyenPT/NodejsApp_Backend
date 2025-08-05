@@ -2,6 +2,7 @@
 import { Expose, Transform, Type } from "class-transformer";
 
 import { AwardResponse } from "@/dto/student/award.response.js";
+import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces";
 
 import { FileResponse } from "../file/file.response";
 import { CertificationResponse } from "./certification.response";
@@ -30,7 +31,7 @@ import { ExamSubject } from "./exam";
  *       "name": "IELTS"
  *     }
  *   ],
- *   "location": "Thành phố Hồ Chí Minh, Việt Nam",
+ *   "province": "Hồ Chí Minh",
  *   "major": "Khoa học Máy tính",
  *   "maxBudget": 20000000,
  *   "minBudget": 10000000,
@@ -125,6 +126,10 @@ export class StudentProfileResponse {
     @Expose()
     @Transform(({ value }) => (value ? parseInt(String(value)) : undefined))
     minBudget!: number;
+
+    @Expose()
+    @Type(() => String)
+    province!: VietnamSouthernProvinces;
 
     /**
      * List of exam subjects

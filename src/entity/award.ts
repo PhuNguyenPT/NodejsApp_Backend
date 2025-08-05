@@ -16,6 +16,9 @@ import { StudentEntity } from "@/entity/student.js";
 @Index("idx_award_student_id", ["studentId"])
 @Index("idx_award_date", ["awardDate"])
 @Index("idx_award_category", ["category"])
+@Index("idx_award_level", ["level"])
+@Index("idx_award_created_at", ["createdAt"])
+@Index("idx_award_modified_at", ["modifiedAt"])
 export class AwardEntity {
     @Column({ type: "date" })
     awardDate!: Date;
