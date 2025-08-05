@@ -36,15 +36,8 @@ export class StudentService {
             });
         }
 
-        const studentEntity: StudentEntity = new StudentEntity({
-            aptitudeTestScore: studentInfoDTO.aptitudeTestScore,
-            location: studentInfoDTO.location,
-            major: studentInfoDTO.major,
-            maxBudget: studentInfoDTO.maxBudget,
-            minBudget: studentInfoDTO.minBudget,
-            subjectCombination: studentInfoDTO.subjectCombination,
-            vsatScore: studentInfoDTO.vsatScore,
-        });
+        const studentEntity: StudentEntity =
+            this.studentRepository.create(studentInfoDTO);
 
         const savedStudent: StudentEntity =
             await this.studentRepository.save(studentEntity);
@@ -99,17 +92,15 @@ export class StudentService {
                     "Min budget cannot be greater than max budget",
             });
         }
+        if (!userId) {
+            throw new ValidationException({
+                userId: "User ID is required to create a student profile",
+            });
+        }
 
-        const studentEntity: StudentEntity = new StudentEntity({
-            aptitudeTestScore: studentInfoDTO.aptitudeTestScore,
-            location: studentInfoDTO.location,
-            major: studentInfoDTO.major,
-            maxBudget: studentInfoDTO.maxBudget,
-            minBudget: studentInfoDTO.minBudget,
-            subjectCombination: studentInfoDTO.subjectCombination,
-            userId: userId,
-            vsatScore: studentInfoDTO.vsatScore,
-        });
+        const studentEntity: StudentEntity =
+            this.studentRepository.create(studentInfoDTO);
+        studentEntity.userId = userId; // Set userId for the student entity
 
         const savedStudent: StudentEntity =
             await this.studentRepository.save(studentEntity);

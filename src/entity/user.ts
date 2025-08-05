@@ -24,6 +24,10 @@ import { StudentEntity } from "./student";
     "accountNonExpired",
     "accountNonLocked",
 ])
+@Index("idx_user_created_at", ["createdAt"])
+@Index("idx_user_modified_at", ["modifiedAt"])
+@Index("idx_user_permissions", ["permissions"])
+@Index("idx_user_phone_numbers", ["phoneNumbers"])
 export class UserEntity {
     @Column({ default: true, type: "boolean" })
     accountNonExpired = true;
@@ -83,9 +87,9 @@ export class UserEntity {
     status!: UserStatus;
 
     @OneToMany(() => StudentEntity, (student) => student.user, {
-        lazy: true,
+        eager: false,
     })
-    studentEntities?: Promise<StudentEntity[]>;
+    studentEntities?: StudentEntity[];
 
     constructor(user?: Partial<UserEntity>) {
         if (user) {

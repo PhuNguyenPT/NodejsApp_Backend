@@ -43,6 +43,8 @@ export enum FileType {
 @Index("idx_file_type", ["fileType"])
 @Index("idx_file_status", ["status"])
 @Index("idx_file_uploaded_by", ["uploadedBy"])
+@Index("idx_file_created_at", ["createdAt"])
+@Index("idx_file_modified_at", ["modifiedAt"])
 export class FileEntity {
     @CreateDateColumn({ type: "timestamp with time zone" })
     createdAt!: Date;

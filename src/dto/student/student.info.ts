@@ -4,6 +4,7 @@ import {
     ArrayMaxSize,
     ArrayMinSize,
     IsArray,
+    IsEnum,
     IsNotEmpty,
     IsNumber,
     IsOptional,
@@ -17,6 +18,7 @@ import {
 
 import { AwardDTO } from "@/dto/student/award.js";
 import { CertificationDTO } from "@/dto/student/certification.js";
+import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces";
 
 import { ExamSubject } from "./exam";
 
@@ -43,7 +45,7 @@ import { ExamSubject } from "./exam";
  *       "name": "IELTS"
  *     }
  *   ],
- *   "location": "Thành phố Hồ Chí Minh, Việt Nam",
+ *   "province": "Hồ Chí Minh",
  *   "major": "Khoa học Máy tính",
  *   "maxBudget": 20000000,
  *   "minBudget": 10000000,
@@ -74,7 +76,7 @@ import { ExamSubject } from "./exam";
  *       "expirationDate": "2026-06-01"
  *     }
  *   ]
- *   "location": "Ho Chi Minh City, Vietnam",
+ *   "province": "Hồ Chí Minh",
  *   "major": "Computer Science",
  *   "maxBudget": 20000000,
  *   "minBudget": 5000000,
@@ -92,6 +94,7 @@ export class StudentInfoDTO {
      * Aptitude test score (Điểm ĐGNL - Đánh giá năng lực)
      * @example 700
      */
+    @Expose()
     @IsNumber({}, { message: "Aptitude Test Score must be a number" })
     @IsOptional()
     @Max(1200)
@@ -139,7 +142,7 @@ export class StudentInfoDTO {
      * @required
      * @minLength 1
      * @maxLength 500
-     * @example "Thành phố Hồ Chí Minh, Việt Nam"
+     * @example "1 Lê Duẩn, Bến Nghé, Quận 1, Thành phố Hồ Chí Minh, Việt Nam"
      * @example "Ho Chi Minh City, Vietnam"
      * @example "Hanoi, Vietnam"
      * @example "Da Nang, Vietnam"
@@ -147,11 +150,11 @@ export class StudentInfoDTO {
      * @example "Nha Trang, Khanh Hoa, Vietnam"
      */
     @Expose()
-    @IsNotEmpty({ message: "Location is required" })
+    @IsOptional()
     @IsString({ message: "Location must be a string" })
     @MaxLength(500, { message: "Location cannot exceed 500 characters" })
     @MinLength(1, { message: "Location must be at least 1 character long" })
-    location!: string;
+    location?: string;
 
     /**
      * Primary field of study or academic major of the student.
@@ -222,6 +225,17 @@ export class StudentInfoDTO {
     minBudget!: number;
 
     /**
+     * Province or city where the student is located
+     * @example VietnamSouthernProvinces.HO_CHI_MINH
+     */
+    @Expose()
+    @IsEnum(VietnamSouthernProvinces, {
+        message: "Province must be a valid Vietnamese southern province",
+    })
+    @IsNotEmpty({ message: "Province is required" })
+    province!: VietnamSouthernProvinces;
+
+    /**
      * Array of exactly 4 exam subjects
      * @example [{ "name": "Toán", "score": 8.0 }, { "name": "Ngữ Văn", "score": 7.0 }, { "name": "Tiếng Anh", "score": 9.5 }, { "name": "Vật Lý", "score": 8.75 }]
      */
@@ -231,6 +245,7 @@ export class StudentInfoDTO {
     @ArrayMinSize(4, {
         message: "Exam Subjects must contain at least 4 subjects",
     })
+    @Expose()
     @IsArray()
     @Type(() => ExamSubject)
     @ValidateNested({ each: true })
@@ -240,6 +255,7 @@ export class StudentInfoDTO {
      * VSAT score (Vietnamese Scholastic Aptitude Test)
      * @example 85
      */
+    @Expose()
     @IsNumber({ maxDecimalPlaces: 2 })
     @IsOptional()
     @Max(150)
