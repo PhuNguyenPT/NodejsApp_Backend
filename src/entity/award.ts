@@ -36,7 +36,13 @@ export class AwardEntity {
     @CreateDateColumn({ type: "timestamp with time zone" })
     createdAt!: Date;
 
-    @Column({ length: 255, nullable: true, type: "varchar" })
+    @Column({
+        insert: true,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+        update: false,
+    })
     createdBy?: string;
 
     @Column({ nullable: true, type: "text" })
@@ -54,7 +60,13 @@ export class AwardEntity {
     @UpdateDateColumn({ type: "timestamp with time zone" })
     modifiedAt!: Date;
 
-    @Column({ length: 255, nullable: true, type: "varchar" })
+    @Column({
+        insert: false,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+        update: true,
+    })
     modifiedBy?: string;
 
     @Column({ length: 200, nullable: true, type: "varchar" })

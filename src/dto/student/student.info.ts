@@ -66,6 +66,7 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces";
  *     { "name": "Tiếng Anh", "score": 9.5 },
  *     { "name": "Vật Lý", "score": 8.75 }
  *   ],
+ *   "talentScore": 9.5,
  *   "vsatScore": [120, 130, 125]
  * }
  */
@@ -231,6 +232,18 @@ export class StudentInfoDTO {
     @ValidateNested({ each: true })
     subjectCombination!: ExamSubject[];
 
+    /**
+     * Talent score representing the student's aptitude or potential
+     * Optional field that can be used to indicate the student's talent level
+     * @example 9.5
+     * @validation
+     * - Must be a number
+     * - Must be between 0 and 10 (inclusive)
+     * - Optional field (can be null or undefined)
+     * - Maximum of 2 decimal places
+     * - Cannot exceed 10
+     * - Cannot be less than 0
+     */
     @Expose()
     @IsNumber({ maxDecimalPlaces: 2 })
     @IsOptional()

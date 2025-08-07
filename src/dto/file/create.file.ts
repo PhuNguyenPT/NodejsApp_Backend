@@ -19,6 +19,15 @@ import { FileType } from "@/entity/file.js";
  */
 export class CreateFileDTO {
     /**
+     * Optional uploader identifier
+     * @description UUID of the user who is uploading the file
+     * @example "456e7890-e89b-12d3-a456-426614174001"
+     */
+    @IsNotEmpty()
+    @IsString()
+    createdBy!: string;
+
+    /**
      * Optional file description
      * @description Additional context or details about the file content
      * @example "Student transcript for Fall 2024 semester"
@@ -94,6 +103,15 @@ export class CreateFileDTO {
     mimeType!: string;
 
     /**
+     * Optional uploader identifier
+     * @description UUID of the user who is uploading the file
+     * @example "456e7890-e89b-12d3-a456-426614174001"
+     */
+    @IsNotEmpty()
+    @IsString()
+    modifiedBy!: string;
+
+    /**
      * Original filename from upload
      * @description The filename as it was when originally uploaded
      * @example "transcript_fall_2024.pdf"
@@ -126,7 +144,6 @@ export class CreateFileDTO {
      * @description UUID of the user who is uploading the file
      * @example "456e7890-e89b-12d3-a456-426614174001"
      */
-    @IsOptional()
     @IsUUID(4, { message: "Uploaded by must be a valid UUID" })
-    uploadedBy?: string;
+    uploadedBy!: string;
 }

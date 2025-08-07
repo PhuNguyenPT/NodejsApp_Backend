@@ -11,6 +11,7 @@ import {
     Post,
     Produces,
     Query,
+    Request,
     Route,
     Security,
     SuccessResponse,
@@ -26,6 +27,7 @@ import { validateUuidParam } from "@/middleware/uuid.validation.middleware";
 import validateDTO from "@/middleware/validation.middleware.js";
 import { UserService } from "@/service/user.service.js";
 import { TYPES } from "@/type/container/types";
+import { AuthenticatedRequest } from "@/type/express/express";
 
 /**
  * Manages user-related operations.
@@ -157,8 +159,14 @@ export class UserController extends Controller {
     public async updateUser(
         @Path() userId: string,
         @Body() requestBody: UpdateUserAdminDTO,
+        @Request() request: AuthenticatedRequest,
     ): Promise<UserAdmin> {
-        const userEntity = await this.userService.update(userId, requestBody);
+        const user: Express.User = request.user;
+        const userEntity = await this.userService.update(
+            userId,
+            requestBody,
+            user,
+        );
         const responseDTO: UserAdmin = UserMapper.toUserAdmin(userEntity);
         return responseDTO;
     }

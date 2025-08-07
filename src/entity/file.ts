@@ -51,9 +51,11 @@ export class FileEntity {
 
     @Column({
         default: Role.ANONYMOUS,
+        insert: true,
         length: 255,
         nullable: true,
         type: "varchar",
+        update: false,
     })
     createdBy?: string;
     @Column({ length: 500, nullable: true, type: "varchar" })
@@ -91,10 +93,11 @@ export class FileEntity {
     modifiedAt!: Date;
 
     @Column({
-        default: Role.ANONYMOUS,
+        insert: false,
         length: 255,
         nullable: true,
         type: "varchar",
+        update: true,
     })
     modifiedBy?: string;
 

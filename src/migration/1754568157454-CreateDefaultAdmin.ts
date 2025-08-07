@@ -4,8 +4,8 @@ import * as bcrypt from "bcrypt";
 import { Role, getDefaultPermissionsByRole } from "@/type/enum/user.js";
 import { config } from "@/util/validate.env.js";
 
-export class CreateDefaultAdmin1754403818737 implements MigrationInterface {
-    name = "CreateDefaultAdmin1754403818737";
+export class CreateDefaultAdmin1754568157454 implements MigrationInterface {
+    name = "CreateDefaultAdmin1754568157454";
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Get admin credentials from environment variables
