@@ -22,7 +22,7 @@ import {
 } from "tsoa";
 
 import { CreateFileDTO } from "@/dto/file/create.file";
-import { FileResponse, FileUploadResponse } from "@/dto/file/file.response.js";
+import { FileResponse } from "@/dto/file/file.response.js";
 import { UpdateFileDTO } from "@/dto/file/update.file";
 import { FileEntity, FileType } from "@/entity/file.js";
 import { FileMapper } from "@/mapper/file.mapper";
@@ -321,7 +321,7 @@ export class FileController extends Controller {
          * @example "academic,transcript,2024"
          */
         @FormField("tags") tags?: string,
-    ): Promise<FileUploadResponse> {
+    ): Promise<FileResponse> {
         const user = request.user;
 
         // Validate string fields using helper method
@@ -342,6 +342,7 @@ export class FileController extends Controller {
         this.validateFileExtension(finalFileName, file.mimetype);
 
         const createFileDTO: CreateFileDTO = {
+            createdBy: user.email,
             description: description,
             fileContent: file.buffer,
             fileName: finalFileName,
@@ -349,6 +350,7 @@ export class FileController extends Controller {
             fileSize: file.size,
             fileType: fileType,
             mimeType: file.mimetype,
+            modifiedBy: user.email,
             originalFileName: file.originalname,
             studentId: studentId,
             tags: tags,
@@ -358,15 +360,7 @@ export class FileController extends Controller {
         const fileEntity: FileEntity =
             await this.fileService.createFile(createFileDTO);
 
-        return {
-            fileName: fileEntity.fileName,
-            filePath: fileEntity.filePath,
-            fileSize: fileEntity.getHumanReadableFileSize(),
-            fileType: fileEntity.fileType,
-            id: fileEntity.id,
-            message: "File uploaded successfully",
-            originalFileName: fileEntity.originalFileName,
-        };
+        return FileMapper.toFileResponse(fileEntity);
     }
 
     // Private helper methods

@@ -16,7 +16,7 @@ export const FileMapper = {
         return {
             createdAt: file.createdAt,
             description: file.description,
-            downloadUrl: `/api/files/${file.id}/download`,
+            downloadUrl: `/files/${file.id}/download`,
             fileName: file.fileName,
             fileSize: file.getHumanReadableFileSize(),
             fileType: file.fileType,
@@ -26,7 +26,7 @@ export const FileMapper = {
             modifiedAt: file.modifiedAt,
             originalFileName: file.originalFileName,
             previewUrl: file.isImage()
-                ? `/api/files/${file.id}/preview`
+                ? `/files/${file.id}/preview`
                 : undefined,
             status: file.status,
             tags: file.tags,

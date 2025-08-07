@@ -117,6 +117,13 @@ export class FileResponse {
  */
 export class FileUploadResponse {
     /**
+     * Optional download URL
+     * @description Direct URL for downloading the file (if applicable)
+     * @example "/files/123e4567-e89b-12d3-a456-426614174000/download"
+     */
+    downloadUrl?: string;
+
+    /**
      * Display filename
      * @description The filename that will be used for display and download
      * @example "john_doe_transcript.pdf"
@@ -164,4 +171,11 @@ export class FileUploadResponse {
      * @example "transcript_fall_2024.pdf"
      */
     originalFileName!: string;
+
+    /**
+     * Optional preview URL for images
+     * @description Direct URL for previewing image files inline
+     * @example "/files/123e4567-e89b-12d3-a456-426614174000/preview"
+     */
+    previewUrl?: string;
 }
