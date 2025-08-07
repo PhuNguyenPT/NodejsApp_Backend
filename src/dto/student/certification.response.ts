@@ -1,27 +1,47 @@
 import { Expose, Type } from "class-transformer";
+
+import { ExamType } from "@/type/enum/exam";
+
 /**
- * Data Transfer Object for Certification information
+ * Data Transfer Object for Certification response information
  * @example
  * {
+ *   "id": "cert-uuid-123",
+ *   "examType": {
+ *     "type": "CCNN",
+ *     "value": "IELTS"
+ *   },
  *   "issueDate": "2023-01-15",
  *   "expirationDate": "2025-01-15",
  *   "level": "6.5",
- *   "name": "IELTS"
+ *   "name": "IELTS Academic"
  * }
  * @example
  * {
- *   "credentialId": "CERT-2023-XYZ789",
+ *   "id": "cert-uuid-456",
+ *   "examType": {
+ *     "type": "CCQT",
+ *     "value": "SAT"
+ *   },
+ *   "credentialId": "SAT-2023-XYZ789",
  *   "expirationDate": "2026-12-31",
  *   "issueDate": "2023-01-15",
- *   "issuingOrganization": "AWS Certification Authority",
- *   "level": 3,
- *   "levelDescription": "Professional Level",
- *   "name": "AWS Solutions Architect Professional"
+ *   "issuingOrganization": "College Board",
+ *   "level": "1450",
+ *   "levelDescription": "Total Score",
+ *   "name": "SAT Reasoning Test"
  * }
  */
 export class CertificationResponse {
     @Expose()
     credentialId?: string;
+
+    /**
+     * Type and category of the exam/certification
+     * @example { "type": "CCNN", "value": "IELTS" }
+     */
+    @Expose()
+    examType!: ExamType;
 
     @Expose()
     @Type(() => Date)
@@ -44,5 +64,5 @@ export class CertificationResponse {
     levelDescription?: string;
 
     @Expose()
-    name!: string;
+    name?: string;
 }

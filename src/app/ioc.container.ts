@@ -12,6 +12,7 @@ import { AwardEntity } from "@/entity/award";
 import { CertificationEntity } from "@/entity/certification";
 import { FileEntity } from "@/entity/file";
 import { StudentEntity } from "@/entity/student";
+import { UserEntity } from "@/entity/user";
 import { UserRepository } from "@/repository/impl/user.repository.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { AuthService } from "@/service/auth.service";
@@ -32,7 +33,7 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
-    .bind<IUserRepository>(TYPES.UserRepository)
+    .bind<IUserRepository>(TYPES.IUserRepository)
     .to(UserRepository)
     .inSingletonScope();
 
@@ -49,6 +50,11 @@ iocContainer
 iocContainer
     .bind<Repository<CertificationEntity>>(TYPES.CertificationRepository)
     .toDynamicValue(() => AppDataSource.getRepository(CertificationEntity))
+    .inSingletonScope();
+
+iocContainer
+    .bind<Repository<UserEntity>>(TYPES.UserRepository)
+    .toDynamicValue(() => AppDataSource.getRepository(UserEntity))
     .inSingletonScope();
 
 iocContainer

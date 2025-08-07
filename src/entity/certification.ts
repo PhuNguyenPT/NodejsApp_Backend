@@ -11,6 +11,7 @@ import {
 } from "typeorm";
 
 import { StudentEntity } from "@/entity/student.js";
+import { ExamType } from "@/type/enum/exam";
 
 @Entity({ name: "certifications" })
 @Index("idx_certification_student_id", ["studentId"])
@@ -31,20 +32,23 @@ export class CertificationEntity {
     @Column({ length: 100, nullable: true, type: "varchar" })
     credentialId?: string;
 
-    @Column({ type: "date" })
-    expirationDate!: Date;
+    @Column({ nullable: true, type: "jsonb" })
+    examType?: ExamType;
+
+    @Column({ nullable: true, type: "date" })
+    expirationDate?: Date;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ type: "date" })
-    issueDate!: Date;
+    @Column({ nullable: true, type: "date" })
+    issueDate?: Date;
 
     @Column({ length: 200, nullable: true, type: "varchar" })
     issuingOrganization?: string;
 
-    @Column({ length: 50, type: "varchar" })
-    level!: string;
+    @Column({ length: 50, nullable: true, type: "varchar" })
+    level?: string;
 
     @Column({ length: 100, nullable: true, type: "varchar" })
     levelDescription?: string;
@@ -55,8 +59,8 @@ export class CertificationEntity {
     @Column({ length: 255, nullable: true, type: "varchar" })
     modifiedBy?: string;
 
-    @Column({ length: 200, type: "varchar" })
-    name!: string;
+    @Column({ length: 200, nullable: true, type: "varchar" })
+    name?: string;
 
     @JoinColumn({ name: "studentId" })
     @ManyToOne(() => StudentEntity, (student) => student.certifications, {

@@ -27,7 +27,7 @@ import { JWT_EXPIRATION_TIME_IN_SECONDS } from "@/util/jwt.options.js";
 @injectable()
 export class AuthService {
     constructor(
-        @inject(TYPES.UserRepository) private userRepository: IUserRepository,
+        @inject(TYPES.IUserRepository) private userRepository: IUserRepository,
         @inject(TYPES.JWTService) private jwtService: JWTService,
         @inject(TYPES.Logger) private logger: ILogger,
     ) {}

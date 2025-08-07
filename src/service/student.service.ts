@@ -1,4 +1,3 @@
-import { plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
@@ -7,13 +6,15 @@ import { StudentInfoDTO } from "@/dto/student/student.info";
 import { AwardEntity } from "@/entity/award";
 import { CertificationEntity } from "@/entity/certification";
 import { StudentEntity } from "@/entity/student";
+import { UserEntity } from "@/entity/user";
 import { TYPES } from "@/type/container/types";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
 import { ValidationException } from "@/type/exception/validation.exception";
 import { ILogger } from "@/type/interface/logger";
 import { Page } from "@/type/pagination/page";
 import { Pageable } from "@/type/pagination/pageable";
-@injectable() // ← Missing decorator
+
+@injectable()
 export class StudentService {
     constructor(
         @inject(TYPES.StudentRepository)
@@ -22,10 +23,18 @@ export class StudentService {
         private awardRepository: Repository<AwardEntity>,
         @inject(TYPES.CertificationRepository)
         private certificationRepository: Repository<CertificationEntity>,
+        @inject(TYPES.UserRepository)
+        private userRepository: Repository<UserEntity>,
         @inject(TYPES.Logger)
         private logger: ILogger,
     ) {}
 
+    /**
+     * Creates a student profile for an anonymous user.
+     * Uses TypeORM cascades to save the student and their related awards/certifications in a single operation.
+     * @param studentInfoDTO - The DTO containing the student's information.
+     * @returns The newly created StudentEntity, including its relations.
+     */
     public async createStudentEntity(
         studentInfoDTO: StudentInfoDTO,
     ): Promise<StudentEntity> {
@@ -36,52 +45,47 @@ export class StudentService {
             });
         }
 
+        // Create the main student entity from the DTO.
         const studentEntity: StudentEntity =
             this.studentRepository.create(studentInfoDTO);
 
-        const savedStudent: StudentEntity =
-            await this.studentRepository.save(studentEntity);
-
+        // If awards exist, create entities and attach them directly to the student entity.
+        // The cascade option on the relation will handle the save.
         if (studentInfoDTO.awards && studentInfoDTO.awards.length > 0) {
-            const awards: AwardEntity[] = studentInfoDTO.awards.map(
-                (awardDTO) => {
-                    const award: AwardEntity = plainToInstance(
-                        AwardEntity,
-                        awardDTO,
-                    );
-                    award.studentId = savedStudent.id;
-                    return award;
-                },
+            studentEntity.awards = studentInfoDTO.awards.map((award) =>
+                this.awardRepository.create(award),
             );
-            await this.awardRepository.save(awards);
         }
 
+        // Do the same for certifications.
         if (
             studentInfoDTO.certifications &&
             studentInfoDTO.certifications.length > 0
         ) {
-            const certifications: CertificationEntity[] =
-                studentInfoDTO.certifications.map((certificationDTO) => {
-                    const certificationEntity: CertificationEntity =
-                        plainToInstance(CertificationEntity, certificationDTO);
-                    certificationEntity.studentId = savedStudent.id;
-                    return certificationEntity;
-                }); // ← Added missing semicolon
-            await this.certificationRepository.save(certifications);
+            studentEntity.certifications = studentInfoDTO.certifications.map(
+                (cert) => this.certificationRepository.create(cert),
+            );
         }
 
+        // A SINGLE save operation handles the student, awards, and certifications
+        // thanks to the `{ cascade: true }` option in the StudentEntity definition.
+        const savedStudent = await this.studentRepository.save(studentEntity);
+
         this.logger.info(
-            `Create Anonymous Student Profile id: ${studentEntity.id} successfully`,
+            `Create Anonymous Student Profile id: ${savedStudent.id} successfully`,
         );
-        // Return student with populated relations
-        return (
-            (await this.studentRepository.findOne({
-                relations: ["awards", "certifications"],
-                where: { id: savedStudent.id },
-            })) ?? savedStudent
-        );
+
+        // The 'save' method returns the fully populated entity, so no extra 'findOne' is needed.
+        return savedStudent;
     }
 
+    /**
+     * Creates a student profile linked to an authenticated user.
+     * Uses TypeORM cascades to save the student and their related awards/certifications in a single operation.
+     * @param studentInfoDTO - The DTO containing the student's information.
+     * @param userId - The ID of the authenticated user.
+     * @returns The newly created StudentEntity, including its relations.
+     */
     public async createStudentEntityByUserId(
         studentInfoDTO: StudentInfoDTO,
         userId: string,
@@ -98,51 +102,55 @@ export class StudentService {
             });
         }
 
-        const studentEntity: StudentEntity =
-            this.studentRepository.create(studentInfoDTO);
-        studentEntity.userId = userId; // Set userId for the student entity
-
-        const savedStudent: StudentEntity =
-            await this.studentRepository.save(studentEntity);
-
-        if (studentInfoDTO.awards && studentInfoDTO.awards.length > 0) {
-            const awards: AwardEntity[] = studentInfoDTO.awards.map(
-                (awardDTO) => {
-                    const award: AwardEntity = plainToInstance(
-                        AwardEntity,
-                        awardDTO,
-                    );
-                    award.studentId = savedStudent.id;
-                    return award;
-                },
+        const userEntity = await this.userRepository.findOne({
+            where: { id: userId },
+        });
+        if (!userEntity) {
+            throw new EntityNotFoundException(
+                `User with ID ${userId} not found`,
             );
-            await this.awardRepository.save(awards);
         }
 
+        // Create the main student entity from the DTO.
+        const studentEntity: StudentEntity =
+            this.studentRepository.create(studentInfoDTO);
+        studentEntity.userId = userId;
+
+        // If awards exist, create entities, set audit fields, and attach them.
+        if (studentInfoDTO.awards && studentInfoDTO.awards.length > 0) {
+            studentEntity.awards = studentInfoDTO.awards.map((award) => {
+                const awardEntity = this.awardRepository.create(award);
+                awardEntity.createdBy = userEntity.email;
+                awardEntity.modifiedBy = userEntity.email;
+                return awardEntity;
+            });
+        }
+
+        // If certifications exist, create entities, set audit fields, and attach them.
         if (
             studentInfoDTO.certifications &&
             studentInfoDTO.certifications.length > 0
         ) {
-            const certifications: CertificationEntity[] =
-                studentInfoDTO.certifications.map((certificationDTO) => {
-                    const certificationEntity: CertificationEntity =
-                        plainToInstance(CertificationEntity, certificationDTO);
-                    certificationEntity.studentId = savedStudent.id;
-                    return certificationEntity;
-                }); // ← Added missing semicolon
-            await this.certificationRepository.save(certifications);
+            studentEntity.certifications = studentInfoDTO.certifications.map(
+                (cert) => {
+                    const certEntity =
+                        this.certificationRepository.create(cert);
+                    certEntity.createdBy = userEntity.email;
+                    certEntity.modifiedBy = userEntity.email;
+                    return certEntity;
+                },
+            );
         }
 
+        // A SINGLE save operation handles everything.
+        const savedStudent = await this.studentRepository.save(studentEntity);
+
         this.logger.info(
-            `Create Student Profile id: ${studentEntity.id} with User id: ${userId} successfully`,
+            `Create Student Profile id: ${savedStudent.id} with User id: ${userId} successfully`,
         );
-        // Return student with populated relations
-        return (
-            (await this.studentRepository.findOne({
-                relations: ["awards", "certifications"],
-                where: { id: savedStudent.id, userId: userId },
-            })) ?? savedStudent
-        );
+
+        // Return the saved entity directly. It already contains the new relations.
+        return savedStudent;
     }
 
     public async getAllStudentEntitiesByUserId(
@@ -215,7 +223,7 @@ export class StudentService {
         return studentEntity;
     }
 
-    async getStudentWithFiles(
+    public async getStudentWithFiles(
         studentId: string,
         userId?: string,
     ): Promise<StudentEntity> {

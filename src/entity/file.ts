@@ -81,7 +81,7 @@ export class FileEntity {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ nullable: true, type: "json" })
+    @Column({ nullable: true, type: "jsonb" })
     metadata?: Record<string, unknown>;
 
     @Column({ length: 100, type: "varchar" })

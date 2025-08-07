@@ -5,6 +5,7 @@ export const TYPES = {
     CertificationRepository: Symbol.for("CertificationRepository"),
     FileRepository: Symbol.for("FileRepository"),
     FileService: Symbol.for("FileService"),
+    IUserRepository: Symbol.for("IUserRepository"),
     JWTService: Symbol.for("JWTService"),
     KeyStore: Symbol.for("KeyStore"),
     Logger: Symbol.for("Logger"),

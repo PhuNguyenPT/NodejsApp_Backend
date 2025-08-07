@@ -8,24 +8,45 @@ import {
     MinLength,
 } from "class-validator";
 
+import { ExamType } from "@/type/enum/exam";
+
 /**
  * Data Transfer Object for Certification information
  * @example
  * {
+ *   "examType": {
+ *     "type": "CCNN",
+ *     "value": "IELTS"
+ *   },
  *   "issueDate": "2023-01-15",
  *   "expirationDate": "2025-01-15",
  *   "level": "6.5",
- *   "name": "IELTS"
+ *   "name": "IELTS Academic"
  * }
  * @example
  * {
- *   "credentialId": "CERT-2023-XYZ789",
+ *   "examType": {
+ *     "type": "CCQT",
+ *     "value": "SAT"
+ *   },
+ *   "credentialId": "SAT-2023-XYZ789",
  *   "expirationDate": "2026-12-31",
  *   "issueDate": "2023-01-15",
- *   "issuingOrganization": "AWS Certification Authority",
- *   "level": 3,
- *   "levelDescription": "Professional Level",
- *   "name": "AWS Solutions Architect Professional"
+ *   "issuingOrganization": "College Board",
+ *   "level": "1450",
+ *   "levelDescription": "Total Score",
+ *   "name": "SAT Reasoning Test"
+ * }
+ * @example
+ * {
+ *   "examType": {
+ *     "type": "DGNL",
+ *     "value": "DHQG_TPHCM"
+ *   },
+ *   "issueDate": "2023-03-01",
+ *   "expirationDate": "2024-03-01",
+ *   "level": "700",
+ *   "name": "Đánh giá năng lực ĐHQG TP.HCM"
  * }
  */
 export class CertificationDTO {
@@ -34,6 +55,14 @@ export class CertificationDTO {
     @IsString({ message: "Credential ID must be a string" })
     @MaxLength(100, { message: "Credential ID cannot exceed 100 characters" })
     credentialId?: string;
+
+    /**
+     * Type and category of the exam/certification
+     * @example { "type": "CCNN", "value": "IELTS" }
+     */
+    @Expose()
+    @IsNotEmpty({ message: "Exam type is required" })
+    examType!: ExamType;
 
     @Expose()
     @IsDate({ message: "Expiration date must be a valid date" })
@@ -74,7 +103,7 @@ export class CertificationDTO {
     levelDescription?: string;
 
     @Expose()
-    @IsNotEmpty({ message: "Certification name is required" })
+    @IsOptional()
     @IsString({ message: "Certification name must be a string" })
     @MaxLength(200, {
         message: "Certification name cannot exceed 200 characters",
@@ -82,5 +111,5 @@ export class CertificationDTO {
     @MinLength(1, {
         message: "Certification name must be at least 1 character long",
     })
-    name!: string;
+    name?: string;
 }
