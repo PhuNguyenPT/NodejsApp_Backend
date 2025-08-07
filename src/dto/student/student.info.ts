@@ -5,6 +5,7 @@ import {
     ArrayMinSize,
     IsArray,
     IsEnum,
+    IsInt,
     IsNotEmpty,
     IsNumber,
     IsOptional,
@@ -16,11 +17,11 @@ import {
     ValidateNested,
 } from "class-validator";
 
+import { AptitudeTestDTO } from "@/dto/student/aptitude.test.dto";
 import { AwardDTO } from "@/dto/student/award.js";
 import { CertificationDTO } from "@/dto/student/certification.js";
+import { ExamSubject } from "@/dto/student/exam";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces";
-
-import { ExamSubject } from "./exam";
 
 /**
  * Data Transfer Object for creating or updating student profile information.
@@ -28,7 +29,13 @@ import { ExamSubject } from "./exam";
  * academic background, budget preferences, achievements, and certifications.
  * @example
  * {
- *   "aptitudeTestScore": 700,
+ *   "aptitudeTestScore": {
+ *     "examType": {
+ *       "type": "DGNL",
+ *       "value": "VNUHCM"
+ *     },
+ *     "score": 700
+ *   },
  *   "awards": [
  *     {
  *       "awardDate": "2023-12-15",
@@ -39,10 +46,14 @@ import { ExamSubject } from "./exam";
  *   ],
  *   "certifications": [
  *     {
+ *       "examType": {
+ *         "type": "CCNN",
+ *         "value": "IELTS"
+ *       },
  *       "issueDate": "2023-01-15",
  *       "expirationDate": "2025-01-15",
  *       "level": "6.5",
- *       "name": "IELTS"
+ *       "name": "IELTS Academic"
  *     }
  *   ],
  *   "province": "Hồ Chí Minh",
@@ -55,51 +66,20 @@ import { ExamSubject } from "./exam";
  *     { "name": "Tiếng Anh", "score": 9.5 },
  *     { "name": "Vật Lý", "score": 8.75 }
  *   ],
- *   "vsatScore": 85
- * }
- * @example
- * {
- *   "aptitudeTestScore": 700,
- *   "awards": [
- *     {
- *       "name": "Dean's List Award",
- *       "category": "Academic Excellence",
- *       "level": "University",
- *       "awardDate": "2023-12-15"
- *     }
- *   ],
- *   "certifications": [
- *     {
- *       "name": "AWS Solutions Architect",
- *       "issuingOrganization": "Amazon Web Services",
- *       "issueDate": "2023-06-01",
- *       "expirationDate": "2026-06-01"
- *     }
- *   ]
- *   "province": "Hồ Chí Minh",
- *   "major": "Computer Science",
- *   "maxBudget": 20000000,
- *   "minBudget": 5000000,
- *   "subjectCombination": [
- *     { "name": "Math", "score": 8.0 },
- *     { "name": "Literature", "score": 7.0 },
- *     { "name": "English", "score": 9.5 },
- *     { "name": "Physics", "score": 8.75 }
- *   ],
- *   "vsatScore": 85
+ *   "vsatScore": [120, 130, 125]
  * }
  */
 export class StudentInfoDTO {
     /**
-     * Aptitude test score (Điểm ĐGNL - Đánh giá năng lực)
-     * @example 700
+     * Aptitude test information including exam type and score
+     * Contains the exam type (DGNL, CCNN, or CCQT) and the numeric score achieved
+     * @example { "examType": { "type": "DGNL", "value": "VNUHCM" }, "score": 700 }
      */
     @Expose()
-    @IsNumber({}, { message: "Aptitude Test Score must be a number" })
     @IsOptional()
-    @Max(1200)
-    @Min(0)
-    aptitudeTestScore?: number;
+    @Type(() => AptitudeTestDTO)
+    @ValidateNested()
+    aptitudeTestScore?: AptitudeTestDTO;
 
     /**
      * List of awards and recognitions received by the student.
@@ -220,7 +200,7 @@ export class StudentInfoDTO {
      */
     @Expose()
     @IsNotEmpty({ message: "Min budget is required" })
-    @IsNumber({}, { message: "Min budget must be a number" })
+    @IsNumber({}, { message: "Min budget must be greater than 0" })
     @Min(1, { message: "Min budget must be greater than 0" })
     minBudget!: number;
 
@@ -251,14 +231,25 @@ export class StudentInfoDTO {
     @ValidateNested({ each: true })
     subjectCombination!: ExamSubject[];
 
-    /**
-     * VSAT score (Vietnamese Scholastic Aptitude Test)
-     * @example 85
-     */
     @Expose()
     @IsNumber({ maxDecimalPlaces: 2 })
     @IsOptional()
-    @Max(150)
-    @Min(0)
-    vsatScore?: number;
+    @Max(10, { message: "Talent score cannot exceed 10" })
+    @Min(0, { message: "Talent score must be at least 0" })
+    talentScore?: number;
+
+    /**
+     * VSAT score (Vietnamese Scholastic Aptitude Test)
+     * Array of exactly 3 scores
+     * @example [120, 130, 125]
+     */
+    @ArrayMaxSize(3, { message: "Vsat score must have exactly 3 scores." })
+    @ArrayMinSize(3, { message: "Vsat score must have exactly 3 scores." })
+    @Expose()
+    @IsArray()
+    @IsInt({ each: true })
+    @IsOptional()
+    @Max(150, { each: true })
+    @Min(0, { each: true })
+    vsatScore?: number[];
 }

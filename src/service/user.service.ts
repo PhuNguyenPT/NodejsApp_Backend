@@ -18,7 +18,7 @@ import { hashPassword } from "@/util/bcrypt";
 @injectable()
 export class UserService {
     constructor(
-        @inject(TYPES.UserRepository)
+        @inject(TYPES.IUserRepository)
         private readonly userRepository: IUserRepository,
         @inject(TYPES.Logger)
         private readonly logger: ILogger, // Now properly typed!

@@ -15,7 +15,7 @@ export class PassportConfig {
     private isInitialized = false;
 
     constructor(
-        @inject(TYPES.UserRepository)
+        @inject(TYPES.IUserRepository)
         private userRepository: IUserRepository,
         @inject(TYPES.Logger)
         private logger: ILogger,
