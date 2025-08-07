@@ -115,13 +115,13 @@ export class StudentService {
         const studentEntity: StudentEntity =
             this.studentRepository.create(studentInfoDTO);
         studentEntity.userId = userId;
+        studentEntity.createdBy = userEntity.email;
 
         // If awards exist, create entities, set audit fields, and attach them.
         if (studentInfoDTO.awards && studentInfoDTO.awards.length > 0) {
             studentEntity.awards = studentInfoDTO.awards.map((award) => {
                 const awardEntity = this.awardRepository.create(award);
                 awardEntity.createdBy = userEntity.email;
-                awardEntity.modifiedBy = userEntity.email;
                 return awardEntity;
             });
         }
@@ -136,7 +136,6 @@ export class StudentService {
                     const certEntity =
                         this.certificationRepository.create(cert);
                     certEntity.createdBy = userEntity.email;
-                    certEntity.modifiedBy = userEntity.email;
                     return certEntity;
                 },
             );

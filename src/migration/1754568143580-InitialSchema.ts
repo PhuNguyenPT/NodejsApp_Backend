@@ -1,11 +1,11 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitialSchema1754403744822 implements MigrationInterface {
-    name = "InitialSchema1754403744822";
+export class InitialSchema1754568143580 implements MigrationInterface {
+    name = "InitialSchema1754568143580";
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(
-            `CREATE TABLE "certifications" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "credentialId" character varying(100), "expirationDate" date NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "issueDate" date NOT NULL, "issuingOrganization" character varying(200), "level" character varying(50) NOT NULL, "levelDescription" character varying(100), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(200) NOT NULL, "studentId" uuid NOT NULL, CONSTRAINT "PK_fd763d412e4a1fb1b6dadd6e72b" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "certifications" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "credentialId" character varying(100), "examType" jsonb, "expirationDate" date, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "issueDate" date, "issuingOrganization" character varying(200), "level" character varying(50), "levelDescription" character varying(100), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(200), "studentId" uuid NOT NULL, CONSTRAINT "PK_fd763d412e4a1fb1b6dadd6e72b" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_certification_modified_at" ON "certifications" ("modifiedAt") `,
@@ -38,7 +38,7 @@ export class InitialSchema1754403744822 implements MigrationInterface {
             `CREATE TYPE "public"."users_status_enum" AS ENUM('Happy', 'Sad')`,
         );
         await queryRunner.query(
-            `CREATE TABLE "users" ("accountNonExpired" boolean NOT NULL DEFAULT true, "accountNonLocked" boolean NOT NULL DEFAULT true, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "credentialsNonExpired" boolean NOT NULL DEFAULT true, "email" character varying(255) NOT NULL, "enabled" boolean NOT NULL DEFAULT true, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(255), "password" character varying(128) NOT NULL, "permissions" text, "phoneNumbers" text, "role" "public"."users_role_enum" NOT NULL DEFAULT 'USER', "status" "public"."users_status_enum" NOT NULL DEFAULT 'Happy', CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "users" ("accountNonExpired" boolean NOT NULL DEFAULT true, "accountNonLocked" boolean NOT NULL DEFAULT true, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255) DEFAULT 'ANONYMOUS', "credentialsNonExpired" boolean NOT NULL DEFAULT true, "email" character varying(255) NOT NULL, "enabled" boolean NOT NULL DEFAULT true, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(255), "password" character varying(128) NOT NULL, "permissions" text, "phoneNumbers" text, "role" "public"."users_role_enum" NOT NULL DEFAULT 'USER', "status" "public"."users_status_enum" NOT NULL DEFAULT 'Happy', CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_user_phone_numbers" ON "users" ("phoneNumbers") `,
@@ -74,7 +74,7 @@ export class InitialSchema1754403744822 implements MigrationInterface {
             `CREATE TYPE "public"."files_status_enum" AS ENUM('active', 'archived', 'deleted')`,
         );
         await queryRunner.query(
-            `CREATE TABLE "files" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255) DEFAULT 'ANONYMOUS', "description" character varying(500), "fileContent" bytea NOT NULL, "fileName" character varying(255) NOT NULL, "filePath" character varying(500), "fileSize" bigint NOT NULL, "fileType" "public"."files_filetype_enum" NOT NULL DEFAULT 'other', "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" json, "mimeType" character varying(100) NOT NULL, "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255) DEFAULT 'ANONYMOUS', "originalFileName" character varying(255) NOT NULL, "status" "public"."files_status_enum" NOT NULL DEFAULT 'active', "studentId" uuid NOT NULL, "tags" character varying(255), "uploadedBy" uuid, CONSTRAINT "PK_6c16b9093a142e0e7613b04a3d9" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "files" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255) DEFAULT 'ANONYMOUS', "description" character varying(500), "fileContent" bytea NOT NULL, "fileName" character varying(255) NOT NULL, "filePath" character varying(500), "fileSize" bigint NOT NULL, "fileType" "public"."files_filetype_enum" NOT NULL DEFAULT 'other', "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "mimeType" character varying(100) NOT NULL, "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "originalFileName" character varying(255) NOT NULL, "status" "public"."files_status_enum" NOT NULL DEFAULT 'active', "studentId" uuid NOT NULL, "tags" character varying(255), "uploadedBy" uuid, CONSTRAINT "PK_6c16b9093a142e0e7613b04a3d9" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_file_modified_at" ON "files" ("modifiedAt") `,
@@ -95,13 +95,10 @@ export class InitialSchema1754403744822 implements MigrationInterface {
             `CREATE INDEX "idx_file_student_id" ON "files" ("studentId") `,
         );
         await queryRunner.query(
-            `CREATE TABLE "students" ("aptitudeTestScore" numeric(5,2), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255) DEFAULT 'ANONYMOUS', "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "location" character varying(500), "major" character varying(200), "maxBudget" numeric(14,2), "minBudget" numeric(14,2), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255) DEFAULT 'ANONYMOUS', "province" character varying(50), "subjectCombination" json, "userId" uuid, "vsatScore" numeric(5,2), CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "students" ("aptitudeTestScore" jsonb, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "location" character varying(500), "major" character varying(200), "maxBudget" numeric(14,2), "minBudget" numeric(14,2), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "province" character varying(50), "subjectCombination" jsonb, "talentScore" numeric(4,2), "userId" uuid, "vsatScore" jsonb, CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
-            `CREATE INDEX "idx_student_vsat_score" ON "students" ("vsatScore") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_student_aptitude_test_score" ON "students" ("aptitudeTestScore") `,
+            `CREATE INDEX "idx_student_talent_score" ON "students" ("talentScore") `,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_student_modified_at" ON "students" ("modifiedAt") `,
@@ -125,7 +122,7 @@ export class InitialSchema1754403744822 implements MigrationInterface {
             `CREATE INDEX "idx_student_user_id" ON "students" ("userId") `,
         );
         await queryRunner.query(
-            `CREATE TABLE "awards" ("awardDate" date NOT NULL, "awardId" character varying(100), "awardingOrganization" character varying(200), "category" character varying(100) NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "description" text, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "level" character varying(50) NOT NULL, "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(200) NOT NULL, "studentId" uuid NOT NULL, CONSTRAINT "PK_bc3f6adc548ff46c76c03e06377" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "awards" ("awardDate" date NOT NULL, "awardId" character varying(100), "awardingOrganization" character varying(200), "category" character varying(100), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "description" text, "examType" jsonb, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "level" character varying(50), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(200), "studentId" uuid NOT NULL, CONSTRAINT "PK_bc3f6adc548ff46c76c03e06377" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_award_modified_at" ON "awards" ("modifiedAt") `,
@@ -199,9 +196,8 @@ export class InitialSchema1754403744822 implements MigrationInterface {
             `DROP INDEX "public"."idx_student_modified_at"`,
         );
         await queryRunner.query(
-            `DROP INDEX "public"."idx_student_aptitude_test_score"`,
+            `DROP INDEX "public"."idx_student_talent_score"`,
         );
-        await queryRunner.query(`DROP INDEX "public"."idx_student_vsat_score"`);
         await queryRunner.query(`DROP TABLE "students"`);
         await queryRunner.query(`DROP INDEX "public"."idx_file_student_id"`);
         await queryRunner.query(`DROP INDEX "public"."idx_file_type"`);

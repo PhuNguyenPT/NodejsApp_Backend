@@ -38,7 +38,14 @@ export class UserEntity {
     @CreateDateColumn({ type: "timestamp with time zone" })
     createdAt!: Date;
 
-    @Column({ length: 255, nullable: true, type: "varchar" })
+    @Column({
+        default: Role.ANONYMOUS,
+        insert: true,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+        update: false,
+    })
     createdBy?: string;
 
     @Column({ default: true, type: "boolean" })
@@ -56,7 +63,13 @@ export class UserEntity {
     @UpdateDateColumn({ type: "timestamp with time zone" })
     modifiedAt!: Date;
 
-    @Column({ length: 255, nullable: true, type: "varchar" })
+    @Column({
+        insert: false,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+        update: true,
+    })
     modifiedBy?: string;
 
     @Column({ length: 255, nullable: true, type: "varchar" })

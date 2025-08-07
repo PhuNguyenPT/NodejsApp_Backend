@@ -213,6 +213,7 @@ export class UserService {
     public async update(
         id: string,
         updateData: Partial<UpdateUserAdminDTO>,
+        user: Express.User,
     ): Promise<UserEntity> {
         try {
             this.logger.info("Updating user", {
@@ -228,6 +229,7 @@ export class UserService {
                 UserEntity,
                 updateData,
             );
+            userEntity.modifiedBy = user.email;
 
             // Only update permissions if role is explicitly provided in update data
             if (updateData.role !== undefined) {

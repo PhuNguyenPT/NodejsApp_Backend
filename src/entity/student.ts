@@ -16,7 +16,6 @@ import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
 import { UserEntity } from "@/entity/user.js";
 import { ExamType } from "@/type/enum/exam";
-import { Role } from "@/type/enum/user";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces";
 
 import { FileEntity, FileType } from "./file";
@@ -68,10 +67,11 @@ export class StudentEntity {
     createdAt!: Date;
 
     @Column({
-        default: Role.ANONYMOUS,
+        insert: true,
         length: 255,
         nullable: true,
         type: "varchar",
+        update: false,
     })
     createdBy?: string;
 
@@ -100,10 +100,11 @@ export class StudentEntity {
     modifiedAt!: Date;
 
     @Column({
-        default: Role.ANONYMOUS,
+        insert: false,
         length: 255,
         nullable: true,
         type: "varchar",
+        update: true,
     })
     modifiedBy?: string;
 
