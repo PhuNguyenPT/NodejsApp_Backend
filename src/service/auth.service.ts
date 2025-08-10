@@ -22,7 +22,7 @@ import { EntityNotFoundException } from "@/type/exception/entity.not.found.excep
 import { HttpException } from "@/type/exception/http.exception.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.js";
 import { ILogger } from "@/type/interface/logger.js";
-import { JWT_EXPIRATION_TIME_IN_SECONDS } from "@/util/jwt.options.js";
+import { ACCESS_TOKEN_EXPIRATION_SECONDS } from "@/util/jwt.options.js";
 
 @injectable()
 export class AuthService {
@@ -69,7 +69,10 @@ export class AuthService {
 
             // Generate tokens
             const accessToken: string =
-                this.jwtService.generateAccessToken(jwtPayload);
+                await this.jwtService.generateAccessToken(jwtPayload);
+
+            const refreshToken =
+                await this.jwtService.generateRefreshToken(jwtPayload);
 
             // Convert entity to DTO
             const userDto = plainToClass(User, user);
@@ -77,9 +80,10 @@ export class AuthService {
             this.logger.info(`Successful login for user: ${email}`);
 
             return new AuthResponse({
-                accessToken,
-                expiresIn: JWT_EXPIRATION_TIME_IN_SECONDS,
+                accessToken: accessToken,
+                expiresIn: ACCESS_TOKEN_EXPIRATION_SECONDS, // Updated
                 message: "Login successful",
+                refreshToken: refreshToken,
                 success: true,
                 user: userDto,
             });
@@ -107,16 +111,63 @@ export class AuthService {
         }
     }
 
-    logout(): { message: string; success: boolean } {
-        // Since we're using stateless JWT tokens, logout is handled client-side
-        // In the future, you might want to:
-        // 1. Add token to a blacklist (requires Redis/database)
-        // 2. Invalidate refresh tokens in database if stored there
+    async logout(
+        accessToken: string,
+        refreshToken?: string,
+    ): Promise<{ message: string; success: boolean }> {
+        try {
+            const tokensToBlacklist: string[] = [];
 
-        return {
-            message: "Logout successful",
-            success: true,
-        };
+            if (accessToken) tokensToBlacklist.push(accessToken);
+            if (refreshToken) tokensToBlacklist.push(refreshToken);
+
+            if (tokensToBlacklist.length === 0) {
+                this.logger.warn("Logout called with no tokens provided");
+                return {
+                    message: "No tokens to logout",
+                    success: true,
+                };
+            }
+
+            // Blacklist all tokens in parallel
+            const blacklistPromises = tokensToBlacklist.map((token) =>
+                this.jwtService.logout(token),
+            );
+
+            const results = await Promise.allSettled(blacklistPromises);
+
+            const successCount = results.filter(
+                (result) => result.status === "fulfilled" && result.value,
+            ).length;
+
+            const failedCount = results.length - successCount;
+
+            if (failedCount > 0) {
+                this.logger.warn(
+                    `Logout partial success: ${successCount.toString()}/${results.length.toString()} tokens blacklisted`,
+                );
+            } else {
+                this.logger.info(
+                    `Logout successful: ${successCount.toString()} token(s) blacklisted`,
+                );
+            }
+
+            return {
+                message: "Logout successful",
+                success: true,
+            };
+        } catch (error) {
+            this.logger.error("Logout error", {
+                error: error instanceof Error ? error.message : String(error),
+                hasAccessToken: !!accessToken,
+                hasRefreshToken: !!refreshToken,
+            });
+
+            return {
+                message: "Logout completed (some tokens may remain active)",
+                success: true,
+            };
+        }
     }
 
     async refreshToken(
@@ -125,12 +176,12 @@ export class AuthService {
     ): Promise<AuthResponse> {
         try {
             this.logger.debug("Verifying token", {
-                token: refreshToken.substring(0, 50) + "...", // Only log first 50 chars for security
+                token: refreshToken.substring(0, 50) + "...",
             });
 
             // Verify refresh token - will throw if invalid
             const payload: CustomJwtPayload =
-                this.jwtService.verifyToken(refreshToken);
+                await this.jwtService.verifyToken(refreshToken);
 
             // Check if user still exists and is active
             const user = await this.userRepository.findById(payload.id);
@@ -139,7 +190,7 @@ export class AuthService {
                 throw new HttpException(401, "User not found");
             }
 
-            // Fix the comparison logic - compare the right fields
+            // Verify token belongs to current user
             const currentUser = userJwtPayload as CustomJwtPayload;
             if (
                 currentUser.email !== user.email ||
@@ -158,7 +209,7 @@ export class AuthService {
                 throw new HttpException(403, "Account is no longer active");
             }
 
-            // Create JWT payload
+            // Create JWT payload with fresh user data
             const jwtPayload: CustomJwtPayload = {
                 email: user.email,
                 id: user.id,
@@ -168,15 +219,24 @@ export class AuthService {
                 status: user.status,
             };
 
+            // Generate new access token
             const newAccessToken =
-                this.jwtService.generateAccessToken(jwtPayload);
+                await this.jwtService.generateAccessToken(jwtPayload);
+
+            // Generate new refresh token
+            const newRefreshToken =
+                await this.jwtService.generateRefreshToken(jwtPayload);
+
+            // Blacklist the old refresh token to prevent reuse
+            await this.jwtService.logout(refreshToken);
 
             this.logger.info(`Token refreshed for user: ${user.email}`);
 
             return new AuthResponse({
-                expiresIn: JWT_EXPIRATION_TIME_IN_SECONDS,
+                accessToken: newAccessToken, // New access token
+                expiresIn: ACCESS_TOKEN_EXPIRATION_SECONDS,
                 message: "Token refresh successful",
-                refreshToken: newAccessToken,
+                refreshToken: newRefreshToken, // New refresh token
                 success: true,
             });
         } catch (error) {
@@ -236,7 +296,10 @@ export class AuthService {
             };
 
             // Generate tokens
-            const accessToken = this.jwtService.generateAccessToken(jwtPayload);
+            const accessToken =
+                await this.jwtService.generateAccessToken(jwtPayload);
+            const refreshToken =
+                await this.jwtService.generateRefreshToken(jwtPayload);
 
             // Convert entity to DTO
             const userDto = plainToClass(User, savedUser);
@@ -244,9 +307,10 @@ export class AuthService {
             this.logger.info(`New user registered: ${email}`);
 
             return new AuthResponse({
-                accessToken,
-                expiresIn: JWT_EXPIRATION_TIME_IN_SECONDS,
+                accessToken: accessToken,
+                expiresIn: ACCESS_TOKEN_EXPIRATION_SECONDS,
                 message: "Registration successful",
+                refreshToken: refreshToken,
                 success: true,
                 user: userDto,
             });

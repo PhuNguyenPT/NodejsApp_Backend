@@ -14,6 +14,7 @@ import { PassportConfig } from "@/config/passport.config.js";
 import { initializeRedis } from "@/config/redis.js";
 import swaggerDocs from "@/config/swagger.js";
 import { RegisterRoutes } from "@/generated/routes.js";
+import { TokenCleanupJob } from "@/job/token.cleanup.job";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
 import { TYPES } from "@/type/container/types.js";
 import { keyStore } from "@/util/key.js";
@@ -48,6 +49,7 @@ class App {
     public async initialize(): Promise<void> {
         await this.initializeDatabaseConnections();
         this.initializePassportStrategies();
+        this.initializeTokenCleanup();
     }
 
     public listen(): void {
@@ -111,7 +113,6 @@ class App {
             this.express.use(middleware);
         });
     }
-
     private initializePassportStrategies(): void {
         try {
             const passportConfig = iocContainer.get<PassportConfig>(
@@ -155,6 +156,18 @@ class App {
                 timestamp: new Date().toISOString(),
             });
         });
+    }
+
+    private initializeTokenCleanup(): void {
+        try {
+            const tokenCleanupJob = iocContainer.get<TokenCleanupJob>(
+                TYPES.TokenCleanupJob,
+            );
+            tokenCleanupJob.startPeriodicCleanup(60); // Run every hour
+            logger.info("Token cleanup job initialized");
+        } catch (error) {
+            logger.error("Failed to initialize token cleanup job:", error);
+        }
     }
 }
 

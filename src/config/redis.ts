@@ -1,4 +1,4 @@
-// src/config/redis.source.ts
+// src/config/redis.ts
 import { createClient, type RedisClientType } from "redis";
 
 import logger from "@/util/logger.js";

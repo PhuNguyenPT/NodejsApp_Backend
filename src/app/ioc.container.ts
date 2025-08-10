@@ -13,11 +13,15 @@ import { CertificationEntity } from "@/entity/certification.js";
 import { FileEntity } from "@/entity/file.js";
 import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
+import { TokenCleanupJob } from "@/job/token.cleanup.job";
+import { JwtTokenRepository } from "@/repository/impl/jwt.repository.js";
 import { UserRepository } from "@/repository/impl/user.repository.js";
+import { IJwtTokenRepository } from "@/repository/jwt.token.repository.interface.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { AuthService } from "@/service/auth.service.js";
 import { FileService } from "@/service/file.service.js";
 import { JWTService } from "@/service/jwt.service.js";
+import { JwtEntityService } from "@/service/jwt.token.service.js";
 import { StudentService } from "@/service/student.service.js";
 import { UserService } from "@/service/user.service.js";
 import { KeyStore } from "@/type/class/keystore.js";
@@ -63,6 +67,16 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
+    .bind<IJwtTokenRepository>(TYPES.IJwtTokenRepository)
+    .to(JwtTokenRepository)
+    .inSingletonScope();
+
+iocContainer
+    .bind<JwtEntityService>(TYPES.JwtEntityService)
+    .to(JwtEntityService)
+    .inSingletonScope();
+
+iocContainer
     .bind<UserService>(TYPES.UserService)
     .to(UserService)
     .inSingletonScope();
@@ -104,5 +118,10 @@ iocContainer
     .inRequestScope();
 
 iocContainer.bind<FileController>(FileController).toSelf().inRequestScope();
+
+iocContainer
+    .bind<TokenCleanupJob>(TYPES.TokenCleanupJob)
+    .to(TokenCleanupJob)
+    .inSingletonScope();
 
 export { iocContainer };
