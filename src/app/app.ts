@@ -7,7 +7,7 @@ import passport from "passport";
 
 import { iocContainer } from "@/app/ioc.container.js";
 import { corsOptions } from "@/config/cors.js";
-import { AppDataSource } from "@/config/data.source.js";
+import { postgresDataSource } from "@/config/data.source.js";
 import { helmetOptions } from "@/config/helmet.js";
 import { getMorganConfig, setupRequestTracking } from "@/config/morgan.js";
 import { PassportConfig } from "@/config/passport.config.js";
@@ -66,7 +66,7 @@ class App {
 
         try {
             // Add connection timeout
-            const initPromise = AppDataSource.initialize();
+            const initPromise = postgresDataSource.initialize();
             const timeoutPromise = new Promise((_, reject) => {
                 setTimeout(() => {
                     reject(
@@ -82,7 +82,7 @@ class App {
             logger.info("Database connection established successfully");
 
             // Test the connection with a simple query
-            await AppDataSource.query("SELECT 1");
+            await postgresDataSource.query("SELECT 1");
             logger.info("Database connection test passed");
         } catch (error) {
             logger.error("Failed to initialize database connection:", error);

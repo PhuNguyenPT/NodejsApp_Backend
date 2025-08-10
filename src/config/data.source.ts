@@ -9,7 +9,7 @@ import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
 import { config } from "@/util/validate.env.js";
 
-export const AppDataSource = new DataSource({
+export const postgresDataSource = new DataSource({
     database: config.POSTGRES_DB,
     entities: [
         PostEntity,
