@@ -4,7 +4,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 
 import { KeyStore } from "@/type/class/keystore.js";
 import { TYPES } from "@/type/container/types.js";
-import { CustomJwtPayload } from "@/type/interface/jwt";
+import { CustomJwtPayload } from "@/type/interface/jwt.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { signOptions, verifyOptions } from "@/util/jwt.options.js";
 

@@ -1,5 +1,5 @@
-import { FileResponse } from "@/dto/file/file.response";
-import { FileEntity } from "@/entity/file";
+import { FileResponse } from "@/dto/file/file.response.js";
+import { FileEntity } from "@/entity/file.js";
 
 export const FileMapper = {
     toFileDownloadResponse(file: FileEntity) {
@@ -29,8 +29,8 @@ export const FileMapper = {
                 ? `/files/${file.id}/preview`
                 : undefined,
             status: file.status,
+            studentId: file.studentId,
             tags: file.tags,
-            uploadedBy: file.uploader?.email,
         };
     },
 

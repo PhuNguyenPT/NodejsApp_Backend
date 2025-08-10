@@ -9,9 +9,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import { StudentEntity } from "@/entity/student.js";
 import { Permission, Role, UserStatus } from "@/type/enum/user.js";
-
-import { StudentEntity } from "./student";
 
 @Entity({ name: "users" })
 @Index("idx_user_id_name", ["id", "name"])

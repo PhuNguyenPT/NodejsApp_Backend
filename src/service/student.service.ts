@@ -1,18 +1,18 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
-import { defaultPaginationConfig } from "@/config/pagination.config";
-import { StudentInfoDTO } from "@/dto/student/student.info";
-import { AwardEntity } from "@/entity/award";
-import { CertificationEntity } from "@/entity/certification";
-import { StudentEntity } from "@/entity/student";
-import { UserEntity } from "@/entity/user";
-import { TYPES } from "@/type/container/types";
-import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
-import { ValidationException } from "@/type/exception/validation.exception";
-import { ILogger } from "@/type/interface/logger";
-import { Page } from "@/type/pagination/page";
-import { Pageable } from "@/type/pagination/pageable";
+import { defaultPaginationConfig } from "@/config/pagination.config.js";
+import { StudentInfoDTO } from "@/dto/student/student.info.js";
+import { AwardEntity } from "@/entity/award.js";
+import { CertificationEntity } from "@/entity/certification.js";
+import { StudentEntity } from "@/entity/student.js";
+import { UserEntity } from "@/entity/user.js";
+import { TYPES } from "@/type/container/types.js";
+import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
+import { ValidationException } from "@/type/exception/validation.exception.js";
+import { ILogger } from "@/type/interface/logger.js";
+import { Page } from "@/type/pagination/page.js";
+import { Pageable } from "@/type/pagination/pageable.js";
 
 @injectable()
 export class StudentService {

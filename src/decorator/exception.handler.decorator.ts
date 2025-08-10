@@ -1,6 +1,6 @@
 // src/decorator/exception.handler.decorator.ts
 
-import { ErrorDetails } from "@/type/interface/error.details";
+import { ErrorDetails } from "@/type/interface/error.details.js";
 
 // Use a more flexible constructor type that doesn't constrain parameters
 type ErrorConstructor = abstract new (...args: never[]) => Error;

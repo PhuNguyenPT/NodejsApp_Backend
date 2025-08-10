@@ -1,11 +1,11 @@
 // src/config/data.source.ts
 import { DataSource } from "typeorm";
 
-import { AwardEntity } from "@/entity/award";
-import { CertificationEntity } from "@/entity/certification";
-import { FileEntity } from "@/entity/file";
+import { AwardEntity } from "@/entity/award.js";
+import { CertificationEntity } from "@/entity/certification.js";
+import { FileEntity } from "@/entity/file.js";
 import { PostEntity } from "@/entity/post.js";
-import { StudentEntity } from "@/entity/student";
+import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
 import { config } from "@/util/validate.env.js";
 

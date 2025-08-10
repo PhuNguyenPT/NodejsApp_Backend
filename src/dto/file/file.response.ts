@@ -97,6 +97,13 @@ export class FileResponse {
     status!: string;
 
     /**
+     * Foreign key to student
+     * @description UUID of the student associated with this file
+     * @example "123e4567-e89b-12d3-a456-426614174000"
+     */
+    studentId!: string;
+
+    /**
      * Optional file tags
      * @description Comma-separated tags for categorization
      * @example "academic,transcript,fall2024"

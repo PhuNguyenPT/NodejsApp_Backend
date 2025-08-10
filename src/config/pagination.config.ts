@@ -1,4 +1,4 @@
-import { config } from "@/util/validate.env";
+import { config } from "@/util/validate.env.js";
 
 // src/config/pagination.config.ts
 export interface PaginationConfig {

@@ -1,6 +1,6 @@
 import { Expose, Type } from "class-transformer";
 
-import { ExamType } from "@/type/enum/exam";
+import { ExamType } from "@/type/enum/exam.js";
 
 /**
  * Data Transfer Object for Certification response information

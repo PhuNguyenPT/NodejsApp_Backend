@@ -12,7 +12,7 @@ import {
     ValidateNested,
 } from "class-validator";
 
-import { ExamType } from "@/type/enum/exam";
+import { ExamType } from "@/type/enum/exam.js";
 
 import { AptitudeTestDTO } from "./aptitude.test.dto";
 

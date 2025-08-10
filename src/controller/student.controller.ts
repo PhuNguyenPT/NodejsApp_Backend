@@ -17,20 +17,20 @@ import {
     Tags,
 } from "tsoa";
 
-import { StudentResponse } from "@/dto/student/student";
-import { StudentInfoDTO } from "@/dto/student/student.info";
-import { StudentProfileResponse } from "@/dto/student/student.profile.response";
-import { StudentEntity } from "@/entity/student";
-import { StudentMapper } from "@/mapper/student.mapper";
-import { validateUuidParam } from "@/middleware/uuid.validation.middleware";
-import validateDTO from "@/middleware/validation.middleware";
-import { StudentService } from "@/service/student.service";
-import { TYPES } from "@/type/container/types";
-import { HttpStatus } from "@/type/enum/http.status";
-import { ValidationException } from "@/type/exception/validation.exception";
-import { AuthenticatedRequest } from "@/type/express/express";
-import { Page } from "@/type/pagination/page";
-import { Pageable } from "@/type/pagination/pageable";
+import { StudentInfoDTO } from "@/dto/student/student.info.js";
+import { StudentResponse } from "@/dto/student/student.js";
+import { StudentProfileResponse } from "@/dto/student/student.profile.response.js";
+import { StudentEntity } from "@/entity/student.js";
+import { StudentMapper } from "@/mapper/student.mapper.js";
+import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
+import validateDTO from "@/middleware/validation.middleware.js";
+import { StudentService } from "@/service/student.service.js";
+import { TYPES } from "@/type/container/types.js";
+import { HttpStatus } from "@/type/enum/http.status.js";
+import { ValidationException } from "@/type/exception/validation.exception.js";
+import { AuthenticatedRequest } from "@/type/express/express.js";
+import { Page } from "@/type/pagination/page.js";
+import { Pageable } from "@/type/pagination/pageable.js";
 
 @injectable()
 @Route("students")

@@ -20,7 +20,7 @@ import { BadCredentialsException } from "@/type/exception/bad.credentials.except
 import { EntityExistsException } from "@/type/exception/entity.exists.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { HttpException } from "@/type/exception/http.exception.js";
-import { CustomJwtPayload } from "@/type/interface/jwt";
+import { CustomJwtPayload } from "@/type/interface/jwt.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { JWT_EXPIRATION_TIME_IN_SECONDS } from "@/util/jwt.options.js";
 
