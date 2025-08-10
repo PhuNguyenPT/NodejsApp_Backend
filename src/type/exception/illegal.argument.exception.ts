@@ -1,5 +1,5 @@
-import { HttpStatus } from "@/type/enum/http.status";
-import { HttpException } from "@/type/exception/http.exception";
+import { HttpStatus } from "@/type/enum/http.status.js";
+import { HttpException } from "@/type/exception/http.exception.js";
 
 /**
  * Exception thrown when an invalid argument is passed to a function or method.

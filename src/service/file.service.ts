@@ -2,12 +2,13 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
-import { CreateFileDTO } from "@/dto/file/create.file";
-import { UpdateFileDTO } from "@/dto/file/update.file";
+import { CreateFileDTO } from "@/dto/file/create.file.js";
+import { UpdateFileDTO } from "@/dto/file/update.file.js";
 import { FileEntity, FileStatus, FileType } from "@/entity/file.js";
 import { StudentEntity } from "@/entity/student.js";
 import { TYPES } from "@/type/container/types.js";
-import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
+import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
+import { ValidationException } from "@/type/exception/validation.exception.js";
 import logger from "@/util/logger.js";
 
 @injectable()
@@ -20,9 +21,10 @@ export class FileService {
     ) {}
 
     async createFile(createFileDTO: CreateFileDTO): Promise<FileEntity> {
-        // Verify student exists
+        // Verify student exists and load files
         const student: null | StudentEntity =
             await this.studentRepository.findOne({
+                relations: ["files"],
                 where: { id: createFileDTO.studentId },
             });
 
@@ -32,8 +34,17 @@ export class FileService {
             );
         }
 
-        const fileEntity = this.fileRepository.create(createFileDTO);
-        const savedFile = await this.fileRepository.save(fileEntity);
+        // Use the helper method from StudentEntity
+        if (student.getActiveFiles().length >= 6) {
+            throw new ValidationException({
+                file:
+                    `Student has reached the maximum limit of 6 files. ` +
+                    `Current active files: ${student.getActiveFiles().length.toString()}`,
+            });
+        }
+
+        const newFile = this.fileRepository.create(createFileDTO);
+        const savedFile = await this.fileRepository.save(newFile);
 
         logger.info(`File created successfully with ID: ${savedFile.id}`);
         return savedFile;
@@ -50,13 +61,13 @@ export class FileService {
 
     async getFileById(fileId: string): Promise<FileEntity> {
         const file = await this.fileRepository.findOne({
-            relations: ["student", "uploader"],
+            relations: ["student"],
             where: { id: fileId, status: FileStatus.ACTIVE },
         });
 
         if (!file) {
             throw new EntityNotFoundException(
-                `File with ID ${fileId.toString()} not found`,
+                `File with ID ${fileId} not found`,
             );
         }
 
@@ -66,7 +77,6 @@ export class FileService {
     async getFilesByStudentId(studentId: string): Promise<FileEntity[]> {
         return await this.fileRepository.find({
             order: { createdAt: "DESC" },
-            relations: ["uploader"],
             where: {
                 status: FileStatus.ACTIVE,
                 studentId: studentId,
@@ -80,7 +90,6 @@ export class FileService {
     ): Promise<FileEntity[]> {
         return await this.fileRepository.find({
             order: { createdAt: "DESC" },
-            relations: ["uploader"],
             where: {
                 fileType: fileType,
                 status: FileStatus.ACTIVE,
@@ -108,7 +117,7 @@ export class FileService {
 
         files.forEach((file) => {
             counts[file.fileType]++;
-            totalSize += Number(file.fileSize);
+            totalSize += file.fileSize;
         });
 
         return { counts, files, totalSize };

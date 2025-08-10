@@ -1,7 +1,7 @@
 import { Expose } from "class-transformer";
 import { IsInt, IsNotEmpty, Max, Min } from "class-validator";
 
-import { ExamType } from "@/type/enum/exam";
+import { ExamType } from "@/type/enum/exam.js";
 
 /**
  * DTO for aptitude test information containing both type and score

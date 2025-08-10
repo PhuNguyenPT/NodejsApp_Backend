@@ -11,8 +11,7 @@ import {
 } from "typeorm";
 
 import { StudentEntity } from "@/entity/student.js";
-import { UserEntity } from "@/entity/user.js";
-import { Role } from "@/type/enum/user";
+import { Role } from "@/type/enum/user.js";
 
 /**
  * File status - must be one of: active, archived, deleted
@@ -42,7 +41,6 @@ export enum FileType {
 @Index("idx_file_student_id", ["studentId"])
 @Index("idx_file_type", ["fileType"])
 @Index("idx_file_status", ["status"])
-@Index("idx_file_uploaded_by", ["uploadedBy"])
 @Index("idx_file_created_at", ["createdAt"])
 @Index("idx_file_modified_at", ["modifiedAt"])
 export class FileEntity {
@@ -58,6 +56,7 @@ export class FileEntity {
         update: false,
     })
     createdBy?: string;
+
     @Column({ length: 500, nullable: true, type: "varchar" })
     description?: string;
 
@@ -118,24 +117,11 @@ export class FileEntity {
     })
     student!: StudentEntity;
 
-    // Foreign key to student
     @Column({ type: "uuid" })
     studentId!: string;
 
     @Column({ length: 255, nullable: true, type: "varchar" })
     tags?: string;
-
-    // Optional: Track who uploaded the file
-    @Column({ nullable: true, type: "uuid" })
-    uploadedBy?: string;
-
-    @JoinColumn({ name: "uploadedBy" })
-    @ManyToOne(() => UserEntity, {
-        eager: false,
-        nullable: true,
-        onDelete: "SET NULL",
-    })
-    uploader?: UserEntity;
 
     constructor(file?: Partial<FileEntity>) {
         if (file) {
@@ -149,7 +135,7 @@ export class FileEntity {
     }
 
     getHumanReadableFileSize(): string {
-        const bytes = Number(this.fileSize);
+        const bytes = this.fileSize;
         const units = ["B", "KB", "MB", "GB", "TB"];
         if (bytes === 0) return "0 B";
 

@@ -6,16 +6,16 @@ import helmet from "helmet";
 import passport from "passport";
 
 import { iocContainer } from "@/app/ioc.container.js";
-import { corsOptions } from "@/config/cors";
+import { corsOptions } from "@/config/cors.js";
 import { AppDataSource } from "@/config/data.source.js";
-import { helmetOptions } from "@/config/helmet";
+import { helmetOptions } from "@/config/helmet.js";
 import { getMorganConfig, setupRequestTracking } from "@/config/morgan.js";
 import { PassportConfig } from "@/config/passport.config.js";
-import swaggerDocs from "@/config/swagger";
+import swaggerDocs from "@/config/swagger.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
 import { TYPES } from "@/type/container/types.js";
-import { keyStore } from "@/util/key";
+import { keyStore } from "@/util/key.js";
 import logger from "@/util/logger.js";
 import { config } from "@/util/validate.env.js";
 

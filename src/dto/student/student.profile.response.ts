@@ -1,12 +1,12 @@
 // src/dto/student.info.ts
 import { Expose, Transform, Type } from "class-transformer";
 
-import { FileResponse } from "@/dto/file/file.response";
-import { AptitudeTestResponse } from "@/dto/student/aptitude.test.response";
+import { FileResponse } from "@/dto/file/file.response.js";
+import { AptitudeTestResponse } from "@/dto/student/aptitude.test.response.js";
 import { AwardResponse } from "@/dto/student/award.response.js";
-import { CertificationResponse } from "@/dto/student/certification.response";
-import { ExamSubject } from "@/dto/student/exam";
-import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces";
+import { CertificationResponse } from "@/dto/student/certification.response.js";
+import { ExamSubject } from "@/dto/student/exam.js";
+import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
 /**
  * Data Transfer Object for student profile response information.

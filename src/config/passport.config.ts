@@ -8,7 +8,7 @@ import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { strategyOptionsWithRequest } from "@/util/jwt.options.js";
-import { config } from "@/util/validate.env";
+import { config } from "@/util/validate.env.js";
 
 @injectable()
 export class PassportConfig {

@@ -8,7 +8,7 @@ import {
     MinLength,
 } from "class-validator";
 
-import { ExamType } from "@/type/enum/exam";
+import { ExamType } from "@/type/enum/exam.js";
 
 /**
  * Data Transfer Object for Certification information

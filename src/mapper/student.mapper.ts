@@ -1,11 +1,10 @@
 import { plainToInstance } from "class-transformer";
 
-import { StudentResponse } from "@/dto/student/student";
-import { StudentProfileResponse } from "@/dto/student/student.profile.response";
-import { StudentEntity } from "@/entity/student";
-import { Page } from "@/type/pagination/page";
-
-import { FileMapper } from "./file.mapper";
+import { StudentResponse } from "@/dto/student/student.js";
+import { StudentProfileResponse } from "@/dto/student/student.profile.response.js";
+import { StudentEntity } from "@/entity/student.js";
+import { FileMapper } from "@/mapper/file.mapper.js";
+import { Page } from "@/type/pagination/page.js";
 
 export const StudentMapper = {
     toStudentProfileResponse(

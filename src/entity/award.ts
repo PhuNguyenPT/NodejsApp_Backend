@@ -11,7 +11,7 @@ import {
 } from "typeorm";
 
 import { StudentEntity } from "@/entity/student.js";
-import { ExamType } from "@/type/enum/exam";
+import { ExamType } from "@/type/enum/exam.js";
 
 @Entity({ name: "awards" })
 @Index("idx_award_student_id", ["studentId"])

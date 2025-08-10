@@ -17,11 +17,11 @@ import {
     ValidateNested,
 } from "class-validator";
 
-import { AptitudeTestDTO } from "@/dto/student/aptitude.test.dto";
+import { AptitudeTestDTO } from "@/dto/student/aptitude.test.dto.js";
 import { AwardDTO } from "@/dto/student/award.js";
 import { CertificationDTO } from "@/dto/student/certification.js";
-import { ExamSubject } from "@/dto/student/exam";
-import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces";
+import { ExamSubject } from "@/dto/student/exam.js";
+import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
 /**
  * Data Transfer Object for creating or updating student profile information.

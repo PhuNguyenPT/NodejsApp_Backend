@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitialSchema1754568143580 implements MigrationInterface {
-    name = "InitialSchema1754568143580";
+export class InitialSchema1754794905473 implements MigrationInterface {
+    name = "InitialSchema1754794905473";
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(
@@ -74,16 +74,13 @@ export class InitialSchema1754568143580 implements MigrationInterface {
             `CREATE TYPE "public"."files_status_enum" AS ENUM('active', 'archived', 'deleted')`,
         );
         await queryRunner.query(
-            `CREATE TABLE "files" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255) DEFAULT 'ANONYMOUS', "description" character varying(500), "fileContent" bytea NOT NULL, "fileName" character varying(255) NOT NULL, "filePath" character varying(500), "fileSize" bigint NOT NULL, "fileType" "public"."files_filetype_enum" NOT NULL DEFAULT 'other', "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "mimeType" character varying(100) NOT NULL, "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "originalFileName" character varying(255) NOT NULL, "status" "public"."files_status_enum" NOT NULL DEFAULT 'active', "studentId" uuid NOT NULL, "tags" character varying(255), "uploadedBy" uuid, CONSTRAINT "PK_6c16b9093a142e0e7613b04a3d9" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "files" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255) DEFAULT 'ANONYMOUS', "description" character varying(500), "fileContent" bytea NOT NULL, "fileName" character varying(255) NOT NULL, "filePath" character varying(500), "fileSize" bigint NOT NULL, "fileType" "public"."files_filetype_enum" NOT NULL DEFAULT 'other', "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "mimeType" character varying(100) NOT NULL, "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "originalFileName" character varying(255) NOT NULL, "status" "public"."files_status_enum" NOT NULL DEFAULT 'active', "studentId" uuid NOT NULL, "tags" character varying(255), CONSTRAINT "PK_6c16b9093a142e0e7613b04a3d9" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_file_modified_at" ON "files" ("modifiedAt") `,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_file_created_at" ON "files" ("createdAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_file_uploaded_by" ON "files" ("uploadedBy") `,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_file_status" ON "files" ("status") `,
@@ -152,9 +149,6 @@ export class InitialSchema1754568143580 implements MigrationInterface {
             `ALTER TABLE "files" ADD CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
-            `ALTER TABLE "files" ADD CONSTRAINT "FK_a443b3a690edf7e690e3dace8d9" FOREIGN KEY ("uploadedBy") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
-        );
-        await queryRunner.query(
             `ALTER TABLE "students" ADD CONSTRAINT "FK_e0208b4f964e609959aff431bf9" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
@@ -168,9 +162,6 @@ export class InitialSchema1754568143580 implements MigrationInterface {
         );
         await queryRunner.query(
             `ALTER TABLE "students" DROP CONSTRAINT "FK_e0208b4f964e609959aff431bf9"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "files" DROP CONSTRAINT "FK_a443b3a690edf7e690e3dace8d9"`,
         );
         await queryRunner.query(
             `ALTER TABLE "files" DROP CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212"`,
@@ -202,7 +193,6 @@ export class InitialSchema1754568143580 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "public"."idx_file_student_id"`);
         await queryRunner.query(`DROP INDEX "public"."idx_file_type"`);
         await queryRunner.query(`DROP INDEX "public"."idx_file_status"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_file_uploaded_by"`);
         await queryRunner.query(`DROP INDEX "public"."idx_file_created_at"`);
         await queryRunner.query(`DROP INDEX "public"."idx_file_modified_at"`);
         await queryRunner.query(`DROP TABLE "files"`);

@@ -1,29 +1,26 @@
-import {
-    JsonWebTokenError,
-    NotBeforeError,
-    TokenExpiredError,
-} from "jsonwebtoken";
+// src/handler/global.exception.handler.ts
+
+import jwt from "jsonwebtoken"; // Corrected import
 import { ValidateError } from "tsoa";
 import { EntityMetadataNotFoundError } from "typeorm";
 
-// src/handler/global.exception.handler.ts
 import { ExceptionHandler } from "@/decorator/exception.handler.decorator.js";
-import { HttpStatus } from "@/type/enum/http.status";
-import { AccessDeniedException } from "@/type/exception/access.denied.exception";
-import { AuthenticationException } from "@/type/exception/authentication.exception";
-import { BadCredentialsException } from "@/type/exception/bad.credentials.exception";
-import { EntityExistsException } from "@/type/exception/entity.exists.exception";
-import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
-import { ExpiredJwtException } from "@/type/exception/expired.jwt.exception";
-import { HttpException } from "@/type/exception/http.exception";
-import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception";
-import { InvalidUuidException } from "@/type/exception/invalid.uuid.exception";
-import { JwtException } from "@/type/exception/jwt.exception";
-import { ValidationException } from "@/type/exception/validation.exception";
-import { ErrorDetails } from "@/type/interface/error.details";
-import { ErrorResponse } from "@/type/interface/error.response";
-import { ValidationResponse } from "@/type/interface/validation.response";
-import logger from "@/util/logger";
+import { HttpStatus } from "@/type/enum/http.status.js";
+import { AccessDeniedException } from "@/type/exception/access.denied.exception.js";
+import { AuthenticationException } from "@/type/exception/authentication.exception.js";
+import { BadCredentialsException } from "@/type/exception/bad.credentials.exception.js";
+import { EntityExistsException } from "@/type/exception/entity.exists.exception.js";
+import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
+import { ExpiredJwtException } from "@/type/exception/expired.jwt.exception.js";
+import { HttpException } from "@/type/exception/http.exception.js";
+import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception.js";
+import { InvalidUuidException } from "@/type/exception/invalid.uuid.exception.js";
+import { JwtException } from "@/type/exception/jwt.exception.js";
+import { ValidationException } from "@/type/exception/validation.exception.js";
+import { ErrorDetails } from "@/type/interface/error.details.js";
+import { ErrorResponse } from "@/type/interface/error.response.js";
+import { ValidationResponse } from "@/type/interface/validation.response.js";
+import logger from "@/util/logger.js";
 
 export const internalServerErrorMessage = "Internal Server Error";
 
@@ -190,9 +187,8 @@ class ExceptionHandlers {
 
     @ExceptionHandler(HttpException)
     handleHttpException(exception: HttpException): ErrorDetails {
-        const status =
-            Number(exception.status) || HttpStatus.INTERNAL_SERVER_ERROR;
-        const message = String(exception.message) || internalServerErrorMessage;
+        const status = exception.status || HttpStatus.INTERNAL_SERVER_ERROR;
+        const message = exception.message || internalServerErrorMessage;
 
         const response: ErrorResponse = {
             message,
@@ -244,8 +240,8 @@ class ExceptionHandlers {
         return { message, response, status };
     }
 
-    @ExceptionHandler(JsonWebTokenError)
-    handleJsonWebTokenError(error: JsonWebTokenError): ErrorDetails {
+    @ExceptionHandler(jwt.JsonWebTokenError)
+    handleJsonWebTokenError(error: jwt.JsonWebTokenError): ErrorDetails {
         const status = HttpStatus.UNAUTHORIZED;
         const message = "Invalid token";
 
@@ -283,8 +279,8 @@ class ExceptionHandlers {
         return { message, response, status };
     }
 
-    @ExceptionHandler(NotBeforeError)
-    handleNotBeforeError(error: NotBeforeError): ErrorDetails {
+    @ExceptionHandler(jwt.NotBeforeError) // Corrected reference
+    handleNotBeforeError(error: jwt.NotBeforeError): ErrorDetails {
         const status = HttpStatus.UNAUTHORIZED;
         const message = "Token not active yet";
 
@@ -324,8 +320,8 @@ class ExceptionHandlers {
         return { message, response, status };
     }
 
-    @ExceptionHandler(TokenExpiredError)
-    handleTokenExpiredError(error: TokenExpiredError): ErrorDetails {
+    @ExceptionHandler(jwt.TokenExpiredError)
+    handleTokenExpiredError(error: jwt.TokenExpiredError): ErrorDetails {
         const status = HttpStatus.UNAUTHORIZED;
         const message = "Token has expired";
 

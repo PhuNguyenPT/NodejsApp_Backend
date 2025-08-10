@@ -1,7 +1,7 @@
 import { plainToInstance } from "class-transformer";
 
-import { UserAdmin } from "@/dto/user/user";
-import { UserEntity } from "@/entity/user";
+import { UserAdmin } from "@/dto/user/user.js";
+import { UserEntity } from "@/entity/user.js";
 
 export const UserMapper = {
     /**

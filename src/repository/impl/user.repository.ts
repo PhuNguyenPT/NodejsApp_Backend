@@ -5,9 +5,9 @@ import { AppDataSource } from "@/config/data.source.js";
 import { User, UserAdmin } from "@/dto/user/user";
 import { UserEntity } from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
-import { EntityExistsException } from "@/type/exception/entity.exists.exception";
-import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
-import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception";
+import { EntityExistsException } from "@/type/exception/entity.exists.exception.js";
+import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
+import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception.js";
 
 export class UserRepository implements IUserRepository {
     private repository: Repository<UserEntity>;

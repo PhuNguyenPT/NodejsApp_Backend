@@ -1,7 +1,7 @@
 // src/dto/file/update.file.ts
 import { IsEnum, IsOptional, IsString, MaxLength } from "class-validator";
 
-import { FileType } from "@/entity/file";
+import { FileType } from "@/entity/file.js";
 
 /**
  * Data Transfer Object for updating file metadata

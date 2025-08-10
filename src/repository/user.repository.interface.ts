@@ -1,5 +1,5 @@
 // src/repository/user.repository.interface.ts
-import { User, UserAdmin } from "@/dto/user/user";
+import { User, UserAdmin } from "@/dto/user/user.js";
 import { UserEntity } from "@/entity/user.js";
 
 export interface IUserRepository {

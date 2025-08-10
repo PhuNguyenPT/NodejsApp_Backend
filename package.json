@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "An Express.js template with TypeScript, ESLint and Prettier",
   "type": "commonjs",
+  "engines": {
+    "node": "22.17.0"
+  },
   "scripts": {
     "dev": "npm run tsoa:build && tsoa spec-and-routes && tsx --watch --env-file .env.dev src/app/index.ts",
     "dev:staging": "npm run tsoa:build && tsx --watch --env-file .env.staging src/app/index.ts",
@@ -94,13 +97,13 @@
     "helmet": "^8.1.0",
     "inversify": "^7.6.1",
     "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
-    "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "tsoa": "^6.6.0",
     "typeorm": "^0.3.25",

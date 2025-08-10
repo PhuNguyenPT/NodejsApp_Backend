@@ -11,14 +11,13 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { ExamProfileDTO } from "@/dto/student/exam";
+import { ExamProfileDTO } from "@/dto/student/exam.js";
 import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
+import { FileEntity, FileType } from "@/entity/file.js";
 import { UserEntity } from "@/entity/user.js";
-import { ExamType } from "@/type/enum/exam";
-import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces";
-
-import { FileEntity, FileType } from "./file";
+import { ExamType } from "@/type/enum/exam.js";
+import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
 interface AptitudeTestData {
     examType: ExamType;
@@ -284,7 +283,7 @@ export class StudentEntity {
         if (!this.files) return 0;
         return this.files
             .filter((file) => file.isActive())
-            .reduce((total, file) => total + Number(file.fileSize), 0);
+            .reduce((total, file) => total + file.fileSize, 0);
     }
 
     getTotalSubjectScore(): number {

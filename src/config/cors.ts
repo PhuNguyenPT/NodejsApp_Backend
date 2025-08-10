@@ -1,6 +1,6 @@
 import { CorsOptions } from "cors";
 
-import { config } from "@/util/validate.env";
+import { config } from "@/util/validate.env.js";
 
 export const corsOptions: CorsOptions = {
     allowedHeaders: [

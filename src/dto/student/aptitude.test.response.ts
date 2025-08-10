@@ -1,6 +1,6 @@
 import { Expose, Transform } from "class-transformer";
 
-import { ExamType } from "@/type/enum/exam";
+import { ExamType } from "@/type/enum/exam.js";
 
 export class AptitudeTestResponse {
     /**

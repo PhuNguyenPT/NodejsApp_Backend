@@ -2,7 +2,7 @@
 import { Expose, Transform, Type } from "class-transformer";
 import { IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
-import { defaultPaginationConfig } from "@/config/pagination.config";
+import { defaultPaginationConfig } from "@/config/pagination.config.js";
 
 export class Pageable {
     /**

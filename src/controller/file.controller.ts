@@ -23,17 +23,17 @@ import {
 
 import { CreateFileDTO } from "@/dto/file/create.file";
 import { FileResponse } from "@/dto/file/file.response.js";
-import { UpdateFileDTO } from "@/dto/file/update.file";
+import { UpdateFileDTO } from "@/dto/file/update.file.js";
 import { FileEntity, FileType } from "@/entity/file.js";
-import { FileMapper } from "@/mapper/file.mapper";
-import { validateUuidParam } from "@/middleware/uuid.validation.middleware";
-import validateDTO from "@/middleware/validation.middleware";
+import { FileMapper } from "@/mapper/file.mapper.js";
+import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
+import validateDTO from "@/middleware/validation.middleware.js";
 import { FileService } from "@/service/file.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http.status.js";
-import { ValidationException } from "@/type/exception/validation.exception";
+import { ValidationException } from "@/type/exception/validation.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
-import { ILogger } from "@/type/interface/logger";
+import { ILogger } from "@/type/interface/logger.js";
 
 @injectable()
 @Route("files")
