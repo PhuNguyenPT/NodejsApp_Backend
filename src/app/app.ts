@@ -7,10 +7,11 @@ import passport from "passport";
 
 import { iocContainer } from "@/app/ioc.container.js";
 import { corsOptions } from "@/config/cors.js";
-import { AppDataSource } from "@/config/data.source.js";
+import { initializePostgreSQL } from "@/config/data.source.js";
 import { helmetOptions } from "@/config/helmet.js";
 import { getMorganConfig, setupRequestTracking } from "@/config/morgan.js";
 import { PassportConfig } from "@/config/passport.config.js";
+import { initializeRedis } from "@/config/redis.js";
 import swaggerDocs from "@/config/swagger.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
@@ -43,9 +44,9 @@ class App {
         return `http://${this.hostname}:${this.port.toString()}${this.basePath}`;
     }
 
-    // Separate async initialization method
+    // Separate async initialization method with concurrent database connections
     public async initialize(): Promise<void> {
-        await this.initializeDatabaseConnection();
+        await this.initializeDatabaseConnections();
         this.initializePassportStrategies();
     }
 
@@ -61,32 +62,23 @@ class App {
         this.express.use(cors(corsOptions));
     }
 
-    private async initializeDatabaseConnection(): Promise<void> {
-        logger.info("Initializing database connection...");
+    private async initializeDatabaseConnections(): Promise<void> {
+        logger.info("Initializing database connections...");
 
         try {
-            // Add connection timeout
-            const initPromise = AppDataSource.initialize();
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => {
-                    reject(
-                        new Error(
-                            "Database connection timeout after 30 seconds",
-                        ),
-                    );
-                }, 30000);
-            });
+            // Initialize both PostgreSQL and Redis concurrently
+            const postgresPromise = initializePostgreSQL();
+            const redisPromise = initializeRedis();
 
-            await Promise.race([initPromise, timeoutPromise]);
+            // Wait for both connections to complete
+            await Promise.all([postgresPromise, redisPromise]);
 
-            logger.info("Database connection established successfully");
-
-            // Test the connection with a simple query
-            await AppDataSource.query("SELECT 1");
-            logger.info("Database connection test passed");
+            logger.info("✅ All database connections established successfully");
         } catch (error) {
-            logger.error("Failed to initialize database connection:", error);
-
+            logger.error(
+                "❌ Failed to initialize database connections:",
+                error,
+            );
             throw error;
         }
     }

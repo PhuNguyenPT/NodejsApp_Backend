@@ -2,7 +2,7 @@
 import { Container } from "inversify";
 import { Repository } from "typeorm";
 
-import { AppDataSource } from "@/config/data.source.js";
+import { postgresDataSource } from "@/config/data.source.js";
 import { PassportConfig } from "@/config/passport.config.js";
 import { AuthController } from "@/controller/auth.controller.js";
 import { FileController } from "@/controller/file.controller.js";
@@ -39,27 +39,27 @@ iocContainer
 
 iocContainer
     .bind<Repository<StudentEntity>>(TYPES.StudentRepository)
-    .toDynamicValue(() => AppDataSource.getRepository(StudentEntity))
+    .toDynamicValue(() => postgresDataSource.getRepository(StudentEntity))
     .inSingletonScope();
 
 iocContainer
     .bind<Repository<AwardEntity>>(TYPES.AwardRepository)
-    .toDynamicValue(() => AppDataSource.getRepository(AwardEntity))
+    .toDynamicValue(() => postgresDataSource.getRepository(AwardEntity))
     .inSingletonScope();
 
 iocContainer
     .bind<Repository<CertificationEntity>>(TYPES.CertificationRepository)
-    .toDynamicValue(() => AppDataSource.getRepository(CertificationEntity))
+    .toDynamicValue(() => postgresDataSource.getRepository(CertificationEntity))
     .inSingletonScope();
 
 iocContainer
     .bind<Repository<UserEntity>>(TYPES.UserRepository)
-    .toDynamicValue(() => AppDataSource.getRepository(UserEntity))
+    .toDynamicValue(() => postgresDataSource.getRepository(UserEntity))
     .inSingletonScope();
 
 iocContainer
     .bind<Repository<FileEntity>>(TYPES.FileRepository)
-    .toDynamicValue(() => AppDataSource.getRepository(FileEntity))
+    .toDynamicValue(() => postgresDataSource.getRepository(FileEntity))
     .inSingletonScope();
 
 iocContainer

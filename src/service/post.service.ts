@@ -1,7 +1,7 @@
 // src/service/post.service.ts
 import { Repository } from "typeorm";
 
-import { AppDataSource } from "@/config/data.source.js";
+import { postgresDataSource } from "@/config/data.source.js";
 import PostEntity from "@/entity/post.js";
 import logger from "@/util/logger.js";
 
@@ -9,7 +9,7 @@ class PostService {
     private repository: Repository<PostEntity>;
 
     constructor() {
-        this.repository = AppDataSource.getRepository(PostEntity);
+        this.repository = postgresDataSource.getRepository(PostEntity);
     }
 
     /**

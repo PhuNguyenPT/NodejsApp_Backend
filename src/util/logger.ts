@@ -85,7 +85,7 @@ if (enableFileLogging || isProduction) {
 }
 
 // Create winston logger instance
-const winstonLogger = winston.createLogger({
+const logger = winston.createLogger({
     exceptionHandlers:
         enableFileLogging || isProduction
             ? [
@@ -122,7 +122,7 @@ export class WinstonLoggerService implements ILogger {
     private readonly logger: Logger;
 
     constructor() {
-        this.logger = winstonLogger;
+        this.logger = logger;
     }
 
     debug(message: string, meta?: Record<string, unknown>): void {
@@ -146,5 +146,4 @@ export class WinstonLoggerService implements ILogger {
     }
 }
 
-// Export the winston instance for backward compatibility if needed
-export default winstonLogger;
+export default logger;

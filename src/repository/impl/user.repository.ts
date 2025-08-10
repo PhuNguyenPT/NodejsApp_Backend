@@ -1,7 +1,7 @@
 // src/repository/impl/user.repository.ts
 import { Repository } from "typeorm";
 
-import { AppDataSource } from "@/config/data.source.js";
+import { postgresDataSource } from "@/config/data.source.js";
 import { User, UserAdmin } from "@/dto/user/user";
 import { UserEntity } from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
@@ -13,7 +13,7 @@ export class UserRepository implements IUserRepository {
     private repository: Repository<UserEntity>;
 
     constructor() {
-        this.repository = AppDataSource.getRepository(UserEntity);
+        this.repository = postgresDataSource.getRepository(UserEntity);
     }
 
     public createUser(user: User): UserEntity {
