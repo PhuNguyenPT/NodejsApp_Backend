@@ -44,9 +44,17 @@ interface Config {
     PRIVATE_KEY_PATH: string;
     PUBLIC_KEY_PATH: string;
 
+    // Redis configuration
+    REDIS_DB: number;
+    REDIS_HOST: string;
+    REDIS_PASSWORD?: string;
+    REDIS_PORT: number;
+    REDIS_TTL: number;
+    REDIS_USER_PASSWORD?: string;
+    REDIS_USERNAME?: string;
+
     // Migration settings
     RUN_MIGRATIONS_ON_STARTUP: boolean;
-
     // Application config
     SERVER_HOSTNAME: string;
     SERVER_PATH: string;
@@ -96,6 +104,17 @@ export const config: Config = cleanEnv(process.env, {
     // JWT RSA Keys
     PRIVATE_KEY_PATH: str(),
     PUBLIC_KEY_PATH: str(),
+
+    // Redis configuration
+    REDIS_DB: num({ default: 0 }),
+    REDIS_HOST: str({ default: "localhost" }),
+    REDIS_PASSWORD: str({ default: undefined }),
+    REDIS_PORT: port({ default: 6379 }),
+    REDIS_TTL: num({ default: 3600 }),
+    REDIS_USER_PASSWORD: str({ default: undefined }),
+    REDIS_USERNAME: str({ default: undefined }),
+
+    // Migration settings
     RUN_MIGRATIONS_ON_STARTUP: bool({ default: false }),
 
     // Application config

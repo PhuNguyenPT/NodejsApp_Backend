@@ -7,6 +7,7 @@ import { FileEntity } from "@/entity/file.js";
 import { PostEntity } from "@/entity/post.js";
 import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
+import logger from "@/util/logger.js";
 import { config } from "@/util/validate.env.js";
 
 export const postgresDataSource = new DataSource({
@@ -35,3 +36,20 @@ export const postgresDataSource = new DataSource({
     type: "postgres",
     username: config.POSTGRES_USER,
 });
+
+// Initialize PostgreSQL connection
+export const initializePostgreSQL = async (): Promise<void> => {
+    logger.info("Connecting to PostgreSQL...");
+
+    try {
+        await postgresDataSource.initialize();
+        logger.info("✅ PostgreSQL connection established successfully");
+
+        // Test the connection with a simple query
+        await postgresDataSource.query("SELECT 1");
+        logger.info("✅ PostgreSQL connection test passed");
+    } catch (error) {
+        logger.error("❌ Failed to initialize PostgreSQL connection:", error);
+        throw error;
+    }
+};
