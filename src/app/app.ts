@@ -31,8 +31,7 @@ class App {
         this.hostname = config.SERVER_HOSTNAME;
         this.basePath = config.SERVER_PATH;
 
-        this.initializeDatabaseConnection();
-        this.initializePassportStrategies();
+        // Initialize synchronous components only
         this.initializeCors();
         this.initializeMiddleware();
         this.initializeRoutesAndDocs();
@@ -42,6 +41,12 @@ class App {
 
     public getServerUrl(): string {
         return `http://${this.hostname}:${this.port.toString()}${this.basePath}`;
+    }
+
+    // Separate async initialization method
+    public async initialize(): Promise<void> {
+        await this.initializeDatabaseConnection();
+        this.initializePassportStrategies();
     }
 
     public listen(): void {
@@ -56,14 +61,34 @@ class App {
         this.express.use(cors(corsOptions));
     }
 
-    private initializeDatabaseConnection(): void {
-        AppDataSource.initialize()
-            .then(() => {
-                logger.info("Database connection established");
-            })
-            .catch((error: unknown) => {
-                logger.error("Error during Data Source initialization:", error);
+    private async initializeDatabaseConnection(): Promise<void> {
+        logger.info("Initializing database connection...");
+
+        try {
+            // Add connection timeout
+            const initPromise = AppDataSource.initialize();
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                    reject(
+                        new Error(
+                            "Database connection timeout after 30 seconds",
+                        ),
+                    );
+                }, 30000);
             });
+
+            await Promise.race([initPromise, timeoutPromise]);
+
+            logger.info("Database connection established successfully");
+
+            // Test the connection with a simple query
+            await AppDataSource.query("SELECT 1");
+            logger.info("Database connection test passed");
+        } catch (error) {
+            logger.error("Failed to initialize database connection:", error);
+
+            throw error;
+        }
     }
 
     private initializeErrorHandling(): void {
