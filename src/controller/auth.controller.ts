@@ -53,19 +53,35 @@ export class AuthController extends Controller {
     @Produces("application/json")
     @Security("bearerAuth")
     @SuccessResponse("200", "Logout successful")
-    public logout(@Request() request: AuthenticatedRequest): {
+    public async logout(
+        @Request() request: AuthenticatedRequest,
+        @Body() body: { refreshToken: string },
+    ): Promise<{
         message: string;
         success: boolean;
-    } {
+    }> {
         const user = request.user;
 
-        // TypeScript now knows user is defined due to the checks above
+        // Extract access token from Authorization header
+        const accessToken: null | string =
+            ExtractJwt.fromAuthHeaderAsBearerToken()(request);
+
+        if (!accessToken) {
+            this.setStatus(400);
+            throw new JwtException("No access token provided");
+        }
+
+        // Extract refresh token from request body (client should send it)
         this.logger.info(`User logging out: ${user.email} (ID: ${user.id})`);
 
-        return {
-            message: "Logout successful. Client should now discard the token.",
-            success: true,
-        };
+        // Call auth service to handle token blacklisting
+        const result = await this.authService.logout(
+            accessToken,
+            body.refreshToken,
+        );
+
+        this.setStatus(200);
+        return result;
     }
 
     @Post("refresh")

@@ -67,6 +67,7 @@
     "@/entity": "dist/entity",
     "@/generated": "dist/generated",
     "@/handler": "dist/handler",
+    "@/job": "dist/job",
     "@/mapper": "dist/mapper",
     "@/middleware": "dist/middleware",
     "@/repository": "dist/repository",

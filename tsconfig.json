@@ -27,6 +27,7 @@
       "@/entity/*": ["entity/*"],
       "@/generated/*": ["generated/*"],
       "@/handler/*": ["handler/*"],
+      "@/job/*": ["job/*"],
       "@/mapper/*": ["mapper/*"],
       "@/middleware/*": ["middleware/*"],
       "@/repository/*": ["repository/*"],

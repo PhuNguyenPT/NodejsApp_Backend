@@ -5,6 +5,7 @@ import passport from "passport";
 import { Strategy as JwtStrategy } from "passport-jwt";
 
 import { IUserRepository } from "@/repository/user.repository.interface.js";
+import { JwtEntityService } from "@/service/jwt.token.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { strategyOptionsWithRequest } from "@/util/jwt.options.js";
@@ -19,6 +20,8 @@ export class PassportConfig {
         private userRepository: IUserRepository,
         @inject(TYPES.Logger)
         private logger: ILogger,
+        @inject(TYPES.JwtEntityService)
+        private jwtEntityService: JwtEntityService,
     ) {}
 
     public initializeStrategies(): void {
@@ -26,7 +29,6 @@ export class PassportConfig {
             return;
         }
 
-        // Cast to the specific type to avoid union type confusion
         const strategyOptions = strategyOptionsWithRequest;
 
         passport.use(
@@ -35,15 +37,140 @@ export class PassportConfig {
                 (req: Request, payload: Express.User, done) => {
                     void (async () => {
                         try {
-                            // Now you have access to the request object
                             const clientIP = req.ip ?? "unknown";
                             const userAgent =
                                 req.headers["user-agent"] ?? "unknown";
 
+                            // Extract the raw JWT token from the request
+                            const authHeader = req.headers.authorization;
+                            let rawToken: null | string = null;
+
+                            if (authHeader?.startsWith("Bearer ")) {
+                                rawToken = authHeader.substring(7);
+                            }
+
+                            if (!rawToken) {
+                                this.logger.warn(
+                                    "No token found in authorization header",
+                                );
+                                done(null, false, {
+                                    message: "Authentication token is required",
+                                });
+                                return;
+                            }
+
+                            try {
+                                // 1. FIRST: Check if token is blacklisted (logout/revoked tokens)
+                                const isBlacklisted =
+                                    await this.jwtEntityService.isTokenBlacklisted(
+                                        rawToken,
+                                    );
+                                if (isBlacklisted) {
+                                    this.logger.warn(
+                                        `Blacklisted token access attempt for user: ${payload.id}`,
+                                        {
+                                            clientIP,
+                                            reason: "token_blacklisted",
+                                            tokenId: payload.id,
+                                            userAgent,
+                                        },
+                                    );
+                                    done(null, false, {
+                                        message:
+                                            "Token has been revoked. Please log in again.",
+                                    });
+                                    return;
+                                }
+
+                                // 2. Check if token exists in Redis storage
+                                const tokenInfo =
+                                    await this.jwtEntityService.getTokenInfo(
+                                        rawToken,
+                                    );
+                                if (!tokenInfo) {
+                                    this.logger.warn(
+                                        `Token not found in storage for user: ${payload.id}`,
+                                        {
+                                            clientIP,
+                                            reason: "token_not_found",
+                                            userAgent,
+                                        },
+                                    );
+                                    done(null, false, {
+                                        message:
+                                            "Invalid or expired token. Please log in again.",
+                                    });
+                                    return;
+                                }
+
+                                // 3. Check if token is expired in Redis (additional layer)
+                                if (tokenInfo.isExpired()) {
+                                    this.logger.warn(
+                                        `Expired token in storage for user: ${payload.id}`,
+                                        {
+                                            clientIP,
+                                            reason: "token_expired_redis",
+                                            userAgent,
+                                        },
+                                    );
+
+                                    // Auto-cleanup expired token
+                                    await this.jwtEntityService.blacklistToken(
+                                        rawToken,
+                                    );
+
+                                    done(null, false, {
+                                        message:
+                                            "Token has expired. Please log in again.",
+                                    });
+                                    return;
+                                }
+
+                                // 4. Validate token is still valid (not marked invalid for other reasons)
+                                if (!tokenInfo.isValid()) {
+                                    this.logger.warn(
+                                        `Invalid token state for user: ${payload.id}`,
+                                        {
+                                            clientIP,
+                                            reason: "token_invalid_state",
+                                            userAgent,
+                                        },
+                                    );
+                                    done(null, false, {
+                                        message:
+                                            "Invalid token. Please log in again.",
+                                    });
+                                    return;
+                                }
+                            } catch (redisError) {
+                                this.logger.error(
+                                    "Redis token validation error:",
+                                    {
+                                        clientIP,
+                                        error:
+                                            redisError instanceof Error
+                                                ? redisError.message
+                                                : String(redisError),
+                                        userId: payload.id,
+                                    },
+                                );
+
+                                // Option B: Fall back to JWT-only validation
+                                this.logger.warn(
+                                    "Falling back to JWT-only validation due to Redis error",
+                                    {
+                                        clientIP,
+                                        userAgent,
+                                        userId: payload.id,
+                                    },
+                                );
+                            }
+                            const isFallbackMode = true; // Set this in the catch block
+
+                            // Find user in database
                             const user = await this.userRepository.findById(
                                 payload.id,
                             );
-
                             if (!user) {
                                 this.logger.warn(
                                     `User not found for ID: ${payload.id}`,
@@ -58,9 +185,12 @@ export class PassportConfig {
                             if (!user.isAccountActive()) {
                                 this.logger.warn(
                                     `Inactive account access attempt for user: ${user.id}`,
+                                    {
+                                        clientIP,
+                                        userAgent,
+                                    },
                                 );
 
-                                // Provide specific error messages based on account status
                                 let message = "Account is not active";
                                 if (!user.isEnabled()) {
                                     message = "Account is disabled";
@@ -80,6 +210,12 @@ export class PassportConfig {
                             if (user.email !== payload.email) {
                                 this.logger.warn(
                                     `Token payload mismatch for user: ${user.id}`,
+                                    {
+                                        clientIP,
+                                        tokenEmail: payload.email,
+                                        userAgent,
+                                        userEmail: user.email,
+                                    },
                                 );
                                 done(null, false, {
                                     message: "Token payload mismatch",
@@ -91,15 +227,20 @@ export class PassportConfig {
                             if (this.isSuspiciousIP(clientIP)) {
                                 this.logger.warn(
                                     `Suspicious login attempt from IP: ${clientIP} for user: ${user.id}`,
+                                    {
+                                        userAgent,
+                                    },
                                 );
                                 done(null, false, { message: "Access denied" });
                                 return;
                             }
 
-                            // Check for additional security constraints
                             if (this.isUserAgentSuspicious(userAgent)) {
                                 this.logger.warn(
                                     `Suspicious user agent: ${userAgent} for user: ${user.id}`,
+                                    {
+                                        clientIP,
+                                    },
                                 );
                                 done(null, false, { message: "Access denied" });
                                 return;
@@ -107,10 +248,16 @@ export class PassportConfig {
 
                             // Log successful authentication for audit purposes
                             this.logger.info(
-                                `User ${user.id} authenticated successfully from IP: ${clientIP} - ${userAgent}`,
+                                `User ${user.id} authenticated successfully`,
+                                {
+                                    clientIP,
+                                    fallbackMode: isFallbackMode, // Track when Redis was bypassed
+                                    tokenValid: true,
+                                    userAgent,
+                                },
                             );
 
-                            // Return user that conforms to Express.User (which extends JWTPayload)
+                            // Return user that conforms to Express.User
                             const userPayload: Express.User = {
                                 email: user.email,
                                 exp: payload.exp,
@@ -130,6 +277,7 @@ export class PassportConfig {
                                     error instanceof Error
                                         ? error.message
                                         : String(error),
+                                userAgent: req.headers["user-agent"],
                                 userId: payload.id,
                             });
                             done(error, false);
@@ -158,7 +306,6 @@ export class PassportConfig {
                         return;
                     }
 
-                    // Check if user is still active during deserialization
                     if (!user.isAccountActive()) {
                         this.logger.warn(
                             `Inactive user during deserialization: ${id}`,
@@ -196,12 +343,10 @@ export class PassportConfig {
      * Check for suspicious IPs
      */
     private isSuspiciousIP(ip: string): boolean {
-        // Handle the case where IP might be 'unknown'
         if (ip === "unknown" || !ip) {
-            return false; // or true, depending on your security policy
+            return false;
         }
 
-        // In development, allow localhost/loopback addresses
         const isDevelopment: boolean = config.NODE_ENV === "development";
         const isLocalhost: boolean =
             ip === "127.0.0.1" ||
@@ -216,7 +361,6 @@ export class PassportConfig {
             return false;
         }
 
-        // Example: Block certain IP ranges or known bad IPs
         const blockedIPs: string[] = [
             "127.0.0.1", // IPv4 localhost (blocked in production)
             "::1", // IPv6 localhost (blocked in production)
@@ -236,7 +380,6 @@ export class PassportConfig {
             // Add more patterns as needed
         ];
 
-        // In production/staging, block localhost and private networks
         if (config.NODE_ENV === "production" || config.NODE_ENV === "staging") {
             if (blockedIPs.includes(ip)) {
                 return true;

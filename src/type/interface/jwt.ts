@@ -1,3 +1,4 @@
+// src/type/interface/jwt.ts
 import { JwtPayload } from "jsonwebtoken";
 
 import { Permission, Role, UserStatus } from "@/type/enum/user.js";
