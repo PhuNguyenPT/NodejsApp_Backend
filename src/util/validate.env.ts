@@ -17,46 +17,51 @@ interface Config {
 
     // Database connection settings
     DB_LOGGING: boolean;
+    // Migration settings
+    DB_RUN_MIGRATIONS_ON_STARTUP: boolean;
+
     DB_SYNCHRONIZE: boolean;
 
     // Logging settings
     ENABLE_FILE_LOGGING: boolean;
+    // JWT Configuration
+    JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS: number;
+
+    JWT_REFRESH_TOKEN_EXPIRATION_IN_SECONDS: number;
+
     LOG_DIR: string;
     LOG_LEVEL: "debug" | "error" | "http" | "info" | "warn";
-
     // Environment config
     NODE_ENV: "development" | "production" | "staging";
-
     // Pagination Configuration (Spring Boot style)
     PAGINATION_DEFAULT_PAGE: number;
+
     PAGINATION_DEFAULT_SIZE: number;
     PAGINATION_MAX_SIZE: number;
     PAGINATION_MIN_SIZE: number;
-
     // Database config
     POSTGRES_DB: string;
     POSTGRES_HOST: string;
+
     POSTGRES_PASSWORD: string;
     POSTGRES_PORT: number;
-    POSTGRES_USER: string;
 
+    POSTGRES_USER: string;
     // JWT RSA Keys
     PRIVATE_KEY_PATH: string;
     PUBLIC_KEY_PATH: string;
-
     // Redis configuration
     REDIS_DB: number;
     REDIS_HOST: string;
     REDIS_PASSWORD?: string;
-    REDIS_PORT: number;
-    REDIS_TTL: number;
-    REDIS_USER_PASSWORD?: string;
-    REDIS_USERNAME?: string;
 
-    // Migration settings
-    RUN_MIGRATIONS_ON_STARTUP: boolean;
+    REDIS_PORT: number;
+    REDIS_USER_PASSWORD?: string;
+
+    REDIS_USERNAME?: string;
     // Application config
     SERVER_HOSTNAME: string;
+
     SERVER_PATH: string;
     SERVER_PORT: number;
 }
@@ -73,11 +78,24 @@ export const config: Config = cleanEnv(process.env, {
 
     // Database connection settings
     DB_LOGGING: bool({ default: false }),
+    // Migration settings
+    DB_RUN_MIGRATIONS_ON_STARTUP: bool({ default: false }),
+
     DB_SYNCHRONIZE: bool({ default: false }),
 
     // Logging settings
     ENABLE_FILE_LOGGING: bool({ default: false }),
+    // JWT Configuration
+    JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS: num({
+        default: 3600, // 1 hour
+    }),
+
+    JWT_REFRESH_TOKEN_EXPIRATION_IN_SECONDS: num({
+        default: 604800, // 7 days
+    }),
+    // Logging directory
     LOG_DIR: str({ default: "logs" }),
+
     LOG_LEVEL: str({
         choices: ["error", "warn", "info", "http", "debug"],
         default: "info",
@@ -87,35 +105,31 @@ export const config: Config = cleanEnv(process.env, {
     NODE_ENV: str({
         choices: ["development", "production", "staging"],
     }),
-
     // Pagination Configuration (Spring Boot style)
     PAGINATION_DEFAULT_PAGE: num({ default: 1 }),
     PAGINATION_DEFAULT_SIZE: num({ default: 20 }),
     PAGINATION_MAX_SIZE: num({ default: 2000 }),
-    PAGINATION_MIN_SIZE: num({ default: 1 }),
 
+    PAGINATION_MIN_SIZE: num({ default: 1 }),
     // Database config
     POSTGRES_DB: str(),
     POSTGRES_HOST: str(),
     POSTGRES_PASSWORD: str(),
     POSTGRES_PORT: port({ default: 5432 }),
-    POSTGRES_USER: str(),
 
+    POSTGRES_USER: str(),
     // JWT RSA Keys
     PRIVATE_KEY_PATH: str(),
-    PUBLIC_KEY_PATH: str(),
 
+    PUBLIC_KEY_PATH: str(),
     // Redis configuration
     REDIS_DB: num({ default: 0 }),
     REDIS_HOST: str({ default: "localhost" }),
     REDIS_PASSWORD: str({ default: undefined }),
     REDIS_PORT: port({ default: 6379 }),
-    REDIS_TTL: num({ default: 3600 }),
     REDIS_USER_PASSWORD: str({ default: undefined }),
-    REDIS_USERNAME: str({ default: undefined }),
 
-    // Migration settings
-    RUN_MIGRATIONS_ON_STARTUP: bool({ default: false }),
+    REDIS_USERNAME: str({ default: undefined }),
 
     // Application config
     SERVER_HOSTNAME: str({ default: "localhost" }),
@@ -124,7 +138,7 @@ export const config: Config = cleanEnv(process.env, {
 });
 
 function validateEnv(): void {
-    console.info("Environment validation completed");
+    console.info("Environment validating...");
 }
 
 export default validateEnv;

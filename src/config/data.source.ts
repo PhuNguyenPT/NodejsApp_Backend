@@ -27,7 +27,7 @@ export const postgresDataSource = new DataSource({
             ? "src/migration/*.ts"
             : "dist/migration/*.js",
     ],
-    migrationsRun: config.RUN_MIGRATIONS_ON_STARTUP,
+    migrationsRun: config.DB_RUN_MIGRATIONS_ON_STARTUP,
     migrationsTableName: "typeorm_migrations",
     password: config.POSTGRES_PASSWORD,
     port: config.POSTGRES_PORT,

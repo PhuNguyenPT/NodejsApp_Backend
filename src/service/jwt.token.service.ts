@@ -4,6 +4,7 @@ import { JwtEntity, TokenType } from "@/entity/jwt.entity";
 import { IJwtTokenRepository } from "@/repository/jwt.token.repository.interface";
 import { TYPES } from "@/type/container/types";
 import { ILogger } from "@/type/interface/logger";
+import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt.options";
 
 @injectable()
 export class JwtEntityService {
@@ -122,7 +123,10 @@ export class JwtEntityService {
     }
 
     // Refresh token TTL
-    async refreshTokenTTL(token: string, newTtl = 3600): Promise<boolean> {
+    async refreshTokenTTL(
+        token: string,
+        newTtl = JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
+    ): Promise<boolean> {
         try {
             const jwtEntity: JwtEntity | null =
                 await this.jwtTokenRepository.findByToken(token);
