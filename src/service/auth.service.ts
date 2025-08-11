@@ -16,10 +16,13 @@ import {
     Role,
     UserStatus,
 } from "@/type/enum/user.js";
+import { AccessDeniedException } from "@/type/exception/access.denied.exception";
+import { AuthenticationException } from "@/type/exception/authentication.exception";
 import { BadCredentialsException } from "@/type/exception/bad.credentials.exception.js";
 import { EntityExistsException } from "@/type/exception/entity.exists.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { HttpException } from "@/type/exception/http.exception.js";
+import { JwtException } from "@/type/exception/jwt.exception";
 import { CustomJwtPayload } from "@/type/interface/jwt.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { ACCESS_TOKEN_EXPIRATION_SECONDS } from "@/util/jwt.options.js";
@@ -81,7 +84,7 @@ export class AuthService {
 
             return new AuthResponse({
                 accessToken: accessToken,
-                expiresIn: ACCESS_TOKEN_EXPIRATION_SECONDS, // Updated
+                expiresIn: ACCESS_TOKEN_EXPIRATION_SECONDS,
                 message: "Login successful",
                 refreshToken: refreshToken,
                 success: true,
@@ -170,16 +173,11 @@ export class AuthService {
         }
     }
 
-    async refreshToken(
-        refreshToken: string,
-        userJwtPayload: Express.User,
-    ): Promise<AuthResponse> {
+    async refreshToken(refreshToken: string): Promise<AuthResponse> {
         try {
-            this.logger.debug("Verifying token", {
-                token: refreshToken.substring(0, 50) + "...",
-            });
+            this.logger.debug("Processing token refresh request");
 
-            // Verify refresh token - will throw if invalid
+            // Verify refresh token - will throw if invalid, expired, or blacklisted
             const payload: CustomJwtPayload =
                 await this.jwtService.verifyToken(refreshToken);
 
@@ -187,29 +185,22 @@ export class AuthService {
             const user = await this.userRepository.findById(payload.id);
 
             if (!user) {
-                throw new HttpException(401, "User not found");
-            }
-
-            // Verify token belongs to current user
-            const currentUser = userJwtPayload as CustomJwtPayload;
-            if (
-                currentUser.email !== user.email ||
-                currentUser.id !== user.id
-            ) {
-                this.logger.warn("Token user mismatch", {
-                    dbEmail: user.email,
-                    dbId: user.id,
-                    tokenEmail: currentUser.email,
-                    tokenId: currentUser.id,
+                this.logger.warn("Token refresh failed: user not found", {
+                    userId: payload.id,
                 });
-                throw new HttpException(401, "Invalid refresh token");
+                throw new AuthenticationException("User not found");
             }
 
-            if (user.status !== UserStatus.HAPPY) {
-                throw new HttpException(403, "Account is no longer active");
+            // FIXED: Check if account is NOT active (the logic was inverted)
+            if (!user.isAccountActive()) {
+                this.logger.warn("Token refresh failed: account inactive", {
+                    active: user.isAccountActive(),
+                    userId: payload.id,
+                });
+                throw new AccessDeniedException("Account is no longer active");
             }
 
-            // Create JWT payload with fresh user data
+            // Create JWT payload with fresh user data from database
             const jwtPayload: CustomJwtPayload = {
                 email: user.email,
                 id: user.id,
@@ -223,21 +214,51 @@ export class AuthService {
             const newAccessToken =
                 await this.jwtService.generateAccessToken(jwtPayload);
 
-            // Generate new refresh token
-            const newRefreshToken =
-                await this.jwtService.generateRefreshToken(jwtPayload);
+            if (!payload.exp) {
+                this.logger.warn(
+                    "Token refresh failed: no expiration in payload",
+                    { payload },
+                );
+                throw new JwtException("Invalid token payload");
+            }
 
-            // Blacklist the old refresh token to prevent reuse
-            await this.jwtService.logout(refreshToken);
+            // Use JWT service to decode and check expiration
+            const shouldRotateRefreshToken = this.shouldRotateRefreshToken(
+                payload.exp,
+            );
 
-            this.logger.info(`Token refreshed for user: ${user.email}`);
+            let newRefreshToken: string | undefined;
+
+            if (shouldRotateRefreshToken) {
+                // Generate new refresh token
+                newRefreshToken =
+                    await this.jwtService.generateRefreshToken(jwtPayload);
+
+                // Blacklist the old refresh token to prevent reuse
+                await this.jwtService.logout(refreshToken);
+
+                this.logger.info(
+                    `Refresh token rotated for user: ${user.email}`,
+                );
+            } else {
+                // Keep the existing refresh token
+                this.logger.debug(
+                    `Refresh token reused for user: ${user.email}`,
+                );
+            }
+
+            // Convert entity to DTO
+            const userDto = plainToClass(User, user);
+
+            this.logger.info(`Access token refreshed for user: ${user.email}`);
 
             return new AuthResponse({
-                accessToken: newAccessToken, // New access token
+                accessToken: newAccessToken,
                 expiresIn: ACCESS_TOKEN_EXPIRATION_SECONDS,
                 message: "Token refresh successful",
-                refreshToken: newRefreshToken, // New refresh token
+                refreshToken: newRefreshToken ?? refreshToken,
                 success: true,
+                user: userDto,
             });
         } catch (error) {
             if (
@@ -249,9 +270,9 @@ export class AuthService {
                 throw error;
             }
 
-            this.logger.warn("Invalid refresh token attempt", {
+            this.logger.error("Unexpected error during token refresh", {
                 error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : String(error),
+                stack: error instanceof Error ? error.stack : undefined,
             });
 
             throw new HttpException(401, "Invalid refresh token");
@@ -333,6 +354,37 @@ export class AuthService {
                 500,
                 "Registration failed due to internal error",
             );
+        }
+    }
+
+    /**
+     * Determine if refresh token should be rotated
+     * You can customize this logic based on your security requirements
+     */
+    private shouldRotateRefreshToken(
+        exp: number,
+        thresholdHours = 24,
+    ): boolean {
+        try {
+            const now = Date.now();
+            const tokenExpiryMs = exp * 1000;
+            const timeUntilExpiry = tokenExpiryMs - now;
+            const thresholdMs = thresholdHours * 60 * 60 * 1000;
+
+            const isExpiringSoon = timeUntilExpiry < thresholdMs;
+
+            this.logger.debug("Token expiration check", {
+                isExpiringSoon,
+                thresholdHours,
+                timeUntilExpiryHours: Math.floor(
+                    timeUntilExpiry / (60 * 60 * 1000),
+                ),
+                tokenExpiresAt: new Date(tokenExpiryMs).toISOString(),
+            });
+            return isExpiringSoon;
+        } catch (error) {
+            this.logger.error("Error checking token for rotation", { error });
+            return true; // Default to rotation on error
         }
     }
 }

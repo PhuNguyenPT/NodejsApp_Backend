@@ -88,8 +88,11 @@ export class JwtEntity {
             createdAt: this.createdAt.toISOString(),
             id: this.id,
             isBlacklisted: this.isBlacklisted.toString(),
+            modifiedAt:
+                this.modifiedAt?.toISOString() ?? new Date().toISOString(),
             token: this.token,
             ttl: this.ttl.toString(),
+            type: this.type,
         };
     }
 }

@@ -1,4 +1,11 @@
-import { IsEmail, IsString, Length, Matches } from "class-validator";
+import { Expose } from "class-transformer";
+import {
+    IsEmail,
+    IsNotEmpty,
+    IsString,
+    Length,
+    Matches,
+} from "class-validator";
 
 /**
  * DTO for user login request.
@@ -35,7 +42,17 @@ export class LoginRequest {
  *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  * }
  */
+
+/**
+ * DTO for password reset request.
+ * @example
+ * {
+ *   "refreshToken": ""
+ * }
+ */
 export class RefreshTokenRequest {
+    @Expose()
+    @IsNotEmpty({ message: "Refresh token cannot be empty" })
     @IsString({ message: "Refresh token must be a string" })
     refreshToken!: string;
 }
