@@ -8,7 +8,8 @@ import { TYPES } from "@/type/container/types.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.js";
 import { ILogger } from "@/type/interface/logger.js";
 import {
-    REFRESH_TOKEN_EXPIRATION_SECONDS,
+    JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
+    JWT_REFRESH_TOKEN_EXPIRATION_SECONDS,
     refreshSignOptions,
     signOptions,
     verifyOptions,
@@ -106,7 +107,7 @@ export class JWTService {
 
             await this.jwtEntityService.createToken(
                 token,
-                REFRESH_TOKEN_EXPIRATION_SECONDS,
+                JWT_REFRESH_TOKEN_EXPIRATION_SECONDS,
                 TokenType.REFRESH,
             );
 
@@ -289,7 +290,7 @@ export class JWTService {
         expiresIn: number | string | undefined,
     ): number {
         if (!expiresIn) {
-            return 3600; // Default 1 hour
+            return JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS; // Default 1 hour
         }
 
         if (typeof expiresIn === "number") {
@@ -316,7 +317,7 @@ export class JWTService {
             }
         }
 
-        return 3600; // Default fallback
+        return JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS; // Default fallback
     }
 
     /**

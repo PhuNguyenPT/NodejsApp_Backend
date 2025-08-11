@@ -25,7 +25,7 @@ import { HttpException } from "@/type/exception/http.exception.js";
 import { JwtException } from "@/type/exception/jwt.exception";
 import { CustomJwtPayload } from "@/type/interface/jwt.js";
 import { ILogger } from "@/type/interface/logger.js";
-import { ACCESS_TOKEN_EXPIRATION_SECONDS } from "@/util/jwt.options.js";
+import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt.options.js";
 
 @injectable()
 export class AuthService {
@@ -84,7 +84,7 @@ export class AuthService {
 
             return new AuthResponse({
                 accessToken: accessToken,
-                expiresIn: ACCESS_TOKEN_EXPIRATION_SECONDS,
+                expiresIn: JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
                 message: "Login successful",
                 refreshToken: refreshToken,
                 success: true,
@@ -254,7 +254,7 @@ export class AuthService {
 
             return new AuthResponse({
                 accessToken: newAccessToken,
-                expiresIn: ACCESS_TOKEN_EXPIRATION_SECONDS,
+                expiresIn: JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
                 message: "Token refresh successful",
                 refreshToken: newRefreshToken ?? refreshToken,
                 success: true,
@@ -329,7 +329,7 @@ export class AuthService {
 
             return new AuthResponse({
                 accessToken: accessToken,
-                expiresIn: ACCESS_TOKEN_EXPIRATION_SECONDS,
+                expiresIn: JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
                 message: "Registration successful",
                 refreshToken: refreshToken,
                 success: true,

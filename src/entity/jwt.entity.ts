@@ -1,5 +1,7 @@
-// src/entity/jwt.token.ts
 import { randomUUID } from "crypto";
+
+// src/entity/jwt.token.ts
+import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt.options";
 
 export enum TokenType {
     ACCESS = "access",
@@ -30,12 +32,12 @@ export class JwtEntity {
         type?: TokenType;
     }) {
         this.token = params.token;
-        this.ttl = params.ttl ?? 3600;
+        this.ttl = params.ttl ?? JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS;
         this.isBlacklisted = params.isBlacklisted ?? false;
         this.id = params.id ?? randomUUID();
         this.createdAt = params.createdAt ?? new Date();
         this.type = params.type ?? TokenType.ACCESS;
-        this.modifiedAt = new Date();
+        this.modifiedAt = params.modifiedAt;
     }
 
     // Create entity from Redis data
@@ -54,9 +56,10 @@ export class JwtEntity {
     // Blacklist the token
     blacklist(): void {
         this.isBlacklisted = true;
+        this.modifiedAt = new Date();
     }
 
-    // Get remaining TTL in seconds
+    // Get remaining TTL in ms
     getRemainingTtl(): number {
         if (this.isExpired()) {
             return 0;
@@ -84,15 +87,19 @@ export class JwtEntity {
 
     // Convert entity to Redis-storable format
     toRedisObject(): Record<string, string> {
-        return {
+        const obj: Record<string, string> = {
             createdAt: this.createdAt.toISOString(),
             id: this.id,
             isBlacklisted: this.isBlacklisted.toString(),
-            modifiedAt:
-                this.modifiedAt?.toISOString() ?? new Date().toISOString(),
             token: this.token,
             ttl: this.ttl.toString(),
             type: this.type,
         };
+
+        if (this.modifiedAt) {
+            obj.modifiedAt = this.modifiedAt.toISOString();
+        }
+
+        return obj;
     }
 }
