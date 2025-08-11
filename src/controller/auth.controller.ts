@@ -1,5 +1,4 @@
 // src/controller/auth.controller.ts
-import express from "express";
 import { inject, injectable } from "inversify";
 import { ExtractJwt } from "passport-jwt";
 import {
@@ -16,7 +15,11 @@ import {
     Tags,
 } from "tsoa";
 
-import { LoginRequest, RegisterRequest } from "@/dto/auth/auth.request.js";
+import {
+    LoginRequest,
+    RefreshTokenRequest,
+    RegisterRequest,
+} from "@/dto/auth/auth.request.js";
 import { AuthResponse } from "@/dto/auth/auth.response.js";
 import validateDTO from "@/middleware/validation.middleware.js";
 import { AuthService } from "@/service/auth.service.js";
@@ -55,7 +58,7 @@ export class AuthController extends Controller {
     @SuccessResponse("200", "Logout successful")
     public async logout(
         @Request() request: AuthenticatedRequest,
-        @Body() body: { refreshToken: string },
+        @Body() body?: { refreshToken?: string },
     ): Promise<{
         message: string;
         success: boolean;
@@ -77,36 +80,32 @@ export class AuthController extends Controller {
         // Call auth service to handle token blacklisting
         const result = await this.authService.logout(
             accessToken,
-            body.refreshToken,
+            body?.refreshToken,
         );
 
         this.setStatus(200);
         return result;
     }
 
+    @Middlewares(validateDTO(RefreshTokenRequest))
     @Post("refresh")
     @Produces("application/json")
+    @Response("400", "Validation error")
     @Response("401", "Invalid refresh token")
-    @Security("bearerAuth") // Add this security decorator
     @SuccessResponse("200", "Token refresh successful")
     public async refreshToken(
-        @Request() request: express.Request,
+        @Body() refreshData: RefreshTokenRequest,
     ): Promise<AuthResponse> {
-        if (!request.user) {
-            throw new JwtException("Unknown user");
+        const { refreshToken } = refreshData;
+
+        if (!refreshToken) {
+            this.setStatus(400);
+            throw new JwtException("Refresh token is required");
         }
-        const user = request.user;
-        const currentToken: null | string =
-            ExtractJwt.fromAuthHeaderAsBearerToken()(request);
-        if (!currentToken) {
-            this.setStatus(401);
-            throw new JwtException("No valid bearer token provided");
-        }
-        // Pass user info to refresh token service if needed
-        const authResponse: AuthResponse = await this.authService.refreshToken(
-            currentToken,
-            user,
-        );
+
+        // Pass refresh token from request body to service
+        const authResponse: AuthResponse =
+            await this.authService.refreshToken(refreshToken);
         this.setStatus(200);
         return authResponse;
     }
