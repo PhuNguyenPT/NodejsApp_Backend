@@ -347,36 +347,36 @@ export class PassportConfig {
             return false;
         }
 
-        const isDevelopment: boolean = config.NODE_ENV === "development";
-        const isLocalhost: boolean =
-            ip === "127.0.0.1" ||
-            ip === "::1" ||
-            ip.startsWith("127.") ||
-            ip === "localhost";
+        // const isDevelopment: boolean = config.NODE_ENV === "development";
+        // const isLocalhost: boolean =
+        //     ip === "127.0.0.1" ||
+        //     ip === "::1" ||
+        //     ip.startsWith("127.") ||
+        //     ip === "localhost";
 
-        if (isDevelopment && isLocalhost) {
-            this.logger.debug(
-                `Allowing localhost access in development mode: ${ip}`,
-            );
-            return false;
-        }
+        // if (isDevelopment && isLocalhost) {
+        //     this.logger.debug(
+        //         `Allowing localhost access in development mode: ${ip}`,
+        //     );
+        //     return false;
+        // }
 
         const blockedIPs: string[] = [
-            "127.0.0.1", // IPv4 localhost (blocked in production)
-            "::1", // IPv6 localhost (blocked in production)
-            "0.0.0.0", // IPv4 any address
-            "::", // IPv6 any address
-            "192.168.1.100", // Example blocked IP
+            // "127.0.0.1", // IPv4 localhost (blocked in production)
+            // "::1", // IPv6 localhost (blocked in production)
+            // "0.0.0.0", // IPv4 any address
+            // "::", // IPv6 any address
+            // "192.168.1.100", // Example blocked IP
             // Add more as needed
         ];
 
         const suspiciousPatterns: RegExp[] = [
-            /^127\./, // Block all 127.x.x.x (IPv4 loopback range) in production
-            /^::1$/, // IPv6 localhost in production
-            /^::ffff:127\./, // IPv4-mapped IPv6 localhost in production
-            /^10\./, // Private network 10.x.x.x (uncomment if needed)
-            /^192\.168\./, // Private network 192.168.x.x (uncomment if needed)
-            /^172\.(1[6-9]|2[0-9]|3[01])\./, // Private network 172.16-31.x.x (uncomment if needed)
+            // /^127\./, // Block all 127.x.x.x (IPv4 loopback range) in production
+            // /^::1$/, // IPv6 localhost in production
+            // /^::ffff:127\./, // IPv4-mapped IPv6 localhost in production
+            // /^10\./, // Private network 10.x.x.x (uncomment if needed)
+            // /^192\.168\./, // Private network 192.168.x.x (uncomment if needed)
+            // /^172\.(1[6-9]|2[0-9]|3[01])\./, // Private network 172.16-31.x.x (uncomment if needed)
             // Add more patterns as needed
         ];
 

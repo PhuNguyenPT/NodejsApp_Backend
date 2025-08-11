@@ -1,0 +1,88 @@
+networks:
+  app-network:
+    driver: bridge
+
+services:
+  # Your Node.js Application Service
+  app-prod:
+    image: phunpt01/nodejs-backend:latest
+    container_name: app-prod
+    restart: always
+    env_file:
+      - .env.prod
+    ports:
+      - "${SERVER_HOSTNAME}:${SERVER_PORT}:${SERVER_PORT}"
+    networks:
+      - app-network
+    depends_on:
+      postgres-prod:
+        condition: service_healthy
+      redis-prod:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+  postgres-prod:
+    image: ${POSTGRES_IMAGE}
+    container_name: postgres-prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # ports: # No longer needed for container-to-container communication
+    #   - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  redis-prod:
+    image: ${REDIS_IMAGE}
+    container_name: redis-prod
+    restart: always
+    command: >
+      sh -c "
+      redis-server 
+      --requirepass ${REDIS_PASSWORD} 
+      --user ${REDIS_USERNAME} on '>${REDIS_USER_PASSWORD}' '~*' '&*' '+@all'
+      "
+    # ports: # No longer needed for container-to-container communication
+    #   - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: [
+          "CMD",
+          "redis-cli",
+          "-h",
+          "localhost", # Healthcheck runs inside the container, so localhost is correct here
+          "-p",
+          "6379",
+          "--user",
+          "${REDIS_USERNAME}",
+          "--pass",
+          "${REDIS_USER_PASSWORD}",
+          "ping",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
