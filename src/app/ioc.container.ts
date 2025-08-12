@@ -19,6 +19,7 @@ import { UserRepository } from "@/repository/impl/user.repository.js";
 import { IJwtTokenRepository } from "@/repository/jwt.token.repository.interface.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { AuthService } from "@/service/auth.service.js";
+import { CertificationService } from "@/service/certification.service";
 import { FileService } from "@/service/file.service.js";
 import { JWTService } from "@/service/jwt.service.js";
 import { JwtEntityService } from "@/service/jwt.token.service.js";
@@ -99,6 +100,11 @@ iocContainer
 iocContainer
     .bind<FileService>(TYPES.FileService)
     .to(FileService)
+    .inSingletonScope();
+
+iocContainer
+    .bind<CertificationService>(TYPES.CertificationService)
+    .to(CertificationService)
     .inSingletonScope();
 
 iocContainer

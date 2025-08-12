@@ -31,6 +31,10 @@ interface Config {
 
     LOG_DIR: string;
     LOG_LEVEL: "debug" | "error" | "http" | "info" | "warn";
+
+    // Mistral AI API Configuration
+    MISTRAL_API_KEY: string;
+
     // Environment config
     NODE_ENV: "development" | "production" | "staging";
     // Pagination Configuration (Spring Boot style)
@@ -100,6 +104,9 @@ export const config: Config = cleanEnv(process.env, {
         choices: ["error", "warn", "info", "http", "debug"],
         default: "info",
     }),
+
+    // Mistral AI API Configuration
+    MISTRAL_API_KEY: str(),
 
     // Environment config
     NODE_ENV: str({
