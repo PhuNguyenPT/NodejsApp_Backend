@@ -7,6 +7,7 @@ import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
 import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
+import { CertificationService } from "@/service/certification.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -25,6 +26,8 @@ export class StudentService {
         private certificationRepository: Repository<CertificationEntity>,
         @inject(TYPES.UserRepository)
         private userRepository: Repository<UserEntity>,
+        @inject(TYPES.CertificationService)
+        private certificationService: CertificationService,
         @inject(TYPES.Logger)
         private logger: ILogger,
     ) {}
@@ -63,7 +66,16 @@ export class StudentService {
             studentInfoDTO.certifications.length > 0
         ) {
             studentEntity.certifications = studentInfoDTO.certifications.map(
-                (cert) => this.certificationRepository.create(cert),
+                (cert) => {
+                    const certificationEntity: CertificationEntity =
+                        this.certificationRepository.create(cert);
+                    certificationEntity.cefr =
+                        this.certificationService.getCEFRLevel(
+                            cert.examType,
+                            cert.level,
+                        );
+                    return certificationEntity;
+                },
             );
         }
 
@@ -135,6 +147,10 @@ export class StudentService {
                 (cert) => {
                     const certEntity =
                         this.certificationRepository.create(cert);
+                    certEntity.cefr = this.certificationService.getCEFRLevel(
+                        cert.examType,
+                        cert.level,
+                    );
                     certEntity.createdBy = userEntity.email;
                     return certEntity;
                 },

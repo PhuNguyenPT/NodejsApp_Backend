@@ -1,5 +1,6 @@
 import { Expose, Type } from "class-transformer";
 
+import { CEFR } from "@/entity/certification";
 import { ExamType } from "@/type/enum/exam.js";
 
 /**
@@ -33,6 +34,9 @@ import { ExamType } from "@/type/enum/exam.js";
  * }
  */
 export class CertificationResponse {
+    @Expose()
+    cefr?: CEFR;
+
     @Expose()
     credentialId?: string;
 

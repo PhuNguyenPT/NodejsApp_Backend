@@ -13,6 +13,14 @@ import {
 import { StudentEntity } from "@/entity/student.js";
 import { ExamType } from "@/type/enum/exam.js";
 
+export enum CEFR {
+    A1 = "A1",
+    A2 = "A2",
+    B1 = "B1",
+    B2 = "B2",
+    C1 = "C1",
+    C2 = "C2",
+}
 @Entity({ name: "certifications" })
 @Index("idx_certification_student_id", ["studentId"])
 @Index("idx_certification_issue_date", ["issueDate"])
@@ -23,6 +31,13 @@ import { ExamType } from "@/type/enum/exam.js";
 @Index("idx_certification_created_at", ["createdAt"])
 @Index("idx_certification_modified_at", ["modifiedAt"])
 export class CertificationEntity {
+    @Column({
+        enum: CEFR,
+        nullable: true,
+        type: "enum",
+    })
+    cefr?: CEFR;
+
     @CreateDateColumn({ type: "timestamp with time zone" })
     createdAt!: Date;
 
