@@ -32,7 +32,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install ONLY production dependencies, skipping devDependencies
-RUN npm install --omit=dev --ignore-scripts
+RUN HUSKY=0 npm install --omit=dev
 
 # Copy the compiled code from the "builder" stage
 COPY --from=builder /app/dist ./dist
