@@ -32,7 +32,6 @@
     "lint:fix": "eslint --fix .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky",
     "migration:generate": "tsx --env-file .env.dev ./node_modules/typeorm/cli.js migration:generate -d src/config/data.source.ts",
     "migration:create": "tsx --env-file .env.dev ./node_modules/typeorm/cli.js migration:create",
     "migration:run": "tsx --env-file .env.dev ./node_modules/typeorm/cli.js migration:run -d src/config/data.source.ts",
