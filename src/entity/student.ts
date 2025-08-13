@@ -17,6 +17,7 @@ import { CertificationEntity } from "@/entity/certification.js";
 import { FileEntity, FileType } from "@/entity/file.js";
 import { UserEntity } from "@/entity/user.js";
 import { ExamType } from "@/type/enum/exam.js";
+import { SpecialStudentCase } from "@/type/enum/special.student.case";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
 interface AptitudeTestData {
@@ -114,6 +115,14 @@ export class StudentEntity {
         type: "varchar",
     })
     province?: VietnamSouthernProvinces;
+
+    @Column({
+        enum: SpecialStudentCase,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+    })
+    specialStudentCase?: SpecialStudentCase;
 
     @Column({ nullable: true, type: "jsonb" })
     subjectCombination?: ExamSubjectData[];

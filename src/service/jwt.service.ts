@@ -15,7 +15,7 @@ import {
     verifyOptions,
 } from "@/util/jwt.options.js";
 
-import { JwtEntityService } from "./jwt.token.service.js";
+import { JwtEntityService } from "./jwt.entity.service.js";
 
 @injectable()
 export class JWTService {

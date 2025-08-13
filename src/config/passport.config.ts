@@ -5,7 +5,7 @@ import passport from "passport";
 import { Strategy as JwtStrategy } from "passport-jwt";
 
 import { IUserRepository } from "@/repository/user.repository.interface.js";
-import { JwtEntityService } from "@/service/jwt.token.service.js";
+import { JwtEntityService } from "@/service/jwt.entity.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { strategyOptionsWithRequest } from "@/util/jwt.options.js";

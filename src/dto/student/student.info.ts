@@ -21,6 +21,7 @@ import { AptitudeTestDTO } from "@/dto/student/aptitude.test.dto.js";
 import { AwardDTO } from "@/dto/student/award.js";
 import { CertificationDTO } from "@/dto/student/certification.js";
 import { ExamSubject } from "@/dto/student/exam.js";
+import { SpecialStudentCase } from "@/type/enum/special.student.case";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
 /**
@@ -60,6 +61,7 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  *   "major": "Khoa học Máy tính",
  *   "maxBudget": 20000000,
  *   "minBudget": 10000000,
+ *   "specialStudentCase": "Học sinh trường chuyên",
  *   "subjectCombination": [
  *     { "name": "Toán", "score": 8.0 },
  *     { "name": "Ngữ Văn", "score": 7.0 },
@@ -215,6 +217,25 @@ export class StudentInfoDTO {
     })
     @IsNotEmpty({ message: "Province is required" })
     province!: VietnamSouthernProvinces;
+
+    /**
+     * Special student case indicating unique circumstances or qualifications
+     * Optional field that can be used to specify if the student falls under any special category
+     * Valid values are defined in the SpecialStudentCase enum.
+     * @type {SpecialStudentCase}
+     * @optional
+     * @see SpecialStudentCase for valid enum values
+     * @example "Học sinh thuộc huyện nghèo, vùng đặc biệt khó khăn"
+     * @example "Anh hùng Lao động, Anh hùng Lực lượng vũ trang Nhân dân, Chiến sĩ thi đua toàn quốc"
+     * @example "Học sinh trường chuyên"
+     * @example "Dân tộc thiểu số rất ít người (Mông, La Ha,...)"
+     */
+    @Expose()
+    @IsEnum(SpecialStudentCase, {
+        message: "Special student case must be a valid enum value",
+    })
+    @IsOptional()
+    specialStudentCase?: SpecialStudentCase;
 
     /**
      * Array of exactly 4 exam subjects

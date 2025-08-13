@@ -10,7 +10,7 @@ import { IJwtTokenRepository } from "../jwt.token.repository.interface";
 export class JwtTokenRepository implements IJwtTokenRepository {
     private readonly BLACKLIST_TTL_SECONDS = 60; // 1 minute
 
-    private readonly keyPrefix = "jwt_token:";
+    private readonly keyPrefix = "jwt_entity:";
     private readonly tokenIndexPrefix = "token_index:";
 
     // Blacklist token by ID
