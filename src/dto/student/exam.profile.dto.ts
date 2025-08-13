@@ -20,12 +20,6 @@ import { AptitudeTestDTO } from "./aptitude.test.dto";
  * Represents a complete exam profile containing subject scores and optional test scores
  * @example
  * {
- *   "subjectCombination": [
- *     { "name": "Toán", "score": 8.0 },
- *     { "name": "Ngữ Văn", "score": 7.0 },
- *     { "name": "Tiếng Anh", "score": 9.5 },
- *     { "name": "Vật Lý", "score": 8.75 }
- *   ],
  *   "aptitudeTestScore": {
  *     "examType": {
  *       "type": "DGNL",
@@ -33,6 +27,12 @@ import { AptitudeTestDTO } from "./aptitude.test.dto";
  *     },
  *     "score": 700
  *   },
+ *   "nationalExam": [
+ *     { "name": "Toán", "score": 8.0 },
+ *     { "name": "Ngữ Văn", "score": 7.0 },
+ *     { "name": "Tiếng Anh", "score": 9.5 },
+ *     { "name": "Vật Lý", "score": 8.75 }
+ *   ],
  *   "vsatScore": [
  *     { "name": "Toán", "score": 120 },
  *     { "name": "Ngữ Văn", "score": 130 },
@@ -60,7 +60,7 @@ export class ExamProfileDTO {
     @IsArray()
     @Type(() => ExamSubject)
     @ValidateNested({ each: true })
-    public subjectCombination: ExamSubject[];
+    public nationalExam: ExamSubject[];
 
     /**
      * VSAT scores - array of exactly 3 scores (0-150 each)
@@ -79,7 +79,7 @@ export class ExamProfileDTO {
      * @example 33.25
      */
     get totalSubjectScore(): number {
-        return this.subjectCombination.reduce((sum, s) => sum + s.score, 0);
+        return this.nationalExam.reduce((sum, s) => sum + s.score, 0);
     }
 
     /**
@@ -117,7 +117,7 @@ export class ExamProfileDTO {
                 "VSAT scores must be an array of exactly 3 numbers.",
             );
         }
-        this.subjectCombination = subjects;
+        this.nationalExam = subjects;
         this.aptitudeTestScore = aptitudeTestData;
         this.vsatScore = vsatScores;
     }
@@ -205,7 +205,7 @@ export class ExamProfileDTO {
      */
     toStudentEntityData(): {
         aptitudeTestScore?: { examType: ExamType; score: number };
-        subjectCombination: { name: string; score: number }[];
+        nationalExam: { name: string; score: number }[];
         vsatScore?: VsatExamSubject[];
     } {
         return {
@@ -215,7 +215,7 @@ export class ExamProfileDTO {
                       score: this.aptitudeTestScore.score,
                   }
                 : undefined,
-            subjectCombination: this.subjectCombination.map((s) => ({
+            nationalExam: this.nationalExam.map((s) => ({
                 name: s.name,
                 score: s.score,
             })),

@@ -89,17 +89,17 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  *       "grade": 12
  *     }
  *   ],
- *   "province": "Hồ Chí Minh",
  *   "major": "Khoa học Máy tính",
  *   "maxBudget": 20000000,
  *   "minBudget": 10000000,
- *   "specialStudentCase": "Học sinh trường chuyên",
- *   "subjectCombination": [
+ *   "nationalExam": [
  *     { "name": "Toán", "score": 8.0 },
  *     { "name": "Ngữ Văn", "score": 7.0 },
  *     { "name": "Tiếng Anh", "score": 9.5 },
  *     { "name": "Vật Lý", "score": 8.75 }
  *   ],
+ *   "province": "Hồ Chí Minh",
+ *   "specialStudentCase": "Học sinh trường chuyên",
  *   "talentScore": 9.5,
  *   "vsatScore": [
  *     { "name": "Toán", "score": 120 },
@@ -321,6 +321,22 @@ export class StudentInfoDTO {
     minBudget!: number;
 
     /**
+     * Array of exactly 4 exam subjects
+     * @example [{ "name": "Toán", "score": 8.0 }, { "name": "Ngữ Văn", "score": 7.0 }, { "name": "Tiếng Anh", "score": 9.5 }, { "name": "Vật Lý", "score": 8.75 }]
+     */
+    @ArrayMaxSize(4, {
+        message: "Exam Subjects must contain exactly 4 subjects",
+    })
+    @ArrayMinSize(4, {
+        message: "Exam Subjects must contain exactly 4 subjects",
+    })
+    @Expose()
+    @IsArray()
+    @Type(() => ExamSubject)
+    @ValidateNested({ each: true })
+    nationalExam!: ExamSubject[];
+
+    /**
      * Province or city where the student is located
      * @example VietnamSouthernProvinces.HO_CHI_MINH
      */
@@ -349,22 +365,6 @@ export class StudentInfoDTO {
     })
     @IsOptional()
     specialStudentCase?: SpecialStudentCase;
-
-    /**
-     * Array of exactly 4 exam subjects
-     * @example [{ "name": "Toán", "score": 8.0 }, { "name": "Ngữ Văn", "score": 7.0 }, { "name": "Tiếng Anh", "score": 9.5 }, { "name": "Vật Lý", "score": 8.75 }]
-     */
-    @ArrayMaxSize(4, {
-        message: "Exam Subjects must contain exactly 4 subjects",
-    })
-    @ArrayMinSize(4, {
-        message: "Exam Subjects must contain exactly 4 subjects",
-    })
-    @Expose()
-    @IsArray()
-    @Type(() => ExamSubject)
-    @ValidateNested({ each: true })
-    subjectCombination!: ExamSubject[];
 
     /**
      * Talent score representing the student's aptitude or potential

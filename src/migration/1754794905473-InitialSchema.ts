@@ -92,7 +92,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "idx_file_student_id" ON "files" ("studentId") `,
         );
         await queryRunner.query(
-            `CREATE TABLE "students" ("aptitudeTestScore" jsonb, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "location" character varying(500), "major" character varying(200), "maxBudget" numeric(14,2), "minBudget" numeric(14,2), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "province" character varying(50), "subjectCombination" jsonb, "talentScore" numeric(4,2), "userId" uuid, "vsatScore" jsonb, CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "students" ("aptitudeTestScore" jsonb, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "location" character varying(500), "major" character varying(200), "maxBudget" numeric(14,2), "minBudget" numeric(14,2), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "province" character varying(50), "nationalExam" jsonb, "talentScore" numeric(4,2), "userId" uuid, "vsatScore" jsonb, CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_student_talent_score" ON "students" ("talentScore") `,

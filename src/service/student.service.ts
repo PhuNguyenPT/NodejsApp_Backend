@@ -4,9 +4,9 @@ import { Repository } from "typeorm";
 import { defaultPaginationConfig } from "@/config/pagination.config.js";
 import { StudentInfoDTO } from "@/dto/student/student.info.dto.js";
 import { AwardEntity } from "@/entity/award.js";
-import { CertificationEntity } from "@/entity/certification.js";
 import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
+import { AwardService } from "@/service/award.service.js";
 import { CertificationService } from "@/service/certification.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
@@ -19,17 +19,17 @@ import { Pageable } from "@/type/pagination/pageable.js";
 export class StudentService {
     constructor(
         @inject(TYPES.StudentRepository)
-        private studentRepository: Repository<StudentEntity>,
+        private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.AwardRepository)
-        private awardRepository: Repository<AwardEntity>,
-        @inject(TYPES.CertificationRepository)
-        private certificationRepository: Repository<CertificationEntity>,
+        private readonly awardRepository: Repository<AwardEntity>,
         @inject(TYPES.UserRepository)
-        private userRepository: Repository<UserEntity>,
+        private readonly userRepository: Repository<UserEntity>,
+        @inject(TYPES.AwardService)
+        private readonly awardService: AwardService,
         @inject(TYPES.CertificationService)
-        private certificationService: CertificationService,
+        private readonly certificationService: CertificationService,
         @inject(TYPES.Logger)
-        private logger: ILogger,
+        private readonly logger: ILogger,
     ) {}
 
     /**
@@ -55,8 +55,8 @@ export class StudentService {
         // If awards exist, create entities and attach them directly to the student entity.
         // The cascade option on the relation will handle the save.
         if (studentInfoDTO.awards && studentInfoDTO.awards.length > 0) {
-            studentEntity.awards = studentInfoDTO.awards.map((award) =>
-                this.awardRepository.create(award),
+            studentEntity.awards = this.awardService.create(
+                studentInfoDTO.awards,
             );
         }
 
@@ -65,17 +65,8 @@ export class StudentService {
             studentInfoDTO.certifications &&
             studentInfoDTO.certifications.length > 0
         ) {
-            studentEntity.certifications = studentInfoDTO.certifications.map(
-                (cert) => {
-                    const certificationEntity: CertificationEntity =
-                        this.certificationRepository.create(cert);
-                    certificationEntity.cefr =
-                        this.certificationService.getCEFRLevel(
-                            cert.examType,
-                            cert.level,
-                        );
-                    return certificationEntity;
-                },
+            studentEntity.certifications = this.certificationService.create(
+                studentInfoDTO.certifications,
             );
         }
 
@@ -130,11 +121,12 @@ export class StudentService {
 
         // If awards exist, create entities, set audit fields, and attach them.
         if (studentInfoDTO.awards && studentInfoDTO.awards.length > 0) {
-            studentEntity.awards = studentInfoDTO.awards.map((award) => {
-                const awardEntity = this.awardRepository.create(award);
-                awardEntity.createdBy = userEntity.email;
-                return awardEntity;
-            });
+            studentEntity.awards = this.awardService.create(
+                studentInfoDTO.awards,
+            );
+            studentEntity.awards.forEach(
+                (awardEntity) => (awardEntity.createdBy = userEntity.email),
+            );
         }
 
         // If certifications exist, create entities, set audit fields, and attach them.
@@ -142,17 +134,11 @@ export class StudentService {
             studentInfoDTO.certifications &&
             studentInfoDTO.certifications.length > 0
         ) {
-            studentEntity.certifications = studentInfoDTO.certifications.map(
-                (cert) => {
-                    const certEntity =
-                        this.certificationRepository.create(cert);
-                    certEntity.cefr = this.certificationService.getCEFRLevel(
-                        cert.examType,
-                        cert.level,
-                    );
-                    certEntity.createdBy = userEntity.email;
-                    return certEntity;
-                },
+            studentEntity.certifications = this.certificationService.create(
+                studentInfoDTO.certifications,
+            );
+            studentEntity.certifications.forEach(
+                (cert) => (cert.createdBy = userEntity.email),
             );
         }
 

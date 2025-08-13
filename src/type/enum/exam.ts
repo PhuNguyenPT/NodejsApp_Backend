@@ -1,5 +1,6 @@
 export enum CCNNType {
     IELTS = "IELTS",
+    OTHER = "Other",
     TOEFL_CBT = "TOEFL CBT",
     TOEFL_iBT = "TOEFL iBT",
     TOEFL_Paper = "TOEFL Paper",
@@ -12,12 +13,14 @@ export enum CCQTType {
     DoulingoEnglishTest = "DoulingoEnglishTest",
     IB = "IB",
     OSSD = "OSSD",
+    OTHER = "Other",
     PTE = "PTE",
     SAT = "SAT",
 }
 
 export enum DGNLType {
     HSA = "HSA",
+    OTHER = "Other",
     TSA = "TSA",
     VNUHCM = "VNUHCM",
 }

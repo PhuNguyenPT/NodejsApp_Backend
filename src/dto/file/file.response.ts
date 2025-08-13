@@ -3,6 +3,30 @@ import { FileType } from "@/entity/file";
 /**
  * Response object containing file metadata
  * @description Standard response format for file information without binary content
+ * @example
+ * {
+ *   "createdAt": "2024-01-15T10:30:00.000Z",
+ *   "description": "Student transcript for Fall 2024 semester",
+ *   "downloadUrl": "/api/files/123e4567-e89b-12d3-a456-426614174000/download",
+ *   "fileName": "john_doe_transcript.pdf",
+ *   "filePath": "/uploads/students/123e4567-e89b-12d3-a456-426614174000/john_doe_transcript.pdf",
+ *   "fileSize": "1.5 MB",
+ *   "fileType": "transcript",
+ *   "id": "123e4567-e89b-12d3-a456-426614174000",
+ *   "message": "File uploaded successfully",
+ *   "metadata": {
+ *     "semester": "Fall 2024",
+ *     "grade": "A"
+ *   },
+ *   "mimeType": "application/pdf",
+ *   "modifiedAt": "2024-01-20T14:45:00.000Z",
+ *   "originalFileName": "transcript_fall_2024.pdf",
+ *   "previewUrl": "/api/files/123e4567-e89b-12d3-a456-426614174000/preview",
+ *   "status": "active",
+ *   "studentId": "123e4567-e89b-12d3-a456-426614174000",
+ *   "tags": "academic,transcript,fall2024",
+ *   "uploadedBy": "456e7890-e89b-12d3-a456-426614174001"
+ * }
  */
 export class FileResponse {
     /**
@@ -34,6 +58,13 @@ export class FileResponse {
     fileName!: string;
 
     /**
+     * Optional internal file path
+     * @description System path where the file is stored (for internal use, typically in upload responses)
+     * @example "/uploads/students/123e4567-e89b-12d3-a456-426614174000/john_doe_transcript.pdf"
+     */
+    filePath?: string;
+
+    /**
      * Human-readable file size
      * @description File size formatted for display (e.g., "1.5 MB")
      * @example "1.5 MB"
@@ -53,6 +84,13 @@ export class FileResponse {
      * @example "123e4567-e89b-12d3-a456-426614174000"
      */
     id!: string;
+
+    /**
+     * Optional success message
+     * @description Confirmation message for operations like uploads
+     * @example "File uploaded successfully"
+     */
+    message?: string;
 
     /**
      * Optional metadata object
@@ -116,73 +154,4 @@ export class FileResponse {
      * @example "456e7890-e89b-12d3-a456-426614174001"
      */
     uploadedBy?: string;
-}
-
-/**
- * Response object for successful file uploads
- * @description Confirmation response returned after a file is successfully uploaded
- */
-export class FileUploadResponse {
-    /**
-     * Optional download URL
-     * @description Direct URL for downloading the file (if applicable)
-     * @example "/files/123e4567-e89b-12d3-a456-426614174000/download"
-     */
-    downloadUrl?: string;
-
-    /**
-     * Display filename
-     * @description The filename that will be used for display and download
-     * @example "john_doe_transcript.pdf"
-     */
-    fileName!: string;
-
-    /**
-     * Internal file path
-     * @description System path where the file is stored (for internal use)
-     * @example "/uploads/students/123e4567-e89b-12d3-a456-426614174000/john_doe_transcript.pdf"
-     */
-    filePath!: string;
-
-    /**
-     * Human-readable file size
-     * @description File size formatted for display
-     * @example "1.5 MB"
-     */
-    fileSize!: string;
-
-    /**
-     * File type categorization
-     * @description The category assigned to this file
-     * @example "transcript"
-     */
-    fileType!: FileType;
-
-    /**
-     * Unique file identifier
-     * @description UUID assigned to the uploaded file
-     * @example "123e4567-e89b-12d3-a456-426614174000"
-     */
-    id!: string;
-
-    /**
-     * Success message
-     * @description Confirmation message for the upload operation
-     * @example "File uploaded successfully"
-     */
-    message!: string;
-
-    /**
-     * Original filename from upload
-     * @description The filename as provided during upload
-     * @example "transcript_fall_2024.pdf"
-     */
-    originalFileName!: string;
-
-    /**
-     * Optional preview URL for images
-     * @description Direct URL for previewing image files inline
-     * @example "/files/123e4567-e89b-12d3-a456-426614174000/preview"
-     */
-    previewUrl?: string;
 }

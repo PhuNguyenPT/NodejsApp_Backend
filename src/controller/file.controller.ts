@@ -111,7 +111,11 @@ export class FileController extends Controller {
         const response = request.res;
 
         // Sanitize filename for security
-        const sanitizedFileName = this.sanitizeFilename(file.fileName);
+        const correctedFileName = this.getCorrectFilename(
+            file.fileName,
+            file.mimeType,
+        );
+        const sanitizedFileName = this.sanitizeFilename(correctedFileName);
 
         // Set security and download headers
         this.setDownloadHeaders(
@@ -147,7 +151,9 @@ export class FileController extends Controller {
     @SuccessResponse(HttpStatus.OK, "File retrieved successfully")
     public async getFileById(@Path() fileId: string): Promise<FileResponse> {
         const file: FileEntity = await this.fileService.getFileById(fileId);
-        return FileMapper.toFileResponse(file);
+        const fileResponse: FileResponse = FileMapper.toFileResponse(file);
+        fileResponse.message = "File metadata retrieved successfully";
+        return fileResponse;
     }
 
     /**
@@ -169,7 +175,13 @@ export class FileController extends Controller {
     ): Promise<FileResponse[]> {
         const files: FileEntity[] =
             await this.fileService.getFilesByStudentId(studentId);
-        return FileMapper.toFileResponseList(files);
+        const fileResponses: FileResponse[] =
+            FileMapper.toFileResponseList(files);
+        const message = "File metadata retrieved successfully";
+        fileResponses.forEach(
+            (fileResponse) => (fileResponse.message = message),
+        );
+        return fileResponses;
     }
 
     /**
@@ -207,7 +219,11 @@ export class FileController extends Controller {
         const response = request.res;
 
         // Sanitize filename for security
-        const sanitizedFileName = this.sanitizeFilename(file.fileName);
+        const correctedFileName = this.getCorrectFilename(
+            file.fileName,
+            file.mimeType,
+        );
+        const sanitizedFileName = this.sanitizeFilename(correctedFileName);
 
         // Set preview headers with caching
         this.setPreviewHeaders(
@@ -245,9 +261,11 @@ export class FileController extends Controller {
     @Security("bearerAuth", ["file:update"])
     @SuccessResponse(HttpStatus.OK, "File updated successfully")
     public async updateFile(
+        @Request() request: AuthenticatedRequest,
         @Path() fileId: string,
         @Body() updateFileDTO: UpdateFileDTO,
     ): Promise<FileResponse> {
+        const user: Express.User = request.user;
         // Validate string fields using helper method
         this.validateStringFields({
             description: updateFileDTO.description,
@@ -255,11 +273,17 @@ export class FileController extends Controller {
             tags: updateFileDTO.tags,
         });
 
+        if (updateFileDTO.fileName) {
+            this.validateFilename(updateFileDTO.fileName, user);
+        }
+
         const file: FileEntity = await this.fileService.updateFile(
             fileId,
             updateFileDTO,
         );
-        return FileMapper.toFileResponse(file);
+        const fileResponse: FileResponse = FileMapper.toFileResponse(file);
+        fileResponse.message = "File metadata updated successfully";
+        return fileResponse;
     }
 
     /**
@@ -360,52 +384,190 @@ export class FileController extends Controller {
         const fileEntity: FileEntity =
             await this.fileService.createFile(createFileDTO);
 
-        return FileMapper.toFileResponse(fileEntity);
+        const fileResponse: FileResponse =
+            FileMapper.toFileResponse(fileEntity);
+        fileResponse.message = "File uploaded successfully";
+        return fileResponse;
     }
 
     // Private helper methods
 
     /**
-     * Sanitize filename to prevent directory traversal and special characters
+     * Enhanced method to handle filename/extension conflicts
+     * @param storedFileName The filename stored in the database
+     * @param mimeType The actual MIME type of the file content
+     * @returns Corrected filename with proper extension
+     */
+    private getCorrectFilename(
+        storedFileName: string,
+        mimeType: string,
+    ): string {
+        const lastDotIndex = storedFileName.lastIndexOf(".");
+        const nameWithoutExt =
+            lastDotIndex > 0
+                ? storedFileName.substring(0, lastDotIndex)
+                : storedFileName;
+        const storedExtension =
+            lastDotIndex > 0
+                ? storedFileName.substring(lastDotIndex).toLowerCase()
+                : "";
+
+        // Get the correct extension based on MIME type
+        const correctExtension = this.getExtensionFromMimeType(mimeType);
+
+        // If we have a correct extension from MIME type, use it
+        if (correctExtension) {
+            // Check if stored extension matches MIME type
+            const expectedExtensions =
+                this.getValidExtensionsForMimeType(mimeType);
+
+            if (!expectedExtensions.includes(storedExtension)) {
+                // Extension doesn't match MIME type, use the correct one
+                this.logger.warn("Filename extension mismatch with MIME type", {
+                    action: "using_mime_based_extension",
+                    correctExtension,
+                    mimeType,
+                    storedExtension,
+                    storedFileName,
+                });
+                return nameWithoutExt + correctExtension;
+            }
+        }
+
+        // If stored extension is valid for the MIME type, keep original filename
+        return storedFileName;
+    }
+
+    /**
+     * Get appropriate file extension based on MIME type
+     * @param mimeType The MIME type of the file
+     * @returns File extension with dot (e.g., '.pdf', '.jpg')
+     */
+    private getExtensionFromMimeType(mimeType: string): string {
+        const mimeToExtension: Record<string, string> = {
+            "application/javascript": ".js",
+            "application/json": ".json",
+            "application/msword": ".doc",
+            "application/pdf": ".pdf",
+            "application/vnd.ms-excel": ".xls",
+            "application/vnd.ms-powerpoint": ".ppt",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+                ".pptx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                ".xlsx",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                ".docx",
+            "application/x-rar-compressed": ".rar",
+            "application/xml": ".xml",
+            "application/zip": ".zip",
+            "audio/mpeg": ".mp3",
+            "audio/wav": ".wav",
+            "image/bmp": ".bmp",
+            "image/gif": ".gif",
+            "image/jpeg": ".jpg",
+            "image/jpg": ".jpg",
+            "image/png": ".png",
+            "image/svg+xml": ".svg",
+            "image/webp": ".webp",
+            "text/css": ".css",
+            "text/csv": ".csv",
+            "text/html": ".html",
+            "text/plain": ".txt",
+            "video/avi": ".avi",
+            "video/mp4": ".mp4",
+        };
+
+        return mimeToExtension[mimeType] || "";
+    }
+
+    /**
+     * Get valid extensions for a given MIME type
+     * @param mimeType The MIME type
+     * @returns Array of valid extensions (with dots)
+     */
+    private getValidExtensionsForMimeType(mimeType: string): string[] {
+        const validExtensions: Record<string, string[]> = {
+            "application/msword": [".doc"],
+            "application/pdf": [".pdf"],
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                [".docx"],
+            "image/bmp": [".bmp"],
+            "image/gif": [".gif"],
+            "image/jpeg": [".jpg", ".jpeg"],
+            "image/png": [".png"],
+            "image/webp": [".webp"],
+            "text/plain": [".txt"],
+            // Add more as needed
+        };
+
+        return validExtensions[mimeType] ?? [];
+    }
+
+    /**
+     * Enhanced filename sanitization that preserves the original extension
      * @param filename The filename to sanitize
-     * @returns Sanitized filename safe for filesystem operations
-     * @description Used for download sanitization only. Replaces dangerous characters with underscores
-     * and ensures the filename is safe for serving to clients. This is a fallback security measure
-     * for files that may have been uploaded before strict validation was implemented.
+     * @returns Sanitized filename with original extension preserved
      */
     private sanitizeFilename(filename: string): string {
-        return filename
-            .split("") // Split into characters
+        // Split filename and extension
+        const lastDotIndex = filename.lastIndexOf(".");
+        const name =
+            lastDotIndex > 0 ? filename.substring(0, lastDotIndex) : filename;
+        const extension =
+            lastDotIndex > 0 ? filename.substring(lastDotIndex) : "";
+
+        // Sanitize the name part only
+        const sanitizedName = name
+            .split("")
             .map((char) => {
                 const code = char.charCodeAt(0);
-                // Replace control characters (0-31, 127-159) and invalid filesystem chars
+                // Replace control characters and invalid filesystem chars
                 if (
                     code < 32 ||
                     (code >= 127 && code < 160) ||
-                    /[<>:"/\\|?*]/.test(char)
+                    /[<>:"/\\|?*;]/.test(char)
                 ) {
                     return "_";
                 }
                 return char;
             })
             .join("")
+            .trim()
+            .substring(0, 200); // Leave room for extension
+
+        // Sanitize extension (remove any dangerous characters but keep the dot and extension)
+        const sanitizedExtension = extension
+            .split("")
+            .map((char, index) => {
+                if (index === 0 && char === ".") return char; // Keep the dot
+                const code = char.charCodeAt(0);
+                if (
+                    code < 32 ||
+                    (code >= 127 && code < 160) ||
+                    /[<>:"/\\|?*;]/.test(char)
+                ) {
+                    return "_";
+                }
+                return char;
+            })
+            .join("");
+
+        const result = sanitizedName + sanitizedExtension;
+
+        // Final cleanup
+        return result
             .replace(/^\.+/, "") // Remove leading dots
-            .replace(/\.+$/, "") // Remove trailing dots
-            .trim() // Remove leading/trailing whitespace
-            .substring(0, 255); // Limit length
+            .replace(/\.+$/, "") // Remove trailing dots (but preserve single extension dot)
+            .trim()
+            .substring(0, 255);
     }
 
     /**
      * Set headers for file downloads with security measures
      * @param response Express response object
      * @param mimeType MIME type of the file
-     * @param filename Sanitized filename for the download
+     * @param filename Sanitized filename for the download (should include extension)
      * @param contentLength Size of the file in bytes
-     * @description Sets secure headers for file downloads including:
-     * - Content-Disposition: attachment (forces download)
-     * - Cache-Control: no-cache (prevents caching of sensitive files)
-     * - Content-Security-Policy: default-src 'none' (prevents script execution)
-     * - X-Content-Type-Options: nosniff (prevents MIME sniffing attacks)
      */
     private setDownloadHeaders(
         response: express.Response,
@@ -416,6 +578,8 @@ export class FileController extends Controller {
         // Content headers
         response.setHeader("Content-Type", mimeType);
         response.setHeader("Content-Length", contentLength.toString());
+
+        // Use filename as-is (it should already have the correct extension)
         response.setHeader(
             "Content-Disposition",
             `attachment; filename="${filename}"`,
@@ -438,13 +602,8 @@ export class FileController extends Controller {
      * Set headers for file previews with appropriate caching
      * @param response Express response object
      * @param mimeType MIME type of the file (should be image/*)
-     * @param filename Sanitized filename for the preview
+     * @param filename Sanitized filename for the preview (should include extension)
      * @param contentLength Size of the file in bytes
-     * @description Sets headers optimized for image previews including:
-     * - Content-Disposition: inline (displays in browser)
-     * - Cache-Control: public, max-age=3600 (1 hour caching for performance)
-     * - ETag for cache validation
-     * - X-Content-Type-Options: nosniff (prevents MIME sniffing attacks)
      */
     private setPreviewHeaders(
         response: express.Response,
@@ -455,6 +614,8 @@ export class FileController extends Controller {
         // Content headers
         response.setHeader("Content-Type", mimeType);
         response.setHeader("Content-Length", contentLength.toString());
+
+        // Use filename as-is (it should already have the correct extension)
         response.setHeader(
             "Content-Disposition",
             `inline; filename="${filename}"`,
