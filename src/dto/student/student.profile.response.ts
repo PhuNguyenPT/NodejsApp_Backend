@@ -6,6 +6,7 @@ import { AptitudeTestResponse } from "@/dto/student/aptitude.test.response.js";
 import { AwardResponse } from "@/dto/student/award.response.js";
 import { CertificationResponse } from "@/dto/student/certification.response.js";
 import { ExamSubject } from "@/dto/student/exam.js";
+import { SpecialStudentCase } from "@/type/enum/special.student.case";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
 /**
@@ -135,6 +136,16 @@ export class StudentProfileResponse {
     @Expose()
     @Type(() => String)
     province!: VietnamSouthernProvinces;
+
+    /**
+     * Special student case indicating unique circumstances or qualifications.
+     * Optional field that can be used to specify if the student falls under any special category.
+     * Valid values are defined in the SpecialStudentCase enum.
+     */
+    @Expose()
+    @Transform(({ value }) => (value ? String(value) : undefined))
+    @Type(() => String)
+    specialStudentCase?: SpecialStudentCase;
 
     /**
      * List of exactly 4 exam subjects with their scores
