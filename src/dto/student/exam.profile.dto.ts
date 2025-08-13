@@ -33,8 +33,11 @@ import { AptitudeTestDTO } from "./aptitude.test.dto";
  *     },
  *     "score": 700
  *   },
- *   "vsatScore": [120, 135, 140]
- * }
+ *   "vsatScore": [
+ *     { "name": "Toán", "score": 120 },
+ *     { "name": "Ngữ Văn", "score": 130 },
+ *     { "name": "Tiếng Anh", "score": 125 }
+ *   ] * }
  */
 export class ExamProfileDTO {
     /**
@@ -66,11 +69,10 @@ export class ExamProfileDTO {
     @ArrayMaxSize(3)
     @ArrayMinSize(3)
     @IsArray()
-    @IsNumber({ maxDecimalPlaces: 2 }, { each: true })
     @IsOptional()
     @Max(150, { each: true })
     @Min(0, { each: true })
-    public vsatScore?: number[];
+    public vsatScore?: VsatExamSubject[];
 
     /**
      * Calculates the total score of all 4 subjects
@@ -86,7 +88,9 @@ export class ExamProfileDTO {
      */
     get totalVSATScore(): number {
         if (!this.vsatScore || !Array.isArray(this.vsatScore)) return 0;
-        return this.vsatScore.reduce((sum, score) => sum + score, 0);
+
+        // Access the 'score' property of each object in the array
+        return this.vsatScore.reduce((sum, subject) => sum + subject.score, 0);
     }
 
     /**
@@ -101,7 +105,7 @@ export class ExamProfileDTO {
     constructor(
         subjects: ExamSubject[],
         aptitudeTestData?: AptitudeTestDTO,
-        vsatScores?: number[],
+        vsatScores?: VsatExamSubject[],
     ) {
         if (subjects.length !== 4) {
             throw new Error(
@@ -128,7 +132,7 @@ export class ExamProfileDTO {
     static fromStudentEntity(
         subjects: { name: string; score: number }[],
         aptitudeTestData?: { examType: ExamType; score: number },
-        vsatScores?: number[],
+        vsatScores?: VsatExamSubject[],
     ): ExamProfileDTO {
         const examSubjects = subjects.map(
             (s) => new ExamSubject(s.name, s.score),
@@ -149,7 +153,7 @@ export class ExamProfileDTO {
      * @param index - Index of the VSAT score (0-2)
      * @returns VSAT score at the specified index
      */
-    getVSATScore(index: number): number | undefined {
+    getVSATScore(index: number): undefined | VsatExamSubject {
         if (!this.vsatScore || !Array.isArray(this.vsatScore)) return undefined;
         return this.vsatScore[index];
     }
@@ -186,7 +190,7 @@ export class ExamProfileDTO {
      * Helper method to set VSAT scores
      * @param scores - Array of exactly 3 VSAT scores
      */
-    setVSATScores(scores: number[]): void {
+    setVSATScores(scores: VsatExamSubject[]): void {
         if (scores.length !== 3) {
             throw new Error(
                 "VSAT scores must be an array of exactly 3 numbers",
@@ -202,7 +206,7 @@ export class ExamProfileDTO {
     toStudentEntityData(): {
         aptitudeTestScore?: { examType: ExamType; score: number };
         subjectCombination: { name: string; score: number }[];
-        vsatScore?: number[];
+        vsatScore?: VsatExamSubject[];
     } {
         return {
             aptitudeTestScore: this.aptitudeTestScore
@@ -240,6 +244,42 @@ export class ExamSubject {
     @Expose()
     @IsNumber({ maxDecimalPlaces: 2 })
     @Max(10)
+    @Min(0)
+    public score: number;
+
+    /**
+     * Creates a new ExamSubject instance
+     * @param name - The subject name
+     * @param score - The subject score (0.0 - 10.0)
+     * @example "Toán"
+     * @example 8.0
+     */
+    constructor(name: string, score: number) {
+        this.name = name;
+        this.score = score;
+    }
+}
+
+/**
+ * Represents a single exam subject and its score
+ */
+export class VsatExamSubject {
+    /**
+     * Subject name (e.g., "Toán", "Ngữ Văn", "Tiếng Anh", "Vật Lý")
+     * @example "Toán"
+     */
+    @Expose()
+    @IsNotEmpty()
+    @IsString()
+    public name: string;
+
+    /**
+     * Subject score (0.0 - 10.0)
+     * @example 8.0
+     */
+    @Expose()
+    @IsNumber({ maxDecimalPlaces: 2 })
+    @Max(150)
     @Min(0)
     public score: number;
 

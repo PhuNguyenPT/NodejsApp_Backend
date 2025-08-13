@@ -169,11 +169,16 @@ export class StudentEntity {
     userId?: string;
 
     /**
-     * VSAT score - array of exactly 3 scores (0-150 each)
-     * Stored as JSON array
+     * VSAT score - array of exactly 3 subjects with names and scores (0-150 each)
+     * Stored as JSON array of ExamSubjectData objects
+     * @example [
+     *   { "name": "Toán", "score": 120 },
+     *   { "name": "Vật Lý", "score": 130 },
+     *   { "name": "Tiếng Anh", "score": 125 }
+     * ]
      */
     @Column({ nullable: true, type: "jsonb" })
-    vsatScore?: number[];
+    vsatScore?: ExamSubjectData[];
 
     constructor(student?: Partial<StudentEntity>) {
         if (student) {
@@ -390,7 +395,10 @@ export class StudentEntity {
     // Helper method to get total VSAT score
     getTotalVSATScore(): number {
         if (!this.vsatScore || !Array.isArray(this.vsatScore)) return 0;
-        return this.vsatScore.reduce((sum, score) => sum + score, 0);
+        return this.vsatScore.reduce(
+            (sum, examSubject) => sum + examSubject.score,
+            0,
+        );
     }
 
     // Helper method to get user email safely
@@ -398,10 +406,17 @@ export class StudentEntity {
         return this.user?.email ?? null;
     }
 
-    // Helper method to get VSAT score by index
+    // Helper method to get VSAT score by index (backward compatibility)
     getVSATScore(index: number): number | undefined {
         if (!this.vsatScore || !Array.isArray(this.vsatScore)) return undefined;
-        return this.vsatScore[index];
+        return this.vsatScore[index]?.score;
+    }
+
+    // Helper method to get VSAT score by name
+    getVSATScoreByName(subjectName: string): number | undefined {
+        if (!this.vsatScore || !Array.isArray(this.vsatScore)) return undefined;
+        const subject = this.vsatScore.find((s) => s.name === subjectName);
+        return subject?.score;
     }
 
     // Helper method to check if academic performance data exists
@@ -440,8 +455,13 @@ export class StudentEntity {
             Array.isArray(this.vsatScore) &&
             this.vsatScore.length === 3 &&
             this.vsatScore.every(
-                (score) =>
-                    typeof score === "number" && score >= 0 && score <= 150,
+                (examSubject) =>
+                    typeof examSubject === "object" &&
+                    typeof examSubject.name === "string" &&
+                    examSubject.name.length > 0 &&
+                    typeof examSubject.score === "number" &&
+                    examSubject.score >= 0 &&
+                    examSubject.score <= 150,
             )
         );
     }
@@ -517,10 +537,50 @@ export class StudentEntity {
         this.vsatScore = data.vsatScore;
     }
 
-    // Helper method to set VSAT scores
-    setVSATScores(scores: number[]): void {
+    // Helper method to set VSAT scores with ExamSubjectData format
+    setVSATScores(vsatScores: ExamSubjectData[]): void {
+        if (vsatScores.length === 3) {
+            // Validate each score
+            const isValid = vsatScores.every(
+                (examSubject) =>
+                    typeof examSubject === "object" &&
+                    examSubject.name.length > 0 &&
+                    typeof examSubject.score === "number" &&
+                    examSubject.score >= 0 &&
+                    examSubject.score <= 150,
+            );
+
+            if (isValid) {
+                this.vsatScore = vsatScores;
+            } else {
+                throw new Error(
+                    "VSAT scores must be an array of 3 valid ExamSubjectData objects with scores between 0-150",
+                );
+            }
+        } else {
+            throw new Error(
+                "VSAT scores must be an array of exactly 3 ExamSubjectData objects",
+            );
+        }
+    }
+
+    // Helper method to set VSAT scores with simple number array (backward compatibility)
+    setVSATScoresFromNumbers(scores: number[], subjectNames?: string[]): void {
         if (scores.length === 3) {
-            this.vsatScore = scores;
+            const defaultNames = ["Reading", "Writing", "Math"];
+            const names =
+                subjectNames && subjectNames.length === 3
+                    ? subjectNames
+                    : defaultNames;
+
+            const vsatScores: ExamSubjectData[] = scores.map(
+                (score, index) => ({
+                    name: names[index],
+                    score: score,
+                }),
+            );
+
+            this.setVSATScores(vsatScores);
         } else {
             throw new Error(
                 "VSAT scores must be an array of exactly 3 numbers",

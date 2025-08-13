@@ -1,11 +1,10 @@
-// src/dto/student.info.ts
+// src/dto/student.info.dto.ts
 import { Expose, Type } from "class-transformer";
 import {
     ArrayMaxSize,
     ArrayMinSize,
     IsArray,
     IsEnum,
-    IsInt,
     IsNotEmpty,
     IsNumber,
     IsOptional,
@@ -22,7 +21,10 @@ import { AptitudeTestDTO } from "@/dto/student/aptitude.test.dto.js";
 import { AwardDTO } from "@/dto/student/award.dto.js";
 import { CertificationDTO } from "@/dto/student/certification.dto.js";
 import { ConductDTO } from "@/dto/student/conduct.dto.js";
-import { ExamSubject } from "@/dto/student/exam.profile.dto.js";
+import {
+    ExamSubject,
+    VsatExamSubject,
+} from "@/dto/student/exam.profile.dto.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
@@ -99,7 +101,11 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  *     { "name": "Vật Lý", "score": 8.75 }
  *   ],
  *   "talentScore": 9.5,
- *   "vsatScore": [120, 130, 125]
+ *   "vsatScore": [
+ *     { "name": "Toán", "score": 120 },
+ *     { "name": "Ngữ Văn", "score": 130 },
+ *     { "name": "Tiếng Anh", "score": 125 }
+ *   ]
  * }
  */
 export class StudentInfoDTO {
@@ -128,10 +134,10 @@ export class StudentInfoDTO {
      * ]
      */
     @ArrayMaxSize(3, {
-        message: "Academic performance array must contain at most 3 records",
+        message: "Academic performance must contain exactly 3 records",
     })
-    @ArrayMinSize(1, {
-        message: "Academic performance must contain at least 1 record",
+    @ArrayMinSize(3, {
+        message: "Academic performance must contain exactly 3 records",
     })
     @Expose()
     @IsArray({ message: "Academic performance must be an array" })
@@ -212,10 +218,10 @@ export class StudentInfoDTO {
      * - Array cannot be empty
      */
     @ArrayMaxSize(3, {
-        message: "Conduct array must contain at most 3 records",
+        message: "Conduct must contain exactly 3 records",
     })
-    @ArrayMinSize(1, {
-        message: "Conduct must contain at least 1 record",
+    @ArrayMinSize(3, {
+        message: "Conduct must contain exactly 3 records",
     })
     @Expose()
     @IsArray({ message: "Conduct must be an array" })
@@ -349,10 +355,10 @@ export class StudentInfoDTO {
      * @example [{ "name": "Toán", "score": 8.0 }, { "name": "Ngữ Văn", "score": 7.0 }, { "name": "Tiếng Anh", "score": 9.5 }, { "name": "Vật Lý", "score": 8.75 }]
      */
     @ArrayMaxSize(4, {
-        message: "Exam Subjects must contain at most 4 subjects",
+        message: "Exam Subjects must contain exactly 4 subjects",
     })
     @ArrayMinSize(4, {
-        message: "Exam Subjects must contain at least 4 subjects",
+        message: "Exam Subjects must contain exactly 4 subjects",
     })
     @Expose()
     @IsArray()
@@ -381,16 +387,24 @@ export class StudentInfoDTO {
 
     /**
      * VSAT score (Vietnamese Scholastic Aptitude Test)
-     * Array of exactly 3 scores
-     * @example [120, 130, 125]
+     * Array of exactly 3 exam subjects with names and scores (0-150 each)
+     * Each subject contains a name and score following the ExamSubject structure
+     * @example [
+     *     { "name": "Toán", "score": 120 },
+     *     { "name": "Ngữ Văn", "score": 130 },
+     *     { "name": "Tiếng Anh", "score": 125 }
+     * ]
+     * @validation
+     * - Must be an array of exactly 3 ExamSubject objects
+     * - Each ExamSubject must have a valid name (string) and score (number 0-150)
+     * - Optional field (can be null or undefined)
      */
-    @ArrayMaxSize(3, { message: "Vsat score must have exactly 3 scores." })
-    @ArrayMinSize(3, { message: "Vsat score must have exactly 3 scores." })
+    @ArrayMaxSize(3, { message: "VSAT score must have exactly 3 subjects." })
+    @ArrayMinSize(3, { message: "VSAT score must have exactly 3 subjects." })
     @Expose()
-    @IsArray()
-    @IsInt({ each: true })
+    @IsArray({ message: "VSAT score must be an array" })
     @IsOptional()
-    @Max(150, { each: true })
-    @Min(0, { each: true })
-    vsatScore?: number[];
+    @Type(() => VsatExamSubject)
+    @ValidateNested({ each: true })
+    vsatScore?: VsatExamSubject[];
 }
