@@ -4,6 +4,8 @@ import { DataSource } from "typeorm";
 import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
 import { FileEntity } from "@/entity/file.js";
+import { MajorEntity } from "@/entity/major.entity.js";
+import { MajorGroupEntity } from "@/entity/major.group.entity.js";
 import { PostEntity } from "@/entity/post.js";
 import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
@@ -19,6 +21,8 @@ export const postgresDataSource = new DataSource({
         AwardEntity,
         StudentEntity,
         FileEntity,
+        MajorEntity,
+        MajorGroupEntity,
     ],
     host: config.POSTGRES_HOST,
     logging: config.DB_LOGGING,
