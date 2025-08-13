@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
 import { defaultPaginationConfig } from "@/config/pagination.config.js";
-import { StudentInfoDTO } from "@/dto/student/student.info.js";
+import { StudentInfoDTO } from "@/dto/student/student.info.dto.js";
 import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
 import { StudentEntity } from "@/entity/student.js";
@@ -113,7 +113,6 @@ export class StudentService {
                 userId: "User ID is required to create a student profile",
             });
         }
-
         const userEntity = await this.userRepository.findOne({
             where: { id: userId },
         });

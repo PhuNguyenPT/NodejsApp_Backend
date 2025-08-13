@@ -1,4 +1,5 @@
 import { Expose, Type } from "class-transformer";
+import { IsNotEmpty, IsOptional } from "class-validator";
 
 /**
  * Data Transfer Object for Award information
@@ -22,27 +23,35 @@ import { Expose, Type } from "class-transformer";
  */
 export class AwardResponse {
     @Expose()
+    @IsNotEmpty()
     @Type(() => Date)
     awardDate!: Date;
 
     @Expose()
+    @IsOptional()
     awardId?: string;
 
     @Expose()
+    @IsOptional()
     awardingOrganization?: string;
 
     @Expose()
+    @IsNotEmpty()
     category!: string;
 
     @Expose()
+    @IsOptional()
     description?: string;
 
     @Expose()
+    @IsNotEmpty()
     id!: string;
 
     @Expose()
+    @IsNotEmpty()
     level!: string;
 
     @Expose()
+    @IsNotEmpty()
     name!: string;
 }

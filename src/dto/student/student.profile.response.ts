@@ -2,10 +2,12 @@
 import { Expose, Transform, Type } from "class-transformer";
 
 import { FileResponse } from "@/dto/file/file.response.js";
+import { AcademicPerformanceResponse } from "@/dto/student/academic.performance.response.js";
 import { AptitudeTestResponse } from "@/dto/student/aptitude.test.response.js";
 import { AwardResponse } from "@/dto/student/award.response.js";
 import { CertificationResponse } from "@/dto/student/certification.response.js";
-import { ExamSubject } from "@/dto/student/exam.js";
+import { ConductResponse } from "@/dto/student/conduct.response.js";
+import { ExamSubject } from "@/dto/student/exam.profile.dto.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
@@ -17,6 +19,20 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  * {
  *   "id": "uuid-string",
  *   "userId": "user-uuid-string",
+ *   "academicPerformances": [
+ *     {
+ *       "academicPerformance": "Giỏi",
+ *       "grade": 10
+ *     },
+ *     {
+ *       "academicPerformance": "Khá",
+ *       "grade": 11
+ *     },
+ *     {
+ *       "academicPerformance": "Xuất sắc",
+ *       "grade": 12
+ *     }
+ *   ],
  *   "aptitudeTestScore": {
  *     "examType": {
  *       "type": "DGNL",
@@ -44,6 +60,20 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  *       "name": "IELTS Academic"
  *     }
  *   ],
+ *   "conducts": [
+ *     {
+ *       "conduct": "Tốt",
+ *       "grade": 10
+ *     },
+ *     {
+ *       "conduct": "Khá",
+ *       "grade": 11
+ *     },
+ *     {
+ *       "conduct": "Trung bình",
+ *       "grade": 12
+ *     }
+ *   ],
  *   "location": "Ho Chi Minh City, Vietnam",
  *   "major": "Computer Science",
  *   "maxBudget": 20000000,
@@ -61,6 +91,33 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  * }
  */
 export class StudentProfileResponse {
+    /**
+     * Student academic performance assessment
+     * Array of academic performance ratings that can include multiple evaluations for different grades/years.
+     * Each entry contains an academic performance rating and the corresponding grade level.
+     *
+     * @type {AcademicPerformanceResponse[]}
+     * @optional
+     * @see AcademicPerformanceResponse for detailed structure
+     * @example [
+     *   {
+     *     "academicPerformance": "Giỏi",
+     *     "grade": 10
+     *   },
+     *   {
+     *     "academicPerformance": "Khá",
+     *     "grade": 11
+     *   },
+     *   {
+     *     "academicPerformance": "Xuất sắc",
+     *     "grade": 12
+     *   }
+     * ]
+     */
+    @Expose()
+    @Type(() => AcademicPerformanceResponse)
+    academicPerformances?: AcademicPerformanceResponse[];
+
     /**
      * Aptitude test information including exam type and score
      * Contains the exam type (DGNL, CCNN, or CCQT) and the numeric score achieved
@@ -94,6 +151,33 @@ export class StudentProfileResponse {
     @Expose()
     @Type(() => CertificationResponse)
     certifications?: CertificationResponse[];
+
+    /**
+     * Student conduct/behavior assessment
+     * Array of conduct ratings that can include multiple evaluations for different grades/years.
+     * Each entry contains a conduct rating and the corresponding grade level.
+     *
+     * @type {ConductResponse[]}
+     * @optional
+     * @see ConductResponse for detailed structure
+     * @example [
+     *   {
+     *     "conduct": "Tốt",
+     *     "grade": 10
+     *   },
+     *   {
+     *     "conduct": "Khá",
+     *     "grade": 11
+     *   },
+     *   {
+     *     "conduct": "Trung bình",
+     *     "grade": 12
+     *   }
+     * ]
+     */
+    @Expose()
+    @Type(() => ConductResponse)
+    conducts?: ConductResponse[];
 
     @Expose()
     @Type(() => FileResponse)

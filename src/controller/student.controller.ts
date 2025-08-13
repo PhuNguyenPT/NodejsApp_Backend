@@ -17,7 +17,7 @@ import {
     Tags,
 } from "tsoa";
 
-import { StudentInfoDTO } from "@/dto/student/student.info.js";
+import { StudentInfoDTO } from "@/dto/student/student.info.dto.js";
 import { StudentResponse } from "@/dto/student/student.js";
 import { StudentProfileResponse } from "@/dto/student/student.profile.response.js";
 import { StudentEntity } from "@/entity/student.js";
