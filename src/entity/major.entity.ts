@@ -14,7 +14,7 @@ import { MajorGroupEntity } from "@/entity/major.group.entity.js";
  */
 @Entity("majors")
 export class MajorEntity {
-    @Column({ length: 255, type: "varchar", unique: true })
+    @Column({ length: 255, nullable: false, type: "varchar", unique: true })
     code!: string; // The full major code, e.g., "71401"
 
     @JoinColumn({ name: "group_id" })
@@ -24,13 +24,13 @@ export class MajorEntity {
     })
     group!: MajorGroupEntity;
 
-    @Column()
+    @Column({ nullable: false, type: "uuid" })
     group_id!: string;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ length: 255, type: "varchar" })
+    @Column({ length: 255, nullable: false, type: "varchar" })
     name!: string; // The Vietnamese name of the major, e.g., "Khoa học giáo dục"
 
     constructor(major?: Partial<MajorEntity>) {

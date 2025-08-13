@@ -9,7 +9,7 @@ import { MajorGroup } from "@/type/enum/major.js";
  */
 @Entity("major_groups")
 export class MajorGroupEntity {
-    @Column({ unique: true })
+    @Column({ length: "255", type: "varchar", unique: true })
     code!: string; // The 3-digit code, e.g., "714"
 
     @Column({
@@ -26,7 +26,7 @@ export class MajorGroupEntity {
     @OneToMany(() => MajorEntity, (major) => major.group)
     majors!: MajorEntity[];
 
-    @Column({ length: 255, type: "varchar" })
+    @Column({ length: 255, nullable: false, type: "varchar" })
     name!: string; // The Vietnamese name, e.g., "Khoa học giáo dục và đào tạo giáo viên"
 
     constructor(majorGroup?: Partial<MajorGroupEntity>) {
