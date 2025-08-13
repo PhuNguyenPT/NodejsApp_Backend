@@ -17,11 +17,13 @@ import {
     ValidateNested,
 } from "class-validator";
 
+import { AcademicPerformanceDTO } from "@/dto/student/academic.performance.dto.js";
 import { AptitudeTestDTO } from "@/dto/student/aptitude.test.dto.js";
-import { AwardDTO } from "@/dto/student/award.js";
-import { CertificationDTO } from "@/dto/student/certification.js";
-import { ExamSubject } from "@/dto/student/exam.js";
-import { SpecialStudentCase } from "@/type/enum/special.student.case";
+import { AwardDTO } from "@/dto/student/award.dto.js";
+import { CertificationDTO } from "@/dto/student/certification.dto.js";
+import { ConductDTO } from "@/dto/student/conduct.dto.js";
+import { ExamSubject } from "@/dto/student/exam.profile.dto.js";
+import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
 /**
@@ -30,6 +32,20 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  * academic background, budget preferences, achievements, and certifications.
  * @example
  * {
+ *   "academicPerformances": [
+ *     {
+ *       "academicPerformance": "Giỏi",
+ *       "grade": 10
+ *     },
+ *     {
+ *       "academicPerformance": "Khá",
+ *       "grade": 11
+ *     },
+ *     {
+ *       "academicPerformance": "Xuất sắc",
+ *       "grade": 12
+ *     }
+ *   ],
  *   "aptitudeTestScore": {
  *     "examType": {
  *       "type": "DGNL",
@@ -57,6 +73,20 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  *       "name": "IELTS Academic"
  *     }
  *   ],
+ *   "conducts": [
+ *     {
+ *       "conduct": "Tốt",
+ *       "grade": 10
+ *     },
+ *     {
+ *       "conduct": "Khá",
+ *       "grade": 11
+ *     },
+ *     {
+ *       "conduct": "Trung bình",
+ *       "grade": 12
+ *     }
+ *   ],
  *   "province": "Hồ Chí Minh",
  *   "major": "Khoa học Máy tính",
  *   "maxBudget": 20000000,
@@ -73,6 +103,43 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  * }
  */
 export class StudentInfoDTO {
+    /**
+     * Student academic performance assessment
+     * Array of academic performance ratings that can include multiple evaluations for different grades/years.
+     * Each entry contains an academic performance rating and the corresponding grade level.
+     * Valid academic performance values are defined in the AcademicPerformance enum.
+     *
+     * @type {AcademicPerformanceDTO[]}
+     * @required
+     * @see AcademicPerformanceDTO for detailed structure and validation rules
+     * @example [
+     *   {
+     *     "academicPerformance": "Giỏi",
+     *     "grade": 10
+     *   },
+     *   {
+     *     "academicPerformance": "Khá",
+     *     "grade": 11
+     *   },
+     *   {
+     *     "academicPerformance": "Xuất sắc",
+     *     "grade": 12
+     *   }
+     * ]
+     */
+    @ArrayMaxSize(3, {
+        message: "Academic performance array must contain at most 3 records",
+    })
+    @ArrayMinSize(1, {
+        message: "Academic performance must contain at least 1 record",
+    })
+    @Expose()
+    @IsArray({ message: "Academic performance must be an array" })
+    @IsNotEmpty({ message: "Academic performance is required" })
+    @Type(() => AcademicPerformanceDTO)
+    @ValidateNested({ each: true })
+    academicPerformances!: AcademicPerformanceDTO[];
+
     /**
      * Aptitude test information including exam type and score
      * Contains the exam type (DGNL, CCNN, or CCQT) and the numeric score achieved
@@ -115,7 +182,47 @@ export class StudentInfoDTO {
     @Type(() => CertificationDTO)
     @ValidateNested({ each: true })
     certifications?: CertificationDTO[];
-
+    /**
+     * Student conduct/behavior assessment
+     * Array of conduct ratings that can include multiple evaluations for different grades/years.
+     * Each entry contains a conduct rating and the corresponding grade level.
+     * Valid conduct values are defined in the Conduct enum.
+     *
+     * @type {ConductDTO[]}
+     * @required
+     * @see ConductDTO for detailed structure and validation rules
+     * @example [
+     *   {
+     *     "conduct": "Tốt",
+     *     "grade": 10
+     *   },
+     *   {
+     *     "conduct": "Khá",
+     *     "grade": 11
+     *   },
+     *   {
+     *     "conduct": "Trung bình",
+     *     "grade": 12
+     *   }
+     * ]
+     * @validation
+     * - Required field (cannot be null or undefined)
+     * - Must be an array of ConductDTO objects
+     * - Each ConductDTO must have valid conduct enum value and grade (1-12)
+     * - Array cannot be empty
+     */
+    @ArrayMaxSize(3, {
+        message: "Conduct array must contain at most 3 records",
+    })
+    @ArrayMinSize(1, {
+        message: "Conduct must contain at least 1 record",
+    })
+    @Expose()
+    @IsArray({ message: "Conduct must be an array" })
+    @IsNotEmpty({ message: "Conduct is required" })
+    @Type(() => ConductDTO)
+    @ValidateNested({ each: true })
+    conducts!: ConductDTO[];
     /**
      * Geographic location or preferred study location of the student.
      * Can include city, state, country, or specific address information.

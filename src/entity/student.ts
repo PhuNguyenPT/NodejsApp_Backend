@@ -11,7 +11,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { ExamProfileDTO } from "@/dto/student/exam.js";
+import { ExamProfileDTO } from "@/dto/student/exam.profile.dto.js";
 import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
 import { FileEntity, FileType } from "@/entity/file.js";
@@ -20,9 +20,19 @@ import { ExamType } from "@/type/enum/exam.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
+interface AcademicPerformanceData {
+    academicPerformance: string;
+    grade: number;
+}
+
 interface AptitudeTestData {
     examType: ExamType;
     score: number;
+}
+
+interface ConductData {
+    conduct: string;
+    grade: number;
 }
 
 interface ExamSubjectData {
@@ -40,6 +50,13 @@ interface ExamSubjectData {
 @Index("idx_student_modified_at", ["modifiedAt"])
 @Index("idx_student_talent_score", ["talentScore"])
 export class StudentEntity {
+    /**
+     * Academic performance data for different grades
+     * Array containing academic performance ratings and corresponding grades
+     */
+    @Column({ nullable: true, type: "jsonb" })
+    academicPerformances?: AcademicPerformanceData[];
+
     /**
      * Aptitude test information including exam type and score
      * Stored as JSON containing examType and score
@@ -62,6 +79,13 @@ export class StudentEntity {
         },
     )
     certifications?: CertificationEntity[];
+
+    /**
+     * Conduct/behavior data for different grades
+     * Array containing conduct ratings and corresponding grades
+     */
+    @Column({ nullable: true, type: "jsonb" })
+    conducts?: ConductData[];
 
     @CreateDateColumn({ type: "timestamp with time zone" })
     createdAt!: Date;
@@ -157,6 +181,40 @@ export class StudentEntity {
         }
     }
 
+    // Helper method to add academic performance for a specific grade
+    addAcademicPerformance(academicPerformance: string, grade: number): void {
+        this.academicPerformances ??= [];
+
+        // Remove existing entry for the same grade if it exists
+        this.academicPerformances = this.academicPerformances.filter(
+            (ap) => ap.grade !== grade,
+        );
+
+        // Add new entry
+        this.academicPerformances.push({ academicPerformance, grade });
+    }
+
+    // Helper method to add conduct for a specific grade
+    addConduct(conduct: string, grade: number): void {
+        this.conducts ??= [];
+
+        // Remove existing entry for the same grade if it exists
+        this.conducts = this.conducts.filter((c) => c.grade !== grade);
+
+        // Add new entry
+        this.conducts.push({ conduct, grade });
+    }
+
+    // Helper method to get academic performance by grade
+    getAcademicPerformanceByGrade(
+        grade: number,
+    ): AcademicPerformanceData | null {
+        if (!this.academicPerformances) return null;
+        return (
+            this.academicPerformances.find((ap) => ap.grade === grade) ?? null
+        );
+    }
+
     // Helper method to get active certifications (not expired)
     getActiveCertifications(): CertificationEntity[] {
         if (!this.certifications) return [];
@@ -204,6 +262,12 @@ export class StudentEntity {
             return "Invalid budget range";
         }
         return `$${this.minBudget.toLocaleString()} - $${this.maxBudget.toLocaleString()}`;
+    }
+
+    // Helper method to get conduct by grade
+    getConductByGrade(grade: number): ConductData | null {
+        if (!this.conducts) return null;
+        return this.conducts.find((c) => c.grade === grade) ?? null;
     }
 
     getExamProfileDTO(): ExamProfileDTO | null {
@@ -254,6 +318,26 @@ export class StudentEntity {
             }
             return counts;
         }, initialCounts);
+    }
+
+    // Helper method to get latest academic performance
+    getLatestAcademicPerformance(): AcademicPerformanceData | null {
+        if (
+            !this.academicPerformances ||
+            this.academicPerformances.length === 0
+        )
+            return null;
+        return this.academicPerformances.reduce((latest, current) =>
+            current.grade > latest.grade ? current : latest,
+        );
+    }
+
+    // Helper method to get latest conduct
+    getLatestConduct(): ConductData | null {
+        if (!this.conducts || this.conducts.length === 0) return null;
+        return this.conducts.reduce((latest, current) =>
+            current.grade > latest.grade ? current : latest,
+        );
     }
 
     // Helper method to get recent awards (within specified days)
@@ -318,6 +402,18 @@ export class StudentEntity {
     getVSATScore(index: number): number | undefined {
         if (!this.vsatScore || !Array.isArray(this.vsatScore)) return undefined;
         return this.vsatScore[index];
+    }
+
+    // Helper method to check if academic performance data exists
+    hasAcademicPerformanceData(): boolean {
+        return !!(
+            this.academicPerformances && this.academicPerformances.length > 0
+        );
+    }
+
+    // Helper method to check if conduct data exists
+    hasConductData(): boolean {
+        return !!(this.conducts && this.conducts.length > 0);
     }
 
     // Helper method to check if student has specific file type
@@ -397,9 +493,21 @@ export class StudentEntity {
         return amount >= this.minBudget && amount <= this.maxBudget;
     }
 
+    // Helper method to set academic performance data
+    setAcademicPerformance(
+        academicPerformanceDataArray: AcademicPerformanceData[],
+    ): void {
+        this.academicPerformances = academicPerformanceDataArray;
+    }
+
     // Helper method to set aptitude test with both type and score
     setAptitudeTest(examType: ExamType, score: number): void {
         this.aptitudeTestScore = { examType, score };
+    }
+
+    // Helper method to set conduct data
+    setConduct(conductData: ConductData[]): void {
+        this.conducts = conductData;
     }
 
     setExamProfileDTO(examProfile: ExamProfileDTO): void {
