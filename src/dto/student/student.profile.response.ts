@@ -20,8 +20,6 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  * academic background, budget preferences, achievements, and certifications.
  * @example
  * {
- *   "id": "uuid-string",
- *   "userId": "user-uuid-string",
  *   "academicPerformances": [
  *     {
  *       "academicPerformance": "Giỏi",
@@ -77,20 +75,22 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  *       "grade": 12
  *     }
  *   ],
+ *   "fileResponses": []
+ *   "id": "uuid-string",
  *   "location": "Ho Chi Minh City, Vietnam",
  *   "major": "Computer Science",
  *   "maxBudget": 20000000,
  *   "minBudget": 5000000,
- *   "province": "HO_CHI_MINH",
- *   "subjectCombination": [
+ *   "nationalExam": [
  *     { "name": "Math", "score": 8.0 },
  *     { "name": "Literature", "score": 7.0 },
  *     { "name": "English", "score": 9.5 },
  *     { "name": "Physics", "score": 8.75 }
  *   ],
+ *   "province": "HO_CHI_MINH",
  *   "talentScore": 8.5,
+ *   "userId": "user-uuid-string",
  *   "vsatScore": [120, 130, 125],
- *   "fileResponses": []
  * }
  */
 export class StudentProfileResponse {
@@ -218,6 +218,16 @@ export class StudentProfileResponse {
     minBudget!: number;
 
     /**
+     * List of exactly 4 exam subjects with their scores
+     *
+     * @type {ExamSubject[]}
+     * @see ExamSubject for detailed structure and validation rules
+     */
+    @Expose()
+    @Type(() => ExamSubject)
+    nationalExam!: ExamSubject[];
+
+    /**
      * Province or city where the student is located
      */
     @Expose()
@@ -233,16 +243,6 @@ export class StudentProfileResponse {
     @Transform(({ value }) => (value ? String(value) : undefined))
     @Type(() => String)
     specialStudentCase?: SpecialStudentCase;
-
-    /**
-     * List of exactly 4 exam subjects with their scores
-     *
-     * @type {ExamSubject[]}
-     * @see ExamSubject for detailed structure and validation rules
-     */
-    @Expose()
-    @Type(() => ExamSubject)
-    subjectCombination!: ExamSubject[];
 
     /**
      * Talent score (0-10 scale)

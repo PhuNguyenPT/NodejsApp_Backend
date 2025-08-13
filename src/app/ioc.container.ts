@@ -19,6 +19,7 @@ import { UserRepository } from "@/repository/impl/user.repository.js";
 import { IJwtTokenRepository } from "@/repository/jwt.token.repository.interface.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { AuthService } from "@/service/auth.service.js";
+import { AwardService } from "@/service/award.service";
 import { CertificationService } from "@/service/certification.service";
 import { FileService } from "@/service/file.service.js";
 import { JwtEntityService } from "@/service/jwt.entity.service.js";
@@ -93,8 +94,13 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
-    .bind<StudentService>(TYPES.StudentService)
-    .to(StudentService)
+    .bind<AwardService>(TYPES.AwardService)
+    .to(AwardService)
+    .inSingletonScope();
+
+iocContainer
+    .bind<CertificationService>(TYPES.CertificationService)
+    .to(CertificationService)
     .inSingletonScope();
 
 iocContainer
@@ -103,8 +109,8 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
-    .bind<CertificationService>(TYPES.CertificationService)
-    .to(CertificationService)
+    .bind<StudentService>(TYPES.StudentService)
+    .to(StudentService)
     .inSingletonScope();
 
 iocContainer

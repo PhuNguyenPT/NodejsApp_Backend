@@ -2,6 +2,7 @@
 export const TYPES = {
     AuthService: Symbol.for("AuthService"),
     AwardRepository: Symbol.for("AwardRepository"),
+    AwardService: Symbol.for("AwardService"),
     CertificationRepository: Symbol.for("CertificationRepository"),
     CertificationService: Symbol.for("CertificationService"),
     FileRepository: Symbol.for("FileRepository"),

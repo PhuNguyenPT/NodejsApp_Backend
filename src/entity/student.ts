@@ -132,6 +132,9 @@ export class StudentEntity {
     })
     modifiedBy?: string;
 
+    @Column({ nullable: true, type: "jsonb" })
+    nationalExam?: ExamSubjectData[];
+
     @Column({
         enum: VietnamSouthernProvinces,
         length: 50,
@@ -147,9 +150,6 @@ export class StudentEntity {
         type: "varchar",
     })
     specialStudentCase?: SpecialStudentCase;
-
-    @Column({ nullable: true, type: "jsonb" })
-    subjectCombination?: ExamSubjectData[];
 
     /**
      * Talent score (0-10 scale with up to 2 decimal places)
@@ -276,10 +276,10 @@ export class StudentEntity {
     }
 
     getExamProfileDTO(): ExamProfileDTO | null {
-        if (!this.subjectCombination) return null;
+        if (!this.nationalExam) return null;
 
         return ExamProfileDTO.fromStudentEntity(
-            this.subjectCombination,
+            this.nationalExam,
             this.aptitudeTestScore,
             this.vsatScore,
         );
@@ -368,11 +368,9 @@ export class StudentEntity {
     }
 
     getSubjectScore(subjectName: string): null | number {
-        if (!this.subjectCombination) return null;
+        if (!this.nationalExam) return null;
 
-        const subject = this.subjectCombination.find(
-            (s) => s.name === subjectName,
-        );
+        const subject = this.nationalExam.find((s) => s.name === subjectName);
         return subject?.score ?? null;
     }
 
@@ -385,8 +383,8 @@ export class StudentEntity {
     }
 
     getTotalSubjectScore(): number {
-        if (!this.subjectCombination) return 0;
-        return this.subjectCombination.reduce(
+        if (!this.nationalExam) return 0;
+        return this.nationalExam.reduce(
             (sum, subject) => sum + subject.score,
             0,
         );
@@ -443,8 +441,7 @@ export class StudentEntity {
 
     hasValidExamData(): boolean {
         return (
-            this.subjectCombination !== undefined &&
-            this.subjectCombination.length === 4
+            this.nationalExam !== undefined && this.nationalExam.length === 4
         );
     }
 
@@ -532,7 +529,7 @@ export class StudentEntity {
 
     setExamProfileDTO(examProfile: ExamProfileDTO): void {
         const data = examProfile.toStudentEntityData();
-        this.subjectCombination = data.subjectCombination;
+        this.nationalExam = data.nationalExam;
         this.aptitudeTestScore = data.aptitudeTestScore;
         this.vsatScore = data.vsatScore;
     }

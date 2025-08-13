@@ -1,6 +1,7 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
+import { CertificationDTO } from "@/dto/student/certification.dto";
 import { CEFR, CertificationEntity } from "@/entity/certification";
 import { TYPES } from "@/type/container/types";
 import { CCNNType, ExamType } from "@/type/enum/exam";
@@ -10,9 +11,23 @@ import { ValidationException } from "@/type/exception/validation.exception";
 export class CertificationService {
     constructor(
         @inject(TYPES.CertificationRepository)
-        private certificationRepository: Repository<CertificationEntity>,
+        private readonly certificationRepository: Repository<CertificationEntity>,
     ) {}
 
+    public create(certifications: CertificationDTO[]): CertificationEntity[] {
+        const certificationEntities: CertificationEntity[] = certifications.map(
+            (certification) => {
+                const certificationEntity =
+                    this.certificationRepository.create(certification);
+                certificationEntity.cefr = this.getCEFRLevel(
+                    certification.examType,
+                    certification.level,
+                );
+                return certificationEntity;
+            },
+        );
+        return certificationEntities;
+    }
     /**
      * Get CEFR level based on exam type and level
      * @param examType - The type of the exam
