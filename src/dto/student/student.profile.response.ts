@@ -1,4 +1,4 @@
-// src/dto/student.info.ts
+// src/dto/student.profile.response.ts
 import { Expose, Transform, Type } from "class-transformer";
 
 import { FileResponse } from "@/dto/file/file.response.js";
@@ -7,7 +7,10 @@ import { AptitudeTestResponse } from "@/dto/student/aptitude.test.response.js";
 import { AwardResponse } from "@/dto/student/award.response.js";
 import { CertificationResponse } from "@/dto/student/certification.response.js";
 import { ConductResponse } from "@/dto/student/conduct.response.js";
-import { ExamSubject } from "@/dto/student/exam.profile.dto.js";
+import {
+    ExamSubject,
+    VsatExamSubject,
+} from "@/dto/student/exam.profile.dto.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
@@ -255,16 +258,16 @@ export class StudentProfileResponse {
      * VSAT score (Vietnamese Scholastic Aptitude Test)
      * Array of exactly 3 scores (0-150 each)
      */
+    /**
+     * VSAT score (Vietnamese Scholastic Aptitude Test)
+     * Array of exactly 3 exam subjects with names and scores (0-150 each)
+     * @example [
+     * { "name": "Toán", "score": 120 },
+     * { "name": "Ngữ Văn", "score": 130 },
+     * { "name": "Tiếng Anh", "score": 125 }
+     * ]
+     */
     @Expose()
-    @Transform(({ value }): number[] | undefined => {
-        if (Array.isArray(value)) {
-            return value.map((score) => parseInt(String(score)));
-        }
-        if (value === null || value === undefined) {
-            return undefined;
-        }
-        // Handle unexpected types - return undefined for safety
-        return undefined;
-    })
-    vsatScore?: number[];
+    @Type(() => VsatExamSubject) // Ensure correct type mapping
+    vsatScore?: VsatExamSubject[];
 }
