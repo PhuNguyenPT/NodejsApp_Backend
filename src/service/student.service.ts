@@ -8,6 +8,7 @@ import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
 import { AwardService } from "@/service/award.service.js";
 import { CertificationService } from "@/service/certification.service.js";
+import { MajorService } from "@/service/major.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -28,6 +29,8 @@ export class StudentService {
         private readonly awardService: AwardService,
         @inject(TYPES.CertificationService)
         private readonly certificationService: CertificationService,
+        @inject(TYPES.MajorService)
+        private readonly majorService: MajorService,
         @inject(TYPES.Logger)
         private readonly logger: ILogger,
     ) {}
@@ -52,6 +55,12 @@ export class StudentService {
         const studentEntity: StudentEntity =
             this.studentRepository.create(studentInfoDTO);
 
+        if (studentInfoDTO.majors.length > 0) {
+            studentEntity.majorGroupsEntities =
+                await this.majorService.findMajorGroupEntitiesBy(
+                    studentInfoDTO.majors,
+                );
+        }
         // If awards exist, create entities and attach them directly to the student entity.
         // The cascade option on the relation will handle the save.
         if (studentInfoDTO.awards && studentInfoDTO.awards.length > 0) {
@@ -119,6 +128,12 @@ export class StudentService {
         studentEntity.userId = userId;
         studentEntity.createdBy = userEntity.email;
 
+        if (studentInfoDTO.majors.length > 0) {
+            studentEntity.majorGroupsEntities =
+                await this.majorService.findMajorGroupEntitiesBy(
+                    studentInfoDTO.majors,
+                );
+        }
         // If awards exist, create entities, set audit fields, and attach them.
         if (studentInfoDTO.awards && studentInfoDTO.awards.length > 0) {
             studentEntity.awards = this.awardService.create(

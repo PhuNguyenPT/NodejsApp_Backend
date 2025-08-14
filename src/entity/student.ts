@@ -5,6 +5,8 @@ import {
     Entity,
     Index,
     JoinColumn,
+    JoinTable,
+    ManyToMany,
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
@@ -15,9 +17,10 @@ import { ExamProfileDTO } from "@/dto/student/exam.profile.dto.js";
 import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
 import { FileEntity, FileType } from "@/entity/file.js";
+import { MajorGroupEntity } from "@/entity/major.group.entity.js";
 import { UserEntity } from "@/entity/user.js";
 import { ExamType } from "@/type/enum/exam.js";
-import { SpecialStudentCase } from "@/type/enum/special.student.case";
+import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
 interface AcademicPerformanceData {
@@ -42,7 +45,6 @@ interface ExamSubjectData {
 
 @Entity({ name: "students" })
 @Index("idx_student_user_id", ["userId"])
-@Index("idx_student_major", ["major"])
 @Index("idx_student_location", ["location"])
 @Index("idx_student_province", ["province"])
 @Index("idx_student_budget", ["minBudget", "maxBudget"])
@@ -79,7 +81,6 @@ export class StudentEntity {
         },
     )
     certifications?: CertificationEntity[];
-
     /**
      * Conduct/behavior data for different grades
      * Array containing conduct ratings and corresponding grades
@@ -111,8 +112,22 @@ export class StudentEntity {
     @Column({ length: 500, nullable: true, type: "varchar" })
     location?: string;
 
-    @Column({ length: 200, nullable: true, type: "varchar" })
-    major?: string;
+    @JoinTable({
+        inverseJoinColumn: {
+            name: "major_group_id",
+            referencedColumnName: "id",
+        },
+        joinColumn: {
+            name: "student_id",
+            referencedColumnName: "id",
+        },
+        name: "student_major_groups", // junction table name
+    })
+    @ManyToMany(() => MajorGroupEntity, (majorGroup) => majorGroup.students)
+    majorGroupsEntities?: MajorGroupEntity[];
+
+    @Column({ nullable: true, type: "jsonb" })
+    majors?: string[];
 
     @Column({ nullable: true, precision: 14, scale: 2, type: "decimal" })
     maxBudget?: number;

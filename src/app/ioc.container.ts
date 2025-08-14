@@ -11,6 +11,8 @@ import { UserController } from "@/controller/user.controller.js";
 import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
 import { FileEntity } from "@/entity/file.js";
+import { MajorEntity } from "@/entity/major.entity";
+import { MajorGroupEntity } from "@/entity/major.group.entity";
 import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
 import { TokenCleanupJob } from "@/job/token.cleanup.job";
@@ -24,6 +26,7 @@ import { CertificationService } from "@/service/certification.service";
 import { FileService } from "@/service/file.service.js";
 import { JwtEntityService } from "@/service/jwt.entity.service.js";
 import { JWTService } from "@/service/jwt.service.js";
+import { MajorService } from "@/service/major.service";
 import { StudentService } from "@/service/student.service.js";
 import { UserService } from "@/service/user.service.js";
 import { KeyStore } from "@/type/class/keystore.js";
@@ -69,6 +72,16 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
+    .bind<Repository<MajorGroupEntity>>(TYPES.MajorGroupRepository)
+    .toDynamicValue(() => postgresDataSource.getRepository(MajorGroupEntity))
+    .inSingletonScope();
+
+iocContainer
+    .bind<Repository<MajorEntity>>(TYPES.MajorRepository)
+    .toDynamicValue(() => postgresDataSource.getRepository(MajorEntity))
+    .inSingletonScope();
+
+iocContainer
     .bind<IJwtTokenRepository>(TYPES.IJwtTokenRepository)
     .to(JwtTokenRepository)
     .inSingletonScope();
@@ -111,6 +124,11 @@ iocContainer
 iocContainer
     .bind<StudentService>(TYPES.StudentService)
     .to(StudentService)
+    .inSingletonScope();
+
+iocContainer
+    .bind<MajorService>(TYPES.MajorService)
+    .to(MajorService)
     .inSingletonScope();
 
 iocContainer
