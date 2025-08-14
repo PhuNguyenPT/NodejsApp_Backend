@@ -11,6 +11,7 @@ import {
     ExamSubject,
     VsatExamSubject,
 } from "@/dto/student/exam.profile.dto.js";
+import { MajorGroup } from "@/type/enum/major";
 import { SpecialStudentCase } from "@/type/enum/special.student.case";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
@@ -75,22 +76,27 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  *       "grade": 12
  *     }
  *   ],
- *   "fileResponses": []
- *   "id": "uuid-string",
- *   "location": "Ho Chi Minh City, Vietnam",
- *   "major": "Computer Science",
- *   "maxBudget": 20000000,
- *   "minBudget": 5000000,
- *   "nationalExam": [
- *     { "name": "Math", "score": 8.0 },
- *     { "name": "Literature", "score": 7.0 },
- *     { "name": "English", "score": 9.5 },
- *     { "name": "Physics", "score": 8.75 }
+ *   "majors": [
+ *     "Kỹ thuật",
+ *     "Máy tính và công nghệ thông tin",
+ *     "Toán và thống kê"
  *   ],
- *   "province": "HO_CHI_MINH",
- *   "talentScore": 8.5,
- *   "userId": "user-uuid-string",
- *   "vsatScore": [120, 130, 125],
+ *   "maxBudget": 20000000,
+ *   "minBudget": 10000000,
+ *   "nationalExam": [
+ *     { "name": "Toán", "score": 8.0 },
+ *     { "name": "Ngữ Văn", "score": 7.0 },
+ *     { "name": "Tiếng Anh", "score": 9.5 },
+ *     { "name": "Vật Lý", "score": 8.75 }
+ *   ],
+ *   "province": "Hồ Chí Minh",
+ *   "specialStudentCase": "Học sinh trường chuyên",
+ *   "talentScore": 9.5,
+ *   "vsatScore": [
+ *     { "name": "Toán", "score": 120 },
+ *     { "name": "Ngữ Văn", "score": 130 },
+ *     { "name": "Tiếng Anh", "score": 125 }
+ *   ]
  * }
  */
 export class StudentProfileResponse {
@@ -199,7 +205,8 @@ export class StudentProfileResponse {
      * Primary field of study or academic major of the student.
      */
     @Expose()
-    major!: string;
+    @Type(() => String)
+    majors!: MajorGroup[];
 
     /**
      * Maximum budget amount that the student is willing or able to spend.

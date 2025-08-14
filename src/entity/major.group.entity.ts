@@ -1,6 +1,13 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import {
+    Column,
+    Entity,
+    ManyToMany,
+    OneToMany,
+    PrimaryGeneratedColumn,
+} from "typeorm";
 
 import { MajorEntity } from "@/entity/major.entity.js";
+import { StudentEntity } from "@/entity/student.js";
 import { MajorGroup } from "@/type/enum/major.js";
 
 /**
@@ -28,6 +35,9 @@ export class MajorGroupEntity {
 
     @Column({ length: 255, nullable: false, type: "varchar" })
     name!: string; // The Vietnamese name, e.g., "Khoa học giáo dục và đào tạo giáo viên"
+
+    @ManyToMany(() => StudentEntity, (student) => student.majorGroupsEntities)
+    students?: StudentEntity[];
 
     constructor(majorGroup?: Partial<MajorGroupEntity>) {
         if (majorGroup) {

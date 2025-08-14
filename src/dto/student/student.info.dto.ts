@@ -25,6 +25,7 @@ import {
     ExamSubject,
     VsatExamSubject,
 } from "@/dto/student/exam.profile.dto.js";
+import { MajorGroup } from "@/type/enum/major";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
@@ -89,7 +90,11 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  *       "grade": 12
  *     }
  *   ],
- *   "major": "Khoa học Máy tính",
+ *   "majors": [
+ *     "Kỹ thuật",
+ *     "Máy tính và công nghệ thông tin",
+ *     "Toán và thống kê"
+ *   ],
  *   "maxBudget": 20000000,
  *   "minBudget": 10000000,
  *   "nationalExam": [
@@ -253,32 +258,33 @@ export class StudentInfoDTO {
     location?: string;
 
     /**
-     * Primary field of study or academic major of the student.
-     * Represents the student's main area of academic focus or specialization.
-     * Used for matching with relevant opportunities and programs.
+     * Student's major group classifications using standardized Vietnamese categories.
+     * Array of major group values that the student is interested in pursuing.
+     * Must contain at least 1 and at most 3 valid MajorGroup enum values.
      *
-     * @type {string}
+     * @type {MajorGroup[]}
      * @required
-     * @minLength 1
-     * @maxLength 200
-     * @example "Khoa học Máy tính"
-     * @example "Computer Science"
-     * @example "Software Engineering"
-     * @example "Information Technology"
-     * @example "Business Administration"
-     * @example "International Business"
-     * @example "Electrical Engineering"
-     * @example "Mechanical Engineering"
-     * @example "Civil Engineering"
-     * @example "Economics"
-     * @example "Finance and Banking"
+     * @example ["Kỹ thuật", "Máy tính và công nghệ thông tin", "Toán và thống kê"]
+     * @example ["Kinh doanh và quản lý"]
+     * @validation
+     * - Required field (cannot be null or undefined)
+     * - Must be an array with 1-3 valid MajorGroup enum values
+     * - Each value must correspond to official Vietnamese education major group classifications
+     * - Array cannot be empty
+     * - Maximum 3 major groups allowed
+     * - Minimum 1 major group required
      */
+    @ArrayMaxSize(3, { message: "Major groups must contain at most 3 records" })
+    @ArrayMinSize(1, { message: "Major groups must contain at least 1 record" })
     @Expose()
-    @IsNotEmpty({ message: "Major is required" })
-    @IsString({ message: "Major must be a string" })
-    @MaxLength(200, { message: "Major cannot exceed 200 characters" })
-    @MinLength(1, { message: "Major must be at least 1 character long" })
-    major!: string;
+    @IsArray({ message: "Major groups must be an array" })
+    @IsEnum(MajorGroup, {
+        each: true,
+        message:
+            "Each major group must be a valid value from the MajorGroup enum",
+    })
+    @IsNotEmpty({ message: "Major groups are required" })
+    majors!: MajorGroup[];
 
     /**
      * Maximum budget amount that the student is willing or able to spend.
