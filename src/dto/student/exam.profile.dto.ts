@@ -3,16 +3,17 @@ import {
     ArrayMaxSize,
     ArrayMinSize,
     IsArray,
+    IsEnum, // Ensure IsEnum is imported
     IsNotEmpty,
     IsNumber,
     IsOptional,
-    IsString,
     Max,
     Min,
     ValidateNested,
 } from "class-validator";
 
 import { ExamType } from "@/type/enum/exam.js";
+import { VietnameseSubject } from "@/type/enum/subject"; // Import VietnameseSubject enum
 
 import { AptitudeTestDTO } from "./aptitude.test.dto";
 
@@ -98,9 +99,9 @@ export class ExamProfileDTO {
      * @param subjects - Array of exactly 4 ExamSubject instances
      * @param aptitudeTestData - Optional aptitude test DTO with type and score
      * @param vsatScores - Optional array of 3 VSAT scores (0-150 each)
-     * @example [new ExamSubject("Toán", 8.0), new ExamSubject("Ngữ Văn", 7.0), new ExamSubject("Tiếng Anh", 9.5), new ExamSubject("Vật Lý", 8.75)]
+     * @example [new ExamSubject(VietnameseSubject.TOAN, 8.0), new ExamSubject(VietnameseSubject.VAN, 7.0), new ExamSubject(VietnameseSubject.TIENG_ANH, 9.5), new ExamSubject(VietnameseSubject.VAT_LY, 8.75)]
      * @example new AptitudeTestDTO()
-     * @example [120, 135, 140]
+     * @example [new VsatExamSubject(VietnameseSubject.TOAN, 120), new VsatExamSubject(VietnameseSubject.VAN, 130), new VsatExamSubject(VietnameseSubject.TIENG_ANH, 125)]
      */
     constructor(
         subjects: ExamSubject[],
@@ -114,7 +115,7 @@ export class ExamProfileDTO {
         }
         if (vsatScores && vsatScores.length !== 3) {
             throw new Error(
-                "VSAT scores must be an array of exactly 3 numbers.",
+                "VSAT scores must be an array of exactly 3 subjects.",
             );
         }
         this.nationalExam = subjects;
@@ -130,7 +131,7 @@ export class ExamProfileDTO {
      * @returns ExamProfileDTO instance
      */
     static fromStudentEntity(
-        subjects: { name: string; score: number }[],
+        subjects: { name: VietnameseSubject; score: number }[],
         aptitudeTestData?: { examType: ExamType; score: number },
         vsatScores?: VsatExamSubject[],
     ): ExamProfileDTO {
@@ -160,7 +161,7 @@ export class ExamProfileDTO {
 
     /**
      * Helper method to check if VSAT scores are valid
-     * @returns true if VSAT scores are valid (array of 3 numbers between 0-150)
+     * @returns true if VSAT scores are valid (array of 3 subjects with scores between 0-150)
      */
     hasValidVSATScores(): boolean {
         return (
@@ -168,8 +169,12 @@ export class ExamProfileDTO {
             Array.isArray(this.vsatScore) &&
             this.vsatScore.length === 3 &&
             this.vsatScore.every(
-                (score) =>
-                    typeof score === "number" && score >= 0 && score <= 150,
+                (subject) =>
+                    typeof subject === "object" && // Ensure it's an object
+                    Object.values(VietnameseSubject).includes(subject.name) && // Validate enum value
+                    typeof subject.score === "number" &&
+                    subject.score >= 0 &&
+                    subject.score <= 150,
             )
         );
     }
@@ -188,12 +193,12 @@ export class ExamProfileDTO {
 
     /**
      * Helper method to set VSAT scores
-     * @param scores - Array of exactly 3 VSAT scores
+     * @param scores - Array of exactly 3 VSAT subjects
      */
     setVSATScores(scores: VsatExamSubject[]): void {
         if (scores.length !== 3) {
             throw new Error(
-                "VSAT scores must be an array of exactly 3 numbers",
+                "VSAT scores must be an array of exactly 3 subjects",
             );
         }
         this.vsatScore = scores;
@@ -205,7 +210,7 @@ export class ExamProfileDTO {
      */
     toStudentEntityData(): {
         aptitudeTestScore?: { examType: ExamType; score: number };
-        nationalExam: { name: string; score: number }[];
+        nationalExam: { name: VietnameseSubject; score: number }[]; // Updated to VietnameseSubject
         vsatScore?: VsatExamSubject[];
     } {
         return {
@@ -233,9 +238,11 @@ export class ExamSubject {
      * @example "Toán"
      */
     @Expose()
+    @IsEnum(VietnameseSubject, {
+        message: "Name must be a valid VietnameseSubject enum value",
+    })
     @IsNotEmpty()
-    @IsString()
-    public name: string;
+    public name: VietnameseSubject;
 
     /**
      * Subject score (0.0 - 10.0)
@@ -251,17 +258,17 @@ export class ExamSubject {
      * Creates a new ExamSubject instance
      * @param name - The subject name
      * @param score - The subject score (0.0 - 10.0)
-     * @example "Toán"
+     * @example VietnameseSubject.TOAN
      * @example 8.0
      */
-    constructor(name: string, score: number) {
+    constructor(name: VietnameseSubject, score: number) {
         this.name = name;
         this.score = score;
     }
 }
 
 /**
- * Represents a single exam subject and its score
+ * Represents a single VSAT exam subject and its score
  */
 export class VsatExamSubject {
     /**
@@ -269,13 +276,15 @@ export class VsatExamSubject {
      * @example "Toán"
      */
     @Expose()
+    @IsEnum(VietnameseSubject, {
+        message: "Name must be a valid VietnameseSubject enum value",
+    })
     @IsNotEmpty()
-    @IsString()
-    public name: string;
+    public name: VietnameseSubject;
 
     /**
-     * Subject score (0.0 - 10.0)
-     * @example 8.0
+     * Subject score (0.0 - 150.0)
+     * @example 120
      */
     @Expose()
     @IsNumber({ maxDecimalPlaces: 2 })
@@ -284,13 +293,13 @@ export class VsatExamSubject {
     public score: number;
 
     /**
-     * Creates a new ExamSubject instance
+     * Creates a new VsatExamSubject instance
      * @param name - The subject name
-     * @param score - The subject score (0.0 - 10.0)
-     * @example "Toán"
-     * @example 8.0
+     * @param score - The subject score (0.0 - 150.0)
+     * @example VietnameseSubject.TOAN
+     * @example 120
      */
-    constructor(name: string, score: number) {
+    constructor(name: VietnameseSubject, score: number) {
         this.name = name;
         this.score = score;
     }

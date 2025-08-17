@@ -1,5 +1,10 @@
+import {
+    FileCreatedEvent,
+    OCR_CHANNEL,
+} from "event/orc.event.listener.service";
 // src/service/file.service.ts
 import { inject, injectable } from "inversify";
+import { RedisClientType } from "redis";
 import { Repository } from "typeorm";
 
 import { CreateFileDTO } from "@/dto/file/create.file.js";
@@ -7,6 +12,7 @@ import { UpdateFileDTO } from "@/dto/file/update.file.js";
 import { FileEntity, FileStatus, FileType } from "@/entity/file.js";
 import { StudentEntity } from "@/entity/student.js";
 import { TYPES } from "@/type/container/types.js";
+import { AccessDeniedException } from "@/type/exception/access.denied.exception";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import logger from "@/util/logger.js";
@@ -18,9 +24,13 @@ export class FileService {
         private fileRepository: Repository<FileEntity>,
         @inject(TYPES.StudentRepository)
         private studentRepository: Repository<StudentEntity>,
+        @inject(TYPES.RedisPublisher) private redisPublisher: RedisClientType,
     ) {}
 
-    async createFile(createFileDTO: CreateFileDTO): Promise<FileEntity> {
+    public async createFile(
+        createFileDTO: CreateFileDTO,
+        userId: string,
+    ): Promise<FileEntity> {
         // Verify student exists and load files
         const student: null | StudentEntity =
             await this.studentRepository.findOne({
@@ -34,6 +44,10 @@ export class FileService {
             );
         }
 
+        if (student.userId !== userId) {
+            throw new AccessDeniedException("Access denied");
+        }
+
         // Use the helper method from StudentEntity
         if (student.getActiveFiles().length >= 6) {
             throw new ValidationException({
@@ -43,10 +57,20 @@ export class FileService {
             });
         }
 
-        const newFile = this.fileRepository.create(createFileDTO);
-        const savedFile = await this.fileRepository.save(newFile);
+        const newFile: FileEntity = this.fileRepository.create(createFileDTO);
+        const savedFile: FileEntity = await this.fileRepository.save(newFile);
 
-        logger.info(`File created successfully with ID: ${savedFile.id}`);
+        const payload: FileCreatedEvent = {
+            fileId: savedFile.id,
+            studentId: savedFile.studentId,
+            userId: userId,
+        };
+
+        await this.redisPublisher.publish(OCR_CHANNEL, JSON.stringify(payload));
+
+        logger.info(
+            `File created with ID: ${savedFile.id}. Published event to ${OCR_CHANNEL}.`,
+        );
         return savedFile;
     }
 

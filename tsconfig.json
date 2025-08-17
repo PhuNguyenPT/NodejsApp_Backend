@@ -25,6 +25,7 @@
       "@/decorator/*": ["decorator/*"],
       "@/dto/*": ["dto/*"],
       "@/entity/*": ["entity/*"],
+      "@/event/*": ["event/*"],
       "@/generated/*": ["generated/*"],
       "@/handler/*": ["handler/*"],
       "@/job/*": ["job/*"],

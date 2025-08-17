@@ -13,6 +13,7 @@ import { getMorganConfig, setupRequestTracking } from "@/config/morgan.js";
 import { PassportConfig } from "@/config/passport.config.js";
 import { initializeRedis } from "@/config/redis.js";
 import swaggerDocs from "@/config/swagger.js";
+import { OcrEventListenerService } from "@/event/orc.event.listener.service";
 import { RegisterRoutes } from "@/generated/routes.js";
 import { TokenCleanupJob } from "@/job/token.cleanup.job";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
@@ -50,6 +51,7 @@ class App {
         await this.initializeDatabaseConnections();
         this.initializePassportStrategies();
         this.initializeTokenCleanup();
+        await this.initializeEventListeners();
     }
 
     public listen(): void {
@@ -89,6 +91,24 @@ class App {
         this.express.use(ErrorMiddleware);
     }
 
+    private async initializeEventListeners(): Promise<void> {
+        try {
+            logger.info("Initializing event listeners...");
+
+            // Initialize OCR event listener with proper type assertion
+            const ocrEventListener = iocContainer.get<OcrEventListenerService>(
+                TYPES.OcrEventListenerService,
+            );
+
+            await ocrEventListener.initialize();
+
+            logger.info("✅ Event listeners initialized successfully");
+        } catch (error) {
+            logger.error("❌ Failed to initialize event listeners:", error);
+            throw error;
+        }
+    }
+
     private initializeKeyStore(): void {
         if (keyStore.privateKey && keyStore.publicKey) {
             logger.info("Initializing key pairs successfully");
@@ -113,6 +133,7 @@ class App {
             this.express.use(middleware);
         });
     }
+
     private initializePassportStrategies(): void {
         try {
             const passportConfig = iocContainer.get<PassportConfig>(

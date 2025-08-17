@@ -378,11 +378,12 @@ export class FileController extends Controller {
             originalFileName: file.originalname,
             studentId: studentId,
             tags: tags,
-            uploadedBy: user.id,
         };
 
-        const fileEntity: FileEntity =
-            await this.fileService.createFile(createFileDTO);
+        const fileEntity: FileEntity = await this.fileService.createFile(
+            createFileDTO,
+            user.id,
+        );
 
         const fileResponse: FileResponse =
             FileMapper.toFileResponse(fileEntity);

@@ -1,4 +1,3 @@
-// src/entity/student.ts
 import {
     Column,
     CreateDateColumn,
@@ -21,6 +20,7 @@ import { MajorGroupEntity } from "@/entity/major.group.entity.js";
 import { UserEntity } from "@/entity/user.js";
 import { ExamType } from "@/type/enum/exam.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
+import { VietnameseSubject } from "@/type/enum/subject";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
 interface AcademicPerformanceData {
@@ -38,8 +38,9 @@ interface ConductData {
     grade: number;
 }
 
+// Updated to use VietnameseSubject enum for subject name
 interface ExamSubjectData {
-    name: string;
+    name: VietnameseSubject;
     score: number;
 }
 
@@ -382,7 +383,8 @@ export class StudentEntity {
         );
     }
 
-    getSubjectScore(subjectName: string): null | number {
+    // Updated to use VietnameseSubject for subjectName parameter
+    getSubjectScore(subjectName: VietnameseSubject): null | number {
         if (!this.nationalExam) return null;
 
         const subject = this.nationalExam.find((s) => s.name === subjectName);
@@ -425,8 +427,8 @@ export class StudentEntity {
         return this.vsatScore[index]?.score;
     }
 
-    // Helper method to get VSAT score by name
-    getVSATScoreByName(subjectName: string): number | undefined {
+    // Updated to use VietnameseSubject for subjectName parameter
+    getVSATScoreByName(subjectName: VietnameseSubject): number | undefined {
         if (!this.vsatScore || !Array.isArray(this.vsatScore)) return undefined;
         const subject = this.vsatScore.find((s) => s.name === subjectName);
         return subject?.score;
@@ -469,8 +471,9 @@ export class StudentEntity {
             this.vsatScore.every(
                 (examSubject) =>
                     typeof examSubject === "object" &&
-                    typeof examSubject.name === "string" &&
-                    examSubject.name.length > 0 &&
+                    Object.values(VietnameseSubject).includes(
+                        examSubject.name,
+                    ) && // Validate enum value
                     typeof examSubject.score === "number" &&
                     examSubject.score >= 0 &&
                     examSubject.score <= 150,
@@ -551,12 +554,15 @@ export class StudentEntity {
 
     // Helper method to set VSAT scores with ExamSubjectData format
     setVSATScores(vsatScores: ExamSubjectData[]): void {
+        // Changed parameter type
         if (vsatScores.length === 3) {
             // Validate each score
             const isValid = vsatScores.every(
                 (examSubject) =>
                     typeof examSubject === "object" &&
-                    examSubject.name.length > 0 &&
+                    Object.values(VietnameseSubject).includes(
+                        examSubject.name,
+                    ) && // Validate enum value
                     typeof examSubject.score === "number" &&
                     examSubject.score >= 0 &&
                     examSubject.score <= 150,
@@ -566,7 +572,7 @@ export class StudentEntity {
                 this.vsatScore = vsatScores;
             } else {
                 throw new Error(
-                    "VSAT scores must be an array of 3 valid ExamSubjectData objects with scores between 0-150",
+                    "VSAT scores must be an array of 3 valid ExamSubjectData objects with scores between 0-150 and valid subject names",
                 );
             }
         } else {
@@ -577,10 +583,17 @@ export class StudentEntity {
     }
 
     // Helper method to set VSAT scores with simple number array (backward compatibility)
-    setVSATScoresFromNumbers(scores: number[], subjectNames?: string[]): void {
+    setVSATScoresFromNumbers(
+        scores: number[],
+        subjectNames?: VietnameseSubject[],
+    ): void {
         if (scores.length === 3) {
-            const defaultNames = ["Reading", "Writing", "Math"];
-            const names =
+            const defaultNames: VietnameseSubject[] = [
+                VietnameseSubject.TOAN,
+                VietnameseSubject.VAN,
+                VietnameseSubject.TIENG_ANH,
+            ];
+            const names: VietnameseSubject[] =
                 subjectNames && subjectNames.length === 3
                     ? subjectNames
                     : defaultNames;
