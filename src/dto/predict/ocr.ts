@@ -38,6 +38,7 @@ export interface BatchScoreExtractionResult {
  * Represents the structured result for a single processed file.
  */
 export interface FileScoreExtractionResult {
+    documentAnnotation?: string;
     error?: string;
     fileId: string;
     fileName: string;
@@ -49,6 +50,7 @@ export interface FileScoreExtractionResult {
  * The result of an extraction attempt on a SINGLE file.
  */
 export interface ScoreExtractionResult {
+    documentAnnotation?: string;
     error?: string;
     scores: SubjectScore[];
     success: boolean;

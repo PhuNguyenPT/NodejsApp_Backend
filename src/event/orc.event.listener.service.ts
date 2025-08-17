@@ -3,6 +3,10 @@ import { type RedisClientType } from "redis";
 import { Repository } from "typeorm";
 import { z } from "zod";
 
+import {
+    BatchScoreExtractionResult,
+    FileScoreExtractionResult,
+} from "@/dto/predict/ocr.js";
 import { FileEntity } from "@/entity/file.js";
 import { OcrResultEntity } from "@/entity/ocr.result.entity.js";
 import { MistralService } from "@/service/mistral.service.js";
@@ -10,13 +14,15 @@ import { OcrResultService } from "@/service/ocr.result.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { ILogger } from "@/type/interface/logger.js";
 
-const FileCreatedEventSchema = z.object({
+const SingleFileCreatedEventSchema = z.object({
     fileId: z.string().uuid("Invalid file ID format"), // Add the specific file ID
     studentId: z.string().uuid("Invalid student ID format"),
     userId: z.string().uuid("Invalid user ID format"),
 });
 
-export type FileCreatedEvent = z.infer<typeof FileCreatedEventSchema>;
+export type SingleFileCreatedEvent = z.infer<
+    typeof SingleFileCreatedEventSchema
+>;
 
 export const OCR_CHANNEL = "ocr:file_created";
 
@@ -59,12 +65,12 @@ export class OcrEventListenerService {
 
     private async handleFileCreated(message: string): Promise<void> {
         const processingStartTime = new Date();
-        let payload: FileCreatedEvent | null = null;
+        let payload: null | SingleFileCreatedEvent = null;
         let initialOcrResults: OcrResultEntity[] = [];
 
         try {
             const rawPayload: unknown = JSON.parse(message);
-            payload = FileCreatedEventSchema.parse(rawPayload);
+            payload = SingleFileCreatedEventSchema.parse(rawPayload);
             this.logger.info(
                 `Processing OCR for file ${payload.fileId} of student ${payload.studentId}`,
             );
@@ -72,6 +78,7 @@ export class OcrEventListenerService {
             const existingResult = await this.ocrResultService.findByFileId(
                 payload.fileId,
             );
+
             if (existingResult) {
                 this.logger.warn(
                     `OCR result already exists for file ${payload.fileId}. Skipping processing.`,
@@ -98,7 +105,7 @@ export class OcrEventListenerService {
                 );
 
             // 3. PROCESS: Call the AI service for this specific file
-            const fileExtractionResult =
+            const fileExtractionResult: FileScoreExtractionResult =
                 await this.mistralService.extractSubjectScores(
                     file,
                     payload.userId,
@@ -106,7 +113,7 @@ export class OcrEventListenerService {
 
             // 4. UPDATE the record with the final result
             // Convert single file result to batch format for compatibility with existing updateResults method
-            const batchResult = {
+            const batchResult: BatchScoreExtractionResult = {
                 error: fileExtractionResult.error,
                 ocrModel: "mistral-ocr-latest",
                 results: [fileExtractionResult],

@@ -68,13 +68,15 @@ export class MistralService {
                 student.nationalExam?.map((exam) => exam.name) ?? [];
             const model = "mistral-ocr-latest";
 
-            const result = await this.extractScoresFromImage(
-                file,
-                expectedSubjects,
-                model,
-            );
+            const result: ScoreExtractionResult =
+                await this.extractScoresFromImage(
+                    file,
+                    expectedSubjects,
+                    model,
+                );
 
             return {
+                documentAnnotation: result.documentAnnotation,
                 error: result.error,
                 fileId: file.id,
                 fileName: file.originalFileName,
@@ -135,13 +137,15 @@ export class MistralService {
                         };
                     }
 
-                    const result = await this.extractScoresFromImage(
-                        fileEntity,
-                        expectedSubjects,
-                        model,
-                    );
+                    const result: ScoreExtractionResult =
+                        await this.extractScoresFromImage(
+                            fileEntity,
+                            expectedSubjects,
+                            model,
+                        );
 
                     return {
+                        documentAnnotation: result.documentAnnotation,
                         error: result.error,
                         fileId: fileEntity.id,
                         fileName: fileEntity.originalFileName,
@@ -230,13 +234,15 @@ export class MistralService {
                         };
                     }
 
-                    const result = await this.extractScoresFromImage(
-                        fileEntity,
-                        expectedSubjects,
-                        model,
-                    );
+                    const result: ScoreExtractionResult =
+                        await this.extractScoresFromImage(
+                            fileEntity,
+                            expectedSubjects,
+                            model,
+                        );
 
                     return {
+                        documentAnnotation: result.documentAnnotation,
                         error: result.error,
                         fileId: fileEntity.id,
                         fileName: fileEntity.originalFileName,
@@ -246,7 +252,6 @@ export class MistralService {
                 },
             );
 
-            // Wait for all the parallel requests to complete
             const extractionResults = await Promise.all(extractionPromises);
 
             return {
@@ -301,7 +306,6 @@ export class MistralService {
                     JSON.parse(response.documentAnnotation),
                 );
 
-                // Filter scores to only include subjects the student is registered for
                 const filteredScores = validated.subjects.filter((subject) =>
                     expectedSubjects.some((expected) => {
                         const normalizedScore = normalizeSubjectName(
@@ -314,13 +318,14 @@ export class MistralService {
                 );
 
                 return {
+                    documentAnnotation: response.documentAnnotation,
                     scores: filteredScores,
                     success: true,
                 };
             }
 
             return {
-                error: "No scores found in document annotation",
+                error: "No document annotation found in OCR response",
                 scores: [],
                 success: false,
             };

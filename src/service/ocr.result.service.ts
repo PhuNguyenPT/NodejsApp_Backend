@@ -24,7 +24,7 @@ export class OcrResultService {
         private readonly logger: ILogger,
     ) {}
 
-    // UPDATED METHOD: Create placeholder records only for files that don't already have results
+    // Create placeholder records only for files that don't already have results
     public async createInitialOcrResults(
         studentId: string,
         userId: string,
@@ -107,24 +107,6 @@ export class OcrResultService {
         await this.ocrResultRepository.save(results);
     }
 
-    // NEW METHOD: Batch processing with duplicate prevention
-    public async processBatchWithDuplicateCheck(
-        studentId: string,
-        userId: string,
-        files: FileEntity[],
-    ): Promise<{ newFiles: FileEntity[]; skippedCount: number }> {
-        const fileIds = files.map((f) => f.id);
-        const existingResults = await this.findExistingResults(fileIds);
-        const existingFileIds = new Set(existingResults.map((r) => r.fileId));
-
-        const newFiles = files.filter((file) => !existingFileIds.has(file.id));
-
-        return {
-            newFiles,
-            skippedCount: existingFileIds.size,
-        };
-    }
-
     // Update records with final results
     public async updateResults(
         initialResults: OcrResultEntity[],
@@ -166,6 +148,7 @@ export class OcrResultService {
                     : OcrStatus.FAILED;
                 entity.scores =
                     result.scores.length > 0 ? result.scores : undefined;
+                entity.documentAnnotation = result.documentAnnotation; // ADD THIS LINE
                 entity.errorMessage = result.error;
                 entity.metadata = metadata; // Add shared metadata
             } else {

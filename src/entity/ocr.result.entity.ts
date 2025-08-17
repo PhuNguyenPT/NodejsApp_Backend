@@ -48,6 +48,9 @@ export class OcrResultEntity {
     createdAt!: Date;
 
     @Column({ nullable: true, type: "text" })
+    documentAnnotation?: string;
+
+    @Column({ nullable: true, type: "text" })
     errorMessage?: string;
 
     @JoinColumn({ name: "fileId" })
@@ -65,9 +68,6 @@ export class OcrResultEntity {
 
     @Column({ length: 255, nullable: true, type: "varchar" })
     processedBy?: string;
-
-    @Column({ nullable: true, type: "text" })
-    rawOcrResponse?: string;
 
     @Column({ nullable: true, type: "jsonb" })
     scores?: SubjectScore[];

@@ -8,7 +8,7 @@ export class OcrResult1755431897497 implements MigrationInterface {
             `CREATE TYPE "public"."ocr_results_status_enum" AS ENUM('completed', 'failed', 'partial', 'pending', 'processing')`,
         );
         await queryRunner.query(
-            `CREATE TABLE "ocr_results" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "errorMessage" text, "fileId" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "processedBy" character varying(255), "rawOcrResponse" text, "scores" jsonb, "status" "public"."ocr_results_status_enum" NOT NULL DEFAULT 'pending', "studentId" uuid NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_562c4e52268d72e5b1a6833beb5" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "ocr_results" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "errorMessage" text, "fileId" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "processedBy" character varying(255), "documentAnnotation" text, "scores" jsonb, "status" "public"."ocr_results_status_enum" NOT NULL DEFAULT 'pending', "studentId" uuid NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_562c4e52268d72e5b1a6833beb5" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_ocr_student_file" ON "ocr_results" ("studentId", "fileId") `,

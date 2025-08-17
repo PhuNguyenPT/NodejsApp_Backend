@@ -1,6 +1,6 @@
 import {
-    FileCreatedEvent,
     OCR_CHANNEL,
+    SingleFileCreatedEvent,
 } from "event/orc.event.listener.service";
 // src/service/file.service.ts
 import { inject, injectable } from "inversify";
@@ -60,7 +60,7 @@ export class FileService {
         const newFile: FileEntity = this.fileRepository.create(createFileDTO);
         const savedFile: FileEntity = await this.fileRepository.save(newFile);
 
-        const payload: FileCreatedEvent = {
+        const payload: SingleFileCreatedEvent = {
             fileId: savedFile.id,
             studentId: savedFile.studentId,
             userId: userId,
