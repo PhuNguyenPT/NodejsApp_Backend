@@ -221,14 +221,14 @@ export class StudentService {
     }
 
     public async getStudentEntityByUserId(
-        profileId: string,
+        studentId: string,
         userId: string,
     ): Promise<StudentEntity> {
         const studentEntity: null | StudentEntity =
             await this.studentRepository.findOne({
                 relations: ["awards", "certifications"],
                 where: {
-                    id: profileId,
+                    id: studentId,
                     userId: userId,
                 },
             });

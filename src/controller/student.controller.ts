@@ -47,7 +47,7 @@ export class StudentController extends Controller {
      * Create anonymous student profile (no authentication required)
      */
     @Middlewares(validateDTO(StudentInfoDTO))
-    @Post()
+    @Post("guest")
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @SuccessResponse(HttpStatus.CREATED, "Successfully create student")
@@ -64,7 +64,7 @@ export class StudentController extends Controller {
      * No userId path parameter needed - user is identified through JWT
      */
     @Middlewares(validateDTO(StudentInfoDTO))
-    @Post("profiles")
+    @Post()
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
@@ -89,7 +89,7 @@ export class StudentController extends Controller {
      * Get all student profiles for authenticated user
      * No userId path parameter needed - user is identified through JWT
      */
-    @Get("profiles")
+    @Get()
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
@@ -119,28 +119,28 @@ export class StudentController extends Controller {
      * Get single student profile for authenticated user (returns full profile with awards/certifications)
      * This assumes a user has only one profile - if multiple profiles are allowed, you'd need a different approach
      */
-    @Get("profiles/{profileId}")
-    @Middlewares(validateUuidParam("profileId"))
+    @Get("{studentId}")
+    @Middlewares(validateUuidParam("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getStudentProfileByUserId(
-        @Path() profileId: string,
+        @Path() studentId: string,
         @Request() request: AuthenticatedRequest,
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
         const studentEntity: StudentEntity =
             await this.studentService.getStudentEntityByUserId(
-                profileId,
+                studentId,
                 user.id,
             );
         return StudentMapper.toStudentProfileResponse(studentEntity);
     }
 
-    @Get("profiles/{profileId}/with-files")
-    @Middlewares(validateUuidParam("profileId"))
+    @Get("{studentId}/with-files")
+    @Middlewares(validateUuidParam("studentId"))
     @Produces("application/json")
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(
@@ -148,12 +148,12 @@ export class StudentController extends Controller {
         "Successfully retrieve student profile with files",
     )
     public async getStudentProfileWithFiles(
-        @Path() profileId: string,
+        @Path() studentId: string,
         @Request() request: AuthenticatedRequest,
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentWithFiles(profileId, user.id);
+            await this.studentService.getStudentWithFiles(studentId, user.id);
         return StudentMapper.toStudentProfileWithFilesResponse(studentEntity);
     }
 }
