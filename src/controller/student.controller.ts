@@ -116,6 +116,23 @@ export class StudentController extends Controller {
     }
 
     /**
+     * Get single student profile for guest user (returns full profile with awards/certifications)
+     */
+    @Get("guest/{studentId}")
+    @Middlewares(validateUuidParam("studentId"))
+    @Produces("application/json")
+    @Response(HttpStatus.BAD_REQUEST, "Validation error")
+    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
+    public async getStudentGuest(
+        @Path() studentId: string,
+    ): Promise<StudentProfileResponse> {
+        const studentEntity: StudentEntity =
+            await this.studentService.getStudentEntityGuest(studentId);
+        return StudentMapper.toStudentProfileResponse(studentEntity);
+    }
+
+    /**
      * Get single student profile for authenticated user (returns full profile with awards/certifications)
      * This assumes a user has only one profile - if multiple profiles are allowed, you'd need a different approach
      */
@@ -137,6 +154,21 @@ export class StudentController extends Controller {
                 user.id,
             );
         return StudentMapper.toStudentProfileResponse(studentEntity);
+    }
+
+    @Get("guest/{studentId}/with-files")
+    @Middlewares(validateUuidParam("studentId"))
+    @Produces("application/json")
+    @SuccessResponse(
+        HttpStatus.OK,
+        "Successfully retrieve student profile with files",
+    )
+    public async getStudentProfileGuestWithFiles(
+        @Path() studentId: string,
+    ): Promise<StudentProfileResponse> {
+        const studentEntity: StudentEntity =
+            await this.studentService.getStudentGuestWithFiles(studentId);
+        return StudentMapper.toStudentProfileWithFilesResponse(studentEntity);
     }
 
     @Get("{studentId}/with-files")
