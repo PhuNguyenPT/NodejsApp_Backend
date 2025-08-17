@@ -29,18 +29,6 @@ export class JWTService {
     ) {}
 
     /**
-     * Cleanup expired tokens (should be called periodically)
-     */
-    async cleanupExpiredTokens(): Promise<number> {
-        try {
-            return await this.jwtEntityService.cleanupExpiredTokens();
-        } catch (error) {
-            this.logger.error("Error cleaning up expired tokens:", { error });
-            return 0;
-        }
-    }
-
-    /**
      * Decode token without verification (existing method - unchanged)
      */
     decodeToken(token: string): CustomJwtPayload | null {
@@ -122,48 +110,6 @@ export class JWTService {
                 userId: payload.id,
             });
             throw new Error("Refresh token generation failed");
-        }
-    }
-
-    /**
-     * Get token information from Redis
-     */
-    async getTokenInfo(token: string) {
-        try {
-            return await this.jwtEntityService.getTokenInfo(token);
-        } catch (error) {
-            this.logger.error("Error getting token info:", { error });
-            return null;
-        }
-    }
-
-    /**
-     * Check if token is blacklisted
-     */
-    async isTokenBlacklisted(token: string): Promise<boolean> {
-        try {
-            return await this.jwtEntityService.isTokenBlacklisted(token);
-        } catch (error) {
-            this.logger.error("Error checking token blacklist status:", {
-                error,
-            });
-            return true; // Default to blacklisted for security
-        }
-    }
-
-    /**
-     * Check if token is expired without throwing (updated to include Redis check)
-     */
-    async isTokenExpired(token: string): Promise<boolean> {
-        try {
-            await this.verifyToken(token);
-            return false;
-        } catch (error) {
-            return (
-                error instanceof Error &&
-                (error.message === "Token has expired" ||
-                    error.message === "Invalid or blacklisted token")
-            );
         }
     }
 
