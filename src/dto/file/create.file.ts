@@ -20,8 +20,8 @@ import { FileType } from "@/entity/file.js";
 export class CreateFileDTO {
     /**
      * Optional uploader identifier
-     * @description UUID of the user who is uploading the file
-     * @example "456e7890-e89b-12d3-a456-426614174001"
+     * @description User email
+     * @example "jane.doe@example.com"
      */
     @IsNotEmpty()
     @IsString()
@@ -138,12 +138,4 @@ export class CreateFileDTO {
     @IsString()
     @MaxLength(255)
     tags?: string;
-
-    /**
-     * Optional uploader identifier
-     * @description UUID of the user who is uploading the file
-     * @example "456e7890-e89b-12d3-a456-426614174001"
-     */
-    @IsUUID(4, { message: "Uploaded by must be a valid UUID" })
-    uploadedBy!: string;
 }

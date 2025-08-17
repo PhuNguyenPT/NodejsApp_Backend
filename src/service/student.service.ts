@@ -10,6 +10,7 @@ import { AwardService } from "@/service/award.service.js";
 import { CertificationService } from "@/service/certification.service.js";
 import { MajorService } from "@/service/major.service.js";
 import { TYPES } from "@/type/container/types.js";
+import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
@@ -39,7 +40,8 @@ export class StudentService {
      * Creates a student profile for an anonymous user.
      * Uses TypeORM cascades to save the student and their related awards/certifications in a single operation.
      * @param studentInfoDTO - The DTO containing the student's information.
-     * @returns The newly created StudentEntity, including its relations.
+     * @returns A promise that resolves to the newly created StudentEntity, including its relations.
+     * @throws {ValidationException} If the min budget is greater than the max budget.
      */
     public async createStudentEntity(
         studentInfoDTO: StudentInfoDTO,
@@ -51,9 +53,9 @@ export class StudentService {
             });
         }
 
-        // Create the main student entity from the DTO.
         const studentEntity: StudentEntity =
             this.studentRepository.create(studentInfoDTO);
+        studentEntity.createdBy = Role.ANONYMOUS;
 
         if (studentInfoDTO.majors.length > 0) {
             studentEntity.majorGroupsEntities =
@@ -61,15 +63,13 @@ export class StudentService {
                     studentInfoDTO.majors,
                 );
         }
-        // If awards exist, create entities and attach them directly to the student entity.
-        // The cascade option on the relation will handle the save.
+
         if (studentInfoDTO.awards && studentInfoDTO.awards.length > 0) {
             studentEntity.awards = this.awardService.create(
                 studentInfoDTO.awards,
             );
         }
 
-        // Do the same for certifications.
         if (
             studentInfoDTO.certifications &&
             studentInfoDTO.certifications.length > 0
@@ -79,15 +79,10 @@ export class StudentService {
             );
         }
 
-        // A SINGLE save operation handles the student, awards, and certifications
-        // thanks to the `{ cascade: true }` option in the StudentEntity definition.
         const savedStudent = await this.studentRepository.save(studentEntity);
-
         this.logger.info(
             `Create Anonymous Student Profile id: ${savedStudent.id} successfully`,
         );
-
-        // The 'save' method returns the fully populated entity, so no extra 'findOne' is needed.
         return savedStudent;
     }
 
@@ -96,7 +91,9 @@ export class StudentService {
      * Uses TypeORM cascades to save the student and their related awards/certifications in a single operation.
      * @param studentInfoDTO - The DTO containing the student's information.
      * @param userId - The ID of the authenticated user.
-     * @returns The newly created StudentEntity, including its relations.
+     * @returns A promise that resolves to the newly created StudentEntity, including its relations.
+     * @throws {ValidationException} If budget is invalid or userId is missing.
+     * @throws {EntityNotFoundException} If the user with the given ID is not found.
      */
     public async createStudentEntityByUserId(
         studentInfoDTO: StudentInfoDTO,
@@ -122,7 +119,6 @@ export class StudentService {
             );
         }
 
-        // Create the main student entity from the DTO.
         const studentEntity: StudentEntity =
             this.studentRepository.create(studentInfoDTO);
         studentEntity.userId = userId;
@@ -134,7 +130,7 @@ export class StudentService {
                     studentInfoDTO.majors,
                 );
         }
-        // If awards exist, create entities, set audit fields, and attach them.
+
         if (studentInfoDTO.awards && studentInfoDTO.awards.length > 0) {
             studentEntity.awards = this.awardService.create(
                 studentInfoDTO.awards,
@@ -144,7 +140,6 @@ export class StudentService {
             );
         }
 
-        // If certifications exist, create entities, set audit fields, and attach them.
         if (
             studentInfoDTO.certifications &&
             studentInfoDTO.certifications.length > 0
@@ -157,17 +152,19 @@ export class StudentService {
             );
         }
 
-        // A SINGLE save operation handles everything.
         const savedStudent = await this.studentRepository.save(studentEntity);
-
         this.logger.info(
             `Create Student Profile id: ${savedStudent.id} with User id: ${userId} successfully`,
         );
-
-        // Return the saved entity directly. It already contains the new relations.
         return savedStudent;
     }
 
+    /**
+     * Retrieves a paginated list of student profiles for a specific user.
+     * @param userId - The ID of the user whose profiles are to be retrieved.
+     * @param pageable - Pagination and sorting options.
+     * @returns A promise that resolves to a Page of StudentEntity objects.
+     */
     public async getAllStudentEntitiesByUserId(
         userId: string,
         pageable: Pageable,
@@ -179,7 +176,6 @@ export class StudentService {
             .where("student.userId = :userId", { userId });
 
         const totalElements = await queryBuilder.getCount();
-
         const page = pageable.page ?? defaultPaginationConfig.defaultPage;
         const size = pageable.getLimit();
 
@@ -188,7 +184,6 @@ export class StudentService {
         }
 
         const totalPages = Math.ceil(totalElements / size);
-
         if (page > totalPages) {
             return new Page<StudentEntity>([], page, size, totalElements);
         }
@@ -218,15 +213,22 @@ export class StudentService {
         return new Page<StudentEntity>(entities, page, size, totalElements);
     }
 
+    /**
+     * Retrieves a single student profile by its ID, ensuring it belongs to the specified user.
+     * @param studentId - The ID of the student profile.
+     * @param userId - The ID of the user who must own the profile.
+     * @returns A promise that resolves to the found StudentEntity.
+     * @throws {EntityNotFoundException} If no matching student profile is found.
+     */
     public async getStudentEntityByUserId(
-        profileId: string,
+        studentId: string,
         userId: string,
     ): Promise<StudentEntity> {
         const studentEntity: null | StudentEntity =
             await this.studentRepository.findOne({
                 relations: ["awards", "certifications"],
                 where: {
-                    id: profileId,
+                    id: studentId,
                     userId: userId,
                 },
             });
@@ -238,9 +240,38 @@ export class StudentService {
         return studentEntity;
     }
 
-    public async getStudentWithFiles(
+    /**
+     * Retrieves a single student profile by its ID for a guest user (no ownership check).
+     * @param studentId - The ID of the student profile.
+     * @returns A promise that resolves to the found StudentEntity.
+     * @throws {EntityNotFoundException} If no student profile with the given ID is found.
+     */
+    public async getStudentEntityGuest(
         studentId: string,
-        userId?: string,
+    ): Promise<StudentEntity> {
+        const studentEntity: null | StudentEntity =
+            await this.studentRepository.findOne({
+                relations: ["awards", "certifications"],
+                where: {
+                    id: studentId,
+                },
+            });
+        if (!studentEntity) {
+            throw new EntityNotFoundException(
+                `Student profile with id: ${studentId} not found`,
+            );
+        }
+        return studentEntity;
+    }
+
+    /**
+     * Retrieves a student profile by ID along with its associated active files for a guest user.
+     * @param studentId - The ID of the student to retrieve.
+     * @returns A promise that resolves to the StudentEntity with its files.
+     * @throws {EntityNotFoundException} If the student is not found.
+     */
+    public async getStudentGuestWithFiles(
+        studentId: string,
     ): Promise<StudentEntity> {
         const queryBuilder = this.studentRepository
             .createQueryBuilder("student")
@@ -255,18 +286,46 @@ export class StudentService {
             .leftJoinAndSelect("student.user", "user")
             .where("student.id = :studentId", { studentId });
 
-        if (userId) {
-            queryBuilder.andWhere("student.userId = :userId", { userId });
-        }
-
         const student = await queryBuilder.getOne();
-
         if (!student) {
             throw new EntityNotFoundException(
                 `Student with ID ${studentId} not found`,
             );
         }
+        return student;
+    }
 
+    /**
+     * Retrieves a student profile by ID along with its associated active files, ensuring it belongs to the specified user.
+     * @param studentId - The ID of the student profile to retrieve.
+     * @param userId - The ID of the user who owns the profile.
+     * @returns A promise that resolves to the StudentEntity with its files.
+     * @throws {EntityNotFoundException} If the student is not found or does not belong to the user.
+     */
+    public async getStudentWithFiles(
+        studentId: string,
+        userId: string,
+    ): Promise<StudentEntity> {
+        const queryBuilder = this.studentRepository
+            .createQueryBuilder("student")
+            .leftJoinAndSelect(
+                "student.files",
+                "files",
+                "files.status = :status",
+                { status: "active" },
+            )
+            .leftJoinAndSelect("student.awards", "awards")
+            .leftJoinAndSelect("student.certifications", "certifications")
+            .leftJoinAndSelect("student.user", "user")
+            .where("student.id = :studentId", { studentId })
+            .andWhere("student.userId = :userId", { userId });
+
+        const student = await queryBuilder.getOne();
+        if (!student) {
+            throw new EntityNotFoundException(
+                `Student with ID ${studentId} not found`,
+            );
+        }
         return student;
     }
 }

@@ -1,32 +1,39 @@
 // src/app/ioc.container.ts
 import { Container } from "inversify";
+import { RedisClientType } from "redis";
 import { Repository } from "typeorm";
 
 import { postgresDataSource } from "@/config/data.source.js";
 import { PassportConfig } from "@/config/passport.config.js";
+import { redisClient, redisSubscriber } from "@/config/redis.js";
 import { AuthController } from "@/controller/auth.controller.js";
 import { FileController } from "@/controller/file.controller.js";
+import { OcrController } from "@/controller/ocr.controller.js";
 import { StudentController } from "@/controller/student.controller.js";
 import { UserController } from "@/controller/user.controller.js";
 import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
 import { FileEntity } from "@/entity/file.js";
-import { MajorEntity } from "@/entity/major.entity";
+import { MajorEntity } from "@/entity/major.entity.js";
 import { MajorGroupEntity } from "@/entity/major.group.entity";
+import { OcrResultEntity } from "@/entity/ocr.result.entity.js";
 import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
-import { TokenCleanupJob } from "@/job/token.cleanup.job";
+import { OcrEventListenerService } from "@/event/orc.event.listener.service.js";
+import { TokenCleanupJob } from "@/job/token.cleanup.job.js";
 import { JwtTokenRepository } from "@/repository/impl/jwt.repository.js";
 import { UserRepository } from "@/repository/impl/user.repository.js";
 import { IJwtTokenRepository } from "@/repository/jwt.token.repository.interface.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { AuthService } from "@/service/auth.service.js";
-import { AwardService } from "@/service/award.service";
-import { CertificationService } from "@/service/certification.service";
+import { AwardService } from "@/service/award.service.js";
+import { CertificationService } from "@/service/certification.service.js";
 import { FileService } from "@/service/file.service.js";
 import { JwtEntityService } from "@/service/jwt.entity.service.js";
 import { JWTService } from "@/service/jwt.service.js";
 import { MajorService } from "@/service/major.service";
+import { MistralService } from "@/service/mistral.service.js";
+import { OcrResultService } from "@/service/ocr.result.service.js";
 import { StudentService } from "@/service/student.service.js";
 import { UserService } from "@/service/user.service.js";
 import { KeyStore } from "@/type/class/keystore.js";
@@ -87,6 +94,11 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
+    .bind<Repository<OcrResultEntity>>(TYPES.OcrResultRepository)
+    .toDynamicValue(() => postgresDataSource.getRepository(OcrResultEntity))
+    .inSingletonScope();
+
+iocContainer
     .bind<JwtEntityService>(TYPES.JwtEntityService)
     .to(JwtEntityService)
     .inSingletonScope();
@@ -132,6 +144,21 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
+    .bind<MistralService>(TYPES.MistralService)
+    .to(MistralService)
+    .inSingletonScope();
+
+iocContainer
+    .bind<OcrEventListenerService>(TYPES.OcrEventListenerService)
+    .to(OcrEventListenerService)
+    .inSingletonScope();
+
+iocContainer
+    .bind<OcrResultService>(TYPES.OcrResultService)
+    .to(OcrResultService)
+    .inSingletonScope();
+
+iocContainer
     .bind<PassportConfig>(TYPES.PassportConfig)
     .to(PassportConfig)
     .inSingletonScope();
@@ -149,9 +176,18 @@ iocContainer
 
 iocContainer.bind<FileController>(FileController).toSelf().inRequestScope();
 
+iocContainer.bind<OcrController>(OcrController).toSelf().inRequestScope();
+
 iocContainer
     .bind<TokenCleanupJob>(TYPES.TokenCleanupJob)
     .to(TokenCleanupJob)
     .inSingletonScope();
+
+iocContainer
+    .bind<RedisClientType>(TYPES.RedisPublisher)
+    .toConstantValue(redisClient);
+iocContainer
+    .bind<RedisClientType>(TYPES.RedisSubscriber)
+    .toConstantValue(redisSubscriber);
 
 export { iocContainer };

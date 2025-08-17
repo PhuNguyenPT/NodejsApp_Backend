@@ -6,6 +6,7 @@ import { CertificationEntity } from "@/entity/certification.js";
 import { FileEntity } from "@/entity/file.js";
 import { MajorEntity } from "@/entity/major.entity.js";
 import { MajorGroupEntity } from "@/entity/major.group.entity.js";
+import { OcrResultEntity } from "@/entity/ocr.result.entity.js";
 import { PostEntity } from "@/entity/post.js";
 import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
@@ -23,6 +24,7 @@ export const postgresDataSource = new DataSource({
         FileEntity,
         MajorEntity,
         MajorGroupEntity,
+        OcrResultEntity,
     ],
     host: config.POSTGRES_HOST,
     logging: config.DB_LOGGING,
