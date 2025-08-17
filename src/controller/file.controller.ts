@@ -31,6 +31,7 @@ import validateDTO from "@/middleware/validation.middleware.js";
 import { FileService } from "@/service/file.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http.status.js";
+import { Role } from "@/type/enum/user.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
 import { ILogger } from "@/type/interface/logger.js";
@@ -391,6 +392,105 @@ export class FileController extends Controller {
         return fileResponse;
     }
 
+    /**
+     * Upload a file for a student
+     * @summary Upload and associate a file with a student
+     * @param studentId UUID of the student to associate the file with
+     * @param file The file to upload (multipart/form-data)
+     * @param fileType File type - must be one of: certificate, document, image, other, portfolio, resume, transcript
+     * @param fileName Optional custom filename (will use original if not provided)
+     * @param description Optional description of the file
+     * @param tags Optional comma-separated tags for categorization
+     * @returns Upload confirmation with file metadata
+     * @description Securely uploads a file with comprehensive validation:
+     * - Filename validation (blocks dangerous characters, control characters, directory traversal)
+     * - File extension validation (blocks executable and dangerous file types)
+     * - MIME type validation (warns on mismatches)
+     * - String field validation (prevents empty strings)
+     *
+     * Security features:
+     * - Blocks files with dangerous extensions (.exe, .bat, .php, etc.)
+     * - Prevents directory traversal attacks (../, ..\)
+     * - Sanitizes filenames to remove control characters
+     * - Validates against Windows reserved names (CON, PRN, etc.)
+     * - Logs suspicious patterns for security monitoring
+     */
+    @Middlewares(validateUuidParam("studentId"))
+    @Post("upload/guest/{studentId}")
+    @Produces("application/json")
+    @Response(
+        HttpStatus.BAD_REQUEST,
+        "Validation error - invalid filename, dangerous file type, or invalid student ID",
+    )
+    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
+    @Response(HttpStatus.PAYLOAD_TOO_LARGE, "File size exceeds limit")
+    @SuccessResponse(HttpStatus.CREATED, "File uploaded successfully")
+    public async uploadFileAnonymously(
+        @Path() studentId: string,
+        @UploadedFile("file") file: Express.Multer.File,
+        /**
+         * File type - must be one of: certificate, document, image, other, portfolio, resume, transcript
+         * @example "transcript"
+         */
+        @FormField("fileType") fileType: FileType,
+        /**
+         * Optional custom filename (will use original if not provided)
+         * @example "john_doe_transcript.pdf"
+         */
+        @FormField("fileName") fileName?: string,
+        /**
+         * Optional description of the file
+         * @example "Student transcript for semester 1"
+         */
+        @FormField("description") description?: string,
+        /**
+         * Optional comma-separated tags for categorization
+         * @example "academic,transcript,2024"
+         */
+        @FormField("tags") tags?: string,
+    ): Promise<FileResponse> {
+        // Validate string fields using helper method
+        this.validateStringFields({
+            description,
+            fileName,
+            tags,
+        });
+
+        // Validate filenames for security (block dangerous patterns)
+        this.validateFilename(fileName ?? file.originalname);
+        this.validateFilename(file.originalname);
+
+        // Use original filenames since they passed validation
+        const finalFileName = fileName ?? file.originalname;
+
+        // Validate file extension for security
+        this.validateFileExtension(finalFileName, file.mimetype);
+
+        const createFileDTO: CreateFileDTO = {
+            createdBy: Role.ANONYMOUS,
+            description: description,
+            fileContent: file.buffer,
+            fileName: finalFileName,
+            filePath: file.path,
+            fileSize: file.size,
+            fileType: fileType,
+            mimeType: file.mimetype,
+            modifiedBy: Role.ANONYMOUS,
+            originalFileName: file.originalname,
+            studentId: studentId,
+            tags: tags,
+        };
+
+        const fileEntity: FileEntity =
+            await this.fileService.createFileAnonymously(createFileDTO);
+
+        const fileResponse: FileResponse =
+            FileMapper.toFileResponse(fileEntity);
+        fileResponse.message = "File uploaded successfully";
+        return fileResponse;
+    }
+
     // Private helper methods
 
     /**
@@ -699,7 +799,7 @@ export class FileController extends Controller {
     /**
      * Validate filename for dangerous patterns and block them
      */
-    private validateFilename(filename: string, user: Express.User): void {
+    private validateFilename(filename: string, user?: Express.User): void {
         // Check for control characters
         for (let i = 0; i < filename.length; i++) {
             const code = filename.charCodeAt(i);
@@ -781,7 +881,7 @@ export class FileController extends Controller {
                 this.logger.warn("Suspicious filename pattern detected", {
                     filename,
                     pattern: pattern.toString(),
-                    userId: user.id,
+                    userId: user?.id,
                 });
             }
         }

@@ -103,6 +103,76 @@ export class MistralService {
     }
 
     /**
+     * Extracts subject scores from a single file
+     */
+    public async extractSubjectScoresAnonymously(
+        file: FileEntity,
+    ): Promise<FileScoreExtractionResult> {
+        try {
+            // Get the student to check access and get expected subjects
+            const student = await this.studentRepository.findOne({
+                where: { id: file.studentId },
+            });
+
+            if (!student) {
+                return {
+                    error: `Student not found for file ${file.id}`,
+                    fileId: file.id,
+                    fileName: file.originalFileName,
+                    scores: [],
+                    success: false,
+                };
+            }
+
+            if (!file.isImage()) {
+                return {
+                    error: `File is not an image (MIME type: ${file.mimeType}).`,
+                    fileId: file.id,
+                    fileName: file.originalFileName,
+                    scores: [],
+                    success: false,
+                };
+            }
+
+            const expectedSubjects =
+                student.nationalExam?.map((exam) => exam.name) ?? [];
+            const model = "mistral-ocr-latest";
+
+            const result: ScoreExtractionResult =
+                await this.extractScoresFromImage(
+                    file,
+                    expectedSubjects,
+                    model,
+                );
+
+            return {
+                documentAnnotation: result.documentAnnotation,
+                error: result.error,
+                fileId: file.id,
+                fileName: file.originalFileName,
+                scores: result.scores,
+                success: result.success,
+            };
+        } catch (error) {
+            this.logger.error(
+                `Error during extractSubjectScores for single file: `,
+                { error },
+            );
+            const errorMessage =
+                error instanceof Error
+                    ? error.message
+                    : "Unknown error during score extraction";
+            return {
+                error: errorMessage,
+                fileId: file.id,
+                fileName: file.originalFileName,
+                scores: [],
+                success: false,
+            };
+        }
+    }
+
+    /**
      * Extracts subject scores from all files of a student (batch processing)
      */
     public async extractSubjectScoresBatch(

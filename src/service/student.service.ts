@@ -10,6 +10,7 @@ import { AwardService } from "@/service/award.service.js";
 import { CertificationService } from "@/service/certification.service.js";
 import { MajorService } from "@/service/major.service.js";
 import { TYPES } from "@/type/container/types.js";
+import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
@@ -54,6 +55,7 @@ export class StudentService {
         // Create the main student entity from the DTO.
         const studentEntity: StudentEntity =
             this.studentRepository.create(studentInfoDTO);
+        studentEntity.createdBy = Role.ANONYMOUS;
 
         if (studentInfoDTO.majors.length > 0) {
             studentEntity.majorGroupsEntities =

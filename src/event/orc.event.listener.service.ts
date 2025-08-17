@@ -12,12 +12,13 @@ import { OcrResultEntity } from "@/entity/ocr.result.entity.js";
 import { MistralService } from "@/service/mistral.service.js";
 import { OcrResultService } from "@/service/ocr.result.service.js";
 import { TYPES } from "@/type/container/types.js";
+import { Role } from "@/type/enum/user.js";
 import { ILogger } from "@/type/interface/logger.js";
 
 const SingleFileCreatedEventSchema = z.object({
     fileId: z.string().uuid("Invalid file ID format"), // Add the specific file ID
     studentId: z.string().uuid("Invalid student ID format"),
-    userId: z.string().uuid("Invalid user ID format"),
+    userId: z.string().uuid("Invalid user ID format").optional(),
 });
 
 export type SingleFileCreatedEvent = z.infer<
@@ -75,9 +76,8 @@ export class OcrEventListenerService {
                 `Processing OCR for file ${payload.fileId} of student ${payload.studentId}`,
             );
 
-            const existingResult = await this.ocrResultService.findByFileId(
-                payload.fileId,
-            );
+            const existingResult: null | OcrResultEntity =
+                await this.ocrResultService.findByFileId(payload.fileId);
 
             if (existingResult) {
                 this.logger.warn(
@@ -100,16 +100,13 @@ export class OcrEventListenerService {
             initialOcrResults =
                 await this.ocrResultService.createInitialOcrResults(
                     payload.studentId,
-                    payload.userId,
+                    payload.userId ?? Role.ANONYMOUS,
                     [file],
                 );
 
             // 3. PROCESS: Call the AI service for this specific file
             const fileExtractionResult: FileScoreExtractionResult =
-                await this.mistralService.extractSubjectScores(
-                    file,
-                    payload.userId,
-                );
+                await this.mistralService.extractSubjectScoresAnonymously(file);
 
             // 4. UPDATE the record with the final result
             // Convert single file result to batch format for compatibility with existing updateResults method
