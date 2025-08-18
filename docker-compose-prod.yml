@@ -2,8 +2,13 @@ networks:
   app-network:
     driver: bridge
 
+secrets:
+  private_key:
+    file: ./private.pem
+  public_key:
+    file: ./public.pem
+
 services:
-  # Your Node.js Application Service
   app-prod:
     image: phunpt01/nodejs-backend:latest
     container_name: app-prod
@@ -19,12 +24,21 @@ services:
         condition: service_healthy
       redis-prod:
         condition: service_healthy
+    # Use Docker secrets instead of volume mounts
+    secrets:
+      - private_key
+      - public_key
+    # Update environment variables to point to secret files
+    environment:
+      - PRIVATE_KEY_PATH=/run/secrets/private_key
+      - PUBLIC_KEY_PATH=/run/secrets/public_key
     healthcheck:
       test: ["CMD-SHELL", "curl --fail http://localhost:3000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+
   postgres-prod:
     image: ${POSTGRES_IMAGE}
     container_name: postgres-prod
@@ -35,8 +49,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST_AUTH_METHOD: scram-sha-256
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
-    # ports: # No longer needed for container-to-container communication
-    #   - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -58,18 +70,17 @@ services:
       --requirepass ${REDIS_PASSWORD} 
       --user ${REDIS_USERNAME} on '>${REDIS_USER_PASSWORD}' '~*' '&*' '+@all'
       "
-    # ports: # No longer needed for container-to-container communication
-    #   - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
     networks:
       - app-network
     healthcheck:
-      test: [
+      test:
+        [
           "CMD",
           "redis-cli",
           "-h",
-          "localhost", # Healthcheck runs inside the container, so localhost is correct here
+          "localhost",
           "-p",
           "6379",
           "--user",
