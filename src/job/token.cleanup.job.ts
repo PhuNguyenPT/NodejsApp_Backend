@@ -15,6 +15,7 @@ export class TokenCleanupJob {
         private jwtEntityService: JwtEntityService,
         @inject(TYPES.Logger)
         private logger: ILogger,
+        private cleanupTimeout: NodeJS.Timeout | null = null,
     ) {}
 
     /**
@@ -46,9 +47,6 @@ export class TokenCleanupJob {
         }
     }
 
-    /**
-     * Start periodic cleanup using a chained setTimeout to prevent overlap.
-     */
     startPeriodicCleanup(intervalMinutes: 60): void {
         const intervalMs = intervalMinutes * 60 * 1000;
 
@@ -61,19 +59,23 @@ export class TokenCleanupJob {
                     { error },
                 );
             } finally {
-                // Schedule the next run after the current one is complete.
-                // The `void` operator satisfies the linter rule.
-                setTimeout(() => {
+                // Store the timeout reference so we can cancel it
+                this.cleanupTimeout = setTimeout(() => {
                     void run();
                 }, intervalMs);
             }
         };
 
-        // Start the first run
         void run();
-
         this.logger.info(
             `Started periodic token cleanup every ${intervalMinutes.toString()} minutes`,
         );
+    }
+
+    stop(): void {
+        if (this.cleanupTimeout) {
+            clearTimeout(this.cleanupTimeout);
+            this.cleanupTimeout = null;
+        }
     }
 }
