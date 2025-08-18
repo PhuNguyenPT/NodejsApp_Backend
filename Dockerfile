@@ -45,11 +45,6 @@ COPY --from=builder --chown=appuser:appgroup /app/dist ./dist
 # Create logs directory with proper ownership
 RUN mkdir -p logs && chown appuser:appgroup logs
 
-# Copy the public/private keys with proper ownership
-# Note: A more secure method is to use Docker secrets or inject them as env vars
-COPY --chown=appuser:appgroup public.pem ./
-COPY --chown=appuser:appgroup private.pem ./
-
 # Switch to the new user
 USER appuser
 # --- End Security Best Practice ---
