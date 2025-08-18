@@ -5,7 +5,7 @@ import logger from "@/util/logger.js";
 import { config } from "@/util/validate.env.js";
 
 // Base Redis configuration
-const redisConfig = {
+export const redisConfig = {
     database: config.REDIS_DB,
     password: config.REDIS_USER_PASSWORD,
     socket: {
