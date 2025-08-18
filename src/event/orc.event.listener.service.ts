@@ -41,6 +41,20 @@ export class OcrEventListenerService {
         @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {}
 
+    public async cleanup(): Promise<void> {
+        try {
+            await this.redisSubscriber.unsubscribe(OCR_CHANNEL);
+            this.logger.info(`Unsubscribed from channel: ${OCR_CHANNEL}`);
+        } catch (error: unknown) {
+            const errorMessage =
+                error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error unsubscribing from ${OCR_CHANNEL}:`, {
+                errorMessage,
+            });
+            throw error;
+        }
+    }
+
     public async initialize(): Promise<void> {
         this.logger.info(
             `Initializing Redis listener for channel: ${OCR_CHANNEL}`,

@@ -2,12 +2,13 @@
 import { Repository } from "typeorm";
 
 import { postgresDataSource } from "@/config/data.source.js";
-import { User, UserAdmin } from "@/dto/user/user";
+import { User, UserAdmin } from "@/dto/user/user.js";
 import { UserEntity } from "@/entity/user.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { EntityExistsException } from "@/type/exception/entity.exists.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception.js";
+import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/util/jwt.options.js";
 
 export class UserRepository implements IUserRepository {
     private repository: Repository<UserEntity>;
@@ -49,9 +50,14 @@ export class UserRepository implements IUserRepository {
             throw new IllegalArgumentException(`Invalid email ${email}`);
         }
 
-        const userEntity: null | UserEntity = await this.repository.findOneBy({
-            email,
-        });
+        const userEntity = await this.repository
+            .createQueryBuilder("u")
+            .where("u.email = :email", { email })
+            .cache(
+                `user_cache_${email}`,
+                JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
+            )
+            .getOne();
 
         if (!userEntity) {
             throw new EntityNotFoundException(
@@ -63,7 +69,13 @@ export class UserRepository implements IUserRepository {
     }
 
     public async findById(id: string): Promise<null | UserEntity> {
-        return await this.repository.findOne({ where: { id } });
+        return this.repository.findOne({
+            cache: {
+                id: `user_cache_${id}`,
+                milliseconds: JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
+            },
+            where: { id },
+        });
     }
 
     public async findByIdAndName(

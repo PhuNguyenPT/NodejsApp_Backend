@@ -7,6 +7,7 @@ import {
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
+    Relation,
     UpdateDateColumn,
 } from "typeorm";
 
@@ -54,8 +55,8 @@ export class OcrResultEntity {
     errorMessage?: string;
 
     @JoinColumn({ name: "fileId" })
-    @ManyToOne(() => FileEntity, { onDelete: "CASCADE" })
-    file!: FileEntity; // Now required
+    @ManyToOne("FileEntity", { onDelete: "CASCADE" })
+    file!: Relation<FileEntity>;
 
     @Column({ type: "uuid" })
     fileId!: string;
@@ -80,8 +81,8 @@ export class OcrResultEntity {
     status!: OcrStatus;
 
     @JoinColumn({ name: "studentId" })
-    @ManyToOne(() => StudentEntity, { onDelete: "CASCADE" })
-    student!: StudentEntity;
+    @ManyToOne("StudentEntity", { onDelete: "CASCADE" })
+    student!: Relation<StudentEntity>;
 
     @Column({ type: "uuid" })
     studentId!: string;

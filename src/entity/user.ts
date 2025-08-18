@@ -6,6 +6,7 @@ import {
     Index,
     OneToMany,
     PrimaryGeneratedColumn,
+    Relation,
     UpdateDateColumn,
 } from "typeorm";
 
@@ -98,10 +99,10 @@ export class UserEntity {
     })
     status!: UserStatus;
 
-    @OneToMany(() => StudentEntity, (student) => student.user, {
+    @OneToMany("StudentEntity", "user", {
         eager: false,
     })
-    studentEntities?: StudentEntity[];
+    studentEntities?: Relation<StudentEntity[]>;
 
     constructor(user?: Partial<UserEntity>) {
         if (user) {

@@ -1,7 +1,3 @@
-import {
-    OCR_CHANNEL,
-    SingleFileCreatedEvent,
-} from "event/orc.event.listener.service";
 // src/service/file.service.ts
 import { inject, injectable } from "inversify";
 import { RedisClientType } from "redis";
@@ -11,8 +7,12 @@ import { CreateFileDTO } from "@/dto/file/create.file.js";
 import { UpdateFileDTO } from "@/dto/file/update.file.js";
 import { FileEntity, FileStatus, FileType } from "@/entity/file.js";
 import { StudentEntity } from "@/entity/student.js";
+import {
+    OCR_CHANNEL,
+    SingleFileCreatedEvent,
+} from "@/event/orc.event.listener.service.js";
 import { TYPES } from "@/type/container/types.js";
-import { AccessDeniedException } from "@/type/exception/access.denied.exception";
+import { AccessDeniedException } from "@/type/exception/access.denied.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import logger from "@/util/logger.js";

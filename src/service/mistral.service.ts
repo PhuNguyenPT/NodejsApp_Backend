@@ -1,20 +1,20 @@
-import { responseFormatFromZodObject } from "@mistralai/mistralai/extra/structChat";
+import { responseFormatFromZodObject } from "@mistralai/mistralai/extra/structChat.js";
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
-import { mistralClient } from "@/config/mistralai";
+import { mistralClient } from "@/config/mistralai.js";
 import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
     ScoreExtractionResult,
     TranscriptSchema,
-} from "@/dto/predict/ocr";
-import { FileEntity } from "@/entity/file";
-import { StudentEntity } from "@/entity/student";
-import { TYPES } from "@/type/container/types";
-import { normalizeSubjectName } from "@/type/enum/subject";
-import { AccessDeniedException } from "@/type/exception/access.denied.exception";
-import { ILogger } from "@/type/interface/logger";
+} from "@/dto/predict/ocr.js";
+import { FileEntity } from "@/entity/file.js";
+import { StudentEntity } from "@/entity/student.js";
+import { TYPES } from "@/type/container/types.js";
+import { normalizeSubjectName } from "@/type/enum/subject.js";
+import { AccessDeniedException } from "@/type/exception/access.denied.exception.js";
+import { ILogger } from "@/type/interface/logger.js";
 
 @injectable()
 export class MistralService {

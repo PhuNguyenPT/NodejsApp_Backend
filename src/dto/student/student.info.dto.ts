@@ -25,7 +25,7 @@ import {
     ExamSubject,
     VsatExamSubject,
 } from "@/dto/student/exam.profile.dto.js";
-import { MajorGroup } from "@/type/enum/major";
+import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 

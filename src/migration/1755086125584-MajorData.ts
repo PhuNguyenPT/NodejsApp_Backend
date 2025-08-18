@@ -1,6 +1,6 @@
-import { MajorEntity } from "@/entity/major.entity";
-import { MajorGroupEntity } from "@/entity/major.group.entity";
-import { MajorGroup } from "@/type/enum/major";
+import { MajorEntity } from "@/entity/major.entity.js";
+import { MajorGroupEntity } from "@/entity/major.group.entity.js";
+import { MajorGroup } from "@/type/enum/major.js";
 import { MigrationInterface, QueryRunner } from "typeorm";
 
 // Helper function to get English key by Vietnamese name

@@ -3,19 +3,23 @@ import compression from "compression";
 import cors from "cors";
 import express, { Express, Router } from "express";
 import helmet from "helmet";
+import { Server } from "http";
 import passport from "passport";
 
 import { iocContainer } from "@/app/ioc.container.js";
 import { corsOptions } from "@/config/cors.js";
-import { initializePostgreSQL } from "@/config/data.source.js";
+import {
+    initializePostgreSQL,
+    postgresDataSource,
+} from "@/config/data.source.js";
 import { helmetOptions } from "@/config/helmet.js";
 import { getMorganConfig, setupRequestTracking } from "@/config/morgan.js";
 import { PassportConfig } from "@/config/passport.config.js";
-import { initializeRedis } from "@/config/redis.js";
+import { initializeRedis, redisClient } from "@/config/redis.js";
 import swaggerDocs from "@/config/swagger.js";
-import { OcrEventListenerService } from "@/event/orc.event.listener.service";
+import { OcrEventListenerService } from "@/event/orc.event.listener.service.js";
 import { RegisterRoutes } from "@/generated/routes.js";
-import { TokenCleanupJob } from "@/job/token.cleanup.job";
+import { TokenCleanupJob } from "@/job/token.cleanup.job.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
 import { TYPES } from "@/type/container/types.js";
 import { keyStore } from "@/util/key.js";
@@ -27,6 +31,8 @@ class App {
     public express!: Express;
     public hostname!: string;
     public port!: number;
+    private isShuttingDown = false;
+    private server: null | Server = null;
 
     constructor() {
         this.express = express();
@@ -40,6 +46,7 @@ class App {
         this.initializeRoutesAndDocs();
         this.initializeErrorHandling();
         this.initializeKeyStore();
+        this.setupGracefulShutdown();
     }
 
     public getServerUrl(): string {
@@ -55,11 +62,127 @@ class App {
     }
 
     public listen(): void {
-        this.express.listen(this.port, this.hostname, () => {
+        this.server = this.express.listen(this.port, this.hostname, () => {
             logger.info(
                 `App listening on ${this.hostname}:${this.port.toString()}${this.basePath}`,
             );
         });
+    }
+
+    public async shutdown(): Promise<void> {
+        if (this.isShuttingDown) {
+            logger.warn(
+                "Shutdown already in progress, ignoring duplicate signal",
+            );
+            return;
+        }
+
+        this.isShuttingDown = true;
+        logger.info("🔄 Graceful shutdown initiated...");
+
+        try {
+            // Close HTTP server first
+            if (this.server) {
+                logger.info("📤 Closing HTTP server...");
+                await new Promise<void>((resolve, reject) => {
+                    this.server?.close((error?: Error) => {
+                        if (error) {
+                            logger.error(
+                                "❌ Error closing HTTP server:",
+                                error,
+                            );
+                            reject(error);
+                        } else {
+                            logger.info("✅ HTTP server closed successfully");
+                            resolve();
+                        }
+                    });
+                });
+            }
+
+            // Stop token cleanup job
+            try {
+                const tokenCleanupJob = iocContainer.get<TokenCleanupJob>(
+                    TYPES.TokenCleanupJob,
+                );
+                tokenCleanupJob.stop();
+                logger.info("✅ Token cleanup job stopped");
+            } catch (error: unknown) {
+                logger.warn("⚠️ Error stopping token cleanup job:", error);
+            }
+
+            // Stop event listeners
+            try {
+                const ocrEventListener =
+                    iocContainer.get<OcrEventListenerService>(
+                        TYPES.OcrEventListenerService,
+                    );
+                await ocrEventListener.cleanup();
+                logger.info("✅ Event listeners cleaned up");
+            } catch (error: unknown) {
+                logger.warn("⚠️ Error cleaning up event listeners:", error);
+            }
+
+            // Close database connections
+            await this.closeDatabaseConnections();
+
+            logger.info("🎉 Graceful shutdown completed successfully");
+        } catch (error: unknown) {
+            logger.error("❌ Error during graceful shutdown:", error);
+            throw error;
+        }
+    }
+
+    private async closeDatabaseConnections(): Promise<void> {
+        logger.info("🔌 Closing database connections...");
+
+        const closePromises: Promise<void>[] = [];
+
+        // Close PostgreSQL connection
+        if (postgresDataSource.isInitialized) {
+            closePromises.push(
+                postgresDataSource
+                    .destroy()
+                    .then(() => {
+                        logger.info(
+                            "✅ PostgreSQL connection closed successfully",
+                        );
+                    })
+                    .catch((error: unknown) => {
+                        logger.error(
+                            "❌ Error closing PostgreSQL connection:",
+                            error,
+                        );
+                        throw error;
+                    }),
+            );
+        }
+
+        // Close Redis connection
+        if (redisClient.isOpen) {
+            closePromises.push(
+                redisClient
+                    .quit()
+                    .then(() => {
+                        logger.info("✅ Redis connection closed successfully");
+                    })
+                    .catch((error: unknown) => {
+                        logger.error(
+                            "❌ Error closing Redis connection:",
+                            error,
+                        );
+                        throw error;
+                    }),
+            );
+        }
+
+        // Wait for all database connections to close
+        if (closePromises.length > 0) {
+            await Promise.all(closePromises);
+            logger.info("✅ All database connections closed successfully");
+        } else {
+            logger.info("ℹ️ No active database connections to close");
+        }
     }
 
     private initializeCors(): void {
@@ -189,6 +312,73 @@ class App {
         } catch (error) {
             logger.error("Failed to initialize token cleanup job:", error);
         }
+    }
+
+    private setupGracefulShutdown(): void {
+        // Handle process termination signals
+        const signals = ["SIGTERM", "SIGINT", "SIGUSR2"] as const;
+
+        signals.forEach((signal) => {
+            process.on(signal, () => {
+                void (async () => {
+                    logger.info(
+                        `📡 Received ${signal}, initiating graceful shutdown...`,
+                    );
+
+                    try {
+                        await this.shutdown();
+                        process.exit(0);
+                    } catch (error: unknown) {
+                        logger.error("❌ Error during shutdown:", error);
+                        process.exit(1);
+                    }
+                })();
+            });
+        });
+
+        // Handle uncaught exceptions
+        process.on("uncaughtException", (error: Error) => {
+            void (async () => {
+                logger.error("💥 Uncaught Exception:", error);
+
+                try {
+                    await this.shutdown();
+                } catch (shutdownError: unknown) {
+                    logger.error(
+                        "❌ Error during emergency shutdown:",
+                        shutdownError,
+                    );
+                }
+
+                process.exit(1);
+            })();
+        });
+
+        // Handle unhandled promise rejections
+        process.on(
+            "unhandledRejection",
+            (reason: unknown, promise: Promise<unknown>) => {
+                void (async () => {
+                    logger.error(
+                        "🚫 Unhandled Rejection at:",
+                        promise,
+                        "reason:",
+                        reason,
+                    );
+
+                    try {
+                        await this.shutdown();
+                    } catch (shutdownError: unknown) {
+                        logger.error(
+                            "❌ Error during emergency shutdown:",
+                            shutdownError,
+                        );
+                    }
+
+                    process.exit(1);
+                })();
+            },
+        );
     }
 }
 

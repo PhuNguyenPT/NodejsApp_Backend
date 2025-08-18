@@ -11,12 +11,12 @@ import {
 } from "@tsoa/runtime";
 import { inject } from "inversify";
 
-import { BatchScoreExtractionResult } from "@/dto/predict/ocr";
-import { MistralService } from "@/service/mistral.service";
-import { TYPES } from "@/type/container/types";
-import { HttpStatus } from "@/type/enum/http.status";
-import { AuthenticatedRequest } from "@/type/express/express";
-import { ILogger } from "@/type/interface/logger";
+import { BatchScoreExtractionResult } from "@/dto/predict/ocr.js";
+import { MistralService } from "@/service/mistral.service.js";
+import { TYPES } from "@/type/container/types.js";
+import { HttpStatus } from "@/type/enum/http.status.js";
+import { AuthenticatedRequest } from "@/type/express/express.js";
+import { ILogger } from "@/type/interface/logger.js";
 
 @Route("students")
 @Tags("OCR")

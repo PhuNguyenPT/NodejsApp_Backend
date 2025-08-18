@@ -1,7 +1,7 @@
 import { Expose } from "class-transformer";
 import { IsEnum, IsInt, IsNotEmpty, Max, Min } from "class-validator";
 
-import { Conduct } from "@/type/enum/conduct";
+import { Conduct } from "@/type/enum/conduct.js";
 
 export class ConductResponse {
     /**

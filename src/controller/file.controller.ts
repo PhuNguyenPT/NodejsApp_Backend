@@ -21,7 +21,7 @@ import {
     UploadedFile,
 } from "tsoa";
 
-import { CreateFileDTO } from "@/dto/file/create.file";
+import { CreateFileDTO } from "@/dto/file/create.file.js";
 import { FileResponse } from "@/dto/file/file.response.js";
 import { UpdateFileDTO } from "@/dto/file/update.file.js";
 import { FileEntity, FileType } from "@/entity/file.js";

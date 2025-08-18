@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { VietnameseSubject } from "@/type/enum/subject";
+import { VietnameseSubject } from "@/type/enum/subject.js";
 
 export interface ISubjectScore {
     name: VietnameseSubject;

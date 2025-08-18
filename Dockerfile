@@ -28,29 +28,27 @@ FROM node:22.17.0-bookworm-slim
 
 WORKDIR /app
 
-# Copy the package manifests again
-COPY package*.json ./
+# --- Security Best Practice: Create user early ---
+# Create a dedicated user and group for the application BEFORE copying files
+RUN groupadd --system appgroup && \
+    useradd --system --gid appgroup appuser
+
+# Copy package manifests and set ownership in one step
+COPY --chown=appuser:appgroup package*.json ./
 
 # Install ONLY production dependencies, skipping devDependencies
 RUN HUSKY=0 npm install --omit=dev
 
-# Copy the compiled code from the "builder" stage
-COPY --from=builder /app/dist ./dist
+# Copy the compiled code from the "builder" stage with proper ownership
+COPY --from=builder --chown=appuser:appgroup /app/dist ./dist
 
-RUN mkdir -p logs
+# Create logs directory with proper ownership
+RUN mkdir -p logs && chown appuser:appgroup logs
 
-# Copy the public/private keys if they are needed in the container
+# Copy the public/private keys with proper ownership
 # Note: A more secure method is to use Docker secrets or inject them as env vars
-COPY public.pem ./
-COPY private.pem ./
-
-# --- Security Best Practice: Run as a non-root user ---
-# Create a dedicated user and group for the application
-RUN groupadd --system appgroup && \
-    useradd --system --gid appgroup appuser
-
-# FIX: Change ownership of all necessary app files to the new user
-RUN chown -R appuser:appgroup /app/logs ./public.pem ./private.pem
+COPY --chown=appuser:appgroup public.pem ./
+COPY --chown=appuser:appgroup private.pem ./
 
 # Switch to the new user
 USER appuser

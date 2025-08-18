@@ -1,9 +1,9 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
-import { AwardDTO } from "@/dto/student/award.dto";
-import { AwardEntity } from "@/entity/award";
-import { TYPES } from "@/type/container/types";
+import { AwardDTO } from "@/dto/student/award.dto.js";
+import { AwardEntity } from "@/entity/award.js";
+import { TYPES } from "@/type/container/types.js";
 
 @injectable()
 export class AwardService {
