@@ -6,11 +6,20 @@
     {
       "previewLimit": 50,
       "server": "localhost",
-      "port": 5432,
+      "port": 5433,
       "driver": "PostgreSQL",
       "name": "NodePostgresql",
       "database": "node_app_dev",
       "username": "myuser"
+    },
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "pg-prod",
+      "database": "node_app_prod",
+      "username": "prod_user"
     }
-  ]
+  ],
 }

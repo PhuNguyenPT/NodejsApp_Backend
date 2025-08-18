@@ -8,9 +8,11 @@ export const postgresDataSource = new DataSource({
     cache: {
         options: {
             database: config.REDIS_DB,
-            host: config.REDIS_HOST,
-            password: config.REDIS_USER_PASSWORD, // Add missing Redis password
-            port: config.REDIS_PORT,
+            password: config.REDIS_USER_PASSWORD,
+            socket: {
+                host: config.REDIS_HOST,
+                port: config.REDIS_PORT,
+            },
             username: config.REDIS_USERNAME,
         },
         type: "redis",
