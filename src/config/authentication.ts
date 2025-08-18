@@ -4,7 +4,7 @@ import type { AuthenticateCallback } from "passport";
 import express from "express";
 import passport from "passport";
 
-import { Permission } from "@/type/enum/user";
+import { Permission } from "@/type/enum/user.js";
 import { AccessDeniedException } from "@/type/exception/access.denied.exception.js";
 import { AuthenticationException } from "@/type/exception/authentication.exception.js";
 import { ExpiredJwtException } from "@/type/exception/expired.jwt.exception.js";

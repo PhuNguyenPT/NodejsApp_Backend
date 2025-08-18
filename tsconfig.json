@@ -6,9 +6,9 @@
     "noImplicitAny": false,
     "strict": true,
     "esModuleInterop": true,
-    "module": "commonjs",
+    "module": "nodenext",
     "target": "es2022",
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "declaration": true,
@@ -38,7 +38,9 @@
       "@/util/*": ["util/*"]
     },
     "incremental": true,
-    "tsBuildInfoFile": "./dist/.tsbuildinfo"
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "allowImportingTsExtensions": false,
+    "verbatimModuleSyntax": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

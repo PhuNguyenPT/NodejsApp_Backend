@@ -1,7 +1,7 @@
 import { Expose } from "class-transformer";
 import { IsEnum, IsInt, IsNotEmpty, Max, Min } from "class-validator";
 
-import { AcademicPerformance } from "@/type/enum/academic.performance";
+import { AcademicPerformance } from "@/type/enum/academic.performance.js";
 
 export class AcademicPerformanceResponse {
     /**

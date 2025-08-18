@@ -4,6 +4,7 @@ import {
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
+    Relation,
 } from "typeorm";
 
 import { MajorGroupEntity } from "@/entity/major.group.entity.js";
@@ -18,11 +19,11 @@ export class MajorEntity {
     code!: string; // The full major code, e.g., "71401"
 
     @JoinColumn({ name: "group_id" })
-    @ManyToOne(() => MajorGroupEntity, (group) => group.majors, {
+    @ManyToOne("MajorGroupEntity", "majors", {
         nullable: false,
         onDelete: "CASCADE",
     })
-    group!: MajorGroupEntity;
+    group!: Relation<MajorGroupEntity>;
 
     @Column({ nullable: false, type: "uuid" })
     group_id!: string;

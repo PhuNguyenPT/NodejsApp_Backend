@@ -7,11 +7,13 @@ import {
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
+    Relation,
     UpdateDateColumn,
 } from "typeorm";
 
-import { StudentEntity } from "@/entity/student.js";
 import { ExamType } from "@/type/enum/exam.js";
+
+import { StudentEntity } from "./student.js";
 
 @Entity({ name: "awards" })
 @Index("idx_award_student_id", ["studentId"])
@@ -73,10 +75,10 @@ export class AwardEntity {
     name?: string;
 
     @JoinColumn({ name: "studentId" })
-    @ManyToOne(() => StudentEntity, (student) => student.awards, {
+    @ManyToOne("StudentEntity", "awards", {
         onDelete: "CASCADE",
     })
-    student!: StudentEntity;
+    student!: Relation<StudentEntity>;
 
     @Column({ type: "uuid" })
     studentId!: string;

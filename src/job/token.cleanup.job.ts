@@ -1,8 +1,8 @@
 import { inject, injectable } from "inversify";
 
 import { JwtEntityService } from "@/service/jwt.entity.service.js";
-import { TYPES } from "@/type/container/types";
-import { ILogger } from "@/type/interface/logger";
+import { TYPES } from "@/type/container/types.js";
+import { ILogger } from "@/type/interface/logger.js";
 
 // src/job/token.cleanup.job.ts
 

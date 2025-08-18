@@ -1,11 +1,11 @@
 import { inject, injectable } from "inversify";
 import { EntityNotFoundError, In, Repository } from "typeorm";
 
-import { MajorEntity } from "@/entity/major.entity";
-import { MajorGroupEntity } from "@/entity/major.group.entity";
-import { TYPES } from "@/type/container/types";
-import { MajorGroup } from "@/type/enum/major";
-import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception";
+import { MajorEntity } from "@/entity/major.entity.js";
+import { MajorGroupEntity } from "@/entity/major.group.entity.js";
+import { TYPES } from "@/type/container/types.js";
+import { MajorGroup } from "@/type/enum/major.js";
+import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 
 @injectable()
 export class MajorService {

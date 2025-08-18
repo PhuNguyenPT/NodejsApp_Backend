@@ -1,4 +1,4 @@
-import { FileType } from "@/entity/file";
+import { FileType } from "@/entity/file.js";
 
 /**
  * Response object containing file metadata

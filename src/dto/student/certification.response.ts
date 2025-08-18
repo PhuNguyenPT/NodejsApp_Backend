@@ -1,7 +1,7 @@
 import { Expose, Type } from "class-transformer";
 import { IsNotEmpty, IsOptional } from "class-validator";
 
-import { CEFR } from "@/entity/certification";
+import { CEFR } from "@/entity/certification.js";
 import { ExamType } from "@/type/enum/exam.js";
 
 /**

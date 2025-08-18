@@ -7,10 +7,12 @@ import {
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
+    Relation,
     UpdateDateColumn,
 } from "typeorm";
 
-import { StudentEntity } from "@/entity/student.js";
+import type { StudentEntity } from "@/entity/student.js";
+
 import { Role } from "@/type/enum/user.js";
 
 /**
@@ -111,11 +113,11 @@ export class FileEntity {
     status!: FileStatus;
 
     @JoinColumn({ name: "studentId" })
-    @ManyToOne(() => StudentEntity, (student) => student.files, {
+    @ManyToOne("StudentEntity", "files", {
         eager: false,
         onDelete: "CASCADE",
     })
-    student!: StudentEntity;
+    student!: Relation<StudentEntity>;
 
     @Column({ type: "uuid" })
     studentId!: string;

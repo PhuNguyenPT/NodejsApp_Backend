@@ -4,6 +4,7 @@ import {
     ManyToMany,
     OneToMany,
     PrimaryGeneratedColumn,
+    Relation,
 } from "typeorm";
 
 import { MajorEntity } from "@/entity/major.entity.js";
@@ -30,14 +31,14 @@ export class MajorGroupEntity {
     id!: string;
 
     // A MajorGroup has many Majors. This defines the inverse side of the relationship.
-    @OneToMany(() => MajorEntity, (major) => major.group)
-    majors!: MajorEntity[];
+    @OneToMany("MajorEntity", "group")
+    majors!: Relation<MajorEntity[]>;
 
     @Column({ length: 255, nullable: false, type: "varchar" })
     name!: string; // The Vietnamese name, e.g., "Khoa học giáo dục và đào tạo giáo viên"
 
-    @ManyToMany(() => StudentEntity, (student) => student.majorGroupsEntities)
-    students?: StudentEntity[];
+    @ManyToMany("StudentEntity", "majorGroupsEntities")
+    students?: Relation<StudentEntity[]>;
 
     constructor(majorGroup?: Partial<MajorGroupEntity>) {
         if (majorGroup) {

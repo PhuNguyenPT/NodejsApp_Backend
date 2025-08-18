@@ -1,11 +1,11 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
-import { CertificationDTO } from "@/dto/student/certification.dto";
-import { CEFR, CertificationEntity } from "@/entity/certification";
-import { TYPES } from "@/type/container/types";
-import { CCNNType, ExamType } from "@/type/enum/exam";
-import { ValidationException } from "@/type/exception/validation.exception";
+import { CertificationDTO } from "@/dto/student/certification.dto.js";
+import { CEFR, CertificationEntity } from "@/entity/certification.js";
+import { TYPES } from "@/type/container/types.js";
+import { CCNNType, ExamType } from "@/type/enum/exam.js";
+import { ValidationException } from "@/type/exception/validation.exception.js";
 
 @injectable()
 export class CertificationService {

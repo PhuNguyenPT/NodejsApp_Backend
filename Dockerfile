@@ -50,7 +50,7 @@ RUN groupadd --system appgroup && \
     useradd --system --gid appgroup appuser
 
 # FIX: Change ownership of all necessary app files to the new user
-RUN chown -R appuser:appgroup /app/logs ./public.pem ./private.pem
+RUN chown -R appuser:appgroup /app
 
 # Switch to the new user
 USER appuser

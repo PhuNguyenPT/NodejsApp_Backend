@@ -7,6 +7,7 @@ import {
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
+    Relation,
     UpdateDateColumn,
 } from "typeorm";
 
@@ -90,10 +91,10 @@ export class CertificationEntity {
     name?: string;
 
     @JoinColumn({ name: "studentId" })
-    @ManyToOne(() => StudentEntity, (student) => student.certifications, {
+    @ManyToOne("StudentEntity", "certifications", {
         onDelete: "CASCADE",
     })
-    student!: StudentEntity;
+    student!: Relation<StudentEntity>;
 
     @Column({ type: "uuid" })
     studentId!: string;

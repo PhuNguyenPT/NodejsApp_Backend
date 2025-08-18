@@ -148,11 +148,10 @@ export class OcrResultService {
                     : OcrStatus.FAILED;
                 entity.scores =
                     result.scores.length > 0 ? result.scores : undefined;
-                entity.documentAnnotation = result.documentAnnotation; // ADD THIS LINE
+                entity.documentAnnotation = result.documentAnnotation;
                 entity.errorMessage = result.error;
-                entity.metadata = metadata; // Add shared metadata
+                entity.metadata = metadata;
             } else {
-                // This case shouldn't happen if logic is correct
                 entity.status = OcrStatus.FAILED;
                 entity.errorMessage =
                     "Processing result not found for this file.";

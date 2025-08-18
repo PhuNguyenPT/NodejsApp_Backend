@@ -16,13 +16,13 @@ import {
     Role,
     UserStatus,
 } from "@/type/enum/user.js";
-import { AccessDeniedException } from "@/type/exception/access.denied.exception";
-import { AuthenticationException } from "@/type/exception/authentication.exception";
+import { AccessDeniedException } from "@/type/exception/access.denied.exception.js";
+import { AuthenticationException } from "@/type/exception/authentication.exception.js";
 import { BadCredentialsException } from "@/type/exception/bad.credentials.exception.js";
 import { EntityExistsException } from "@/type/exception/entity.exists.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { HttpException } from "@/type/exception/http.exception.js";
-import { JwtException } from "@/type/exception/jwt.exception";
+import { JwtException } from "@/type/exception/jwt.exception.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt.options.js";

@@ -1,10 +1,10 @@
 import { inject, injectable } from "inversify";
 
-import { JwtEntity, TokenType } from "@/entity/jwt.entity";
-import { IJwtTokenRepository } from "@/repository/jwt.token.repository.interface";
-import { TYPES } from "@/type/container/types";
-import { ILogger } from "@/type/interface/logger";
-import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt.options";
+import { JwtEntity, TokenType } from "@/entity/jwt.entity.js";
+import { IJwtTokenRepository } from "@/repository/jwt.token.repository.interface.js";
+import { TYPES } from "@/type/container/types.js";
+import { ILogger } from "@/type/interface/logger.js";
+import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt.options.js";
 
 @injectable()
 export class JwtEntityService {

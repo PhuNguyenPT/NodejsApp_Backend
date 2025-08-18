@@ -1,10 +1,9 @@
 import { injectable } from "inversify";
 
-import { redisClient } from "@/config/redis";
-import { JwtEntity } from "@/entity/jwt.entity";
-import logger from "@/util/logger";
-
-import { IJwtTokenRepository } from "../jwt.token.repository.interface";
+import { redisClient } from "@/config/redis.js";
+import { JwtEntity } from "@/entity/jwt.entity.js";
+import { IJwtTokenRepository } from "@/repository/jwt.token.repository.interface.js";
+import logger from "@/util/logger.js";
 
 @injectable()
 export class JwtTokenRepository implements IJwtTokenRepository {

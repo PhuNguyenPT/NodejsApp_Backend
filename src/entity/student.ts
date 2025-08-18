@@ -9,37 +9,39 @@ import {
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
+    Relation,
     UpdateDateColumn,
 } from "typeorm";
 
 import { ExamProfileDTO } from "@/dto/student/exam.profile.dto.js";
 import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
-import { FileEntity, FileType } from "@/entity/file.js";
+import { FileEntity } from "@/entity/file.js";
+import { FileType } from "@/entity/file.js";
 import { MajorGroupEntity } from "@/entity/major.group.entity.js";
 import { UserEntity } from "@/entity/user.js";
 import { ExamType } from "@/type/enum/exam.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
-import { VietnameseSubject } from "@/type/enum/subject";
+import { VietnameseSubject } from "@/type/enum/subject.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
-interface AcademicPerformanceData {
+export interface AcademicPerformanceData {
     academicPerformance: string;
     grade: number;
 }
 
-interface AptitudeTestData {
+export interface AptitudeTestData {
     examType: ExamType;
     score: number;
 }
 
-interface ConductData {
+export interface ConductData {
     conduct: string;
     grade: number;
 }
 
 // Updated to use VietnameseSubject enum for subject name
-interface ExamSubjectData {
+export interface ExamSubjectData {
     name: VietnameseSubject;
     score: number;
 }
@@ -67,21 +69,17 @@ export class StudentEntity {
     @Column({ nullable: true, type: "jsonb" })
     aptitudeTestScore?: AptitudeTestData;
 
-    @OneToMany(() => AwardEntity, (award) => award.student, {
+    @OneToMany("AwardEntity", "student", {
         cascade: true,
         eager: false,
     })
-    awards?: AwardEntity[];
+    awards?: Relation<AwardEntity[]>;
 
-    @OneToMany(
-        () => CertificationEntity,
-        (certification) => certification.student,
-        {
-            cascade: true,
-            eager: false,
-        },
-    )
-    certifications?: CertificationEntity[];
+    @OneToMany("CertificationEntity", "student", {
+        cascade: true,
+        eager: false,
+    })
+    certifications?: Relation<CertificationEntity[]>;
     /**
      * Conduct/behavior data for different grades
      * Array containing conduct ratings and corresponding grades
@@ -101,11 +99,11 @@ export class StudentEntity {
     })
     createdBy?: string;
 
-    @OneToMany(() => FileEntity, (file) => file.student, {
+    @OneToMany("FileEntity", "student", {
         cascade: true,
         eager: false,
     })
-    files?: FileEntity[];
+    files?: Relation<FileEntity[]>;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
@@ -124,8 +122,8 @@ export class StudentEntity {
         },
         name: "student_major_groups", // junction table name
     })
-    @ManyToMany(() => MajorGroupEntity, (majorGroup) => majorGroup.students)
-    majorGroupsEntities?: MajorGroupEntity[];
+    @ManyToMany("MajorGroupEntity", "students")
+    majorGroupsEntities?: Relation<MajorGroupEntity[]>;
 
     @Column({ nullable: true, type: "jsonb" })
     majors?: string[];
@@ -174,12 +172,12 @@ export class StudentEntity {
     talentScore?: number;
 
     @JoinColumn({ name: "userId" })
-    @ManyToOne(() => UserEntity, (user) => user.studentEntities, {
+    @ManyToOne("UserEntity", "studentEntities", {
         eager: false,
         nullable: true,
         onDelete: "SET NULL",
     })
-    user?: UserEntity;
+    user?: Relation<UserEntity>;
 
     @Column({ nullable: true, type: "uuid" })
     userId?: string;

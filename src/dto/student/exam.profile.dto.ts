@@ -12,10 +12,9 @@ import {
     ValidateNested,
 } from "class-validator";
 
+import { AptitudeTestDTO } from "@/dto/student/aptitude.test.dto.js";
 import { ExamType } from "@/type/enum/exam.js";
-import { VietnameseSubject } from "@/type/enum/subject"; // Import VietnameseSubject enum
-
-import { AptitudeTestDTO } from "./aptitude.test.dto";
+import { VietnameseSubject } from "@/type/enum/subject.js"; // Import VietnameseSubject enum
 
 /**
  * Represents a complete exam profile containing subject scores and optional test scores
