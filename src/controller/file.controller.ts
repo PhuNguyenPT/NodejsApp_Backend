@@ -392,6 +392,7 @@ export class FileController extends Controller {
         fileResponse.message = "File uploaded successfully";
         return fileResponse;
     }
+
     /**
      * Upload a file for a student
      * @summary Upload and associate a file with a student
@@ -586,6 +587,108 @@ export class FileController extends Controller {
         const fileEntities = await this.fileService.createFiles(
             createFileDTOs,
             user.id,
+            studentId,
+        );
+
+        // Convert to response format
+        const uploadResults = fileEntities.map((fileEntity) => {
+            const fileResponse = FileMapper.toFileResponse(fileEntity);
+            fileResponse.message = `File ${fileEntity.fileName} uploaded successfully`;
+            return fileResponse;
+        });
+
+        return uploadResults;
+    }
+
+    /**
+     * Upload multiple files for a student as a guest
+     * @summary Upload and associate multiple files with a student anonymously in a single batch
+     * @param studentId UUID of the student to associate the files with
+     * @param files The files to upload (multipart/form-data)
+     * @param filesMetadata JSON string containing metadata for each file (must match file count)
+     * @returns Upload confirmation with file metadata for all uploaded files
+     * @description Securely uploads multiple files for a student without requiring user authentication.
+     * This endpoint performs the same comprehensive validations as the authenticated version:
+     * - Filename validation (blocks dangerous characters, control characters, directory traversal)
+     * - File extension validation (blocks executable and dangerous file types)
+     * - MIME type validation (warns on mismatches)
+     * - String field validation (prevents empty strings)
+     * - Atomic batch operation (all files succeed or all fail)
+     * - File count limit validation (max 6 files per student)
+     *
+     * All uploaded files will be attributed to an anonymous guest user.
+     */
+    @Middlewares(validateUuidParam("studentId"))
+    @Post("upload/multiple/guest/{studentId}")
+    @Produces("application/json")
+    @Response(
+        HttpStatus.BAD_REQUEST,
+        "Validation error - invalid filename, dangerous file type, or invalid student ID",
+    )
+    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
+    @Response(HttpStatus.PAYLOAD_TOO_LARGE, "File size exceeds limit")
+    @SuccessResponse(HttpStatus.CREATED, "File uploaded successfully")
+    public async uploadFilesAnonymously(
+        @Path() studentId: string,
+        @UploadedFiles("files") files: Express.Multer.File[],
+        /**
+         * JSON string containing metadata for each file. Must be an array with same length as files.
+         * Each metadata object should contain: fileType (required), fileName (optional), description (optional), tags (optional)
+         * @example '[{"fileType":"transcript","fileName":"john_doe_transcript.pdf","description":"Student transcript for semester 1","tags":"academic,transcript,2024"},{"fileType":"resume","fileName":"john_doe_resume.pdf","description":"Updated professional resume","tags":"career,resume,2024"},{"fileType":"certificate","description":"Academic achievement certificate","tags":"achievement,certificate"}]'
+         */
+        @FormField("filesMetadata") filesMetadata: string,
+    ): Promise<FileResponse[]> {
+        // Parse and validate - any errors will be caught by global handler
+        const validatedMetadata = FilesMetadataSchema.parse(
+            JSON.parse(filesMetadata),
+        );
+
+        // Validate that metadata count matches file count
+        if (validatedMetadata.length !== files.length) {
+            throw new ValidationException({
+                files: `Metadata count (${validatedMetadata.length.toString()}) must match file count (${files.length.toString()})`,
+            });
+        }
+
+        // Validate all files first and prepare DTOs
+        const createFileDTOs: CreateFileDTO[] = files.map((file, index) => {
+            const metadata = validatedMetadata[index];
+
+            // Validate string fields
+            this.validateStringFields({
+                description: metadata.description,
+                fileName: metadata.fileName,
+                tags: metadata.tags,
+            });
+
+            // Validate filename for security
+            const finalFileName = metadata.fileName ?? file.originalname;
+            this.validateFilename(finalFileName);
+            this.validateFilename(file.originalname);
+
+            // Validate file extension
+            this.validateFileExtension(finalFileName, file.mimetype);
+
+            // Return the DTO for batch creation
+            return {
+                createdBy: Role.ANONYMOUS,
+                description: metadata.description,
+                fileContent: file.buffer,
+                fileName: finalFileName,
+                filePath: file.path,
+                fileSize: file.size,
+                fileType: metadata.fileType,
+                mimeType: file.mimetype,
+                originalFileName: file.originalname,
+                studentId: studentId,
+                tags: metadata.tags,
+            };
+        });
+
+        // Create all files in a single batch operation
+        const fileEntities = await this.fileService.createFilesAnonymously(
+            createFileDTOs,
             studentId,
         );
 
