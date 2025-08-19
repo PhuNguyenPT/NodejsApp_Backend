@@ -66,6 +66,9 @@ export class FileService {
         return savedFile;
     }
 
+    /**
+     * Creates a single file for guset and emits a SingleFileCreatedEvent.
+     */
     public async createFileAnonymously(
         createFileDTO: CreateFileDTO,
     ): Promise<FileEntity> {
@@ -97,6 +100,7 @@ export class FileService {
 
         return savedFile;
     }
+
     /**
      * Creates a batch of files and emits a single FilesCreatedEvent.
      */
@@ -145,6 +149,63 @@ export class FileService {
                 fileIds: savedFiles.map((file) => file.id),
                 studentId: studentId,
                 userId: userId,
+            };
+            await this.redisPublisher.publish(
+                OCR_CHANNEL,
+                JSON.stringify(payload),
+            );
+            logger.info(
+                `Created ${savedFiles.length.toString()} files. Published batch event to ${OCR_CHANNEL}.`,
+            );
+        }
+        return savedFiles;
+    }
+
+    /**
+     * Creates a batch of files for guest and emits a single FilesCreatedEvent.
+     */
+    public async createFilesAnonymously(
+        createFileDTOs: CreateFileDTO[],
+        studentId: string,
+    ): Promise<FileEntity[]> {
+        if (createFileDTOs.length === 0) {
+            return [];
+        }
+
+        // Validate all DTOs have the same studentId
+        for (let i = 0; i < createFileDTOs.length; i++) {
+            const dto = createFileDTOs[i];
+            if (dto.studentId !== studentId) {
+                throw new ValidationException({
+                    studentId: `All files must be for the same student. Expected studentId: ${studentId}, but file at index ${i.toString()} has studentId: ${dto.studentId}`,
+                });
+            }
+        }
+
+        // Use transaction to handle pessimistic lock properly
+        const savedFiles = await this.studentRepository.manager.transaction(
+            async (transactionalEntityManager) => {
+                // Use the helper for batch validation too.
+                await this._getAndValidateStudentForUpload(
+                    transactionalEntityManager,
+                    studentId,
+                    createFileDTOs.length, // Number of files being added
+                );
+
+                const newFiles = createFileDTOs.map((dto) =>
+                    this.fileRepository.create(dto),
+                );
+                return await transactionalEntityManager.save(
+                    FileEntity,
+                    newFiles,
+                );
+            },
+        );
+
+        if (savedFiles.length > 0) {
+            const payload: FilesCreatedEvent = {
+                fileIds: savedFiles.map((file) => file.id),
+                studentId: studentId,
             };
             await this.redisPublisher.publish(
                 OCR_CHANNEL,
