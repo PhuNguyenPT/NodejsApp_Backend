@@ -1,13 +1,13 @@
-// src/service/file.service.ts
 import { inject, injectable } from "inversify";
 import { RedisClientType } from "redis";
-import { Repository } from "typeorm";
+import { EntityManager, Repository } from "typeorm";
 
 import { CreateFileDTO } from "@/dto/file/create.file.js";
 import { UpdateFileDTO } from "@/dto/file/update.file.js";
 import { FileEntity, FileStatus, FileType } from "@/entity/file.js";
 import { StudentEntity } from "@/entity/student.js";
 import {
+    FilesCreatedEvent,
     OCR_CHANNEL,
     SingleFileCreatedEvent,
 } from "@/event/orc.event.listener.service.js";
@@ -26,97 +26,140 @@ export class FileService {
         private studentRepository: Repository<StudentEntity>,
         @inject(TYPES.RedisPublisher) private redisPublisher: RedisClientType,
     ) {}
+
+    /**
+     * Creates a single file and emits a SingleFileCreatedEvent.
+     */
     public async createFile(
         createFileDTO: CreateFileDTO,
         userId: string,
     ): Promise<FileEntity> {
-        // Verify student exists and load files
-        const student: null | StudentEntity =
-            await this.studentRepository.findOne({
-                relations: ["files"],
-                where: { id: createFileDTO.studentId },
-            });
+        const savedFile = await this.studentRepository.manager.transaction(
+            async (transactionalEntityManager) => {
+                // Use the refactored helper for all validation and locking
+                await this._getAndValidateStudentForUpload(
+                    transactionalEntityManager,
+                    createFileDTO.studentId,
+                    1,
+                    userId,
+                );
 
-        if (!student) {
-            throw new EntityNotFoundException(
-                `Student with ID ${createFileDTO.studentId} not found`,
-            );
-        }
+                const newFile = this.fileRepository.create(createFileDTO);
+                return await transactionalEntityManager.save(
+                    FileEntity,
+                    newFile,
+                );
+            },
+        );
 
-        if (student.userId !== userId && student.userId !== undefined) {
-            throw new AccessDeniedException("Access denied");
-        }
-
-        // Use the helper method from StudentEntity
-        if (student.getActiveFiles().length >= 6) {
-            throw new ValidationException({
-                file:
-                    `Student has reached the maximum limit of 6 files. ` +
-                    `Current active files: ${student.getActiveFiles().length.toString()}`,
-            });
-        }
-
-        const newFile: FileEntity = this.fileRepository.create(createFileDTO);
-        const savedFile: FileEntity = await this.fileRepository.save(newFile);
-
+        // Publish event after commit
         const payload: SingleFileCreatedEvent = {
             fileId: savedFile.id,
             studentId: savedFile.studentId,
             userId: userId,
         };
-
         await this.redisPublisher.publish(OCR_CHANNEL, JSON.stringify(payload));
-
         logger.info(
-            `File created with ID: ${savedFile.id}. Published event to ${OCR_CHANNEL}.`,
+            `Created 1 file. Published single event to ${OCR_CHANNEL}. File ID: ${savedFile.id}`,
         );
+
         return savedFile;
     }
 
     public async createFileAnonymously(
         createFileDTO: CreateFileDTO,
     ): Promise<FileEntity> {
-        // Verify student exists and load files
-        const student: null | StudentEntity =
-            await this.studentRepository.findOne({
-                relations: ["files"],
-                where: { id: createFileDTO.studentId },
-            });
+        const savedFile = await this.studentRepository.manager.transaction(
+            async (transactionalEntityManager) => {
+                // The same helper works for anonymous uploads by omitting the userId.
+                await this._getAndValidateStudentForUpload(
+                    transactionalEntityManager,
+                    createFileDTO.studentId,
+                    1, // Adding 1 file
+                );
 
-        if (!student) {
-            throw new EntityNotFoundException(
-                `Student with ID ${createFileDTO.studentId} not found`,
-            );
-        }
-
-        if (student.getActiveFiles().length >= 6) {
-            throw new ValidationException({
-                file:
-                    `Student has reached the maximum limit of 6 files. ` +
-                    `Current active files: ${student.getActiveFiles().length.toString()}`,
-            });
-        }
-
-        const newFile: FileEntity = this.fileRepository.create(createFileDTO);
-        const savedFile: FileEntity = await this.fileRepository.save(newFile);
+                const newFile = this.fileRepository.create(createFileDTO);
+                return await transactionalEntityManager.save(
+                    FileEntity,
+                    newFile,
+                );
+            },
+        );
 
         const payload: SingleFileCreatedEvent = {
             fileId: savedFile.id,
             studentId: savedFile.studentId,
         };
-
         await this.redisPublisher.publish(OCR_CHANNEL, JSON.stringify(payload));
-
         logger.info(
             `File created with ID: ${savedFile.id}. Published event to ${OCR_CHANNEL}.`,
         );
+
         return savedFile;
+    }
+    /**
+     * Creates a batch of files and emits a single FilesCreatedEvent.
+     */
+    public async createFiles(
+        createFileDTOs: CreateFileDTO[],
+        userId: string,
+        studentId: string,
+    ): Promise<FileEntity[]> {
+        if (createFileDTOs.length === 0) {
+            return [];
+        }
+
+        // Validate all DTOs have the same studentId
+        for (let i = 0; i < createFileDTOs.length; i++) {
+            const dto = createFileDTOs[i];
+            if (dto.studentId !== studentId) {
+                throw new ValidationException({
+                    studentId: `All files must be for the same student. Expected studentId: ${studentId}, but file at index ${i.toString()} has studentId: ${dto.studentId}`,
+                });
+            }
+        }
+
+        // Use transaction to handle pessimistic lock properly
+        const savedFiles = await this.studentRepository.manager.transaction(
+            async (transactionalEntityManager) => {
+                // Use the helper for batch validation too.
+                await this._getAndValidateStudentForUpload(
+                    transactionalEntityManager,
+                    studentId,
+                    createFileDTOs.length, // Number of files being added
+                    userId,
+                );
+
+                const newFiles = createFileDTOs.map((dto) =>
+                    this.fileRepository.create(dto),
+                );
+                return await transactionalEntityManager.save(
+                    FileEntity,
+                    newFiles,
+                );
+            },
+        );
+
+        if (savedFiles.length > 0) {
+            const payload: FilesCreatedEvent = {
+                fileIds: savedFiles.map((file) => file.id),
+                studentId: studentId,
+                userId: userId,
+            };
+            await this.redisPublisher.publish(
+                OCR_CHANNEL,
+                JSON.stringify(payload),
+            );
+            logger.info(
+                `Created ${savedFiles.length.toString()} files. Published batch event to ${OCR_CHANNEL}.`,
+            );
+        }
+        return savedFiles;
     }
 
     public async deleteFile(fileId: string): Promise<void> {
         const file = await this.getFileById(fileId);
 
-        // Soft delete - mark as deleted instead of actually removing
         file.status = FileStatus.DELETED;
         await this.fileRepository.save(file);
         logger.info(`File soft deleted with ID: ${fileId}`);
@@ -198,7 +241,6 @@ export class FileService {
     ): Promise<FileEntity> {
         const file = await this.getFileById(fileId);
 
-        // Handle each field explicitly, including null values for clearing
         if (
             updateFileDTO.description !== undefined &&
             updateFileDTO.description.trim() !== ""
@@ -234,5 +276,52 @@ export class FileService {
         const updatedFile: FileEntity = await this.fileRepository.save(file);
         logger.info(`File updated successfully with ID: ${updatedFile.id}`);
         return updatedFile;
+    }
+    /**
+     * A private helper to find, lock, and validate a student within a transaction.
+     * This improves performance by using a COUNT query instead of loading all file relations.
+     */
+    private async _getAndValidateStudentForUpload(
+        transactionalEntityManager: EntityManager,
+        studentId: string,
+        filesToAdd: number,
+        userId?: string, // userId is optional for anonymous uploads
+    ): Promise<void> {
+        // 1. Lock the student row to prevent concurrent modifications.
+        const student = await transactionalEntityManager.findOne(
+            StudentEntity,
+            {
+                lock: { mode: "pessimistic_write" },
+                where: { id: studentId },
+            },
+        );
+
+        if (!student) {
+            throw new EntityNotFoundException(
+                `Student with ID ${studentId} not found`,
+            );
+        }
+
+        // 2. Perform access control check if a userId is provided.
+        if (userId && student.userId !== userId) {
+            throw new AccessDeniedException("Access denied");
+        }
+
+        // 3. Efficiently count existing active files instead of loading them all.
+        const currentActiveFiles = await transactionalEntityManager.count(
+            FileEntity,
+            {
+                where: { status: FileStatus.ACTIVE, studentId: studentId },
+            },
+        );
+
+        // 4. Validate the file limit.
+        if (currentActiveFiles + filesToAdd > 6) {
+            throw new ValidationException({
+                files:
+                    `Adding ${filesToAdd.toString()} file(s) would exceed the maximum limit of 6. ` +
+                    `Student currently has ${currentActiveFiles.toString()} active file(s).`,
+            });
+        }
     }
 }

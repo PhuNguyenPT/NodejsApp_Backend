@@ -171,13 +171,13 @@ export class MistralService {
             };
         }
     }
-
     /**
      * Extracts subject scores from all files of a student (batch processing)
      */
     public async extractSubjectScoresBatch(
         student: StudentEntity,
         userId: string,
+        fileIds: string[],
     ): Promise<BatchScoreExtractionResult> {
         try {
             if (student.userId !== undefined && student.userId !== userId) {
@@ -191,11 +191,109 @@ export class MistralService {
                 };
             }
 
+            // Filter to only the requested files
+            const filesToProcess = student.files.filter((file) =>
+                fileIds.includes(file.id),
+            );
+
+            if (filesToProcess.length === 0) {
+                return {
+                    error: `None of the requested files found for student ${student.id}`,
+                    results: [],
+                    success: false,
+                };
+            }
+
             const expectedSubjects =
                 student.nationalExam?.map((exam) => exam.name) ?? [];
             const model = "mistral-ocr-latest";
 
-            const extractionPromises = student.files.map(
+            const extractionPromises = filesToProcess.map(
+                async (fileEntity): Promise<FileScoreExtractionResult> => {
+                    if (!fileEntity.isImage()) {
+                        return {
+                            error: `File is not an image (MIME type: ${fileEntity.mimeType}).`,
+                            fileId: fileEntity.id,
+                            fileName: fileEntity.originalFileName,
+                            scores: [],
+                            success: false,
+                        };
+                    }
+
+                    const result: ScoreExtractionResult =
+                        await this.extractScoresFromImage(
+                            fileEntity,
+                            expectedSubjects,
+                            model,
+                        );
+
+                    return {
+                        documentAnnotation: result.documentAnnotation,
+                        error: result.error,
+                        fileId: fileEntity.id,
+                        fileName: fileEntity.originalFileName,
+                        scores: result.scores,
+                        success: result.success,
+                    };
+                },
+            );
+
+            // Wait for all the parallel requests to complete
+            const extractionResults = await Promise.all(extractionPromises);
+
+            return {
+                ocrModel: model,
+                results: extractionResults,
+                success: true,
+            };
+        } catch (error) {
+            this.logger.error(`Error during extractSubjectScoresBatch: `, {
+                error,
+            });
+            const errorMessage =
+                error instanceof Error
+                    ? error.message
+                    : "Unknown error during score extraction";
+            return {
+                error: errorMessage,
+                results: [],
+                success: false,
+            };
+        }
+    }
+    /**
+     * Extracts subject scores from all files of a student (batch processing)
+     */
+    public async extractSubjectScoresBatchAnonymously(
+        student: StudentEntity,
+        fileIds: string[],
+    ): Promise<BatchScoreExtractionResult> {
+        try {
+            if (!student.files || student.files.length === 0) {
+                return {
+                    error: `No files found for student ${student.id}`,
+                    results: [],
+                    success: false,
+                };
+            }
+
+            const filesToProcess = student.files.filter((file) =>
+                fileIds.includes(file.id),
+            );
+
+            if (filesToProcess.length === 0) {
+                return {
+                    error: `None of the requested files found for student ${student.id}`,
+                    results: [],
+                    success: false,
+                };
+            }
+
+            const expectedSubjects =
+                student.nationalExam?.map((exam) => exam.name) ?? [];
+            const model = "mistral-ocr-latest";
+
+            const extractionPromises = filesToProcess.map(
                 async (fileEntity): Promise<FileScoreExtractionResult> => {
                     if (!fileEntity.isImage()) {
                         return {
