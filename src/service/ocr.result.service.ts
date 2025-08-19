@@ -24,44 +24,72 @@ export class OcrResultService {
         private readonly logger: ILogger,
     ) {}
 
-    // Create placeholder records only for files that don't already have results
     public async createInitialOcrResults(
         studentId: string,
         userId: string,
         files: FileEntity[],
     ): Promise<OcrResultEntity[]> {
-        const fileIds = files.map((f) => f.id);
-        const existingResults = await this.findExistingResults(fileIds);
-        const existingFileIds = new Set(existingResults.map((r) => r.fileId));
-
-        // Filter out files that already have results
-        const filesToProcess = files.filter(
-            (file) => !existingFileIds.has(file.id),
-        );
-
-        if (filesToProcess.length === 0) {
-            this.logger.warn(
-                `All files already have OCR results for student ${studentId}. No new records created.`,
-            );
+        if (files.length === 0) {
             return [];
         }
 
-        const initialEntities = filesToProcess.map(
-            (file) =>
-                new OcrResultEntity({
-                    fileId: file.id,
-                    processedBy: userId,
-                    status: OcrStatus.PROCESSING,
-                    studentId,
-                }),
-        );
+        // Sort fileIds for consistent lock ordering to prevent deadlocks
+        const fileIds = files.map((f) => f.id).sort();
 
-        const savedEntities =
-            await this.ocrResultRepository.save(initialEntities);
-        this.logger.info(
-            `Created ${savedEntities.length.toString()} new placeholder OCR records for student ${studentId}. Skipped ${existingFileIds.size.toString()} files with existing results.`,
-        );
-        return savedEntities;
+        try {
+            return await this.ocrResultRepository.manager.transaction(
+                async (transactionalEntityManager) => {
+                    const existingResults =
+                        await transactionalEntityManager.find(OcrResultEntity, {
+                            lock: { mode: "pessimistic_write" },
+                            where: { fileId: In(fileIds) },
+                        });
+
+                    const existingFileIds = new Set(
+                        existingResults.map((r) => r.fileId),
+                    );
+
+                    // Use original files array for processing (maintain original order)
+                    const filesToProcess = files.filter(
+                        (file) => !existingFileIds.has(file.id),
+                    );
+
+                    if (filesToProcess.length === 0) {
+                        this.logger.warn(
+                            `All ${files.length.toString()} files already have OCR results for student ${studentId}. No new records created.`,
+                        );
+                        return [];
+                    }
+
+                    const initialEntities = filesToProcess.map(
+                        (file) =>
+                            new OcrResultEntity({
+                                fileId: file.id,
+                                processedBy: userId,
+                                status: OcrStatus.PROCESSING,
+                                studentId,
+                            }),
+                    );
+
+                    const savedEntities = await transactionalEntityManager.save(
+                        OcrResultEntity,
+                        initialEntities,
+                    );
+
+                    this.logger.info(
+                        `Created ${savedEntities.length.toString()} new placeholder OCR records for student ${studentId}. Skipped ${existingFileIds.size.toString()} files with existing results.`,
+                    );
+
+                    return savedEntities;
+                },
+            );
+        } catch (error) {
+            this.logger.error(
+                `Transaction failed while creating OCR results for student ${studentId}`,
+                { error, fileCount: files.length },
+            );
+            throw error;
+        }
     }
 
     public async findByFileId(fileId: string): Promise<null | OcrResultEntity> {

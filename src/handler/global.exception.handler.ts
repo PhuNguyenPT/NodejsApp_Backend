@@ -3,6 +3,7 @@
 import jwt from "jsonwebtoken"; // Corrected import
 import { ValidateError } from "tsoa";
 import { EntityMetadataNotFoundError } from "typeorm";
+import { ZodError } from "zod";
 
 import { ExceptionHandler } from "@/decorator/exception.handler.decorator.js";
 import { HttpStatus } from "@/type/enum/http.status.js";
@@ -106,7 +107,6 @@ class ExceptionHandlers {
 
         return { message, response, status };
     }
-
     @ExceptionHandler(EntityMetadataNotFoundError)
     handleEntityMetadataNotFoundError(
         error: EntityMetadataNotFoundError,
@@ -125,7 +125,6 @@ class ExceptionHandlers {
         });
         return { message, response, status };
     }
-
     @ExceptionHandler(EntityNotFoundException)
     handleEntityNotFoundException(
         exception: EntityNotFoundException,
@@ -396,6 +395,48 @@ class ExceptionHandlers {
             stack: exception.stack,
             status,
             validationErrors: exception.validationErrors,
+        });
+
+        return { message, response, status };
+    }
+
+    @ExceptionHandler(ZodError)
+    handleZodError(error: ZodError): ErrorDetails {
+        const status = HttpStatus.BAD_REQUEST;
+        const message = "Validation failed";
+
+        // Use Zod's built-in flattening utility for clean error formatting
+        const flattened = error.flatten();
+
+        // Convert to your ValidationResponse format
+        const validationErrors: Record<string, string> = {};
+
+        // Add form-level errors (top-level issues)
+        if (flattened.formErrors.length > 0) {
+            validationErrors.root = flattened.formErrors.join("; ");
+        }
+
+        // Add field-level errors
+        Object.entries(flattened.fieldErrors).forEach(([field, errors]) => {
+            if (errors && errors.length > 0) {
+                validationErrors[field] = errors.join("; ");
+            }
+        });
+
+        const response: ValidationResponse = {
+            message,
+            status,
+            validationErrors,
+        };
+
+        logger.warn("ZodError", {
+            flattenedErrors: flattened, // Include flattened structure for debugging
+            message,
+            originalError: error.name,
+            stack: error.stack,
+            status,
+            validationErrors,
+            zodErrorCount: error.issues.length,
         });
 
         return { message, response, status };

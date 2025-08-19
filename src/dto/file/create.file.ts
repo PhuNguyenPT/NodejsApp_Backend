@@ -109,7 +109,7 @@ export class CreateFileDTO {
      */
     @IsNotEmpty()
     @IsString()
-    modifiedBy!: string;
+    modifiedBy?: string;
 
     /**
      * Original filename from upload
