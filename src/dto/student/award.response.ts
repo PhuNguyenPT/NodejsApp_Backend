@@ -5,7 +5,6 @@ import { IsNotEmpty, IsOptional } from "class-validator";
  * Data Transfer Object for Award information
  * @example
  * {
- *   "awardDate": "2023-12-15",
  *   "category": "Tiếng Anh",
  *   "level": "Hạng Nhất",
  *   "name": "Học sinh giỏi cấp quốc gia"
@@ -25,7 +24,7 @@ export class AwardResponse {
     @Expose()
     @IsNotEmpty()
     @Type(() => Date)
-    awardDate!: Date;
+    awardDate?: Date;
 
     @Expose()
     @IsOptional()

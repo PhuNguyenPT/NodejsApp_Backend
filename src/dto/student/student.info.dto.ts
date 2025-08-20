@@ -58,7 +58,6 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  *   },
  *   "awards": [
  *     {
- *       "awardDate": "2023-12-15",
  *       "category": "Tiếng Anh",
  *       "level": "Hạng Nhất",
  *       "name": "Học sinh giỏi cấp quốc gia"
@@ -70,10 +69,7 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
  *         "type": "CCNN",
  *         "value": "IELTS"
  *       },
- *       "issueDate": "2023-01-15",
- *       "expirationDate": "2025-01-15",
  *       "level": "6.5",
- *       "name": "IELTS Academic"
  *     }
  *   ],
  *   "conducts": [

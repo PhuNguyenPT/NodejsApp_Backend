@@ -12,7 +12,6 @@ import {
  * Data Transfer Object for Award information
  * @example
  * {
- *   "awardDate": "2023-12-15",
  *   "category": "Tiếng Anh",
  *   "level": "Hạng Nhất",
  *   "name": "Học sinh giỏi cấp quốc gia"
@@ -31,9 +30,9 @@ import {
 export class AwardDTO {
     @Expose()
     @IsDate({ message: "Award date must be a valid date" })
-    @IsNotEmpty({ message: "Award date is required" })
+    @IsOptional()
     @Type(() => Date)
-    awardDate!: Date;
+    awardDate?: Date;
 
     @Expose()
     @IsOptional()

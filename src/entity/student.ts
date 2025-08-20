@@ -365,8 +365,9 @@ export class StudentEntity {
 
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - days);
-
-        return this.awards.filter((award) => award.awardDate >= cutoffDate);
+        return this.awards.filter((award) => {
+            return award.awardDate && award.awardDate >= cutoffDate;
+        });
     }
 
     // Helper method to get recent files (within specified days)
