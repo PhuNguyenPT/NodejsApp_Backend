@@ -3,7 +3,12 @@
 import jwt from "jsonwebtoken"; // Corrected import
 import { ValidateError } from "tsoa";
 import { EntityMetadataNotFoundError } from "typeorm";
-import { ZodError } from "zod";
+import {
+    ZodError,
+    ZodInvalidEnumValueIssue,
+    ZodInvalidTypeIssue,
+    ZodIssue,
+} from "zod";
 
 import { ExceptionHandler } from "@/decorator/exception.handler.decorator.js";
 import { HttpStatus } from "@/type/enum/http.status.js";
@@ -405,37 +410,52 @@ class ExceptionHandlers {
         const status = HttpStatus.BAD_REQUEST;
         const message = "Validation failed";
 
-        // Use Zod's built-in flattening utility for clean error formatting
-        const flattened = error.flatten();
+        // Custom flattener that preserves full field paths
+        const customFlatten = (zodError: ZodError) => {
+            const fieldErrors: Record<string, string[]> = {};
+            const formErrors: string[] = [];
 
-        // Convert to your ValidationResponse format
-        const validationErrors: Record<string, string> = {};
+            zodError.issues.forEach((issue: ZodIssue) => {
+                const path = issue.path.join(".");
+                const errorMessage = issue.message;
 
-        // Add form-level errors (top-level issues)
-        if (flattened.formErrors.length > 0) {
-            validationErrors.root = flattened.formErrors.join("; ");
-        }
+                if (path) {
+                    // Add context for better error messages with proper typing
+                    let contextualMessage = errorMessage;
 
-        // Add field-level errors
-        Object.entries(flattened.fieldErrors).forEach(([field, errors]) => {
-            if (errors && errors.length > 0) {
-                validationErrors[field] = errors.join("; ");
-            }
-        });
+                    if (issue.code === "invalid_type") {
+                        const typedIssue = issue as ZodInvalidTypeIssue;
+                        contextualMessage = `Expected ${typedIssue.expected}, but received ${typedIssue.received}`;
+                    } else if (issue.code === "invalid_enum_value") {
+                        const enumIssue = issue as ZodInvalidEnumValueIssue;
+                        contextualMessage = `Must be one of: ${enumIssue.options.join(", ")}`;
+                    }
 
-        const response: ValidationResponse = {
+                    // Use nullish coalescing to handle undefined
+                    fieldErrors[path] = fieldErrors[path] ?? [];
+                    fieldErrors[path].push(contextualMessage);
+                } else {
+                    formErrors.push(errorMessage);
+                }
+            });
+
+            return { fieldErrors, formErrors };
+        };
+
+        const flattened = customFlatten(error);
+
+        const response = {
             message,
             status,
-            validationErrors,
+            validationErrors: flattened,
         };
 
         logger.warn("ZodError", {
-            flattenedErrors: flattened, // Include flattened structure for debugging
+            flattenedErrors: flattened,
             message,
             originalError: error.name,
             stack: error.stack,
             status,
-            validationErrors,
             zodErrorCount: error.issues.length,
         });
 
