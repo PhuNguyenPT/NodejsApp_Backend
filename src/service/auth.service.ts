@@ -3,12 +3,12 @@ import bcrypt from "bcrypt";
 import { plainToClass } from "class-transformer";
 import { inject, injectable } from "inversify";
 import jwt from "jsonwebtoken";
+import { Repository } from "typeorm";
 
 import { LoginRequest, RegisterRequest } from "@/dto/auth/auth.request.js";
 import { AuthResponse } from "@/dto/auth/auth.response.js";
 import { User } from "@/dto/user/user.js";
 import { UserEntity } from "@/entity/user.js";
-import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { JWTService } from "@/service/jwt.service.js";
 import { TYPES } from "@/type/container/types.js";
 import {
@@ -30,7 +30,8 @@ import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt.options.js";
 @injectable()
 export class AuthService {
     constructor(
-        @inject(TYPES.IUserRepository) private userRepository: IUserRepository,
+        @inject(TYPES.UserRepository)
+        private userRepository: Repository<UserEntity>,
         @inject(TYPES.JWTService) private jwtService: JWTService,
         @inject(TYPES.Logger) private logger: ILogger,
     ) {}
@@ -40,8 +41,11 @@ export class AuthService {
 
         try {
             // Find user by email - will throw EntityNotFoundException if not found
-            const user: UserEntity =
-                await this.userRepository.findByEmail(email);
+            const user = await this.userRepository.findOneBy({ email });
+
+            if (!user) {
+                throw new BadCredentialsException();
+            }
 
             // Check if account is active
             if (user.status !== UserStatus.HAPPY) {
@@ -182,7 +186,9 @@ export class AuthService {
                 await this.jwtService.verifyToken(refreshToken);
 
             // Check if user still exists and is active
-            const user = await this.userRepository.findById(payload.id);
+            const user = await this.userRepository.findOneBy({
+                id: payload.id,
+            });
 
             if (!user) {
                 this.logger.warn("Token refresh failed: user not found", {
@@ -278,33 +284,11 @@ export class AuthService {
             throw new HttpException(401, "Invalid refresh token");
         }
     }
-
     async register(registerData: RegisterRequest): Promise<AuthResponse> {
         const { email, password } = registerData;
 
         try {
-            // Check if user already exists - repository will throw EntityExistsException
-            const existingUser = await this.userRepository.existsByEmail(email);
-            if (existingUser) {
-                throw new EntityExistsException(
-                    "User with this email already exists",
-                );
-            }
-
-            // Hash password
-            const saltRounds = 12;
-            const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-            // Create new user
-            const newUser = new UserEntity({
-                email,
-                password: hashedPassword,
-                permissions: getDefaultPermissionsByRole(Role.USER),
-                role: Role.USER,
-                status: UserStatus.HAPPY,
-            });
-
-            const savedUser = await this.userRepository.saveUser(newUser);
+            const savedUser = await this.createAndSaveUser(email, password);
 
             // Create JWT payload
             const jwtPayload: CustomJwtPayload = {
@@ -325,8 +309,12 @@ export class AuthService {
             // Convert entity to DTO
             const userDto = plainToClass(User, savedUser);
 
-            this.logger.info(`New user registered: ${email}`);
-
+            this.logger.info(`Registration completed successfully`, {
+                accessTokenPrefix: accessToken.substring(0, 10),
+                email,
+                refreshTokenPrefix: refreshToken.substring(0, 10),
+                userId: savedUser.id,
+            });
             return new AuthResponse({
                 accessToken: accessToken,
                 expiresIn: JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
@@ -355,6 +343,60 @@ export class AuthService {
                 "Registration failed due to internal error",
             );
         }
+    }
+
+    private async createAndSaveUser(
+        email: string,
+        password: string,
+    ): Promise<UserEntity> {
+        const savedUser = await this.userRepository.manager.transaction(
+            async (transactionalEntityManager) => {
+                // Check if user exists with pessimistic write lock to prevent race conditions
+                const existingUser = await transactionalEntityManager.findOne(
+                    UserEntity,
+                    {
+                        lock: {
+                            mode: "pessimistic_write",
+                            onLocked: "nowait", // Fail immediately if can't acquire lock
+                        },
+                        where: { email },
+                    },
+                );
+
+                if (existingUser) {
+                    throw new EntityExistsException(
+                        "User with this email already exists",
+                    );
+                }
+
+                // Hash password
+                const saltRounds = 12;
+                const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+                // Create new user
+                const newUser = new UserEntity({
+                    email,
+                    password: hashedPassword,
+                    permissions: getDefaultPermissionsByRole(Role.USER),
+                    role: Role.USER,
+                    status: UserStatus.HAPPY,
+                });
+
+                // Save user within transaction
+                const savedUser =
+                    await transactionalEntityManager.save(newUser);
+
+                // Move logging to its own statement to fix ESLint error
+                this.logger.info(`User entity created successfully`, {
+                    email: savedUser.email,
+                    userId: savedUser.id,
+                });
+
+                return savedUser; // Return the saved user from transaction
+            },
+        );
+
+        return savedUser;
     }
 
     /**
