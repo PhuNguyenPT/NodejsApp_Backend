@@ -1,3 +1,4 @@
+import { Expose } from "class-transformer";
 import { z } from "zod";
 
 import { VietnameseSubject } from "@/type/enum/subject.js";
@@ -15,7 +16,11 @@ export const SubjectScoreSchema = z.object({
     name: z
         .nativeEnum(VietnameseSubject)
         .describe("Vietnamese subject name from enum"),
-    score: z.number().describe("ĐTB score on 0-10 scale"),
+    score: z
+        .number()
+        .describe(
+            "ĐTB, TBM, TBm, or final score column in Vietnamese on 0-10 scale",
+        ),
 });
 
 export const TranscriptSchema = z.object({
@@ -57,4 +62,21 @@ export interface ScoreExtractionResult {
 }
 
 export type SubjectScore = ISubjectScore;
+
 export type Transcript = ITranscript;
+export class OcrResultResponse {
+    @Expose()
+    createdAt!: Date;
+
+    @Expose()
+    fileId!: string;
+
+    @Expose()
+    id!: string;
+
+    @Expose()
+    processedBy!: string;
+
+    @Expose()
+    scores!: SubjectScore[];
+}
