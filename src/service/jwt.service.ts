@@ -55,7 +55,10 @@ export class JWTService {
     /**
      * Generate JWT access token for user and store it in Redis
      */
-    async generateAccessToken(payload: CustomJwtPayload): Promise<string> {
+    async generateAccessToken(
+        payload: CustomJwtPayload,
+        familyId: string,
+    ): Promise<string> {
         try {
             const token = jwt.sign(
                 payload,
@@ -68,6 +71,7 @@ export class JWTService {
                 token,
                 ttl,
                 TokenType.ACCESS,
+                familyId,
             );
 
             // Reduce logging verbosity - only log in debug mode
@@ -85,7 +89,10 @@ export class JWTService {
     /**
      * Generate refresh token and store it in Redis
      */
-    async generateRefreshToken(payload: CustomJwtPayload): Promise<string> {
+    async generateRefreshToken(
+        payload: CustomJwtPayload,
+        familyId: string,
+    ): Promise<string> {
         try {
             const token = jwt.sign(
                 payload,
@@ -97,6 +104,7 @@ export class JWTService {
                 token,
                 JWT_REFRESH_TOKEN_EXPIRATION_SECONDS,
                 TokenType.REFRESH,
+                familyId,
             );
 
             // Reduce logging verbosity - only log in debug mode
@@ -131,50 +139,6 @@ export class JWTService {
                 error: error instanceof Error ? error.message : String(error),
             });
             return false;
-        }
-    }
-
-    /**
-     * Refresh access token using refresh token
-     */
-    async refreshAccessToken(
-        refreshToken: string,
-    ): Promise<{ accessToken: string; newRefreshToken?: string }> {
-        try {
-            // Verify refresh token
-            const payload = await this.verifyToken(refreshToken);
-
-            // Generate new access token
-            const newAccessToken = await this.generateAccessToken({
-                email: payload.email,
-                id: payload.id,
-                name: payload.name,
-                permissions: payload.permissions,
-                role: payload.role,
-                status: payload.status,
-            });
-
-            // Optionally, generate new refresh token and invalidate old one
-            const newRefreshToken = await this.generateRefreshToken({
-                email: payload.email,
-                id: payload.id,
-                name: payload.name,
-                permissions: payload.permissions,
-                role: payload.role,
-                status: payload.status,
-            });
-
-            // Blacklist old refresh token
-            await this.jwtEntityService.blacklistToken(refreshToken);
-
-            this.logger.info(`Tokens refreshed for user: ${payload.id}`);
-            return {
-                accessToken: newAccessToken,
-                newRefreshToken: newRefreshToken,
-            };
-        } catch (error) {
-            this.logger.error("Failed to refresh tokens:", { error });
-            throw new Error("Token refresh failed");
         }
     }
 

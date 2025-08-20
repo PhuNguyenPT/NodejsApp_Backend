@@ -10,6 +10,7 @@ export enum TokenType {
 
 export class JwtEntity {
     public readonly createdAt: Date;
+    public readonly familyId: string;
     public readonly id: string;
     public isBlacklisted: boolean;
     public modifiedAt?: Date;
@@ -24,6 +25,7 @@ export class JwtEntity {
      */
     constructor(params: {
         createdAt?: Date;
+        familyId?: string;
         id?: string;
         isBlacklisted?: boolean;
         modifiedAt?: Date;
@@ -38,12 +40,14 @@ export class JwtEntity {
         this.createdAt = params.createdAt ?? new Date();
         this.type = params.type ?? TokenType.ACCESS;
         this.modifiedAt = params.modifiedAt;
+        this.familyId = params.familyId ?? randomUUID();
     }
 
     // Create entity from Redis data
     static fromRedisObject(data: Record<string, string>): JwtEntity {
         return new JwtEntity({
             createdAt: new Date(data.createdAt),
+            familyId: data.familyId,
             id: data.id,
             isBlacklisted: data.isBlacklisted === "true",
             modifiedAt: data.modifiedAt ? new Date(data.modifiedAt) : undefined,
@@ -89,6 +93,7 @@ export class JwtEntity {
     toRedisObject(): Record<string, string> {
         const obj: Record<string, string> = {
             createdAt: this.createdAt.toISOString(),
+            familyId: this.familyId,
             id: this.id,
             isBlacklisted: this.isBlacklisted.toString(),
             token: this.token,
