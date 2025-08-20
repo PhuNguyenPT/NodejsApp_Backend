@@ -18,10 +18,7 @@ import { ExamType } from "@/type/enum/exam.js";
  *     "type": "CCNN",
  *     "value": "IELTS"
  *   },
- *   "issueDate": "2023-01-15",
- *   "expirationDate": "2025-01-15",
- *   "level": "6.5",
- *   "name": "IELTS Academic"
+ *   "level": "6.5"
  * }
  * @example
  * {
@@ -66,15 +63,15 @@ export class CertificationDTO {
 
     @Expose()
     @IsDate({ message: "Expiration date must be a valid date" })
-    @IsNotEmpty({ message: "Expiration date is required" })
+    @IsOptional()
     @Type(() => Date)
-    expirationDate!: Date;
+    expirationDate?: Date;
 
     @Expose()
     @IsDate({ message: "Issue date must be a valid date" })
-    @IsNotEmpty({ message: "Issue date is required" })
+    @IsOptional()
     @Type(() => Date)
-    issueDate!: Date;
+    issueDate?: Date;
 
     @Expose()
     @IsOptional()

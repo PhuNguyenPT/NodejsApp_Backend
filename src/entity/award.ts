@@ -23,8 +23,8 @@ import { StudentEntity } from "./student.js";
 @Index("idx_award_created_at", ["createdAt"])
 @Index("idx_award_modified_at", ["modifiedAt"])
 export class AwardEntity {
-    @Column({ type: "date" })
-    awardDate!: Date;
+    @Column({ nullable: true, type: "date" })
+    awardDate?: Date;
 
     @Column({ length: 100, nullable: true, type: "varchar" })
     awardId?: string;
