@@ -11,6 +11,7 @@ export interface IJwtTokenRepository {
     findById(id: string): Promise<JwtEntity | null>;
     findByToken(token: string): Promise<JwtEntity | null>;
     getAllTokens(): Promise<JwtEntity[]>;
+    invalidateFamily(familyId: string): Promise<void>;
     isTokenBlacklisted(token: string): Promise<boolean>;
     save(jwtEntity: JwtEntity): Promise<void>;
 }

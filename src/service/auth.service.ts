@@ -1,6 +1,7 @@
 // src/service/auth.service.ts
 import bcrypt from "bcrypt";
 import { plainToClass } from "class-transformer";
+import { randomUUID } from "crypto";
 import { inject, injectable } from "inversify";
 import jwt from "jsonwebtoken";
 import { Repository } from "typeorm";
@@ -8,7 +9,10 @@ import { Repository } from "typeorm";
 import { LoginRequest, RegisterRequest } from "@/dto/auth/auth.request.js";
 import { AuthResponse } from "@/dto/auth/auth.response.js";
 import { User } from "@/dto/user/user.js";
+import { TokenType } from "@/entity/jwt.entity.js";
 import { UserEntity } from "@/entity/user.js";
+import { IJwtTokenRepository } from "@/repository/jwt.token.repository.interface.js";
+import { JwtEntityService } from "@/service/jwt.entity.service.js";
 import { JWTService } from "@/service/jwt.service.js";
 import { TYPES } from "@/type/container/types.js";
 import {
@@ -32,8 +36,12 @@ export class AuthService {
     constructor(
         @inject(TYPES.UserRepository)
         private userRepository: Repository<UserEntity>,
-        @inject(TYPES.JWTService) private jwtService: JWTService,
-        @inject(TYPES.Logger) private logger: ILogger,
+        @inject(TYPES.JWTService) private readonly jwtService: JWTService,
+        @inject(TYPES.JwtEntityService)
+        private readonly jwtEntityService: JwtEntityService,
+        @inject(TYPES.IJwtTokenRepository)
+        private readonly jwtTokenRepository: IJwtTokenRepository,
+        @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {}
 
     async login(loginData: LoginRequest): Promise<AuthResponse> {
@@ -74,12 +82,16 @@ export class AuthService {
                 status: user.status,
             };
 
-            // Generate tokens
-            const accessToken: string =
-                await this.jwtService.generateAccessToken(jwtPayload);
+            const familyId = randomUUID(); // Create ONE familyId for this session
 
-            const refreshToken =
-                await this.jwtService.generateRefreshToken(jwtPayload);
+            // Pass this familyId when generating tokens
+            const accessToken: string =
+                await this.jwtService.generateAccessToken(jwtPayload, familyId);
+
+            const refreshToken = await this.jwtService.generateRefreshToken(
+                jwtPayload,
+                familyId,
+            );
 
             // Convert entity to DTO
             const userDto = plainToClass(User, user);
@@ -125,13 +137,52 @@ export class AuthService {
         try {
             const tokensToBlacklist: string[] = [];
 
-            if (accessToken) tokensToBlacklist.push(accessToken);
-            if (refreshToken) tokensToBlacklist.push(refreshToken);
+            // Validate access token if provided
+            if (accessToken) {
+                const accessJwtEntity =
+                    await this.jwtEntityService.getTokenInfo(accessToken);
+                if (!accessJwtEntity) {
+                    this.logger.warn("Access token not found during logout");
+                } else {
+                    if (accessJwtEntity.isBlacklisted) {
+                        this.logger.debug("Access token already blacklisted");
+                    } else {
+                        // Validate token type
+                        this.validateTokenType(
+                            TokenType.ACCESS,
+                            accessJwtEntity.type,
+                        );
+                        tokensToBlacklist.push(accessToken);
+                    }
+                }
+            }
+
+            // Validate refresh token if provided
+            if (refreshToken) {
+                const refreshJwtEntity =
+                    await this.jwtEntityService.getTokenInfo(refreshToken);
+                if (!refreshJwtEntity) {
+                    this.logger.warn("Refresh token not found during logout");
+                } else {
+                    if (refreshJwtEntity.isBlacklisted) {
+                        this.logger.debug("Refresh token already blacklisted");
+                    } else {
+                        // Validate token type
+                        this.validateTokenType(
+                            TokenType.REFRESH,
+                            refreshJwtEntity.type,
+                        );
+                        tokensToBlacklist.push(refreshToken);
+                    }
+                }
+            }
 
             if (tokensToBlacklist.length === 0) {
-                this.logger.warn("Logout called with no tokens provided");
+                this.logger.info(
+                    "No tokens to blacklist during logout (all may be expired/blacklisted)",
+                );
                 return {
-                    message: "No tokens to logout",
+                    message: "Logout successful - no active tokens found",
                     success: true,
                 };
             }
@@ -164,6 +215,10 @@ export class AuthService {
                 success: true,
             };
         } catch (error) {
+            if (error instanceof BadCredentialsException) {
+                throw error;
+            }
+
             this.logger.error("Logout error", {
                 error: error instanceof Error ? error.message : String(error),
                 hasAccessToken: !!accessToken,
@@ -181,30 +236,99 @@ export class AuthService {
         try {
             this.logger.debug("Processing token refresh request");
 
-            // Verify refresh token - will throw if invalid, expired, or blacklisted
-            const payload: CustomJwtPayload =
-                await this.jwtService.verifyToken(refreshToken);
+            // 1. Get token entity to check for reuse and get its familyId
+            const oldRefreshJwtEntity =
+                await this.jwtEntityService.getTokenInfo(refreshToken);
 
-            // Check if user still exists and is active
+            // 2. CRITICAL: Check for token reuse (stolen token detection)
+            if (!oldRefreshJwtEntity) {
+                this.logger.warn(
+                    "Refresh token not found - possible cleanup or invalid token",
+                );
+                throw new JwtException("Invalid refresh token");
+            }
+
+            if (!oldRefreshJwtEntity.isValid()) {
+                if (oldRefreshJwtEntity.isBlacklisted) {
+                    this.logger.error(
+                        "SECURITY ALERT: Blacklisted refresh token reuse detected",
+                        {
+                            familyId: oldRefreshJwtEntity.familyId,
+                            tokenId: oldRefreshJwtEntity.id,
+                        },
+                    );
+                } else if (oldRefreshJwtEntity.isExpired()) {
+                    this.logger.warn("Expired refresh token used", {
+                        familyId: oldRefreshJwtEntity.familyId,
+                        tokenId: oldRefreshJwtEntity.id,
+                    });
+                }
+
+                // Invalidate the entire family of tokens for security
+                this.logger.warn(
+                    `Refresh token reuse/misuse detected. Invalidating family: ${oldRefreshJwtEntity.familyId}`,
+                );
+                await this.jwtTokenRepository.invalidateFamily(
+                    oldRefreshJwtEntity.familyId,
+                );
+                throw new JwtException("Invalid or reused refresh token");
+            }
+
+            // 3. Verify the token's signature and expiration
+            let payload: CustomJwtPayload;
+            try {
+                payload = await this.jwtService.verifyToken(refreshToken);
+            } catch (verifyError) {
+                // f JWT verification fails, still invalidate family as precaution
+                this.logger.error("JWT verification failed during refresh", {
+                    error:
+                        verifyError instanceof Error
+                            ? verifyError.message
+                            : String(verifyError),
+                    familyId: oldRefreshJwtEntity.familyId,
+                });
+                await this.jwtTokenRepository.invalidateFamily(
+                    oldRefreshJwtEntity.familyId,
+                );
+                throw verifyError;
+            }
+
+            // 4. IMPORTANT: Check the user's current status in the database
             const user = await this.userRepository.findOneBy({
                 id: payload.id,
             });
 
             if (!user) {
                 this.logger.warn("Token refresh failed: user not found", {
+                    familyId: oldRefreshJwtEntity.familyId,
                     userId: payload.id,
                 });
+                // Invalidate family since user no longer exists
+                await this.jwtTokenRepository.invalidateFamily(
+                    oldRefreshJwtEntity.familyId,
+                );
                 throw new AuthenticationException("User not found");
             }
 
-            // FIXED: Check if account is NOT active (the logic was inverted)
+            // Check if account is NOT active
             if (!user.isAccountActive()) {
                 this.logger.warn("Token refresh failed: account inactive", {
                     active: user.isAccountActive(),
+                    familyId: oldRefreshJwtEntity.familyId,
                     userId: payload.id,
                 });
+                // Invalidate family since account is inactive
+                await this.jwtTokenRepository.invalidateFamily(
+                    oldRefreshJwtEntity.familyId,
+                );
                 throw new AccessDeniedException("Account is no longer active");
             }
+
+            // 5. Blacklist the old refresh token immediately to prevent reuse
+            await this.jwtService.logout(refreshToken);
+
+            // 6. Generate NEW tokens using the same familyId
+            const familyId = oldRefreshJwtEntity.familyId;
 
             // Create JWT payload with fresh user data from database
             const jwtPayload: CustomJwtPayload = {
@@ -216,58 +340,42 @@ export class AuthService {
                 status: user.status,
             };
 
-            // Generate new access token
-            const newAccessToken =
-                await this.jwtService.generateAccessToken(jwtPayload);
-
-            if (!payload.exp) {
-                this.logger.warn(
-                    "Token refresh failed: no expiration in payload",
-                    { payload },
-                );
-                throw new JwtException("Invalid token payload");
-            }
-
-            // Use JWT service to decode and check expiration
-            const shouldRotateRefreshToken = this.shouldRotateRefreshToken(
-                payload.exp,
+            // Generate new tokens
+            const newAccessToken = await this.jwtService.generateAccessToken(
+                jwtPayload,
+                familyId,
             );
-
-            let newRefreshToken: string | undefined;
-
-            if (shouldRotateRefreshToken) {
-                // Generate new refresh token
-                newRefreshToken =
-                    await this.jwtService.generateRefreshToken(jwtPayload);
-
-                // Blacklist the old refresh token to prevent reuse
-                await this.jwtService.logout(refreshToken);
-
-                this.logger.info(
-                    `Refresh token rotated for user: ${user.email}`,
-                );
-            } else {
-                // Keep the existing refresh token
-                this.logger.debug(
-                    `Refresh token reused for user: ${user.email}`,
-                );
-            }
+            const newRefreshToken = await this.jwtService.generateRefreshToken(
+                jwtPayload,
+                familyId,
+            );
 
             // Convert entity to DTO
             const userDto = plainToClass(User, user);
 
-            this.logger.info(`Access token refreshed for user: ${user.email}`);
+            this.logger.info(
+                `Token refresh successful for user: ${user.email}`,
+                {
+                    familyId,
+                    userId: user.id,
+                },
+            );
 
             return new AuthResponse({
                 accessToken: newAccessToken,
                 expiresIn: JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
                 message: "Token refresh successful",
-                refreshToken: newRefreshToken ?? refreshToken,
+                refreshToken: newRefreshToken,
                 success: true,
                 user: userDto,
             });
         } catch (error) {
+            // Re-throw known exceptions
             if (
+                error instanceof BadCredentialsException ||
+                error instanceof JwtException ||
+                error instanceof AuthenticationException ||
+                error instanceof AccessDeniedException ||
                 error instanceof jwt.TokenExpiredError ||
                 error instanceof jwt.JsonWebTokenError ||
                 error instanceof jwt.NotBeforeError ||
@@ -284,6 +392,7 @@ export class AuthService {
             throw new HttpException(401, "Invalid refresh token");
         }
     }
+
     async register(registerData: RegisterRequest): Promise<AuthResponse> {
         const { email, password } = registerData;
 
@@ -300,11 +409,16 @@ export class AuthService {
                 status: savedUser.status,
             };
 
+            const familyId = randomUUID();
             // Generate tokens
-            const accessToken =
-                await this.jwtService.generateAccessToken(jwtPayload);
-            const refreshToken =
-                await this.jwtService.generateRefreshToken(jwtPayload);
+            const accessToken = await this.jwtService.generateAccessToken(
+                jwtPayload,
+                familyId,
+            );
+            const refreshToken = await this.jwtService.generateRefreshToken(
+                jwtPayload,
+                familyId,
+            );
 
             // Convert entity to DTO
             const userDto = plainToClass(User, savedUser);
@@ -427,6 +541,61 @@ export class AuthService {
         } catch (error) {
             this.logger.error("Error checking token for rotation", { error });
             return true; // Default to rotation on error
+        }
+    }
+
+    /**
+     * Validates that a token has the expected type
+     * @param token - The JWT token to validate
+     * @param expectedType - The expected token type (ACCESS or REFRESH)
+     * @throws BadCredentialsException if token type doesn't match
+     */
+    private validateTokenType(
+        expectedType: TokenType,
+        tokenType?: TokenType,
+    ): void {
+        try {
+            if (!tokenType) {
+                this.logger.warn(
+                    `Token validation failed: ${expectedType} not found in storage`,
+                );
+                throw new BadCredentialsException(`Invalid ${expectedType}`);
+            }
+
+            if (tokenType !== expectedType) {
+                this.logger.warn(
+                    `Token validation failed: expected ${expectedType} but got ${tokenType}`,
+                    {
+                        actualType: tokenType,
+                        expectedType,
+                    },
+                );
+                throw new BadCredentialsException(
+                    `Invalid provided ${tokenType} token type. Must be ${expectedType} token type`,
+                );
+            }
+
+            this.logger.debug(
+                `Token type validation successful: ${expectedType} token type`,
+            );
+        } catch (error) {
+            // Re-throw BadCredentialsException as-is
+            if (error instanceof BadCredentialsException) {
+                throw error;
+            }
+
+            // Log unexpected errors and throw BadCredentialsException
+            this.logger.error(
+                `Unexpected error during ${expectedType} token type validation`,
+                {
+                    error:
+                        error instanceof Error ? error.message : String(error),
+                    expectedType,
+                },
+            );
+            throw new BadCredentialsException(
+                `Invalid ${expectedType} token type`,
+            );
         }
     }
 }

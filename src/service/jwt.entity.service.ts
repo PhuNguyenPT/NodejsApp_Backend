@@ -58,9 +58,15 @@ export class JwtEntityService {
         token: string,
         ttl: number,
         type: TokenType,
+        familyId: string,
     ): Promise<JwtEntity> {
         try {
-            const jwtEntity: JwtEntity = new JwtEntity({ token, ttl, type });
+            const jwtEntity: JwtEntity = new JwtEntity({
+                familyId,
+                token,
+                ttl,
+                type,
+            });
             await this.jwtTokenRepository.save(jwtEntity);
 
             // Only log in debug mode to reduce noise
