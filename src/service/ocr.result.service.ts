@@ -13,6 +13,8 @@ import {
     OcrStatus,
 } from "@/entity/ocr.result.entity.js";
 import { TYPES } from "@/type/container/types.js";
+import { Role } from "@/type/enum/user.js";
+import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
 
 @injectable()
@@ -91,11 +93,27 @@ export class OcrResultService {
             throw error;
         }
     }
-
     public async findByFileId(fileId: string): Promise<null | OcrResultEntity> {
         return await this.ocrResultRepository.findOne({
             where: { fileId },
         });
+    }
+
+    public async findByStudentId(
+        studentId: string,
+        userId?: string,
+    ): Promise<OcrResultEntity[]> {
+        const ocrResultEntities: OcrResultEntity[] =
+            await this.ocrResultRepository.find({
+                where: { processedBy: userId ?? Role.ANONYMOUS, studentId },
+            });
+
+        if (ocrResultEntities.length === 0) {
+            throw new EntityNotFoundException(
+                `No OCR results found for student id ${studentId} with userId ${userId ?? Role.ANONYMOUS}`,
+            );
+        }
+        return ocrResultEntities;
     }
 
     public async findExistingResults(

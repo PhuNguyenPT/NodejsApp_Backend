@@ -427,7 +427,7 @@ export class FileController extends Controller {
     @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
     @Response(HttpStatus.PAYLOAD_TOO_LARGE, "File size exceeds limit")
     @SuccessResponse(HttpStatus.CREATED, "File uploaded successfully")
-    public async uploadFileAnonymously(
+    public async uploadFileGuest(
         @Path() studentId: string,
         @UploadedFile("file") file: Express.Multer.File,
         /**
@@ -602,7 +602,7 @@ export class FileController extends Controller {
 
     /**
      * Upload multiple files for a student as a guest
-     * @summary Upload and associate multiple files with a student anonymously in a single batch
+     * @summary Upload and associate multiple files with a student guest in a single batch
      * @param studentId UUID of the student to associate the files with
      * @param files The files to upload (multipart/form-data)
      * @param filesMetadata JSON string containing metadata for each file (must match file count)
@@ -629,7 +629,7 @@ export class FileController extends Controller {
     @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
     @Response(HttpStatus.PAYLOAD_TOO_LARGE, "File size exceeds limit")
     @SuccessResponse(HttpStatus.CREATED, "File uploaded successfully")
-    public async uploadFilesAnonymously(
+    public async uploadFilesGuest(
         @Path() studentId: string,
         @UploadedFiles("files") files: Express.Multer.File[],
         /**
@@ -983,22 +983,45 @@ export class FileController extends Controller {
         }
 
         // Optional: Validate that extension matches MIME type
-        const mimeToExtension: Record<string, string[]> = {
+        const mimeToExtension: Record<string, string[] | undefined> = {
+            // Documents
             "application/msword": ["doc"],
             "application/pdf": ["pdf"],
+            "application/vnd.ms-excel": ["xls"],
+            "application/vnd.ms-powerpoint": ["ppt"],
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+                ["pptx"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                ["xlsx"],
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
                 ["docx"],
+
+            // Images
+            "image/bmp": ["bmp"],
             "image/gif": ["gif"],
             "image/jpeg": ["jpg", "jpeg"],
             "image/png": ["png"],
+            "image/svg+xml": ["svg"],
+            "image/webp": ["webp"],
+
+            // Text
+            "text/csv": ["csv"],
+            "text/html": ["html"],
             "text/plain": ["txt"],
         };
 
         const expectedExtensions = mimeToExtension[mimeType];
-        if (extension && !expectedExtensions.includes(extension)) {
+
+        // Only check if we have both extension and expectedExtensions
+        if (
+            extension &&
+            expectedExtensions &&
+            !expectedExtensions.includes(extension)
+        ) {
             this.logger.warn(
                 `MIME type '${mimeType}' doesn't match extension '.${extension}'`,
                 {
+                    expectedExtensions,
                     extension,
                     filename,
                     mimeType,
