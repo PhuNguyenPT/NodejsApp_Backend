@@ -11,7 +11,7 @@ import {
     SuccessResponse,
     Tags,
 } from "@tsoa/runtime";
-import { inject } from "inversify";
+import { inject, injectable } from "inversify";
 
 import {
     BatchScoreExtractionResult,
@@ -27,6 +27,7 @@ import { HttpStatus } from "@/type/enum/http.status.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
 import { ILogger } from "@/type/interface/logger.js";
 
+@injectable()
 @Route("ocr")
 @Tags("OCR")
 export class OcrController extends Controller {

@@ -6,13 +6,14 @@ import {
     Index,
     JoinColumn,
     ManyToOne,
+    OneToOne,
     PrimaryGeneratedColumn,
     Relation,
     UpdateDateColumn,
 } from "typeorm";
 
-import type { StudentEntity } from "@/entity/student.js";
-
+import { OcrResultEntity } from "@/entity/ocr.result.entity.js";
+import { StudentEntity } from "@/entity/student.js";
 import { Role } from "@/type/enum/user.js";
 
 /**
@@ -102,6 +103,13 @@ export class FileEntity {
     })
     modifiedBy?: string;
 
+    // NEW: One-to-One relationship with OCR result
+    @OneToOne("OcrResultEntity", "file", {
+        cascade: true,
+        eager: false,
+    })
+    ocrResult?: Relation<OcrResultEntity>;
+
     @Column({ length: 255, type: "varchar" })
     originalFileName!: string;
 
@@ -131,7 +139,7 @@ export class FileEntity {
         }
     }
 
-    // Helper methods
+    // Existing helper methods
     getFileExtension(): string {
         return this.originalFileName.split(".").pop() ?? "";
     }
@@ -140,7 +148,6 @@ export class FileEntity {
         const bytes = this.fileSize;
         const units = ["B", "KB", "MB", "GB", "TB"];
         if (bytes === 0) return "0 B";
-
         const i = Math.floor(Math.log(bytes) / Math.log(1024));
         const size = bytes / Math.pow(1024, i);
         return `${size.toFixed(2)} ${units[i]}`;

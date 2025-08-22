@@ -9,6 +9,7 @@ import { redisClient, redisSubscriber } from "@/config/redis.js";
 import { AuthController } from "@/controller/auth.controller.js";
 import { FileController } from "@/controller/file.controller.js";
 import { OcrController } from "@/controller/ocr.controller.js";
+import { PredictController } from "@/controller/predict.controller.js";
 import { StudentController } from "@/controller/student.controller.js";
 import { UserController } from "@/controller/user.controller.js";
 import { AwardEntity } from "@/entity/award.js";
@@ -34,6 +35,7 @@ import { JWTService } from "@/service/jwt.service.js";
 import { MajorService } from "@/service/major.service.js";
 import { MistralService } from "@/service/mistral.service.js";
 import { OcrResultService } from "@/service/ocr.result.service.js";
+import { PredictModelService } from "@/service/predic.model.service.js";
 import { StudentService } from "@/service/student.service.js";
 import { UserService } from "@/service/user.service.js";
 import { KeyStore } from "@/type/class/keystore.js";
@@ -159,6 +161,11 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
+    .bind<PredictModelService>(TYPES.PredictModelService)
+    .to(PredictModelService)
+    .inSingletonScope();
+
+iocContainer
     .bind<PassportConfig>(TYPES.PassportConfig)
     .to(PassportConfig)
     .inSingletonScope();
@@ -179,6 +186,11 @@ iocContainer.bind<FileController>(FileController).toSelf().inRequestScope();
 iocContainer.bind<OcrController>(OcrController).toSelf().inRequestScope();
 
 iocContainer
+    .bind<PredictController>(PredictController)
+    .toSelf()
+    .inRequestScope();
+
+iocContainer
     .bind<TokenCleanupJob>(TYPES.TokenCleanupJob)
     .to(TokenCleanupJob)
     .inSingletonScope();
@@ -186,6 +198,7 @@ iocContainer
 iocContainer
     .bind<RedisClientType>(TYPES.RedisPublisher)
     .toConstantValue(redisClient);
+
 iocContainer
     .bind<RedisClientType>(TYPES.RedisSubscriber)
     .toConstantValue(redisSubscriber);

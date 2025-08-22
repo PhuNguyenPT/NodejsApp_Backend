@@ -52,6 +52,10 @@ async function bootstrap(): Promise<void> {
             SERVER_HOSTNAME: config.SERVER_HOSTNAME,
             SERVER_PATH: config.SERVER_PATH,
             SERVER_PORT: config.SERVER_PORT,
+
+            SERVICE_SERVER_HOSTNAME: config.SERVICE_SERVER_HOSTNAME,
+            SERVICE_SERVER_PATH: config.SERVICE_SERVER_PATH,
+            SERVICE_SERVER_PORT: config.SERVICE_SERVER_PORT,
         });
 
         // Create the app (synchronous - no database connection yet)

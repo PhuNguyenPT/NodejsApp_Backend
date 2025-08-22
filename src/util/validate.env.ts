@@ -63,11 +63,16 @@ interface Config {
     REDIS_USER_PASSWORD?: string;
 
     REDIS_USERNAME?: string;
+
     // Application config
     SERVER_HOSTNAME: string;
-
     SERVER_PATH: string;
     SERVER_PORT: number;
+
+    // Predict model service config
+    SERVICE_SERVER_HOSTNAME: string;
+    SERVICE_SERVER_PATH: string;
+    SERVICE_SERVER_PORT: number;
 }
 
 // Validate and export the typed config object
@@ -142,6 +147,11 @@ export const config: Config = cleanEnv(process.env, {
     SERVER_HOSTNAME: str({ default: "localhost" }),
     SERVER_PATH: str({ default: "/api" }),
     SERVER_PORT: port({ default: 3000 }),
+
+    // Predict model service config
+    SERVICE_SERVER_HOSTNAME: str({ default: "localhost" }),
+    SERVICE_SERVER_PATH: str({ default: "" }),
+    SERVICE_SERVER_PORT: port({ default: 8000 }),
 });
 
 function validateEnv(): void {

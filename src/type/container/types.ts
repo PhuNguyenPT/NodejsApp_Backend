@@ -21,6 +21,7 @@ export const TYPES = {
     OcrResultRepository: Symbol.for("OcrResultRepository"),
     OcrResultService: Symbol.for("OcrResultService"),
     PassportConfig: Symbol.for("PassportConfig"),
+    PredictModelService: Symbol.for("PredictModelService"),
     RedisPublisher: Symbol.for("RedisPublisher"),
     RedisSubscriber: Symbol.for("RedisSubscriber"),
     StudentRepository: Symbol.for("StudentRepository"),
@@ -28,4 +29,4 @@ export const TYPES = {
     TokenCleanupJob: Symbol.for("TokenCleanupJob"),
     UserRepository: Symbol.for("UserRepository"),
     UserService: Symbol.for("UserService"),
-} as const;
+};
