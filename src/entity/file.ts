@@ -14,6 +14,7 @@ import {
 
 import { OcrResultEntity } from "@/entity/ocr.result.entity.js";
 import { StudentEntity } from "@/entity/student.js";
+import { UserEntity } from "@/entity/user.js";
 import { Role } from "@/type/enum/user.js";
 
 /**
@@ -103,7 +104,6 @@ export class FileEntity {
     })
     modifiedBy?: string;
 
-    // NEW: One-to-One relationship with OCR result
     @OneToOne("OcrResultEntity", "file", {
         cascade: true,
         eager: false,
@@ -132,6 +132,17 @@ export class FileEntity {
 
     @Column({ length: 255, nullable: true, type: "varchar" })
     tags?: string;
+
+    @JoinColumn({ name: "userId" })
+    @ManyToOne("UserEntity", "studentEntities", {
+        eager: false,
+        nullable: true,
+        onDelete: "SET NULL",
+    })
+    user?: Relation<UserEntity>;
+
+    @Column({ nullable: true, type: "uuid" })
+    userId?: string;
 
     constructor(file?: Partial<FileEntity>) {
         if (file) {

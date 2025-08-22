@@ -122,7 +122,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE TYPE "public"."files_status_enum" AS ENUM('active', 'archived', 'deleted')`,
         );
         await queryRunner.query(
-            `CREATE TABLE "files" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255) DEFAULT 'ANONYMOUS', "description" character varying(500), "fileContent" bytea NOT NULL, "fileName" character varying(255) NOT NULL, "filePath" character varying(500), "fileSize" bigint NOT NULL, "fileType" "public"."files_filetype_enum" NOT NULL DEFAULT 'other', "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "mimeType" character varying(100) NOT NULL, "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "originalFileName" character varying(255) NOT NULL, "status" "public"."files_status_enum" NOT NULL DEFAULT 'active', "studentId" uuid NOT NULL, "tags" character varying(255), CONSTRAINT "PK_6c16b9093a142e0e7613b04a3d9" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "files" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255) DEFAULT 'ANONYMOUS', "description" character varying(500), "fileContent" bytea NOT NULL, "fileName" character varying(255) NOT NULL, "filePath" character varying(500), "fileSize" bigint NOT NULL, "fileType" "public"."files_filetype_enum" NOT NULL DEFAULT 'other', "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "mimeType" character varying(100) NOT NULL, "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "originalFileName" character varying(255) NOT NULL, "status" "public"."files_status_enum" NOT NULL DEFAULT 'active', "studentId" uuid NOT NULL, "tags" character varying(255), "userId" uuid, CONSTRAINT "PK_6c16b9093a142e0e7613b04a3d9" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_file_modified_at" ON "files" ("modifiedAt") `,
@@ -197,6 +197,9 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "files" ADD CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
+            `ALTER TABLE "files" ADD CONSTRAINT "FK_7e7425b17f9e707331e9a6c7335" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+        );
+        await queryRunner.query(
             `ALTER TABLE "students" ADD CONSTRAINT "FK_e0208b4f964e609959aff431bf9" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
@@ -216,6 +219,9 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `ALTER TABLE "students" DROP CONSTRAINT "FK_e0208b4f964e609959aff431bf9"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "files" DROP CONSTRAINT "FK_7e7425b17f9e707331e9a6c7335"`,
         );
         await queryRunner.query(
             `ALTER TABLE "files" DROP CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212"`,
