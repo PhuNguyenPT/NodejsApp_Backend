@@ -52,10 +52,13 @@ export class FileController extends Controller {
     }
 
     /**
-     * Delete file (soft delete)
-     * @summary Delete a file
+     * Delete file (soft delete) - Authorized Users Only
+     * @summary Delete a file (requires authentication and proper permissions)
      * @param fileId UUID of the file to delete
      * @returns No content on successful deletion
+     * @description This endpoint is restricted to authenticated users with file deletion permissions.
+     * Users can only delete files they own or have permission to access.
+     * @security Requires valid bearer token with 'file:delete' scope
      */
     @Delete("{fileId}")
     @Middlewares(validateUuidParam("fileId"))
@@ -65,13 +68,17 @@ export class FileController extends Controller {
     @Response(HttpStatus.UNAUTHORIZED, "Unauthorized")
     @Security("bearerAuth", ["file:delete"])
     @SuccessResponse(HttpStatus.NO_CONTENT, "File deleted successfully")
-    public async deleteFile(@Path() fileId: string): Promise<void> {
-        await this.fileService.deleteFile(fileId);
+    public async deleteFile(
+        @Path() fileId: string,
+        @Request() request: AuthenticatedRequest,
+    ): Promise<void> {
+        const user: Express.User = request.user;
+        await this.fileService.deleteFile(fileId, user.id);
     }
 
     /**
-     * Download file content
-     * @summary Download a file as attachment
+     * Download file content - Authorized Users Only
+     * @summary Download a file as attachment (requires authentication)
      * @param fileId UUID of the file to download
      * @returns Binary file content with secure headers
      * @description Downloads the file with appropriate security headers including:
@@ -79,6 +86,10 @@ export class FileController extends Controller {
      * - Content-Security-Policy: default-src 'none' (prevents script execution)
      * - Cache-Control: no-cache (prevents caching of sensitive files)
      * - X-Content-Type-Options: nosniff (prevents MIME sniffing attacks)
+     *
+     * This endpoint is restricted to authenticated users with file read permissions.
+     * Users can only download files they own or have permission to access.
+     * @security Requires valid bearer token with 'file:read' scope
      */
     @Get("{fileId}/download")
     @Middlewares(validateUuidParam("fileId"))
@@ -89,6 +100,82 @@ export class FileController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "File downloaded successfully", "file")
     public async downloadFile(
+        @Path() fileId: string,
+        @Request() request: express.Request,
+        @Request() authenticatedRequest: AuthenticatedRequest,
+    ): Promise<void> {
+        const user: Express.User = authenticatedRequest.user;
+        const file: FileEntity = await this.fileService.getFileById(
+            fileId,
+            user.id,
+        );
+
+        // Log buffer info for debugging
+        this.logger.info(
+            `File download - Size: ${file.fileSize.toString()}, Buffer length: ${file.fileContent.length.toString()}, MIME: ${file.mimeType}`,
+        );
+
+        // Verify buffer is valid
+        if (file.fileContent.length === 0) {
+            throw new ValidationException({
+                file: "File content is empty or corrupted",
+            });
+        }
+
+        // Check if response object exists
+        if (!request.res) {
+            throw new Error("Response object not available");
+        }
+
+        const response = request.res;
+
+        // Sanitize filename for security
+        const correctedFileName = this.getCorrectFilename(
+            file.fileName,
+            file.mimeType,
+        );
+        const sanitizedFileName = this.sanitizeFilename(correctedFileName);
+
+        // Set security and download headers
+        this.setDownloadHeaders(
+            response,
+            file.mimeType,
+            sanitizedFileName,
+            file.fileContent.length,
+        );
+
+        // Send binary data directly and end the response
+        response.end(file.fileContent);
+
+        this.logger.info("File download completed successfully", {
+            bytesSent: file.getHumanReadableFileSize(),
+            fileId,
+        });
+    }
+
+    /**
+     * Download file content - Guest Access (Public)
+     * @summary Download a file as attachment (no authentication required)
+     * @param fileId UUID of the file to download
+     * @returns Binary file content with secure headers
+     * @description Downloads the file with appropriate security headers including:
+     * - Content-Disposition: attachment (forces download)
+     * - Content-Security-Policy: default-src 'none' (prevents script execution)
+     * - Cache-Control: no-cache (prevents caching of sensitive files)
+     * - X-Content-Type-Options: nosniff (prevents MIME sniffing attacks)
+     *
+     * This is a public endpoint that allows guest users to download files without authentication.
+     * Only files marked as publicly accessible can be downloaded through this endpoint.
+     * @security No authentication required - public access
+     */
+    @Get("guest/{fileId}/download")
+    @Middlewares(validateUuidParam("fileId"))
+    @Produces("application/octet-stream")
+    @Response(HttpStatus.BAD_REQUEST, "Invalid file ID or corrupted file")
+    @Response(HttpStatus.NOT_FOUND, "File not found")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
+    @SuccessResponse(HttpStatus.OK, "File downloaded successfully", "file")
+    public async downloadFileForGuest(
         @Path() fileId: string,
         @Request() request: express.Request,
     ): Promise<void> {
@@ -138,10 +225,13 @@ export class FileController extends Controller {
     }
 
     /**
-     * Get file metadata by ID
-     * @summary Retrieve file information
+     * Get file metadata by ID - Authorized Users Only
+     * @summary Retrieve file information (requires authentication)
      * @param fileId UUID of the file to retrieve
      * @returns File metadata including name, size, type, and upload information
+     * @description This endpoint is restricted to authenticated users with file read permissions.
+     * Users can only retrieve metadata for files they own or have permission to access.
+     * @security Requires valid bearer token with 'file:read' scope
      */
     @Get("{fileId}")
     @Middlewares(validateUuidParam("fileId"))
@@ -152,7 +242,41 @@ export class FileController extends Controller {
     @Response(HttpStatus.UNAUTHORIZED, "Unauthorized")
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "File retrieved successfully")
-    public async getFileById(@Path() fileId: string): Promise<FileResponse> {
+    public async getFileById(
+        @Path() fileId: string,
+        @Request() request: AuthenticatedRequest,
+    ): Promise<FileResponse> {
+        const user: Express.User = request.user;
+        const file: FileEntity = await this.fileService.getFileById(
+            fileId,
+            user.id,
+        );
+        const fileResponse: FileResponse = FileMapper.toFileResponse(file);
+        fileResponse.message = "File metadata retrieved successfully";
+        return fileResponse;
+    }
+
+    /**
+     * Get file metadata by ID - Guest Access (Public)
+     * @summary Retrieve file information (no authentication required)
+     * @param fileId UUID of the file to retrieve
+     * @returns File metadata including name, size, type, and upload information
+     * @description This is a public endpoint that allows guest users to retrieve file metadata without authentication.
+     * Only metadata for files marked as publicly accessible can be retrieved through this endpoint.
+     * Sensitive information like user details may be filtered out in the response.
+     * @security No authentication required - public access
+     */
+    @Get("guest/{fileId}")
+    @Middlewares(validateUuidParam("fileId"))
+    @Produces("application/json")
+    @Response(HttpStatus.BAD_REQUEST, "Invalid file ID format")
+    @Response(HttpStatus.NOT_FOUND, "File not found")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
+    @Response(HttpStatus.UNAUTHORIZED, "Unauthorized")
+    @SuccessResponse(HttpStatus.OK, "File retrieved successfully")
+    public async getFileByIdForGuest(
+        @Path() fileId: string,
+    ): Promise<FileResponse> {
         const file: FileEntity = await this.fileService.getFileById(fileId);
         const fileResponse: FileResponse = FileMapper.toFileResponse(file);
         fileResponse.message = "File metadata retrieved successfully";
@@ -160,10 +284,14 @@ export class FileController extends Controller {
     }
 
     /**
-     * Get all files for a student
-     * @summary Retrieve all files associated with a student
+     * Get all files for a student - Authorized Users Only
+     * @summary Retrieve all files associated with a student (requires authentication)
      * @param studentId UUID of the student
      * @returns Array of file metadata for the specified student
+     * @description This endpoint is restricted to authenticated users with file read permissions.
+     * Users can only retrieve files for students they have permission to access.
+     * Typically used by teachers, administrators, or the student themselves.
+     * @security Requires valid bearer token with 'file:read' scope
      */
     @Get("student/{studentId}")
     @Middlewares(validateUuidParam("studentId"))
@@ -174,6 +302,37 @@ export class FileController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Files retrieved successfully")
     public async getFilesByStudentId(
+        @Path() studentId: string,
+        @Request() request: AuthenticatedRequest,
+    ): Promise<FileResponse[]> {
+        const user: Express.User = request.user;
+        const files: FileEntity[] = await this.fileService.getFilesByStudentId(
+            studentId,
+            user.id,
+        );
+        const fileResponses: FileResponse[] =
+            FileMapper.toFileResponseList(files);
+        const message = "File metadata retrieved successfully";
+        fileResponses.forEach(
+            (fileResponse) => (fileResponse.message = message),
+        );
+        return fileResponses;
+    }
+
+    /**
+     * Get all files for a student
+     * @summary Retrieve all files associated with a student
+     * @param studentId UUID of the student
+     * @returns Array of file metadata for the specified student
+     */
+    @Get("student/guest/{studentId}")
+    @Middlewares(validateUuidParam("studentId"))
+    @Produces("application/json")
+    @Response(HttpStatus.BAD_REQUEST, "Invalid student ID format")
+    @Response(HttpStatus.NOT_FOUND, "Student not found")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
+    @SuccessResponse(HttpStatus.OK, "Files retrieved successfully")
+    public async getFilesByStudentIdForGuest(
         @Path() studentId: string,
     ): Promise<FileResponse[]> {
         const files: FileEntity[] =
@@ -188,12 +347,16 @@ export class FileController extends Controller {
     }
 
     /**
-     * Get file preview (for images)
-     * @summary Preview an image file inline
+     * Get file preview (for images) - Authorized Users Only
+     * @summary Preview an image file inline (requires authentication)
      * @param fileId UUID of the image file to preview
      * @returns Binary image content with inline display headers
      * @description Displays the image inline in the browser with caching enabled for better performance.
      * Only works with image files. Includes security headers to prevent MIME sniffing attacks.
+     *
+     * This endpoint is restricted to authenticated users with file read permissions.
+     * Users can only preview images they own or have permission to access.
+     * @security Requires valid bearer token with 'file:read' scope
      */
     @Get("{fileId}/preview")
     @Middlewares(validateUuidParam("fileId"))
@@ -205,6 +368,72 @@ export class FileController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Image preview retrieved successfully")
     public async previewFile(
+        @Path() fileId: string,
+        @Request() request: express.Request,
+        @Request() authenticatedRequest: AuthenticatedRequest,
+    ): Promise<void> {
+        const user: Express.User = authenticatedRequest.user;
+        const file: FileEntity = await this.fileService.getFileById(
+            fileId,
+            user.id,
+        );
+
+        if (!file.isImage()) {
+            throw new ValidationException({ fileType: "File is not an image" });
+        }
+
+        // Check if response object exists
+        if (!request.res) {
+            throw new Error("Response object not available");
+        }
+
+        const response = request.res;
+
+        // Sanitize filename for security
+        const correctedFileName = this.getCorrectFilename(
+            file.fileName,
+            file.mimeType,
+        );
+        const sanitizedFileName = this.sanitizeFilename(correctedFileName);
+
+        // Set preview headers with caching
+        this.setPreviewHeaders(
+            response,
+            file.mimeType,
+            sanitizedFileName,
+            file.fileContent.length,
+        );
+
+        // Send binary data directly and end the response
+        response.end(file.fileContent);
+
+        this.logger.info("File preview completed successfully", {
+            bytesSent: file.getHumanReadableFileSize(),
+            fileId,
+        });
+    }
+
+    /**
+     * Get file preview (for images) - Guest Access (Public)
+     * @summary Preview an image file inline (no authentication required)
+     * @param fileId UUID of the image file to preview
+     * @returns Binary image content with inline display headers
+     * @description Displays the image inline in the browser with caching enabled for better performance.
+     * Only works with image files. Includes security headers to prevent MIME sniffing attacks.
+     *
+     * This is a public endpoint that allows guest users to preview images without authentication.
+     * Only images from files marked as publicly accessible can be previewed through this endpoint.
+     * @security No authentication required - public access
+     */
+    @Get("guest/{fileId}/preview")
+    @Middlewares(validateUuidParam("fileId"))
+    @Produces("image/*")
+    @Response(HttpStatus.BAD_REQUEST, "Invalid file ID or file is not an image")
+    @Response(HttpStatus.NOT_FOUND, "File not found")
+    @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
+    @Response(HttpStatus.UNAUTHORIZED, "Unauthorized")
+    @SuccessResponse(HttpStatus.OK, "Image preview retrieved successfully")
+    public async previewFileForGuest(
         @Path() fileId: string,
         @Request() request: express.Request,
     ): Promise<void> {
@@ -246,13 +475,17 @@ export class FileController extends Controller {
     }
 
     /**
-     * Update file metadata
-     * @summary Update file information
+     * Update file metadata - Authorized Users Only
+     * @summary Update file information (requires authentication)
      * @param fileId UUID of the file to update
      * @param updateFileDTO File metadata to update
      * @returns Updated file metadata
      * @description Updates file metadata such as name, description, and tags.
      * Validates that string fields are not empty when provided.
+     *
+     * This endpoint is restricted to authenticated users with file update permissions.
+     * Users can only update files they own or have permission to modify.
+     * @security Requires valid bearer token with 'file:update' scope
      */
     @Middlewares(validateUuidParam("fileId"), validateDTO(UpdateFileDTO))
     @Produces("application/json")
@@ -283,6 +516,7 @@ export class FileController extends Controller {
         const file: FileEntity = await this.fileService.updateFile(
             fileId,
             updateFileDTO,
+            user.id,
         );
         const fileResponse: FileResponse = FileMapper.toFileResponse(file);
         fileResponse.message = "File metadata updated successfully";
@@ -290,8 +524,8 @@ export class FileController extends Controller {
     }
 
     /**
-     * Upload a file for a student
-     * @summary Upload and associate a file with a student
+     * Upload a file for a student - Authorized Users Only
+     * @summary Upload and associate a file with a student (requires authentication)
      * @param studentId UUID of the student to associate the file with
      * @param file The file to upload (multipart/form-data)
      * @param fileType File type - must be one of: certificate, document, image, other, portfolio, resume, transcript
@@ -311,6 +545,10 @@ export class FileController extends Controller {
      * - Sanitizes filenames to remove control characters
      * - Validates against Windows reserved names (CON, PRN, etc.)
      * - Logs suspicious patterns for security monitoring
+     *
+     * This endpoint is restricted to authenticated users with file creation permissions.
+     * The uploaded file will be associated with the specified student and attributed to the authenticated user.
+     * @security Requires valid bearer token with 'file:create' scope
      */
     @Middlewares(validateUuidParam("studentId"))
     @Post("upload/single/{studentId}")
@@ -380,6 +618,7 @@ export class FileController extends Controller {
             originalFileName: file.originalname,
             studentId: studentId,
             tags: tags,
+            userId: user.id,
         };
 
         const fileEntity: FileEntity = await this.fileService.createFile(
@@ -394,8 +633,8 @@ export class FileController extends Controller {
     }
 
     /**
-     * Upload a file for a student
-     * @summary Upload and associate a file with a student
+     * Upload a file for a student - Guest Access (Public)
+     * @summary Upload and associate a file with a student (no authentication required)
      * @param studentId UUID of the student to associate the file with
      * @param file The file to upload (multipart/form-data)
      * @param fileType File type - must be one of: certificate, document, image, other, portfolio, resume, transcript
@@ -415,6 +654,11 @@ export class FileController extends Controller {
      * - Sanitizes filenames to remove control characters
      * - Validates against Windows reserved names (CON, PRN, etc.)
      * - Logs suspicious patterns for security monitoring
+     *
+     * This is a public endpoint that allows guest users to upload files without authentication.
+     * The uploaded file will be associated with the specified student and attributed to an anonymous user.
+     * This is typically used for public file submission forms or portals.
+     * @security No authentication required - public access
      */
     @Middlewares(validateUuidParam("studentId"))
     @Post("upload/single/guest/{studentId}")
@@ -492,8 +736,8 @@ export class FileController extends Controller {
     }
 
     /**
-     * Upload multiple files for a student
-     * @summary Upload and associate multiple files with a student in a single batch operation
+     * Upload multiple files for a student - Authorized Users Only
+     * @summary Upload and associate multiple files with a student in a single batch operation (requires authentication)
      * @param studentId UUID of the student to associate the files with
      * @param files The files to upload (multipart/form-data)
      * @param filesMetadata JSON string containing metadata for each file (must match file count)
@@ -510,6 +754,10 @@ export class FileController extends Controller {
      * - Same security validations as single file upload
      * - Batch validation before any file processing
      * - Transaction-like behavior for data consistency
+     *
+     * This endpoint is restricted to authenticated users with file creation permissions.
+     * All uploaded files will be associated with the specified student and attributed to the authenticated user.
+     * @security Requires valid bearer token with 'file:create' scope
      */
     @Middlewares(validateUuidParam("studentId"))
     @Post("upload/multiple/{studentId}")
@@ -580,6 +828,7 @@ export class FileController extends Controller {
                 originalFileName: file.originalname,
                 studentId: studentId,
                 tags: metadata.tags,
+                userId: user.id,
             };
         });
 
@@ -601,8 +850,8 @@ export class FileController extends Controller {
     }
 
     /**
-     * Upload multiple files for a student as a guest
-     * @summary Upload and associate multiple files with a student guest in a single batch
+     * Upload multiple files for a student - Guest Access (Public)
+     * @summary Upload and associate multiple files with a student guest in a single batch (no authentication required)
      * @param studentId UUID of the student to associate the files with
      * @param files The files to upload (multipart/form-data)
      * @param filesMetadata JSON string containing metadata for each file (must match file count)
@@ -616,7 +865,10 @@ export class FileController extends Controller {
      * - Atomic batch operation (all files succeed or all fail)
      * - File count limit validation (max 6 files per student)
      *
-     * All uploaded files will be attributed to an anonymous guest user.
+     * This is a public endpoint that allows guest users to upload multiple files without authentication.
+     * All uploaded files will be attributed to an anonymous guest user and associated with the specified student.
+     * This is typically used for public file submission forms or portals where multiple documents need to be uploaded.
+     * @security No authentication required - public access
      */
     @Middlewares(validateUuidParam("studentId"))
     @Post("upload/multiple/guest/{studentId}")
