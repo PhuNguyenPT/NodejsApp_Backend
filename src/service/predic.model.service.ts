@@ -53,7 +53,7 @@ export class PredictModelService {
 
         if (!student) {
             throw new EntityNotFoundException(
-                `Student with id ${studentId} not found`,
+                `Student profile with id ${studentId} not found`,
             );
         }
 

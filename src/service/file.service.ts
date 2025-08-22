@@ -358,7 +358,7 @@ export class FileService {
 
         if (!student) {
             throw new EntityNotFoundException(
-                `Student with ID ${studentId} not found`,
+                `Student profile with ID ${studentId} not found`,
             );
         }
 

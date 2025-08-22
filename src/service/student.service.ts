@@ -234,7 +234,7 @@ export class StudentService {
             });
         if (!studentEntity) {
             throw new EntityNotFoundException(
-                `Student profile with user id: ${userId} not found`,
+                `Student profile with id: ${studentId} not found`,
             );
         }
         return studentEntity;
@@ -294,7 +294,7 @@ export class StudentService {
         const student = await queryBuilder.getOne();
         if (!student) {
             throw new EntityNotFoundException(
-                `Student with ID ${studentId} not found`,
+                `Student profile with ID ${studentId} not found`,
             );
         }
         return student;
@@ -328,7 +328,7 @@ export class StudentService {
         const student = await queryBuilder.getOne();
         if (!student) {
             throw new EntityNotFoundException(
-                `Student with ID ${studentId} not found`,
+                `Student profile with ID ${studentId} not found`,
             );
         }
         return student;
