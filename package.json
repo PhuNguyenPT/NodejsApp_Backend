@@ -89,6 +89,7 @@
   "homepage": "https://github.com/PhuNguyenPT/NodejsApp#readme",
   "dependencies": {
     "@mistralai/mistralai": "^1.7.5",
+    "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",

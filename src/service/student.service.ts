@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { Repository } from "typeorm";
+import { IsNull, Repository } from "typeorm";
 
 import { defaultPaginationConfig } from "@/config/pagination.config.js";
 import { StudentInfoDTO } from "@/dto/student/student.info.dto.js";
@@ -234,7 +234,7 @@ export class StudentService {
             });
         if (!studentEntity) {
             throw new EntityNotFoundException(
-                `Student profile with user id: ${userId} not found`,
+                `Student profile with id: ${studentId} not found`,
             );
         }
         return studentEntity;
@@ -253,7 +253,9 @@ export class StudentService {
             await this.studentRepository.findOne({
                 relations: ["awards", "certifications"],
                 where: {
+                    createdBy: Role.ANONYMOUS,
                     id: studentId,
+                    userId: IsNull(),
                 },
             });
         if (!studentEntity) {
@@ -284,12 +286,15 @@ export class StudentService {
             .leftJoinAndSelect("student.awards", "awards")
             .leftJoinAndSelect("student.certifications", "certifications")
             .leftJoinAndSelect("student.user", "user")
-            .where("student.id = :studentId", { studentId });
-
+            .where("student.id = :studentId", { studentId })
+            .andWhere("student.createdBy = :createdBy", {
+                createdBy: Role.ANONYMOUS,
+            })
+            .andWhere("student.userId IS NULL");
         const student = await queryBuilder.getOne();
         if (!student) {
             throw new EntityNotFoundException(
-                `Student with ID ${studentId} not found`,
+                `Student profile with ID ${studentId} not found`,
             );
         }
         return student;
@@ -323,7 +328,7 @@ export class StudentService {
         const student = await queryBuilder.getOne();
         if (!student) {
             throw new EntityNotFoundException(
-                `Student with ID ${studentId} not found`,
+                `Student profile with ID ${studentId} not found`,
             );
         }
         return student;

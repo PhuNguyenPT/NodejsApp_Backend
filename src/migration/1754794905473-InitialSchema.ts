@@ -5,6 +5,30 @@ export class InitialSchema1754794905473 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(
+            `CREATE TABLE "posts" ("body" character varying(255) NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying, "title" character varying(255) NOT NULL, CONSTRAINT "PK_2829ac61eff60fcec60d7274b9e" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE TYPE "public"."ocr_results_status_enum" AS ENUM('completed', 'failed', 'partial', 'pending', 'processing')`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "ocr_results" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "documentAnnotation" text, "errorMessage" text, "fileId" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "processedBy" character varying(255), "scores" jsonb, "status" "public"."ocr_results_status_enum" NOT NULL DEFAULT 'pending', "studentId" uuid NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "UQ_ocr_student_file" UNIQUE ("studentId", "fileId"), CONSTRAINT "REL_0787a97b8492c2aebe1dc2cc64" UNIQUE ("fileId"), CONSTRAINT "PK_562c4e52268d72e5b1a6833beb5" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_ocr_created_at" ON "ocr_results" ("createdAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_ocr_status" ON "ocr_results" ("status") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_ocr_file_id" ON "ocr_results" ("fileId") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_ocr_student_id" ON "ocr_results" ("studentId") `,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "majors" ("code" character varying(255) NOT NULL, "group_id" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, CONSTRAINT "UQ_8b287db61b00b45e58c854f19da" UNIQUE ("code"), CONSTRAINT "PK_9d82cf80fe0593040e50ccb297e" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
             `CREATE TYPE "public"."certifications_cefr_enum" AS ENUM('A1', 'A2', 'B1', 'B2', 'C1', 'C2')`,
         );
         await queryRunner.query(
@@ -35,37 +59,25 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "idx_certification_student_id" ON "certifications" ("studentId") `,
         );
         await queryRunner.query(
-            `CREATE TYPE "public"."files_filetype_enum" AS ENUM('certificate', 'document', 'image', 'other', 'portfolio', 'resume', 'transcript')`,
+            `CREATE TABLE "awards" ("awardDate" date, "awardId" character varying(100), "awardingOrganization" character varying(200), "category" character varying(100), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "description" text, "examType" jsonb, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "level" character varying(50), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(200), "studentId" uuid NOT NULL, CONSTRAINT "PK_bc3f6adc548ff46c76c03e06377" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
-            `CREATE TYPE "public"."files_status_enum" AS ENUM('active', 'archived', 'deleted')`,
+            `CREATE INDEX "idx_award_modified_at" ON "awards" ("modifiedAt") `,
         );
         await queryRunner.query(
-            `CREATE TABLE "files" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255) DEFAULT 'ANONYMOUS', "description" character varying(500), "fileContent" bytea NOT NULL, "fileName" character varying(255) NOT NULL, "filePath" character varying(500), "fileSize" bigint NOT NULL, "fileType" "public"."files_filetype_enum" NOT NULL DEFAULT 'other', "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "mimeType" character varying(100) NOT NULL, "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "originalFileName" character varying(255) NOT NULL, "status" "public"."files_status_enum" NOT NULL DEFAULT 'active', "studentId" uuid NOT NULL, "tags" character varying(255), CONSTRAINT "PK_6c16b9093a142e0e7613b04a3d9" PRIMARY KEY ("id"))`,
+            `CREATE INDEX "idx_award_created_at" ON "awards" ("createdAt") `,
         );
         await queryRunner.query(
-            `CREATE INDEX "idx_file_modified_at" ON "files" ("modifiedAt") `,
+            `CREATE INDEX "idx_award_level" ON "awards" ("level") `,
         );
         await queryRunner.query(
-            `CREATE INDEX "idx_file_created_at" ON "files" ("createdAt") `,
+            `CREATE INDEX "idx_award_category" ON "awards" ("category") `,
         );
         await queryRunner.query(
-            `CREATE INDEX "idx_file_status" ON "files" ("status") `,
+            `CREATE INDEX "idx_award_date" ON "awards" ("awardDate") `,
         );
         await queryRunner.query(
-            `CREATE INDEX "idx_file_type" ON "files" ("fileType") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_file_student_id" ON "files" ("studentId") `,
-        );
-        await queryRunner.query(
-            `CREATE TABLE "majors" ("code" character varying(255) NOT NULL, "group_id" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, CONSTRAINT "UQ_8b287db61b00b45e58c854f19da" UNIQUE ("code"), CONSTRAINT "PK_9d82cf80fe0593040e50ccb297e" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
-            `CREATE TYPE "public"."major_groups_english_name_enum" AS ENUM('Nông, lâm nghiệp và thủy sản', 'Kiến trúc và xây dựng', 'Nghệ thuật', 'Kinh doanh và quản lý', 'Máy tính và công nghệ thông tin', 'Khoa học giáo dục và đào tạo giáo viên', 'Kỹ thuật', 'Công nghệ kỹ thuật', 'Môi trường và bảo vệ môi trường', 'Sức khỏe', 'Nhân văn', 'Báo chí và thông tin', 'Pháp luật', 'Khoa học sự sống', 'Sản xuất và chế biến', 'Toán và thống kê', 'Khoa học tự nhiên', 'Khác', 'An ninh, Quốc phòng', 'Khoa học xã hội và hành vi', 'Dịch vụ xã hội', 'Du lịch, khách sạn, thể thao và dịch vụ cá nhân', 'Dịch vụ vận tải', 'Thú y')`,
-        );
-        await queryRunner.query(
-            `CREATE TABLE "major_groups" ("code" character varying(255) NOT NULL, "english_name" "public"."major_groups_english_name_enum" NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, CONSTRAINT "UQ_aed9ebe4ce2616b293ff84997a3" UNIQUE ("code"), CONSTRAINT "PK_81b0cba483bec614241a6d20369" PRIMARY KEY ("id"))`,
+            `CREATE INDEX "idx_award_student_id" ON "awards" ("studentId") `,
         );
         await queryRunner.query(
             `CREATE TYPE "public"."users_role_enum" AS ENUM('ADMIN', 'ANONYMOUS', 'MODERATOR', 'USER')`,
@@ -104,6 +116,36 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "idx_user_id_name" ON "users" ("id", "name") `,
         );
         await queryRunner.query(
+            `CREATE TYPE "public"."files_filetype_enum" AS ENUM('certificate', 'document', 'image', 'other', 'portfolio', 'resume', 'transcript')`,
+        );
+        await queryRunner.query(
+            `CREATE TYPE "public"."files_status_enum" AS ENUM('active', 'archived', 'deleted')`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "files" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255) DEFAULT 'ANONYMOUS', "description" character varying(500), "fileContent" bytea NOT NULL, "fileName" character varying(255) NOT NULL, "filePath" character varying(500), "fileSize" bigint NOT NULL, "fileType" "public"."files_filetype_enum" NOT NULL DEFAULT 'other', "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "mimeType" character varying(100) NOT NULL, "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "originalFileName" character varying(255) NOT NULL, "status" "public"."files_status_enum" NOT NULL DEFAULT 'active', "studentId" uuid NOT NULL, "tags" character varying(255), "userId" uuid, CONSTRAINT "PK_6c16b9093a142e0e7613b04a3d9" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_file_modified_at" ON "files" ("modifiedAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_file_created_at" ON "files" ("createdAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_file_status" ON "files" ("status") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_file_type" ON "files" ("fileType") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_file_student_id" ON "files" ("studentId") `,
+        );
+        await queryRunner.query(
+            `CREATE TYPE "public"."major_groups_english_name_enum" AS ENUM('Nông, lâm nghiệp và thủy sản', 'Kiến trúc và xây dựng', 'Nghệ thuật', 'Kinh doanh và quản lý', 'Máy tính và công nghệ thông tin', 'Khoa học giáo dục và đào tạo giáo viên', 'Kỹ thuật', 'Công nghệ kỹ thuật', 'Môi trường và bảo vệ môi trường', 'Sức khỏe', 'Nhân văn', 'Báo chí và thông tin', 'Pháp luật', 'Khoa học sự sống', 'Sản xuất và chế biến', 'Toán và thống kê', 'Khoa học tự nhiên', 'Khác', 'An ninh, Quốc phòng', 'Khoa học xã hội và hành vi', 'Dịch vụ xã hội', 'Du lịch, khách sạn, thể thao và dịch vụ cá nhân', 'Dịch vụ vận tải', 'Thú y')`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "major_groups" ("code" character varying(255) NOT NULL, "english_name" "public"."major_groups_english_name_enum" NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, CONSTRAINT "UQ_aed9ebe4ce2616b293ff84997a3" UNIQUE ("code"), CONSTRAINT "PK_81b0cba483bec614241a6d20369" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
             `CREATE TABLE "students" ("academicPerformances" jsonb, "aptitudeTestScore" jsonb, "conducts" jsonb, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "location" character varying(500), "majors" jsonb, "maxBudget" numeric(14,2), "minBudget" numeric(14,2), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "nationalExam" jsonb, "province" character varying(50), "specialStudentCase" character varying(255), "talentScore" numeric(4,2), "userId" uuid, "vsatScore" jsonb, CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
@@ -128,30 +170,6 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "idx_student_user_id" ON "students" ("userId") `,
         );
         await queryRunner.query(
-            `CREATE TABLE "awards" ("awardDate" date, "awardId" character varying(100), "awardingOrganization" character varying(200), "category" character varying(100), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "description" text, "examType" jsonb, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "level" character varying(50), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(200), "studentId" uuid NOT NULL, CONSTRAINT "PK_bc3f6adc548ff46c76c03e06377" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_award_modified_at" ON "awards" ("modifiedAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_award_created_at" ON "awards" ("createdAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_award_level" ON "awards" ("level") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_award_category" ON "awards" ("category") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_award_date" ON "awards" ("awardDate") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_award_student_id" ON "awards" ("studentId") `,
-        );
-        await queryRunner.query(
-            `CREATE TABLE "posts" ("body" character varying(255) NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying, "title" character varying(255) NOT NULL, CONSTRAINT "PK_2829ac61eff60fcec60d7274b9e" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
             `CREATE TABLE "student_major_groups" ("student_id" uuid NOT NULL, "major_group_id" uuid NOT NULL, CONSTRAINT "PK_f0ed0c22931c345a0da34dc8866" PRIMARY KEY ("student_id", "major_group_id"))`,
         );
         await queryRunner.query(
@@ -161,19 +179,28 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "IDX_80f55c50a4aee989a2ed83a681" ON "student_major_groups" ("major_group_id") `,
         );
         await queryRunner.query(
-            `ALTER TABLE "certifications" ADD CONSTRAINT "FK_94ecc704512cfe5019d2577a994" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+            `ALTER TABLE "ocr_results" ADD CONSTRAINT "FK_0787a97b8492c2aebe1dc2cc644" FOREIGN KEY ("fileId") REFERENCES "files"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
-            `ALTER TABLE "files" ADD CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+            `ALTER TABLE "ocr_results" ADD CONSTRAINT "FK_4067652cc759950247f03b4a002" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
             `ALTER TABLE "majors" ADD CONSTRAINT "FK_10c322c60cd25c2c170a3302033" FOREIGN KEY ("group_id") REFERENCES "major_groups"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
-            `ALTER TABLE "students" ADD CONSTRAINT "FK_e0208b4f964e609959aff431bf9" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+            `ALTER TABLE "certifications" ADD CONSTRAINT "FK_94ecc704512cfe5019d2577a994" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
             `ALTER TABLE "awards" ADD CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "files" ADD CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "files" ADD CONSTRAINT "FK_7e7425b17f9e707331e9a6c7335" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "students" ADD CONSTRAINT "FK_e0208b4f964e609959aff431bf9" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
             `ALTER TABLE "student_major_groups" ADD CONSTRAINT "FK_b4b7e67064e4ac35b50bd19a59e" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE`,
@@ -191,19 +218,28 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "student_major_groups" DROP CONSTRAINT "FK_b4b7e67064e4ac35b50bd19a59e"`,
         );
         await queryRunner.query(
-            `ALTER TABLE "awards" DROP CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae"`,
-        );
-        await queryRunner.query(
             `ALTER TABLE "students" DROP CONSTRAINT "FK_e0208b4f964e609959aff431bf9"`,
         );
         await queryRunner.query(
-            `ALTER TABLE "majors" DROP CONSTRAINT "FK_10c322c60cd25c2c170a3302033"`,
+            `ALTER TABLE "files" DROP CONSTRAINT "FK_7e7425b17f9e707331e9a6c7335"`,
         );
         await queryRunner.query(
             `ALTER TABLE "files" DROP CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212"`,
         );
         await queryRunner.query(
+            `ALTER TABLE "awards" DROP CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae"`,
+        );
+        await queryRunner.query(
             `ALTER TABLE "certifications" DROP CONSTRAINT "FK_94ecc704512cfe5019d2577a994"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "majors" DROP CONSTRAINT "FK_10c322c60cd25c2c170a3302033"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "ocr_results" DROP CONSTRAINT "FK_4067652cc759950247f03b4a002"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "ocr_results" DROP CONSTRAINT "FK_0787a97b8492c2aebe1dc2cc644"`,
         );
         await queryRunner.query(
             `DROP INDEX "public"."IDX_80f55c50a4aee989a2ed83a681"`,
@@ -212,14 +248,6 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `DROP INDEX "public"."IDX_b4b7e67064e4ac35b50bd19a59"`,
         );
         await queryRunner.query(`DROP TABLE "student_major_groups"`);
-        await queryRunner.query(`DROP TABLE "posts"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_student_id"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_date"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_category"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_level"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_created_at"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_modified_at"`);
-        await queryRunner.query(`DROP TABLE "awards"`);
         await queryRunner.query(`DROP INDEX "public"."idx_student_user_id"`);
         await queryRunner.query(`DROP INDEX "public"."idx_student_location"`);
         await queryRunner.query(`DROP INDEX "public"."idx_student_province"`);
@@ -232,6 +260,18 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `DROP INDEX "public"."idx_student_talent_score"`,
         );
         await queryRunner.query(`DROP TABLE "students"`);
+        await queryRunner.query(`DROP TABLE "major_groups"`);
+        await queryRunner.query(
+            `DROP TYPE "public"."major_groups_english_name_enum"`,
+        );
+        await queryRunner.query(`DROP INDEX "public"."idx_file_student_id"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_file_type"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_file_status"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_file_created_at"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_file_modified_at"`);
+        await queryRunner.query(`DROP TABLE "files"`);
+        await queryRunner.query(`DROP TYPE "public"."files_status_enum"`);
+        await queryRunner.query(`DROP TYPE "public"."files_filetype_enum"`);
         await queryRunner.query(`DROP INDEX "public"."idx_user_id_name"`);
         await queryRunner.query(`DROP INDEX "public"."idx_user_email"`);
         await queryRunner.query(`DROP INDEX "public"."idx_user_status"`);
@@ -246,19 +286,13 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "users"`);
         await queryRunner.query(`DROP TYPE "public"."users_status_enum"`);
         await queryRunner.query(`DROP TYPE "public"."users_role_enum"`);
-        await queryRunner.query(`DROP TABLE "major_groups"`);
-        await queryRunner.query(
-            `DROP TYPE "public"."major_groups_english_name_enum"`,
-        );
-        await queryRunner.query(`DROP TABLE "majors"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_file_student_id"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_file_type"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_file_status"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_file_created_at"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_file_modified_at"`);
-        await queryRunner.query(`DROP TABLE "files"`);
-        await queryRunner.query(`DROP TYPE "public"."files_status_enum"`);
-        await queryRunner.query(`DROP TYPE "public"."files_filetype_enum"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_student_id"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_date"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_category"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_level"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_created_at"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_modified_at"`);
+        await queryRunner.query(`DROP TABLE "awards"`);
         await queryRunner.query(
             `DROP INDEX "public"."idx_certification_student_id"`,
         );
@@ -285,5 +319,13 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(
             `DROP TYPE "public"."certifications_cefr_enum"`,
         );
+        await queryRunner.query(`DROP TABLE "majors"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_ocr_student_id"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_ocr_file_id"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_ocr_status"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_ocr_created_at"`);
+        await queryRunner.query(`DROP TABLE "ocr_results"`);
+        await queryRunner.query(`DROP TYPE "public"."ocr_results_status_enum"`);
+        await queryRunner.query(`DROP TABLE "posts"`);
     }
 }

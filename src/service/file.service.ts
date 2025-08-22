@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { RedisClientType } from "redis";
-import { EntityManager, Repository } from "typeorm";
+import { EntityManager, IsNull, Repository } from "typeorm";
 
 import { CreateFileDTO } from "@/dto/file/create.file.js";
 import { UpdateFileDTO } from "@/dto/file/update.file.js";
@@ -218,18 +218,25 @@ export class FileService {
         return savedFiles;
     }
 
-    public async deleteFile(fileId: string): Promise<void> {
-        const file = await this.getFileById(fileId);
+    public async deleteFile(fileId: string, userId?: string): Promise<void> {
+        const file = await this.getFileById(fileId, userId);
 
         file.status = FileStatus.DELETED;
         await this.fileRepository.save(file);
         logger.info(`File soft deleted with ID: ${fileId}`);
     }
 
-    public async getFileById(fileId: string): Promise<FileEntity> {
+    public async getFileById(
+        fileId: string,
+        userId?: string,
+    ): Promise<FileEntity> {
         const file = await this.fileRepository.findOne({
             relations: ["student"],
-            where: { id: fileId, status: FileStatus.ACTIVE },
+            where: {
+                id: fileId,
+                status: FileStatus.ACTIVE,
+                userId: userId ?? IsNull(),
+            },
         });
 
         if (!file) {
@@ -241,14 +248,24 @@ export class FileService {
         return file;
     }
 
-    public async getFilesByStudentId(studentId: string): Promise<FileEntity[]> {
-        return await this.fileRepository.find({
+    public async getFilesByStudentId(
+        studentId: string,
+        userId?: string,
+    ): Promise<FileEntity[]> {
+        const files: FileEntity[] = await this.fileRepository.find({
             order: { createdAt: "DESC" },
             where: {
                 status: FileStatus.ACTIVE,
                 studentId: studentId,
+                userId: userId ?? IsNull(),
             },
         });
+        if (files.length === 0) {
+            throw new EntityNotFoundException(
+                `Files not found for student with ID: ${studentId}`,
+            );
+        }
+        return files;
     }
 
     public async getFilesByStudentIdAndType(
@@ -299,45 +316,27 @@ export class FileService {
     public async updateFile(
         fileId: string,
         updateFileDTO: UpdateFileDTO,
+        userId?: string,
     ): Promise<FileEntity> {
-        const file = await this.getFileById(fileId);
+        const file = await this.getFileById(fileId, userId);
 
-        if (
-            updateFileDTO.description !== undefined &&
-            updateFileDTO.description.trim() !== ""
-        ) {
-            file.description = updateFileDTO.description;
+        const hasChanges = this.applyUpdatesAndDetectChanges(
+            file,
+            updateFileDTO,
+        );
+
+        if (hasChanges && userId) {
+            file.modifiedBy = userId;
+            const updatedFile: FileEntity =
+                await this.fileRepository.save(file);
+            logger.info(`File updated successfully with ID: ${updatedFile.id}`);
+            return updatedFile;
         }
 
-        if (
-            updateFileDTO.fileName !== undefined &&
-            updateFileDTO.fileName.trim() !== ""
-        ) {
-            file.fileName = updateFileDTO.fileName;
-        }
-
-        if (
-            updateFileDTO.fileType !== undefined &&
-            updateFileDTO.fileType.trim() !== ""
-        ) {
-            file.fileType = updateFileDTO.fileType;
-        }
-
-        if (updateFileDTO.metadata !== undefined) {
-            file.metadata = updateFileDTO.metadata;
-        }
-
-        if (
-            updateFileDTO.tags !== undefined &&
-            updateFileDTO.tags.trim() !== ""
-        ) {
-            file.tags = updateFileDTO.tags;
-        }
-
-        const updatedFile: FileEntity = await this.fileRepository.save(file);
-        logger.info(`File updated successfully with ID: ${updatedFile.id}`);
-        return updatedFile;
+        logger.info(`No changes detected for file ID: ${file.id}`);
+        return file;
     }
+
     /**
      * A private helper to find, lock, and validate a student within a transaction.
      * This improves performance by using a COUNT query instead of loading all file relations.
@@ -359,7 +358,7 @@ export class FileService {
 
         if (!student) {
             throw new EntityNotFoundException(
-                `Student with ID ${studentId} not found`,
+                `Student profile with ID ${studentId} not found`,
             );
         }
 
@@ -384,5 +383,59 @@ export class FileService {
                     `Student currently has ${currentActiveFiles.toString()} active file(s).`,
             });
         }
+    }
+
+    private applyUpdatesAndDetectChanges(
+        file: FileEntity,
+        updateFileDTO: UpdateFileDTO,
+    ): boolean {
+        let hasChanges = false;
+
+        if (
+            updateFileDTO.description !== undefined &&
+            updateFileDTO.description.trim() !== "" &&
+            file.description !== updateFileDTO.description
+        ) {
+            file.description = updateFileDTO.description;
+            hasChanges = true;
+        }
+
+        if (
+            updateFileDTO.fileName !== undefined &&
+            updateFileDTO.fileName.trim() !== "" &&
+            file.fileName !== updateFileDTO.fileName
+        ) {
+            file.fileName = updateFileDTO.fileName;
+            hasChanges = true;
+        }
+
+        if (
+            updateFileDTO.fileType !== undefined &&
+            updateFileDTO.fileType.trim() !== "" &&
+            file.fileType !== updateFileDTO.fileType
+        ) {
+            file.fileType = updateFileDTO.fileType;
+            hasChanges = true;
+        }
+
+        if (
+            updateFileDTO.metadata !== undefined &&
+            JSON.stringify(file.metadata) !==
+                JSON.stringify(updateFileDTO.metadata)
+        ) {
+            file.metadata = updateFileDTO.metadata;
+            hasChanges = true;
+        }
+
+        if (
+            updateFileDTO.tags !== undefined &&
+            updateFileDTO.tags.trim() !== "" &&
+            file.tags !== updateFileDTO.tags
+        ) {
+            file.tags = updateFileDTO.tags;
+            hasChanges = true;
+        }
+
+        return hasChanges;
     }
 }

@@ -1,3 +1,4 @@
+// src/dto/predict/predict.ts
 import { Type } from "class-transformer";
 import {
     IsArray,
@@ -19,17 +20,27 @@ export class HTTPValidationError {
     detail!: ValidationError[];
 }
 
+/**
+ * API Response item - matches the external API response format exactly
+ */
 export class PredictResult {
     /**
      * Mã xét tuyển
      */
+    @IsNotEmpty()
+    @IsString()
     ma_xet_tuyen!: string;
+
     /**
      * Điểm xác suất model dự đoán mức độ phù hợp cho lựa chọn này
      */
+    @IsNumber()
     score!: number;
 }
 
+/**
+ * User input for prediction - matches the external API request format exactly
+ */
 export class UserInput {
     /**
      * Điểm chứng chỉ tiếng anh (nếu có)
