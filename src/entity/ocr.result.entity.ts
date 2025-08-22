@@ -6,8 +6,10 @@ import {
     Index,
     JoinColumn,
     ManyToOne,
+    OneToOne,
     PrimaryGeneratedColumn,
     Relation,
+    Unique,
     UpdateDateColumn,
 } from "typeorm";
 
@@ -43,7 +45,7 @@ export interface OcrMetadata {
 @Index("idx_ocr_file_id", ["fileId"])
 @Index("idx_ocr_status", ["status"])
 @Index("idx_ocr_created_at", ["createdAt"])
-@Index("idx_ocr_student_file", ["studentId", "fileId"]) // Composite index for querying by student and file
+@Unique("UQ_ocr_student_file", ["studentId", "fileId"])
 export class OcrResultEntity {
     @CreateDateColumn({ type: "timestamp with time zone" })
     createdAt!: Date;
@@ -55,7 +57,7 @@ export class OcrResultEntity {
     errorMessage?: string;
 
     @JoinColumn({ name: "fileId" })
-    @ManyToOne("FileEntity", { onDelete: "CASCADE" })
+    @OneToOne("FileEntity", "ocrResult", { onDelete: "CASCADE" })
     file!: Relation<FileEntity>;
 
     @Column({ type: "uuid" })
