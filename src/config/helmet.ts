@@ -18,7 +18,7 @@ export const helmetOptions: HelmetOptions = {
     },
     crossOriginOpenerPolicy: { policy: "same-origin" },
     crossOriginResourcePolicy: { policy: "same-origin" },
-};
+} as const;
 
 export const swaggerHelmetOptions: HelmetOptions = {
     contentSecurityPolicy: {
@@ -38,4 +38,4 @@ export const swaggerHelmetOptions: HelmetOptions = {
     },
     crossOriginOpenerPolicy: { policy: "same-origin" },
     crossOriginResourcePolicy: { policy: "same-origin" },
-};
+} as const;

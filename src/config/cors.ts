@@ -17,4 +17,4 @@ export const corsOptions: CorsOptions = {
     maxAge: 86400,
     methods: ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     origin: config.CORS_ORIGIN,
-};
+} as const;
