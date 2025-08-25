@@ -1,12 +1,5 @@
-import { Expose, Type } from "class-transformer";
-import {
-    IsDate,
-    IsNotEmpty,
-    IsOptional,
-    IsString,
-    MaxLength,
-    MinLength,
-} from "class-validator";
+import { Expose } from "class-transformer";
+import { IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
 
 import { ExamType } from "@/type/enum/exam.js";
 
@@ -47,11 +40,11 @@ import { ExamType } from "@/type/enum/exam.js";
  * }
  */
 export class CertificationDTO {
-    @Expose()
-    @IsOptional()
-    @IsString({ message: "Credential ID must be a string" })
-    @MaxLength(100, { message: "Credential ID cannot exceed 100 characters" })
-    credentialId?: string;
+    // @Expose()
+    // @IsOptional()
+    // @IsString({ message: "Credential ID must be a string" })
+    // @MaxLength(100, { message: "Credential ID cannot exceed 100 characters" })
+    // credentialId?: string;
 
     /**
      * Type and category of the exam/certification
@@ -61,28 +54,28 @@ export class CertificationDTO {
     @IsNotEmpty({ message: "Exam type is required" })
     examType!: ExamType;
 
-    @Expose()
-    @IsDate({ message: "Expiration date must be a valid date" })
-    @IsOptional()
-    @Type(() => Date)
-    expirationDate?: Date;
+    // @Expose()
+    // @IsDate({ message: "Expiration date must be a valid date" })
+    // @IsOptional()
+    // @Type(() => Date)
+    // expirationDate?: Date;
 
-    @Expose()
-    @IsDate({ message: "Issue date must be a valid date" })
-    @IsOptional()
-    @Type(() => Date)
-    issueDate?: Date;
+    // @Expose()
+    // @IsDate({ message: "Issue date must be a valid date" })
+    // @IsOptional()
+    // @Type(() => Date)
+    // issueDate?: Date;
 
-    @Expose()
-    @IsOptional()
-    @IsString({ message: "Issuing organization must be a string" })
-    @MaxLength(200, {
-        message: "Issuing organization cannot exceed 200 characters",
-    })
-    @MinLength(1, {
-        message: "Issuing organization must be at least 1 character long",
-    })
-    issuingOrganization?: string;
+    // @Expose()
+    // @IsOptional()
+    // @IsString({ message: "Issuing organization must be a string" })
+    // @MaxLength(200, {
+    //     message: "Issuing organization cannot exceed 200 characters",
+    // })
+    // @MinLength(1, {
+    //     message: "Issuing organization must be at least 1 character long",
+    // })
+    // issuingOrganization?: string;
 
     @Expose()
     @IsNotEmpty({ message: "Level is required" })
@@ -91,22 +84,22 @@ export class CertificationDTO {
     @MinLength(1, { message: "Level must be at least 1 character long" })
     level!: string;
 
-    @Expose()
-    @IsOptional()
-    @IsString({ message: "Level description must be a string" })
-    @MaxLength(100, {
-        message: "Level description cannot exceed 100 characters",
-    })
-    levelDescription?: string;
+    // @Expose()
+    // @IsOptional()
+    // @IsString({ message: "Level description must be a string" })
+    // @MaxLength(100, {
+    //     message: "Level description cannot exceed 100 characters",
+    // })
+    // levelDescription?: string;
 
-    @Expose()
-    @IsOptional()
-    @IsString({ message: "Certification name must be a string" })
-    @MaxLength(200, {
-        message: "Certification name cannot exceed 200 characters",
-    })
-    @MinLength(1, {
-        message: "Certification name must be at least 1 character long",
-    })
-    name?: string;
+    // @Expose()
+    // @IsOptional()
+    // @IsString({ message: "Certification name must be a string" })
+    // @MaxLength(200, {
+    //     message: "Certification name cannot exceed 200 characters",
+    // })
+    // @MinLength(1, {
+    //     message: "Certification name must be at least 1 character long",
+    // })
+    // name?: string;
 }

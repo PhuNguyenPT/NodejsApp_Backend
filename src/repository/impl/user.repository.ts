@@ -53,10 +53,7 @@ export class UserRepository implements IUserRepository {
         const userEntity = await this.repository
             .createQueryBuilder("u")
             .where("u.email = :email", { email })
-            .cache(
-                `user_cache_${email}`,
-                JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
-            )
+            .cache(JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS)
             .getOne();
 
         if (!userEntity) {
@@ -96,14 +93,21 @@ export class UserRepository implements IUserRepository {
     }
 
     public async saveUser(userEntity: UserEntity): Promise<UserEntity> {
-        const emailExists: boolean = await this.existsByEmail(userEntity.email);
+        return await this.repository.manager.transaction(
+            async (entityManager) => {
+                const emailExists: boolean = await entityManager.existsBy(
+                    UserEntity,
+                    { email: userEntity.email },
+                );
 
-        if (emailExists) {
-            throw new EntityExistsException(
-                `User with email '${userEntity.email}' already exists`,
-            );
-        }
-        return await this.repository.save(userEntity);
+                if (emailExists) {
+                    throw new EntityExistsException(
+                        `User with email '${userEntity.email}' already exists`,
+                    );
+                }
+                return await this.repository.save(userEntity);
+            },
+        );
     }
 
     /**
@@ -118,29 +122,44 @@ export class UserRepository implements IUserRepository {
         id: string,
         updateData: Partial<UserEntity>,
     ): Promise<UserEntity> {
-        // First, find the existing entity to ensure it exists.
-        const userToUpdate = await this.findById(id);
-        if (!userToUpdate) {
-            throw new EntityNotFoundException(`User with id ${id} not found`);
-        }
-
-        // If the email is part of the update, check if the new email already exists
-        // for a *different* user.
-        if (updateData.email && updateData.email !== userToUpdate.email) {
-            const emailExists = await this.existsByEmail(updateData.email);
-            if (emailExists) {
-                throw new IllegalArgumentException(
-                    `Email ${updateData.email} already exists`,
+        return await this.repository.manager.transaction(
+            async (transactionManager) => {
+                // First, find the existing entity to ensure it exists.
+                const userToUpdate = await transactionManager.findOneBy(
+                    UserEntity,
+                    { id },
                 );
-            }
-        }
+                if (!userToUpdate) {
+                    throw new EntityNotFoundException(
+                        `User with id ${id} not found`,
+                    );
+                }
 
-        // Use TypeORM's `merge` to safely apply the partial changes
-        // to the fetched entity. This correctly handles relations.
-        this.repository.merge(userToUpdate, updateData);
+                // If the email is part of the update, check if the new email already exists
+                // for a *different* user.
+                if (
+                    updateData.email &&
+                    updateData.email !== userToUpdate.email
+                ) {
+                    const emailExists = await transactionManager.existsBy(
+                        UserEntity,
+                        { email: updateData.email },
+                    );
+                    if (emailExists) {
+                        throw new IllegalArgumentException(
+                            `Email ${updateData.email} already exists`,
+                        );
+                    }
+                }
 
-        // Save the merged entity. TypeORM will issue an UPDATE query
-        // because the entity has an existing ID.
-        return this.repository.save(userToUpdate);
+                // Use TypeORM's `merge` to safely apply the partial changes
+                // to the fetched entity. This correctly handles relations.
+                transactionManager.merge(UserEntity, userToUpdate, updateData);
+
+                // Save the merged entity. TypeORM will issue an UPDATE query
+                // because the entity has an existing ID.
+                return transactionManager.save(userToUpdate);
+            },
+        );
     }
 }

@@ -6,7 +6,6 @@ import { AcademicPerformanceResponse } from "@/dto/student/academic.performance.
 import { AptitudeTestResponse } from "@/dto/student/aptitude.test.response.js";
 import { AwardResponse } from "@/dto/student/award.response.js";
 import { CertificationResponse } from "@/dto/student/certification.response.js";
-import { ConductResponse } from "@/dto/student/conduct.response.js";
 import {
     ExamSubject,
     VsatExamSubject,
@@ -15,90 +14,6 @@ import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
-/**
- * Data Transfer Object for student profile response information.
- * Contains all necessary data to return a comprehensive student profile including
- * academic background, budget preferences, achievements, and certifications.
- * @example
- * {
- *   "academicPerformances": [
- *     {
- *       "academicPerformance": "Giỏi",
- *       "grade": 10
- *     },
- *     {
- *       "academicPerformance": "Khá",
- *       "grade": 11
- *     },
- *     {
- *       "academicPerformance": "Xuất sắc",
- *       "grade": 12
- *     }
- *   ],
- *   "aptitudeTestScore": {
- *     "examType": {
- *       "type": "DGNL",
- *       "value": "VNUHCM"
- *     },
- *     "score": 700
- *   },
- *   "awards": [
- *     {
- *       "awardDate": "2023-12-15",
- *       "category": "Tiếng Anh",
- *       "level": "Hạng Nhất",
- *       "name": "Học sinh giỏi cấp quốc gia"
- *     }
- *   ],
- *   "certifications": [
- *     {
- *       "examType": {
- *         "type": "CCNN",
- *         "value": "IELTS"
- *       },
- *       "issueDate": "2023-01-15",
- *       "expirationDate": "2025-01-15",
- *       "level": "6.5",
- *       "name": "IELTS Academic"
- *     }
- *   ],
- *   "conducts": [
- *     {
- *       "conduct": "Tốt",
- *       "grade": 10
- *     },
- *     {
- *       "conduct": "Khá",
- *       "grade": 11
- *     },
- *     {
- *       "conduct": "Trung bình",
- *       "grade": 12
- *     }
- *   ],
- *   "majors": [
- *     "Kỹ thuật",
- *     "Máy tính và công nghệ thông tin",
- *     "Toán và thống kê"
- *   ],
- *   "maxBudget": 20000000,
- *   "minBudget": 10000000,
- *   "nationalExam": [
- *     { "name": "Toán", "score": 8.0 },
- *     { "name": "Ngữ Văn", "score": 7.0 },
- *     { "name": "Tiếng Anh", "score": 9.5 },
- *     { "name": "Vật Lý", "score": 8.75 }
- *   ],
- *   "province": "Hồ Chí Minh",
- *   "specialStudentCase": "Học sinh trường chuyên",
- *   "talentScore": 9.5,
- *   "vsatScore": [
- *     { "name": "Toán", "score": 120 },
- *     { "name": "Ngữ Văn", "score": 130 },
- *     { "name": "Tiếng Anh", "score": 125 }
- *   ]
- * }
- */
 export class StudentProfileResponse {
     /**
      * Student academic performance assessment
@@ -110,7 +25,7 @@ export class StudentProfileResponse {
      * @see AcademicPerformanceResponse for detailed structure
      * @example [
      *   {
-     *     "academicPerformance": "Giỏi",
+     *     "academicPerformance": "Tốt",
      *     "grade": 10
      *   },
      *   {
@@ -118,7 +33,7 @@ export class StudentProfileResponse {
      *     "grade": 11
      *   },
      *   {
-     *     "academicPerformance": "Xuất sắc",
+     *     "academicPerformance": "Đạt",
      *     "grade": 12
      *   }
      * ]
@@ -161,48 +76,25 @@ export class StudentProfileResponse {
     @Type(() => CertificationResponse)
     certifications?: CertificationResponse[];
 
-    /**
-     * Student conduct/behavior assessment
-     * Array of conduct ratings that can include multiple evaluations for different grades/years.
-     * Each entry contains a conduct rating and the corresponding grade level.
-     *
-     * @type {ConductResponse[]}
-     * @optional
-     * @see ConductResponse for detailed structure
-     * @example [
-     *   {
-     *     "conduct": "Tốt",
-     *     "grade": 10
-     *   },
-     *   {
-     *     "conduct": "Khá",
-     *     "grade": 11
-     *   },
-     *   {
-     *     "conduct": "Trung bình",
-     *     "grade": 12
-     *   }
-     * ]
-     */
-    @Expose()
-    @Type(() => ConductResponse)
-    conducts?: ConductResponse[];
-
     @Expose()
     @Type(() => FileResponse)
     fileResponses!: FileResponse[];
 
+    /**
+     * @example "f24a03b2-2448-441e-8702-eb577638fb82"
+     */
     @Expose()
     id!: string;
 
-    /**
-     * Geographic location or preferred study location of the student.
-     */
-    @Expose()
-    location?: string;
+    // /**
+    //  * Geographic location or preferred study location of the student.
+    //  */
+    // @Expose()
+    // location?: string;
 
     /**
      * Primary field of study or academic major of the student.
+     * @example ["Kỹ thuật", "Máy tính và công nghệ thông tin", "Toán và thống kê"]
      */
     @Expose()
     @Type(() => String)
@@ -211,6 +103,9 @@ export class StudentProfileResponse {
     /**
      * Maximum budget amount that the student is willing or able to spend.
      * Represents the upper limit of the budget range in Vietnamese Dong (VND).
+     *
+     * @type {number}
+     * @example 20000000
      */
     @Expose()
     @Transform(({ value }) => (value ? parseInt(String(value)) : undefined))
@@ -219,6 +114,9 @@ export class StudentProfileResponse {
     /**
      * Minimum budget amount that the student requires or prefers to spend.
      * Represents the lower limit of the budget range in Vietnamese Dong (VND).
+     *
+     * @type {number}
+     * @example 10000000
      */
     @Expose()
     @Transform(({ value }) => (value ? parseInt(String(value)) : undefined))
@@ -229,22 +127,29 @@ export class StudentProfileResponse {
      *
      * @type {ExamSubject[]}
      * @see ExamSubject for detailed structure and validation rules
+     * @example [{ "name": "Toán", "score": 8.0 }, { "name": "Ngữ Văn", "score": 7.0 }, { "name": "Tiếng Anh", "score": 9.5 }, { "name": "Vật Lý", "score": 8.75 }]
      */
     @Expose()
     @Type(() => ExamSubject)
     nationalExam!: ExamSubject[];
 
     /**
-     * Province or city where the student is located
+     * Province or city where the student's university/college is located
+     * @type {VietnamSouthernProvinces}
+     * @see VietnamSouthernProvinces for valid enum values
      */
+    @Expose()
     @Expose()
     @Type(() => String)
     province!: VietnamSouthernProvinces;
 
     /**
-     * Special student case indicating unique circumstances or qualifications.
-     * Optional field that can be used to specify if the student falls under any special category.
+     * Special student case indicating unique circumstances or qualifications
+     * Optional field that can be used to specify if the student falls under any special category
      * Valid values are defined in the SpecialStudentCase enum.
+     * @type {SpecialStudentCase}
+     * @optional
+     * @see SpecialStudentCase for valid enum values
      */
     @Expose()
     @Transform(({ value }) => (value ? String(value) : undefined))
@@ -253,25 +158,26 @@ export class StudentProfileResponse {
 
     /**
      * Talent score (0-10 scale)
+     * @example 9.5
      */
     @Expose()
     @Transform(({ value }) => (value ? parseFloat(String(value)) : undefined))
     talentScore?: number;
 
+    /**
+     * @example "863fe715-f516-4115-b97e-385fa77fd0d0"
+     */
     @Expose()
     userId!: string;
 
     /**
      * VSAT score (Vietnamese Scholastic Aptitude Test)
-     * Array of exactly 3 scores (0-150 each)
-     */
-    /**
-     * VSAT score (Vietnamese Scholastic Aptitude Test)
      * Array of exactly 3 exam subjects with names and scores (0-150 each)
+     * Each subject contains a name and score following the ExamSubject structure
      * @example [
-     * { "name": "Toán", "score": 120 },
-     * { "name": "Ngữ Văn", "score": 130 },
-     * { "name": "Tiếng Anh", "score": 125 }
+     *     { "name": "Toán", "score": 120 },
+     *     { "name": "Ngữ Văn", "score": 130 },
+     *     { "name": "Tiếng Anh", "score": 125 }
      * ]
      */
     @Expose()

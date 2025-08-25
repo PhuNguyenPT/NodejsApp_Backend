@@ -1,5 +1,5 @@
-import { Expose, Type } from "class-transformer";
-import { IsNotEmpty, IsOptional } from "class-validator";
+import { Expose } from "class-transformer";
+import { IsNotEmpty } from "class-validator";
 
 import { CEFR } from "@/entity/certification.js";
 import { ExamType } from "@/type/enum/exam.js";
@@ -8,15 +8,12 @@ import { ExamType } from "@/type/enum/exam.js";
  * Data Transfer Object for Certification response information
  * @example
  * {
- *   "id": "cert-uuid-123",
+ *   "id": "3b9fb604-f40f-4253-b188-b2fe8c78bc54",
  *   "examType": {
  *     "type": "CCNN",
  *     "value": "IELTS"
  *   },
- *   "issueDate": "2023-01-15",
- *   "expirationDate": "2025-01-15",
- *   "level": "6.5",
- *   "name": "IELTS Academic"
+ *   "level": "6.5"
  * }
  * @example
  * {
@@ -38,8 +35,9 @@ export class CertificationResponse {
     @Expose()
     cefr?: CEFR;
 
-    @Expose()
-    credentialId?: string;
+    // @Expose()
+    // @IsOptional()
+    // credentialId?: string;
 
     /**
      * Type and category of the exam/certification
@@ -48,31 +46,33 @@ export class CertificationResponse {
     @Expose()
     examType!: ExamType;
 
-    @Expose()
-    @Type(() => Date)
-    expirationDate!: Date;
+    // @Expose()
+    // @IsOptional()
+    // @Type(() => Date)
+    // expirationDate!: Date;
 
     @Expose()
     @IsNotEmpty()
     id!: string;
 
-    @Expose()
-    @Type(() => Date)
-    issueDate!: Date;
+    // @Expose()
+    // @IsOptional()
+    // @Type(() => Date)
+    // issueDate?: Date;
 
-    @Expose()
-    @IsOptional()
-    issuingOrganization?: string;
+    // @Expose()
+    // @IsOptional()
+    // issuingOrganization?: string;
 
     @Expose()
     @IsNotEmpty()
     level!: string;
 
-    @Expose()
-    @IsOptional()
-    levelDescription?: string;
+    // @Expose()
+    // @IsOptional()
+    // levelDescription?: string;
 
-    @Expose()
-    @IsOptional()
-    name?: string;
+    // @Expose()
+    // @IsOptional()
+    // name?: string;
 }

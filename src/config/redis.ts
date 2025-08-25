@@ -13,7 +13,7 @@ export const redisConfig = {
         port: config.REDIS_PORT,
     },
     username: config.REDIS_USERNAME,
-};
+} as const;
 
 // Main Redis client for general operations (publishing, get/set operations)
 export const redisClient: RedisClientType = createClient(redisConfig);
