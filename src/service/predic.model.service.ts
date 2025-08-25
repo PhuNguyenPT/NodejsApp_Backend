@@ -146,7 +146,7 @@ export class PredictModelService {
             this.logger.info("Starting prediction");
 
             const response = await this.httpClient.post<L2PredictResult[]>(
-                "/predict",
+                "/predict/l2",
                 userInput,
             );
             const validatedResults = await this.validateResponse(response.data);
