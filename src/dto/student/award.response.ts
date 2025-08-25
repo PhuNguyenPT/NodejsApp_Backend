@@ -1,10 +1,11 @@
-import { Expose, Type } from "class-transformer";
-import { IsNotEmpty, IsOptional } from "class-validator";
+import { Expose } from "class-transformer";
+import { IsNotEmpty } from "class-validator";
 
 /**
  * Data Transfer Object for Award information
  * @example
  * {
+ *   "id": "3b9fb604-f40f-4253-b188-b2fe8c78bc54",
  *   "category": "Tiếng Anh",
  *   "level": "Hạng Nhất",
  *   "name": "Học sinh giỏi cấp quốc gia"
@@ -21,26 +22,26 @@ import { IsNotEmpty, IsOptional } from "class-validator";
  * }
  */
 export class AwardResponse {
-    @Expose()
-    @IsNotEmpty()
-    @Type(() => Date)
-    awardDate?: Date;
+    // @Expose()
+    // @IsOptional()
+    // @Type(() => Date)
+    // awardDate?: Date;
 
-    @Expose()
-    @IsOptional()
-    awardId?: string;
+    // @Expose()
+    // @IsOptional()
+    // awardId?: string;
 
-    @Expose()
-    @IsOptional()
-    awardingOrganization?: string;
+    // @Expose()
+    // @IsOptional()
+    // awardingOrganization?: string;
 
     @Expose()
     @IsNotEmpty()
     category!: string;
 
-    @Expose()
-    @IsOptional()
-    description?: string;
+    // @Expose()
+    // @IsOptional()
+    // description?: string;
 
     @Expose()
     @IsNotEmpty()

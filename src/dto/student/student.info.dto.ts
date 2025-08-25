@@ -8,11 +8,8 @@ import {
     IsNotEmpty,
     IsNumber,
     IsOptional,
-    IsString,
     Max,
-    MaxLength,
     Min,
-    MinLength,
     ValidateNested,
 } from "class-validator";
 
@@ -20,7 +17,6 @@ import { AcademicPerformanceDTO } from "@/dto/student/academic.performance.dto.j
 import { AptitudeTestDTO } from "@/dto/student/aptitude.test.dto.js";
 import { AwardDTO } from "@/dto/student/award.dto.js";
 import { CertificationDTO } from "@/dto/student/certification.dto.js";
-import { ConductDTO } from "@/dto/student/conduct.dto.js";
 import {
     ExamSubject,
     VsatExamSubject,
@@ -29,86 +25,6 @@ import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
-/**
- * Data Transfer Object for creating or updating student profile information.
- * Contains all necessary data to establish a comprehensive student profile including
- * academic background, budget preferences, achievements, and certifications.
- * @example
- * {
- *   "academicPerformances": [
- *     {
- *       "academicPerformance": "Giỏi",
- *       "grade": 10
- *     },
- *     {
- *       "academicPerformance": "Khá",
- *       "grade": 11
- *     },
- *     {
- *       "academicPerformance": "Xuất sắc",
- *       "grade": 12
- *     }
- *   ],
- *   "aptitudeTestScore": {
- *     "examType": {
- *       "type": "DGNL",
- *       "value": "VNUHCM"
- *     },
- *     "score": 700
- *   },
- *   "awards": [
- *     {
- *       "category": "Tiếng Anh",
- *       "level": "Hạng Nhất",
- *       "name": "Học sinh giỏi cấp quốc gia"
- *     }
- *   ],
- *   "certifications": [
- *     {
- *       "examType": {
- *         "type": "CCNN",
- *         "value": "IELTS"
- *       },
- *       "level": "6.5",
- *     }
- *   ],
- *   "conducts": [
- *     {
- *       "conduct": "Tốt",
- *       "grade": 10
- *     },
- *     {
- *       "conduct": "Khá",
- *       "grade": 11
- *     },
- *     {
- *       "conduct": "Trung bình",
- *       "grade": 12
- *     }
- *   ],
- *   "majors": [
- *     "Kỹ thuật",
- *     "Máy tính và công nghệ thông tin",
- *     "Toán và thống kê"
- *   ],
- *   "maxBudget": 20000000,
- *   "minBudget": 10000000,
- *   "nationalExam": [
- *     { "name": "Toán", "score": 8.0 },
- *     { "name": "Ngữ Văn", "score": 7.0 },
- *     { "name": "Tiếng Anh", "score": 9.5 },
- *     { "name": "Vật Lý", "score": 8.75 }
- *   ],
- *   "province": "Hồ Chí Minh",
- *   "specialStudentCase": "Học sinh trường chuyên",
- *   "talentScore": 9.5,
- *   "vsatScore": [
- *     { "name": "Toán", "score": 120 },
- *     { "name": "Ngữ Văn", "score": 130 },
- *     { "name": "Tiếng Anh", "score": 125 }
- *   ]
- * }
- */
 export class StudentInfoDTO {
     /**
      * Student academic performance assessment
@@ -121,7 +37,7 @@ export class StudentInfoDTO {
      * @see AcademicPerformanceDTO for detailed structure and validation rules
      * @example [
      *   {
-     *     "academicPerformance": "Giỏi",
+     *     "academicPerformance": "Tốt",
      *     "grade": 10
      *   },
      *   {
@@ -129,7 +45,7 @@ export class StudentInfoDTO {
      *     "grade": 11
      *   },
      *   {
-     *     "academicPerformance": "Xuất sắc",
+     *     "academicPerformance": "Đạt",
      *     "grade": 12
      *   }
      * ]
@@ -189,69 +105,29 @@ export class StudentInfoDTO {
     @Type(() => CertificationDTO)
     @ValidateNested({ each: true })
     certifications?: CertificationDTO[];
-    /**
-     * Student conduct/behavior assessment
-     * Array of conduct ratings that can include multiple evaluations for different grades/years.
-     * Each entry contains a conduct rating and the corresponding grade level.
-     * Valid conduct values are defined in the Conduct enum.
-     *
-     * @type {ConductDTO[]}
-     * @required
-     * @see ConductDTO for detailed structure and validation rules
-     * @example [
-     *   {
-     *     "conduct": "Tốt",
-     *     "grade": 10
-     *   },
-     *   {
-     *     "conduct": "Khá",
-     *     "grade": 11
-     *   },
-     *   {
-     *     "conduct": "Trung bình",
-     *     "grade": 12
-     *   }
-     * ]
-     * @validation
-     * - Required field (cannot be null or undefined)
-     * - Must be an array of ConductDTO objects
-     * - Each ConductDTO must have valid conduct enum value and grade (1-12)
-     * - Array cannot be empty
-     */
-    @ArrayMaxSize(3, {
-        message: "Conduct must contain exactly 3 records",
-    })
-    @ArrayMinSize(3, {
-        message: "Conduct must contain exactly 3 records",
-    })
-    @Expose()
-    @IsArray({ message: "Conduct must be an array" })
-    @IsNotEmpty({ message: "Conduct is required" })
-    @Type(() => ConductDTO)
-    @ValidateNested({ each: true })
-    conducts!: ConductDTO[];
-    /**
-     * Geographic location or preferred study location of the student.
-     * Can include city, state, country, or specific address information.
-     * Used for matching with location-based opportunities or programs.
-     *
-     * @type {string}
-     * @required
-     * @minLength 1
-     * @maxLength 500
-     * @example "1 Lê Duẩn, Bến Nghé, Quận 1, Thành phố Hồ Chí Minh, Việt Nam"
-     * @example "Ho Chi Minh City, Vietnam"
-     * @example "Hanoi, Vietnam"
-     * @example "Da Nang, Vietnam"
-     * @example "Can Tho, Vietnam"
-     * @example "Nha Trang, Khanh Hoa, Vietnam"
-     */
-    @Expose()
-    @IsOptional()
-    @IsString({ message: "Location must be a string" })
-    @MaxLength(500, { message: "Location cannot exceed 500 characters" })
-    @MinLength(1, { message: "Location must be at least 1 character long" })
-    location?: string;
+
+    // /**
+    //  * Geographic location or preferred study location of the student.
+    //  * Can include city, state, country, or specific address information.
+    //  * Used for matching with location-based opportunities or programs.
+    //  *
+    //  * @type {string}
+    //  * @required
+    //  * @minLength 1
+    //  * @maxLength 500
+    //  * @example "1 Lê Duẩn, Bến Nghé, Quận 1, Thành phố Hồ Chí Minh, Việt Nam"
+    //  * @example "Ho Chi Minh City, Vietnam"
+    //  * @example "Hanoi, Vietnam"
+    //  * @example "Da Nang, Vietnam"
+    //  * @example "Can Tho, Vietnam"
+    //  * @example "Nha Trang, Khanh Hoa, Vietnam"
+    //  */
+    // @Expose()
+    // @IsOptional()
+    // @IsString({ message: "Location must be a string" })
+    // @MaxLength(500, { message: "Location cannot exceed 500 characters" })
+    // @MinLength(1, { message: "Location must be at least 1 character long" })
+    // location?: string;
 
     /**
      * Student's major group classifications using standardized Vietnamese categories.
@@ -339,8 +215,9 @@ export class StudentInfoDTO {
     nationalExam!: ExamSubject[];
 
     /**
-     * Province or city where the student is located
-     * @example VietnamSouthernProvinces.HO_CHI_MINH
+     * Province or city where the student's university/college is located
+     * @type {VietnamSouthernProvinces}
+     * @see VietnamSouthernProvinces for valid enum values
      */
     @Expose()
     @IsEnum(VietnamSouthernProvinces, {
@@ -356,10 +233,6 @@ export class StudentInfoDTO {
      * @type {SpecialStudentCase}
      * @optional
      * @see SpecialStudentCase for valid enum values
-     * @example "Học sinh thuộc huyện nghèo, vùng đặc biệt khó khăn"
-     * @example "Anh hùng Lao động, Anh hùng Lực lượng vũ trang Nhân dân, Chiến sĩ thi đua toàn quốc"
-     * @example "Học sinh trường chuyên"
-     * @example "Dân tộc thiểu số rất ít người (Mông, La Ha,...)"
      */
     @Expose()
     @IsEnum(SpecialStudentCase, {
