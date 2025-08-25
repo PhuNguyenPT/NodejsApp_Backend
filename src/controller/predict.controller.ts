@@ -14,7 +14,7 @@ import {
     Tags,
 } from "tsoa";
 
-import { PredictResult, UserInput } from "@/dto/predict/predict.js";
+import { L2PredictResult, L2PUserInput } from "@/dto/predict/predict.js";
 import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
 import validateDTO from "@/middleware/validation.middleware.js";
 import { PredictModelService } from "@/service/predic.model.service.js";
@@ -35,18 +35,18 @@ export class PredictController extends Controller {
         super();
     }
 
-    @Middlewares(validateUuidParam("studentId"), validateDTO(UserInput))
+    @Middlewares(validateUuidParam("studentId"), validateDTO(L2PUserInput))
     @Post("model/v2/{studentId}")
     @Produces("application/json")
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Predict result created successfully")
     public async getPredictedMajors(
-        @Body() userInput: UserInput,
+        @Body() userInput: L2PUserInput,
         @Path() studentId: string,
         @Request() request: AuthenticatedRequest,
-    ): Promise<PredictResult[]> {
+    ): Promise<L2PredictResult[]> {
         const user: Express.User = request.user;
-        const predictResults: PredictResult[] =
+        const predictResults: L2PredictResult[] =
             await this.predictModelService.predictMajorsByStudentIdAndUserId(
                 userInput,
                 studentId,
@@ -68,7 +68,7 @@ export class PredictController extends Controller {
         @Request() request: AuthenticatedRequest,
     ) {
         const user: Express.User = request.user;
-        const predictResults: PredictResult[] =
+        const predictResults: L2PredictResult[] =
             await this.predictModelService.getPredictedResults(
                 studentId,
                 user.id,

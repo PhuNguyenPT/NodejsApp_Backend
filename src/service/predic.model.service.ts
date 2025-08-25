@@ -6,8 +6,8 @@ import { Repository } from "typeorm";
 
 import {
     HTTPValidationError,
-    PredictResult,
-    UserInput,
+    L2PredictResult,
+    L2PUserInput,
 } from "@/dto/predict/predict.js";
 import { OcrResultEntity, OcrStatus } from "@/entity/ocr.result.entity.js";
 import { StudentEntity } from "@/entity/student.js";
@@ -43,7 +43,7 @@ export class PredictModelService {
     async getPredictedResults(
         studentId: string,
         userId: string,
-    ): Promise<PredictResult[]> {
+    ): Promise<L2PredictResult[]> {
         // TODO: implement query result by event
         const student: null | StudentEntity =
             await this.studentRepository.findOne({
@@ -87,10 +87,10 @@ export class PredictModelService {
     }
 
     async predictMajorsByStudentIdAndUserId(
-        userInput: UserInput,
+        userInput: L2PUserInput,
         studentId: string,
         userId: string,
-    ): Promise<PredictResult[]> {
+    ): Promise<L2PredictResult[]> {
         this.logger.info("Performing prediction majors for student ", {
             studentId: studentId,
             userId: userId,
@@ -140,12 +140,12 @@ export class PredictModelService {
     }
 
     private async predictMajors(
-        userInput: UserInput,
-    ): Promise<PredictResult[]> {
+        userInput: L2PUserInput,
+    ): Promise<L2PredictResult[]> {
         try {
             this.logger.info("Starting prediction");
 
-            const response = await this.httpClient.post<PredictResult[]>(
+            const response = await this.httpClient.post<L2PredictResult[]>(
                 "/predict",
                 userInput,
             );
@@ -162,15 +162,15 @@ export class PredictModelService {
         }
     }
 
-    private async validateResponse(data: unknown): Promise<PredictResult[]> {
+    private async validateResponse(data: unknown): Promise<L2PredictResult[]> {
         if (!Array.isArray(data)) {
             throw new Error("Invalid response format");
         }
 
-        const results: PredictResult[] = [];
+        const results: L2PredictResult[] = [];
 
         for (const item of data) {
-            const instance = plainToInstance(PredictResult, item);
+            const instance = plainToInstance(L2PredictResult, item);
             const errors = await validate(instance);
 
             if (errors.length === 0) {

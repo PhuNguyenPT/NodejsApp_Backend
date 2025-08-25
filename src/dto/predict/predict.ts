@@ -1,4 +1,3 @@
-// src/dto/predict/predict.ts
 import { Type } from "class-transformer";
 import {
     IsArray,
@@ -23,7 +22,7 @@ export class HTTPValidationError {
 /**
  * API Response item - matches the external API response format exactly
  */
-export class PredictResult {
+export class L2PredictResult {
     /**
      * Mã xét tuyển
      */
@@ -41,7 +40,13 @@ export class PredictResult {
 /**
  * User input for prediction - matches the external API request format exactly
  */
-export class UserInput {
+export class L2PUserInput {
+    /**
+     * 1: Công lập, 0: Tư thục
+     */
+    @IsInt()
+    cong_lap!: number;
+
     /**
      * Điểm chứng chỉ tiếng anh (nếu có)
      */
@@ -63,49 +68,49 @@ export class UserInput {
     diem_quy_doi?: number;
 
     /**
-     * Điểm trung bình học kỳ năm lớp 10
+     * Điểm trung bình học kỳ năm lớp 10 (1: Giỏi, 2: Khá, 3: Trung bình, 4: Yếu)
      */
     @IsInt()
     hk10!: number;
 
     /**
-     * Điểm trung bình học kỳ năm lớp 11
+     * Điểm trung bình học kỳ năm lớp 11 (1: Giỏi, 2: Khá, 3: Trung bình, 4: Yếu)
      */
     @IsInt()
     hk11!: number;
 
     /**
-     * Điểm trung bình học kỳ năm lớp 12
+     * Điểm trung bình học kỳ năm lớp 12 (1: Giỏi, 2: Khá, 3: Trung bình, 4: Yếu)
      */
     @IsInt()
     hk12!: number;
 
     /**
-     * Học lực lớp 10
+     * Học lực lớp 10 (1: Giỏi, 2: Khá, 3: Trung bình, 4: Yếu)
      */
     @IsInt()
     hl10!: number;
 
     /**
-     * Học lực lớp 11
+     * Học lực lớp 11 (1: Giỏi, 2: Khá, 3: Trung bình, 4: Yếu)
      */
     @IsInt()
     hl11!: number;
 
     /**
-     * Học lực lớp 12
+     * Học lực lớp 12 (1: Giỏi (trên 8), 2: Trên 7, 3: Khá, 4: Trung bình, 5: Yếu)
      */
     @IsInt()
     hl12!: number;
 
     /**
-     * Mức học phí dự kiến của ngành/trường (đơn vị: VNĐ/năm)
+     * Mức học phí dự kiến của ngành (đơn vị: VNĐ/năm)
      */
     @IsNumber()
     hoc_phi!: number;
 
     /**
-     * Nhóm ngành
+     * Nhóm ngành (vd: 714, 732, ...)
      */
     @IsInt()
     nhom_nganh!: number;
@@ -116,6 +121,13 @@ export class UserInput {
     @IsOptional()
     @IsString()
     ten_ccta?: string;
+
+    /**
+     * Tỉnh/Thành phố (vd: TP. Hồ Chí Minh, ...)
+     */
+    @IsNotEmpty()
+    @IsString()
+    tinh_tp!: string;
 
     /**
      * Tổ hợp môn (vd: D01, A00, VNUHCM, ...)
