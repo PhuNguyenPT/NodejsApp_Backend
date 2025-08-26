@@ -3,7 +3,7 @@ import { RedisClientType } from "redis";
 import { EntityManager, IsNull, Repository } from "typeorm";
 
 import { CreateFileDTO } from "@/dto/file/create.file.js";
-import { UpdateFileDTO } from "@/dto/file/update.file.js";
+import { UpdateFileRequest } from "@/dto/file/update.file.js";
 import { FileEntity, FileStatus, FileType } from "@/entity/file.js";
 import { StudentEntity } from "@/entity/student.js";
 import {
@@ -315,7 +315,7 @@ export class FileService {
 
     public async updateFile(
         fileId: string,
-        updateFileDTO: UpdateFileDTO,
+        updateFileDTO: UpdateFileRequest,
         userId?: string,
     ): Promise<FileEntity> {
         const file = await this.getFileById(fileId, userId);
@@ -387,7 +387,7 @@ export class FileService {
 
     private applyUpdatesAndDetectChanges(
         file: FileEntity,
-        updateFileDTO: UpdateFileDTO,
+        updateFileDTO: UpdateFileRequest,
     ): boolean {
         let hasChanges = false;
 
