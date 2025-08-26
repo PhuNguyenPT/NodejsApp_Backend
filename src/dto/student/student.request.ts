@@ -23,10 +23,9 @@ import {
 } from "@/dto/student/exam.profile.dto.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
-import { VietnameseSubject } from "@/type/enum/subject.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
-export class StudentInfoDTO {
+export class StudentRequest {
     /**
      * Student academic performance assessment
      * Array of academic performance ratings that can include multiple evaluations for different grades/years.
@@ -283,53 +282,4 @@ export class StudentInfoDTO {
     @Type(() => VsatExamSubject)
     @ValidateNested({ each: true })
     vsatScore?: VsatExamSubject[];
-
-    getAptitudeTestScore(): number | undefined {
-        return this.aptitudeTestScore?.score;
-    }
-
-    getCertificationsByExamType(
-        type: "CCNN" | "CCQT" | "ĐGNL",
-    ): CertificationRequest[] {
-        if (!this.certifications) return [];
-        return this.certifications.filter(
-            (cert) =>
-                typeof cert.examType === "object" &&
-                cert.examType.type === type,
-        );
-    }
-
-    getTotalVSATScore(): number {
-        if (!this.vsatScore || !Array.isArray(this.vsatScore)) return 0;
-        return this.vsatScore.reduce(
-            (sum, examSubject) => sum + examSubject.score,
-            0,
-        );
-    }
-
-    hasAptitudeTestScore(): boolean {
-        return !!this.aptitudeTestScore;
-    }
-
-    hasCertificationExamType(type: "CCNN" | "CCQT" | "ĐGNL"): boolean {
-        return this.getCertificationsByExamType(type).length > 0;
-    }
-
-    hasValidVSATScores(): boolean {
-        return (
-            this.vsatScore !== undefined &&
-            Array.isArray(this.vsatScore) &&
-            this.vsatScore.length === 3 &&
-            this.vsatScore.every(
-                (examSubject) =>
-                    typeof examSubject === "object" &&
-                    Object.values(VietnameseSubject).includes(
-                        examSubject.name,
-                    ) && // Validate enum value
-                    typeof examSubject.score === "number" &&
-                    examSubject.score >= 0 &&
-                    examSubject.score <= 150,
-            )
-        );
-    }
 }

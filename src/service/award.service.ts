@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
-import { AwardDTO } from "@/dto/student/award.dto.js";
+import { AwardRequest } from "@/dto/student/award.request.js";
 import { AwardEntity } from "@/entity/award.js";
 import { TYPES } from "@/type/container/types.js";
 
@@ -12,7 +12,7 @@ export class AwardService {
         private readonly awardRepository: Repository<AwardEntity>,
     ) {}
 
-    public create(awards: AwardDTO[]): AwardEntity[] {
+    public create(awards: AwardRequest[]): AwardEntity[] {
         const awardEntities: AwardEntity[] = awards.map((award) =>
             this.awardRepository.create(award),
         );

@@ -1,4 +1,4 @@
-// Enum for Major Group names with English keys and Vietnamese values
+// src/enum/major.ts
 export enum MajorGroup {
     AGRICULTURE_FORESTRY_FISHERIES = "Nông, lâm nghiệp và thủy sản",
     ARCHITECTURE_AND_CONSTRUCTION = "Kiến trúc và xây dựng",
@@ -26,7 +26,8 @@ export enum MajorGroup {
     VETERINARY = "Thú y",
 }
 
-// Const object for Major Group codes mapping to Vietnamese names
+export type MajorGroupKey = keyof typeof MajorGroup;
+
 export const MajorGroupCode = {
     "714": "Khoa học giáo dục và đào tạo giáo viên",
     "721": "Nghệ thuật",
@@ -59,7 +60,7 @@ export type MajorGroupCodeKey = keyof typeof MajorGroupCode;
 
 // Helper function to get code by English key
 export function getCodeByEnglishKey(
-    englishKey: keyof typeof MajorGroup,
+    englishKey: MajorGroupKey,
 ): string | undefined {
     const vietnameseName = MajorGroup[englishKey];
     return Object.keys(MajorGroupCode).find(
@@ -67,15 +68,53 @@ export function getCodeByEnglishKey(
     );
 }
 
+// Helper function to get code by Vietnamese name
+export function getCodeByVietnameseName(
+    vietnameseName: string,
+): string | undefined {
+    return Object.keys(MajorGroupCode).find(
+        (key) => MajorGroupCode[key as MajorGroupCodeKey] === vietnameseName,
+    );
+}
+
 // Helper function to get English key by code
-export function getEnglishKeyByCode(code: string): string | undefined {
+export function getEnglishKeyByCode(code: string): MajorGroupKey | undefined {
     const vietnameseName = MajorGroupCode[code as MajorGroupCodeKey];
     return Object.keys(MajorGroup).find(
-        (key) => MajorGroup[key as keyof typeof MajorGroup] === vietnameseName,
-    );
+        (key) => MajorGroup[key as MajorGroupKey] === vietnameseName,
+    ) as MajorGroupKey | undefined;
+}
+
+// Helper function to get English key by Vietnamese name
+export function getEnglishKeyByVietnameseName(
+    vietnameseName: string,
+): MajorGroupKey | undefined {
+    const entries = Object.entries(MajorGroup) as [MajorGroupKey, string][];
+    const found = entries.find(([, value]) => value === vietnameseName);
+    return found?.[0];
 }
 
 // Helper function to get major group name by code
 export function getMajorGroupByCode(code: string): string | undefined {
     return MajorGroupCode[code as MajorGroupCodeKey];
+}
+
+// Helper function to get all major group keys (equivalent to Object.keys but typed)
+export function getMajorGroupKeys(): MajorGroupKey[] {
+    return Object.keys(MajorGroup) as MajorGroupKey[];
+}
+
+// Helper function to get all major group values (equivalent to Object.values but typed)
+export function getMajorGroupValues(): MajorGroup[] {
+    return Object.values(MajorGroup);
+}
+
+// Helper function to check if a string is a valid major group key
+export function isMajorGroupKey(key: string): key is MajorGroupKey {
+    return key in MajorGroup;
+}
+
+// Helper function to check if a string is a valid major group value
+export function isMajorGroupValue(value: string): value is MajorGroup {
+    return Object.values(MajorGroup).includes(value as MajorGroup);
 }

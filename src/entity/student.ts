@@ -21,6 +21,7 @@ import { FileType } from "@/entity/file.js";
 import { MajorGroupEntity } from "@/entity/major.group.entity.js";
 import { UserEntity } from "@/entity/user.js";
 import { ExamType } from "@/type/enum/exam.js";
+import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
@@ -126,7 +127,7 @@ export class StudentEntity {
     majorGroupsEntities?: Relation<MajorGroupEntity[]>;
 
     @Column({ nullable: true, type: "jsonb" })
-    majors?: string[];
+    majors?: MajorGroup[];
 
     @Column({ nullable: true, precision: 14, scale: 2, type: "decimal" })
     maxBudget?: number;
@@ -283,6 +284,18 @@ export class StudentEntity {
         return `$${this.minBudget.toLocaleString()} - $${this.maxBudget.toLocaleString()}`;
     }
 
+    getCertificationsByExamType(
+        type: "CCNN" | "CCQT" | "ĐGNL",
+    ): CertificationEntity[] {
+        if (!this.certifications) return [];
+        return this.certifications.filter(
+            (cert) =>
+                cert.examType &&
+                typeof cert.examType === "object" &&
+                cert.examType.type === type,
+        );
+    }
+
     // Helper method to get conduct by grade
     getConductByGrade(grade: number): ConductData | null {
         if (!this.conducts) return null;
@@ -398,7 +411,7 @@ export class StudentEntity {
             .reduce((total, file) => total + file.fileSize, 0);
     }
 
-    getTotalSubjectScore(): number {
+    getTotalNationalExamScore(): number {
         if (!this.nationalExam) return 0;
         return this.nationalExam.reduce(
             (sum, subject) => sum + subject.score,
@@ -440,6 +453,14 @@ export class StudentEntity {
         );
     }
 
+    hasAptitudeTestScore(): boolean {
+        return !!this.aptitudeTestScore;
+    }
+
+    hasCertificationExamType(type: "CCNN" | "CCQT" | "ĐGNL"): boolean {
+        return this.getCertificationsByExamType(type).length > 0;
+    }
+
     // Helper method to check if conduct data exists
     hasConductData(): boolean {
         return !!(this.conducts && this.conducts.length > 0);
@@ -455,7 +476,7 @@ export class StudentEntity {
         return !!this.userId && !!this.user;
     }
 
-    hasValidExamData(): boolean {
+    hasValidNationalExamData(): boolean {
         return (
             this.nationalExam !== undefined && this.nationalExam.length === 4
         );

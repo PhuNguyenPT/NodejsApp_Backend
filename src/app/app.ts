@@ -21,7 +21,7 @@ import { OcrEventListenerService } from "@/event/orc.event.listener.service.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import { TokenCleanupJob } from "@/job/token.cleanup.job.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
-import { PredictModelService } from "@/service/predic.model.service.js";
+import { PredictModelService } from "@/service/predict.model.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { keyStore } from "@/util/key.js";
 import logger from "@/util/logger.js";

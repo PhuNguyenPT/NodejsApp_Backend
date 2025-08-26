@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
-import { CertificationDTO } from "@/dto/student/certification.dto.js";
+import { CertificationRequest } from "@/dto/student/certification.request.js";
 import { CEFR, CertificationEntity } from "@/entity/certification.js";
 import { TYPES } from "@/type/container/types.js";
 import { CCNNType, ExamType } from "@/type/enum/exam.js";
@@ -14,7 +14,9 @@ export class CertificationService {
         private readonly certificationRepository: Repository<CertificationEntity>,
     ) {}
 
-    public create(certifications: CertificationDTO[]): CertificationEntity[] {
+    public create(
+        certifications: CertificationRequest[],
+    ): CertificationEntity[] {
         const certificationEntities: CertificationEntity[] = certifications.map(
             (certification) => {
                 const certificationEntity =

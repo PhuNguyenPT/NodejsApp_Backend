@@ -14,10 +14,10 @@ import {
     Tags,
 } from "tsoa";
 
-import { L2PredictResult, L2PUserInput } from "@/dto/predict/predict.js";
+import { L2PredictResult, UserInputL2 } from "@/dto/predict/predict.js";
 import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
 import validateDTO from "@/middleware/validation.middleware.js";
-import { PredictModelService } from "@/service/predic.model.service.js";
+import { PredictModelService } from "@/service/predict.model.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http.status.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
@@ -35,13 +35,13 @@ export class PredictController extends Controller {
         super();
     }
 
-    @Middlewares(validateUuidParam("studentId"), validateDTO(L2PUserInput))
+    @Middlewares(validateUuidParam("studentId"), validateDTO(UserInputL2))
     @Post("model/v2/{studentId}")
     @Produces("application/json")
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Predict result created successfully")
     public async getPredictedMajors(
-        @Body() userInput: L2PUserInput,
+        @Body() userInput: UserInputL2,
         @Path() studentId: string,
         @Request() request: AuthenticatedRequest,
     ): Promise<L2PredictResult[]> {

@@ -17,9 +17,9 @@ import {
     Tags,
 } from "tsoa";
 
-import { StudentInfoDTO } from "@/dto/student/student.info.dto.js";
 import { StudentResponse } from "@/dto/student/student.js";
 import { StudentProfileResponse } from "@/dto/student/student.profile.response.js";
+import { StudentRequest } from "@/dto/student/student.request.js";
 import { StudentEntity } from "@/entity/student.js";
 import { StudentMapper } from "@/mapper/student.mapper.js";
 import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
@@ -47,19 +47,19 @@ export class StudentController extends Controller {
      * Create a student profile as a guest user (no authentication required).
      * This endpoint allows anonymous users to submit their profile information.
      * @summary Create guest student profile
-     * @param studentInfoDTO The student profile data to create.
+     * @param studentRequest The student profile data to create.
      * @returns The newly created student profile.
      */
-    @Middlewares(validateDTO(StudentInfoDTO))
+    @Middlewares(validateDTO(StudentRequest))
     @Post("guest")
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @SuccessResponse(HttpStatus.CREATED, "Successfully create student")
     public async createStudentProfile(
-        @Body() studentInfoDTO: StudentInfoDTO,
+        @Body() studentRequest: StudentRequest,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
-            await this.studentService.createStudentEntity(studentInfoDTO);
+            await this.studentService.createStudentEntity(studentRequest);
         return StudentMapper.toStudentProfileResponse(studentEntity);
     }
 
@@ -68,10 +68,10 @@ export class StudentController extends Controller {
      * The user is identified via their JWT bearer token.
      * @summary Create student profile for authenticated user
      * @param request The authenticated Express request object, containing user details.
-     * @param studentInfoDTO The student profile data to create.
+     * @param studentRequest The student profile data to create.
      * @returns The newly created student profile linked to the user.
      */
-    @Middlewares(validateDTO(StudentInfoDTO))
+    @Middlewares(validateDTO(StudentRequest))
     @Post()
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
@@ -80,12 +80,12 @@ export class StudentController extends Controller {
     @SuccessResponse(HttpStatus.CREATED, "Successfully create student profile")
     public async createStudentProfileForUser(
         @Request() request: AuthenticatedRequest,
-        @Body() studentInfoDTO: StudentInfoDTO,
+        @Body() studentRequest: StudentRequest,
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
         const studentEntity: StudentEntity =
             await this.studentService.createStudentEntityByUserId(
-                studentInfoDTO,
+                studentRequest,
                 user.id,
             );
         const studentProfileResponse: StudentProfileResponse =

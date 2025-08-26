@@ -35,7 +35,7 @@ import { JWTService } from "@/service/jwt.service.js";
 import { MajorService } from "@/service/major.service.js";
 import { MistralService } from "@/service/mistral.service.js";
 import { OcrResultService } from "@/service/ocr.result.service.js";
-import { PredictModelService } from "@/service/predic.model.service.js";
+import { PredictModelService } from "@/service/predict.model.service.js";
 import { StudentService } from "@/service/student.service.js";
 import { UserService } from "@/service/user.service.js";
 import { KeyStore } from "@/type/class/keystore.js";

@@ -21,11 +21,11 @@ export class MajorService {
     ): Promise<MajorGroupEntity[]> {
         const majorGroupEntities: MajorGroupEntity[] =
             await this.majorGroupRepository.findBy({
-                englishName: In(majorGroups),
+                name: In(majorGroups),
             });
         if (majorGroupEntities.length !== majorGroups.length) {
             const foundNames: string[] = majorGroupEntities.map(
-                (entity) => entity.englishName,
+                (entity) => entity.name,
             );
             const missingNames: string[] = majorGroups.filter(
                 (major) => !foundNames.includes(major),
@@ -43,7 +43,7 @@ export class MajorService {
         try {
             const majorGroupEntity: MajorGroupEntity =
                 await this.majorGroupRepository.findOneByOrFail({
-                    englishName: majorGroup,
+                    name: majorGroup,
                 });
             return majorGroupEntity;
         } catch (error) {

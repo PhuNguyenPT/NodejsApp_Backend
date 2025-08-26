@@ -39,7 +39,7 @@ import { ExamType } from "@/type/enum/exam.js";
  *   "name": "Đánh giá năng lực ĐHQG TP.HCM"
  * }
  */
-export class CertificationDTO {
+export class CertificationRequest {
     // @Expose()
     // @IsOptional()
     // @IsString({ message: "Credential ID must be a string" })
