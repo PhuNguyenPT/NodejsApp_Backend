@@ -7,7 +7,7 @@ import { FileType } from "@/entity/file.js";
  * Data Transfer Object for updating file metadata
  * @description Contains optional fields that can be updated for an existing file
  */
-export class UpdateFileDTO {
+export class UpdateFileRequest {
     /**
      * Optional description of the file
      * @description Provides additional context or details about the file content

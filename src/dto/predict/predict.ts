@@ -71,7 +71,7 @@ export class L2PredictResult {
  *   "nhom_nganh": 714
  * }
  */
-export class L2PUserInput {
+export class UserInputL2 {
     /**
      * University type: 1 for public (Công lập), 0 for private (Tư thục)
      */
@@ -91,13 +91,6 @@ export class L2PUserInput {
      */
     @IsNumber()
     diem_chuan!: number;
-
-    /**
-     * Converted score from English certificates (optional)
-     */
-    @IsNumber()
-    @IsOptional()
-    diem_quy_doi?: number;
 
     /**
      * Average grade for grade 10: 1=Excellent (Giỏi), 2=Good (Khá), 3=Average (Trung bình), 4=Weak (Yếu)

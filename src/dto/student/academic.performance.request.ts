@@ -8,7 +8,7 @@ import { AcademicPerformance } from "@/type/enum/academic.performance.js";
  * Contains academic performance rating and corresponding grade level information.
  * Used to track student academic performance across different academic years.
  *
- * @class AcademicPerformanceDTO
+ * @class AcademicPerformanceRequest
  * @example
  * {
  *   "academicPerformance": "Giỏi",
@@ -25,7 +25,7 @@ import { AcademicPerformance } from "@/type/enum/academic.performance.js";
  *   "grade": 12
  * }
  */
-export class AcademicPerformanceDTO {
+export class AcademicPerformanceRequest {
     /**
      * Academic performance assessment
      * Single performance rating for a specific grade/year

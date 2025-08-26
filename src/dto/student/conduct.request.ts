@@ -1,7 +1,6 @@
 import { Expose } from "class-transformer";
 import { IsEnum, IsInt, IsNotEmpty, Max, Min } from "class-validator";
 
-// src/dto/conduct.dto.ts
 import { Conduct } from "@/type/enum/conduct.js";
 
 /**
@@ -9,7 +8,7 @@ import { Conduct } from "@/type/enum/conduct.js";
  * Contains conduct rating and corresponding grade level information.
  * Used to track student behavior across different academic years.
  *
- * @class ConductDTO
+ * @class ConductRequest
  * @example
  * {
  *   "conduct": "Tốt",
@@ -26,7 +25,7 @@ import { Conduct } from "@/type/enum/conduct.js";
  *   "grade": 12
  * }
  */
-export class ConductDTO {
+export class ConductRequest {
     /**
      * Student conduct/behavior assessment
      * Single conduct rating for a specific grade/year

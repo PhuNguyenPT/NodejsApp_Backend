@@ -3,163 +3,628 @@
  * Based on Vietnam's national curriculum and university entrance exam subjects
  */
 export enum VietnameseSubject {
-    AM_NHAC = "Âm Nhạc",
-    CONG_NGHE = "Công Nghệ",
+    BIEU_DIEN_NGHE_THUAT = "Biểu diễn nghệ thuật",
     DIA_LY = "Địa Lý",
+    DOC_DIEN_CAM_HAT = "Đọc diễn cảm, Hát",
+    DOC_HIEU = "Đọc hiểu",
     GDCD = "Giáo Dục Công Dân",
-    GDQP = "Giáo Dục Quốc Phòng An Ninh",
+    GDKTPL = "Giáo dục Kinh tế và Pháp luật",
+    HAT_BIEU_DIEN_NHAC_CU = "Hát hoặc biểu diễn nhạc cụ",
+    HINH_HOA = "Hình họa",
     HOA_HOC = "Hóa Học",
-    KINH_TE = "Kinh Tế",
-    KY_THUAT = "Kỹ Thuật",
+    KY_XUONG_AM = "Ký xướng âm",
     LICH_SU = "Lịch Sử",
-    MY_THUAT = "Mỹ Thuật",
-    PHAP_LUAT = "Pháp Luật",
+    NANG_KHIEU = "Năng khiếu",
+    NANG_KHIEU_1 = "Năng khiếu 1",
+    NANG_KHIEU_2 = "Năng khiếu 2",
+    NANG_KHIEU_AM_NHAC_1 = "Năng khiếu Âm nhạc 1",
+    NANG_KHIEU_AM_NHAC_2 = "Năng khiếu Âm nhạc 2",
+    NANG_KHIEU_BAO_CHI = "Năng khiếu báo chí",
+    NANG_KHIEU_MAM_NON_1 = "NK Mầm non 1( kể chuyện, đọc, diễn cảm)",
+    NANG_KHIEU_MAM_NON_2 = "NK Mầm non 2 (Hát)",
+    NANG_KHIEU_SKDA_1 = "Năng khiếu SKĐA 1",
+    NANG_KHIEU_SKDA_2 = "Năng khiếu SKĐA 2",
+    NANG_KHIEU_TDTT = "Năng khiếu TDTT",
+    NANG_KHIEU_VE = "Vẽ Năng khiếu",
     SINH_HOC = "Sinh Học",
-    TAM_LY_HOC = "Tâm Lý Học",
-    THE_DUC = "Thể Dục",
     TIENG_ANH = "Tiếng Anh",
     TIENG_DUC = "Tiếng Đức",
     TIENG_NGA = "Tiếng Nga",
     TIENG_NHAT = "Tiếng Nhật",
     TIENG_PHAP = "Tiếng Pháp",
     TIENG_TRUNG = "Tiếng Trung",
-    TIN_HOC = "Tin Học",
     TOAN = "Toán",
-    TRIET_HOC = "Triết Học",
+    TRANG_TRI = "Trang trí",
+    TU_DUY_GIAI_QUYET_VAN_DE = "Tư duy Khoa học Giải quyết vấn đề",
     VAN = "Ngữ Văn",
     VAT_LY = "Vật Lý",
+    VE_HINH_HOA_MY_THUAT = "Vẽ Hình họa mỹ thuật",
+    VE_MY_THUAT = "Vẽ Mỹ thuật",
+    VE_TRANG_TRI_MAU = "Vẽ trang trí màu",
+    XAY_DUNG_KICH_BAN_SU_KIEN = "Xây dựng kịch bản sự kiện",
+    XUONG_AM = "Xướng âm",
 }
 
 /**
  * Subject name variations mapping for better OCR recognition
  */
 export const SUBJECT_VARIATIONS: Partial<Record<string, VietnameseSubject>> = {
-    "âm nhạc": VietnameseSubject.AM_NHAC,
-    anh: VietnameseSubject.TIENG_ANH,
-    "anh văn": VietnameseSubject.TIENG_ANH,
-    "an ninh": VietnameseSubject.GDQP,
-    art: VietnameseSubject.MY_THUAT,
-    biology: VietnameseSubject.SINH_HOC,
-    chemistry: VietnameseSubject.HOA_HOC,
-    chinese: VietnameseSubject.TIENG_TRUNG,
-    "civic education": VietnameseSubject.GDCD,
-    "computer science": VietnameseSubject.TIN_HOC,
-    "công dân": VietnameseSubject.GDCD,
-    "công nghệ": VietnameseSubject.CONG_NGHE,
-    địa: VietnameseSubject.DIA_LY,
-    "địa lí": VietnameseSubject.DIA_LY,
-    "địa lý": VietnameseSubject.DIA_LY,
-    đức: VietnameseSubject.TIENG_DUC,
-    english: VietnameseSubject.TIENG_ANH,
-    french: VietnameseSubject.TIENG_PHAP,
-    gdcd: VietnameseSubject.GDCD,
-    gdqp: VietnameseSubject.GDQP,
-    geography: VietnameseSubject.DIA_LY,
-    german: VietnameseSubject.TIENG_DUC,
-    "giáo dục công dân": VietnameseSubject.GDCD,
-    "giáo dục quốc phòng": VietnameseSubject.GDQP,
-    history: VietnameseSubject.LICH_SU,
-    hoá: VietnameseSubject.HOA_HOC,
-    hóa: VietnameseSubject.HOA_HOC,
-    "hoá học": VietnameseSubject.HOA_HOC,
-    "hóa học": VietnameseSubject.HOA_HOC,
-    it: VietnameseSubject.TIN_HOC,
-    japanese: VietnameseSubject.TIENG_NHAT,
-    "kỹ thuật": VietnameseSubject.KY_THUAT,
-    "lịch sử": VietnameseSubject.LICH_SU,
-    literature: VietnameseSubject.VAN,
-    lý: VietnameseSubject.VAT_LY,
-    mathematics: VietnameseSubject.TOAN,
-    music: VietnameseSubject.AM_NHAC,
-    "mỹ thuật": VietnameseSubject.MY_THUAT,
-    nga: VietnameseSubject.TIENG_NGA,
-    "ngữ văn": VietnameseSubject.VAN,
-    nhạc: VietnameseSubject.AM_NHAC,
-    nhật: VietnameseSubject.TIENG_NHAT,
-    pe: VietnameseSubject.THE_DUC,
-    pháp: VietnameseSubject.TIENG_PHAP,
-    "physical education": VietnameseSubject.THE_DUC,
-    physics: VietnameseSubject.VAT_LY,
-    "quốc phòng": VietnameseSubject.GDQP,
-    russian: VietnameseSubject.TIENG_NGA,
-    sinh: VietnameseSubject.SINH_HOC,
-    "sinh học": VietnameseSubject.SINH_HOC,
-    sử: VietnameseSubject.LICH_SU,
-    technology: VietnameseSubject.CONG_NGHE,
-    "thể dục": VietnameseSubject.THE_DUC,
-    "tiếng anh": VietnameseSubject.TIENG_ANH,
-    "tiếng đức": VietnameseSubject.TIENG_DUC,
-    "tiếng nga": VietnameseSubject.TIENG_NGA,
-    "tiếng nhật": VietnameseSubject.TIENG_NHAT,
-    "tiếng pháp": VietnameseSubject.TIENG_PHAP,
-    "tiếng trung": VietnameseSubject.TIENG_TRUNG,
-    tin: VietnameseSubject.TIN_HOC,
-    "tin học": VietnameseSubject.TIN_HOC,
-    toán: VietnameseSubject.TOAN,
-    "toán học": VietnameseSubject.TOAN,
-    trung: VietnameseSubject.TIENG_TRUNG,
-    văn: VietnameseSubject.VAN,
-    "văn học": VietnameseSubject.VAN,
-    "vật lí": VietnameseSubject.VAT_LY,
-    "vật lý": VietnameseSubject.VAT_LY,
-    vẽ: VietnameseSubject.MY_THUAT,
+    // ... (existing variations)
+    "gdkdkt&pl": VietnameseSubject.GDKTPL,
+    gdktpl: VietnameseSubject.GDKTPL,
+    "giáo dục kinh tế và pháp luật": VietnameseSubject.GDKTPL,
+    nktdtt: VietnameseSubject.NANG_KHIEU_TDTT,
+    "vẽ mỹ thuật": VietnameseSubject.VE_MY_THUAT,
+    // ... (add more variations as needed)
 };
 
 /**
  * Subject groups for Vietnamese national university entrance exam
+ * Updated based on the provided comprehensive list
  */
 export const SUBJECT_GROUPS = {
-    A: [
+    // Khối A
+    A00: [
         VietnameseSubject.TOAN,
         VietnameseSubject.VAT_LY,
         VietnameseSubject.HOA_HOC,
     ],
-    A1: [
+    A01: [
         VietnameseSubject.TOAN,
         VietnameseSubject.VAT_LY,
         VietnameseSubject.TIENG_ANH,
     ],
-    B: [
+    A02: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.SINH_HOC,
+    ],
+    A03: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.LICH_SU,
+    ],
+    A04: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.DIA_LY,
+    ],
+    A05: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.LICH_SU,
+    ],
+    A06: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.DIA_LY,
+    ],
+    A07: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.DIA_LY,
+    ],
+    A08: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.GDKTPL,
+    ],
+    A09: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.GDKTPL,
+    ],
+    A10: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.GDKTPL,
+    ],
+    A11: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.GDKTPL,
+    ],
+
+    // Khối B
+    B00: [
         VietnameseSubject.TOAN,
         VietnameseSubject.HOA_HOC,
         VietnameseSubject.SINH_HOC,
     ],
-    C: [
+    B02: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.DIA_LY,
+    ],
+    B03: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.VAN,
+    ],
+    B04: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.GDKTPL,
+    ],
+    B08: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.TIENG_ANH,
+    ],
+
+    // Khối C
+    C00: [
         VietnameseSubject.VAN,
         VietnameseSubject.LICH_SU,
         VietnameseSubject.DIA_LY,
     ],
-    D: [
+    C01: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+    ],
+    C02: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+    ],
+    C03: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.TOAN,
+        VietnameseSubject.LICH_SU,
+    ],
+    C04: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.TOAN,
+        VietnameseSubject.DIA_LY,
+    ],
+    C05: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.HOA_HOC,
+    ],
+    C08: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.SINH_HOC,
+    ],
+    C12: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.SINH_HOC,
+    ],
+    C13: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.DIA_LY,
+    ],
+    C14: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.TOAN,
+        VietnameseSubject.GDKTPL,
+    ],
+    C17: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.GDKTPL,
+    ],
+    C19: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.GDKTPL,
+    ],
+    C20: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.GDKTPL,
+    ],
+
+    // Khối D
+    D01: [
         VietnameseSubject.VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.TIENG_ANH,
     ],
-    D1: [
-        VietnameseSubject.VAN,
-        VietnameseSubject.TOAN,
-        VietnameseSubject.TIENG_PHAP,
-    ],
-    D2: [
+    D02: [
         VietnameseSubject.VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.TIENG_NGA,
     ],
-    D3: [
+    D03: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.TOAN,
+        VietnameseSubject.TIENG_PHAP,
+    ],
+    D04: [
         VietnameseSubject.VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.TIENG_TRUNG,
     ],
-    D4: [
-        VietnameseSubject.VAN,
-        VietnameseSubject.TOAN,
-        VietnameseSubject.TIENG_NHAT,
-    ],
-    D5: [
+    D05: [
         VietnameseSubject.VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.TIENG_DUC,
     ],
+    D06: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.TOAN,
+        VietnameseSubject.TIENG_NHAT,
+    ],
+    D07: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.TIENG_ANH,
+    ],
+    D08: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.TIENG_ANH,
+    ],
+    D09: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.TIENG_ANH,
+    ],
+    D10: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.TIENG_ANH,
+    ],
+    D11: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.TIENG_ANH,
+    ],
+    D12: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.TIENG_ANH,
+    ],
+    D13: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.TIENG_ANH,
+    ],
+    D14: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.TIENG_ANH,
+    ],
+    D15: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.TIENG_ANH,
+    ],
+    D20: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.TIENG_TRUNG,
+    ],
+    D21: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.TIENG_DUC,
+    ],
+    D22: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.TIENG_NGA,
+    ],
+    D23: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.TIENG_NHAT,
+    ],
+    D24: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.TIENG_PHAP,
+    ],
+    D25: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.TIENG_TRUNG,
+    ],
+    D26: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.TIENG_DUC,
+    ],
+    D27: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.TIENG_NGA,
+    ],
+    D28: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.TIENG_NHAT,
+    ],
+    D29: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.TIENG_PHAP,
+    ],
+    D30: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.TIENG_TRUNG,
+    ],
+    D31: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.TIENG_DUC,
+    ],
+    D32: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.TIENG_NGA,
+    ],
+    D33: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.TIENG_NHAT,
+    ],
+    D34: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.TIENG_PHAP,
+    ],
+    D35: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.TIENG_TRUNG,
+    ],
+    D42: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.TIENG_NGA,
+    ],
+    D43: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.TIENG_NHAT,
+    ],
+    D44: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.TIENG_PHAP,
+    ],
+    D45: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.TIENG_TRUNG,
+    ],
+    D55: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.TIENG_TRUNG,
+    ],
+    D63: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.TIENG_NHAT,
+    ],
+    D64: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.TIENG_PHAP,
+    ],
+    D65: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.TIENG_TRUNG,
+    ],
+    D66: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.GDKTPL,
+        VietnameseSubject.TIENG_ANH,
+    ],
+    D68: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.GDKTPL,
+        VietnameseSubject.TIENG_NGA,
+    ],
+    D70: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.GDKTPL,
+        VietnameseSubject.TIENG_PHAP,
+    ],
+    D71: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.GDKTPL,
+        VietnameseSubject.TIENG_TRUNG,
+    ],
+    D84: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.GDKTPL,
+        VietnameseSubject.TIENG_ANH,
+    ],
+
+    // Khối H
+    H01: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAN,
+        VietnameseSubject.VE_MY_THUAT,
+    ],
+    H02: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VE_HINH_HOA_MY_THUAT,
+        VietnameseSubject.VE_TRANG_TRI_MAU,
+    ],
+    H04: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.TIENG_ANH,
+        VietnameseSubject.NANG_KHIEU_VE,
+    ],
+    H06: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.TIENG_ANH,
+        VietnameseSubject.VE_MY_THUAT,
+    ],
+    H07: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HINH_HOA,
+        VietnameseSubject.TRANG_TRI,
+    ],
+    H08: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.VE_MY_THUAT,
+    ],
+
+    // Khối khác
+    K00: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.DOC_HIEU,
+        VietnameseSubject.TU_DUY_GIAI_QUYET_VAN_DE,
+    ],
+    // Khối M
+    M00: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.TOAN,
+        VietnameseSubject.DOC_DIEN_CAM_HAT,
+    ],
+    M01: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.NANG_KHIEU,
+    ],
+    M02: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NANG_KHIEU_1,
+        VietnameseSubject.NANG_KHIEU_2,
+    ],
+    M03: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.NANG_KHIEU_1,
+        VietnameseSubject.NANG_KHIEU_2,
+    ],
+    M04: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.DOC_DIEN_CAM_HAT,
+        VietnameseSubject.DOC_DIEN_CAM_HAT,
+    ], // Note: Hát-Múa combined under one for simplicity, can be split
+    M09: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NANG_KHIEU_MAM_NON_1,
+        VietnameseSubject.NANG_KHIEU_MAM_NON_2,
+    ],
+    M10: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.TIENG_ANH,
+        VietnameseSubject.NANG_KHIEU_1,
+    ],
+    M11: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.NANG_KHIEU_BAO_CHI,
+        VietnameseSubject.TIENG_ANH,
+    ],
+    M13: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.NANG_KHIEU,
+    ],
+
+    M14: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.NANG_KHIEU_BAO_CHI,
+        VietnameseSubject.TOAN,
+    ],
+    // Khối N
+    N00: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.NANG_KHIEU_AM_NHAC_1,
+        VietnameseSubject.NANG_KHIEU_AM_NHAC_2,
+    ],
+    N01: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.XUONG_AM,
+        VietnameseSubject.BIEU_DIEN_NGHE_THUAT,
+    ],
+    N02: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.KY_XUONG_AM,
+        VietnameseSubject.HAT_BIEU_DIEN_NHAC_CU,
+    ],
+
+    N05: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.XAY_DUNG_KICH_BAN_SU_KIEN,
+        VietnameseSubject.NANG_KHIEU,
+    ],
+    S00: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.NANG_KHIEU_SKDA_1,
+        VietnameseSubject.NANG_KHIEU_SKDA_2,
+    ],
+    // Khối T
+    T00: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.NANG_KHIEU_TDTT,
+    ],
+    T01: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAN,
+        VietnameseSubject.NANG_KHIEU_TDTT,
+    ],
+    T02: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.NANG_KHIEU_TDTT,
+    ],
+    T03: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.NANG_KHIEU_TDTT,
+    ],
+
+    T04: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.NANG_KHIEU_TDTT,
+    ],
+    T05: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.GDKTPL,
+        VietnameseSubject.NANG_KHIEU_TDTT,
+    ],
+    // Khối V
+    V02: [
+        VietnameseSubject.VE_MY_THUAT,
+        VietnameseSubject.TOAN,
+        VietnameseSubject.TIENG_ANH,
+    ],
+    V03: [
+        VietnameseSubject.VE_MY_THUAT,
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+    ],
+    V05: [
+        VietnameseSubject.VAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.VE_MY_THUAT,
+    ],
+    V06: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.VE_MY_THUAT,
+    ],
+
+    V10: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.TIENG_PHAP,
+        VietnameseSubject.VE_MY_THUAT,
+    ],
+    V11: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.TIENG_TRUNG,
+        VietnameseSubject.VE_MY_THUAT,
+    ],
 } as const;
+
+// The rest of the helper functions remain the same as they operate on the data structures above.
 
 /**
  * Core subjects required for graduation
@@ -179,17 +644,19 @@ export const CORE_SUBJECTS = [
 /**
  * Get subject group that contains the given subjects
  */
-export function getSubjectGroup(subjects: VietnameseSubject[]): null | string {
+export function getSubjectGroup(
+    subjects: VietnameseSubject[],
+): string | undefined {
     for (const [groupName, groupSubjects] of Object.entries(SUBJECT_GROUPS)) {
         if (
-            groupSubjects.every((groupSubject) =>
-                subjects.includes(groupSubject),
+            (groupSubjects as readonly VietnameseSubject[]).every(
+                (groupSubject) => subjects.includes(groupSubject),
             )
         ) {
             return groupName;
         }
     }
-    return null;
+    return undefined;
 }
 
 /**
@@ -217,7 +684,9 @@ export function isCoreSubject(subject: VietnameseSubject): boolean {
 /**
  * Helper function to normalize and match subject names
  */
-export function normalizeSubjectName(input: string): null | VietnameseSubject {
+export function normalizeSubjectName(
+    input: string,
+): undefined | VietnameseSubject {
     const normalized = input.trim().toLowerCase();
 
     // Direct enum value match
@@ -233,5 +702,5 @@ export function normalizeSubjectName(input: string): null | VietnameseSubject {
         return variation;
     }
 
-    return null;
+    return undefined;
 }

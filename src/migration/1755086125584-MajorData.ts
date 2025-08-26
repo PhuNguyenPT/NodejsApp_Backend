@@ -1,19 +1,10 @@
 import { MajorEntity } from "@/entity/major.entity.js";
 import { MajorGroupEntity } from "@/entity/major.group.entity.js";
-import { MajorGroup } from "@/type/enum/major.js";
+import {
+    getEnglishKeyByVietnameseName,
+    MajorGroup,
+} from "@/type/enum/major.js";
 import { MigrationInterface, QueryRunner } from "typeorm";
-
-// Helper function to get English key by Vietnamese name
-function getEnglishKeyByVietnameseName(
-    vietnameseName: string,
-): MajorGroup | undefined {
-    for (const key in MajorGroup) {
-        if (MajorGroup[key as keyof typeof MajorGroup] === vietnameseName) {
-            return MajorGroup[key as keyof typeof MajorGroup];
-        }
-    }
-    return undefined;
-}
 
 // Raw data extracted from the PDF
 const majorData = [
@@ -274,12 +265,23 @@ export class MajorData1755086125584 implements MigrationInterface {
         // 1. Seed Major Groups
         const majorGroupsToInsert = majorData.map((groupData) => {
             const englishName = getEnglishKeyByVietnameseName(groupData.name);
+
+            // Validate that the name is actually a valid enum value
+            if (
+                !Object.values(MajorGroup).includes(
+                    groupData.name as MajorGroup,
+                )
+            ) {
+                throw new Error(`Invalid major group name: ${groupData.name}`);
+            }
+
             return new MajorGroupEntity({
                 code: groupData.code,
-                name: groupData.name,
+                name: groupData.name as MajorGroup,
                 englishName: englishName,
             });
         });
+
         await queryRunner.manager.save(MajorGroupEntity, majorGroupsToInsert);
 
         // 2. Fetch the newly created groups to get their UUIDs

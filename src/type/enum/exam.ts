@@ -8,13 +8,13 @@ export enum CCNNType {
 }
 
 export enum CCQTType {
+    "A-Level" = "Alevel",
     ACT = "ACT",
-    ALevel = "A-Level",
-    DoulingoEnglishTest = "DoulingoEnglishTest",
+    "Duolingo English Test" = "DoulingoEnglishTest",
     IB = "IB",
     OSSD = "OSSD",
     OTHER = "Other",
-    PTE = "PTE",
+    "PTE Academic" = "PTEAcademic",
     SAT = "SAT",
 }
 

@@ -9,7 +9,7 @@ import {
 
 import { MajorEntity } from "@/entity/major.entity.js";
 import { StudentEntity } from "@/entity/student.js";
-import { MajorGroup } from "@/type/enum/major.js";
+import { MajorGroup, MajorGroupKey } from "@/type/enum/major.js";
 
 /**
  * Represents a Major Group (e.g., "714: Khoa học giáo dục và đào tạo giáo viên").
@@ -21,11 +21,11 @@ export class MajorGroupEntity {
     code!: string; // The 3-digit code, e.g., "714"
 
     @Column({
-        enum: MajorGroup,
+        length: 255,
         name: "english_name",
-        type: "enum",
+        type: "varchar",
     })
-    englishName!: MajorGroup; // The English enum key for programmatic access
+    englishName!: MajorGroupKey; // The English enum key for programmatic access
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
@@ -34,8 +34,8 @@ export class MajorGroupEntity {
     @OneToMany("MajorEntity", "group")
     majors!: Relation<MajorEntity[]>;
 
-    @Column({ length: 255, nullable: false, type: "varchar" })
-    name!: string; // The Vietnamese name, e.g., "Khoa học giáo dục và đào tạo giáo viên"
+    @Column({ enum: MajorGroup, nullable: false, type: "enum" })
+    name!: MajorGroup; // The Vietnamese name, e.g., "Khoa học giáo dục và đào tạo giáo viên"
 
     @ManyToMany("StudentEntity", "majorGroupsEntities")
     students?: Relation<StudentEntity[]>;

@@ -20,7 +20,7 @@ import { IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
  *   "name": "Excellence in Mathematics Award"
  * }
  */
-export class AwardDTO {
+export class AwardRequest {
     // @Expose()
     // @IsDate({ message: "Award date must be a valid date" })
     // @IsOptional()

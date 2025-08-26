@@ -2,8 +2,7 @@ import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
 
 import { defaultPaginationConfig } from "@/config/pagination.config.js";
-import { StudentInfoDTO } from "@/dto/student/student.info.dto.js";
-import { AwardEntity } from "@/entity/award.js";
+import { StudentRequest } from "@/dto/student/student.request.js";
 import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
 import { AwardService } from "@/service/award.service.js";
@@ -22,8 +21,6 @@ export class StudentService {
     constructor(
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
-        @inject(TYPES.AwardRepository)
-        private readonly awardRepository: Repository<AwardEntity>,
         @inject(TYPES.UserRepository)
         private readonly userRepository: Repository<UserEntity>,
         @inject(TYPES.AwardService)
@@ -39,14 +36,14 @@ export class StudentService {
     /**
      * Creates a student profile for an anonymous user.
      * Uses TypeORM cascades to save the student and their related awards/certifications in a single operation.
-     * @param studentInfoDTO - The DTO containing the student's information.
+     * @param studentRequest - The DTO containing the student's information.
      * @returns A promise that resolves to the newly created StudentEntity, including its relations.
      * @throws {ValidationException} If the min budget is greater than the max budget.
      */
     public async createStudentEntity(
-        studentInfoDTO: StudentInfoDTO,
+        studentRequest: StudentRequest,
     ): Promise<StudentEntity> {
-        if (studentInfoDTO.minBudget > studentInfoDTO.maxBudget) {
+        if (studentRequest.minBudget > studentRequest.maxBudget) {
             throw new ValidationException({
                 "budget.minBudget":
                     "Min budget cannot be greater than max budget",
@@ -54,28 +51,28 @@ export class StudentService {
         }
 
         const studentEntity: StudentEntity =
-            this.studentRepository.create(studentInfoDTO);
+            this.studentRepository.create(studentRequest);
         studentEntity.createdBy = Role.ANONYMOUS;
 
-        if (studentInfoDTO.majors.length > 0) {
+        if (studentRequest.majors.length > 0) {
             studentEntity.majorGroupsEntities =
                 await this.majorService.findMajorGroupEntitiesBy(
-                    studentInfoDTO.majors,
+                    studentRequest.majors,
                 );
         }
 
-        if (studentInfoDTO.awards && studentInfoDTO.awards.length > 0) {
+        if (studentRequest.awards && studentRequest.awards.length > 0) {
             studentEntity.awards = this.awardService.create(
-                studentInfoDTO.awards,
+                studentRequest.awards,
             );
         }
 
         if (
-            studentInfoDTO.certifications &&
-            studentInfoDTO.certifications.length > 0
+            studentRequest.certifications &&
+            studentRequest.certifications.length > 0
         ) {
             studentEntity.certifications = this.certificationService.create(
-                studentInfoDTO.certifications,
+                studentRequest.certifications,
             );
         }
 
@@ -89,17 +86,17 @@ export class StudentService {
     /**
      * Creates a student profile linked to an authenticated user.
      * Uses TypeORM cascades to save the student and their related awards/certifications in a single operation.
-     * @param studentInfoDTO - The DTO containing the student's information.
+     * @param studentRequest - The DTO containing the student's information.
      * @param userId - The ID of the authenticated user.
      * @returns A promise that resolves to the newly created StudentEntity, including its relations.
      * @throws {ValidationException} If budget is invalid or userId is missing.
      * @throws {EntityNotFoundException} If the user with the given ID is not found.
      */
     public async createStudentEntityByUserId(
-        studentInfoDTO: StudentInfoDTO,
+        studentRequest: StudentRequest,
         userId: string,
     ): Promise<StudentEntity> {
-        if (studentInfoDTO.minBudget > studentInfoDTO.maxBudget) {
+        if (studentRequest.minBudget > studentRequest.maxBudget) {
             throw new ValidationException({
                 "budget.minBudget":
                     "Min budget cannot be greater than max budget",
@@ -120,20 +117,20 @@ export class StudentService {
         }
 
         const studentEntity: StudentEntity =
-            this.studentRepository.create(studentInfoDTO);
+            this.studentRepository.create(studentRequest);
         studentEntity.userId = userId;
         studentEntity.createdBy = userEntity.email;
 
-        if (studentInfoDTO.majors.length > 0) {
+        if (studentRequest.majors.length > 0) {
             studentEntity.majorGroupsEntities =
                 await this.majorService.findMajorGroupEntitiesBy(
-                    studentInfoDTO.majors,
+                    studentRequest.majors,
                 );
         }
 
-        if (studentInfoDTO.awards && studentInfoDTO.awards.length > 0) {
+        if (studentRequest.awards && studentRequest.awards.length > 0) {
             studentEntity.awards = this.awardService.create(
-                studentInfoDTO.awards,
+                studentRequest.awards,
             );
             studentEntity.awards.forEach(
                 (awardEntity) => (awardEntity.createdBy = userEntity.email),
@@ -141,11 +138,11 @@ export class StudentService {
         }
 
         if (
-            studentInfoDTO.certifications &&
-            studentInfoDTO.certifications.length > 0
+            studentRequest.certifications &&
+            studentRequest.certifications.length > 0
         ) {
             studentEntity.certifications = this.certificationService.create(
-                studentInfoDTO.certifications,
+                studentRequest.certifications,
             );
             studentEntity.certifications.forEach(
                 (cert) => (cert.createdBy = userEntity.email),

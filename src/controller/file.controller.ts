@@ -25,7 +25,7 @@ import {
 import { CreateFileDTO } from "@/dto/file/create.file.js";
 import { FilesMetadataSchema } from "@/dto/file/file.metadata.js";
 import { FileResponse } from "@/dto/file/file.response.js";
-import { UpdateFileDTO } from "@/dto/file/update.file.js";
+import { UpdateFileRequest } from "@/dto/file/update.file.js";
 import { FileEntity, FileType } from "@/entity/file.js";
 import { FileMapper } from "@/mapper/file.mapper.js";
 import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
@@ -487,7 +487,7 @@ export class FileController extends Controller {
      * Users can only update files they own or have permission to modify.
      * @security Requires valid bearer token with 'file:update' scope
      */
-    @Middlewares(validateUuidParam("fileId"), validateDTO(UpdateFileDTO))
+    @Middlewares(validateUuidParam("fileId"), validateDTO(UpdateFileRequest))
     @Produces("application/json")
     @Put("{fileId}")
     @Response(HttpStatus.BAD_REQUEST, "Validation error or invalid file ID")
@@ -499,7 +499,7 @@ export class FileController extends Controller {
     public async updateFile(
         @Request() request: AuthenticatedRequest,
         @Path() fileId: string,
-        @Body() updateFileDTO: UpdateFileDTO,
+        @Body() updateFileDTO: UpdateFileRequest,
     ): Promise<FileResponse> {
         const user: Express.User = request.user;
         // Validate string fields using helper method
