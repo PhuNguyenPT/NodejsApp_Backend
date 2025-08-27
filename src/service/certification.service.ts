@@ -59,13 +59,9 @@ export class CertificationService {
                 default:
                     return undefined; // Unsupported CCNN type
             }
+        } else {
+            return undefined;
         }
-
-        // Handle other exam types (CCQT, DGNL) if needed
-        // For now, these don't have CEFR mappings based on your current implementation
-        throw new ValidationException({
-            examType: `Unsupported exam type: ${examType.type}, value: ${examType.value}`,
-        });
     }
 
     private get_IELTS_CEFR_level(level: number): CEFR | undefined {
