@@ -5,6 +5,14 @@ import { ExamType } from "@/type/enum/exam.js";
 
 /**
  * DTO for aptitude test information containing both type and score
+ * @example
+ * {
+ *   "examType": {
+ *     "type": "DGNL",
+ *     "value": "VNUHCM"
+ *   },
+ *   "score": 700
+ * }
  */
 export class AptitudeTestRequest {
     /**
