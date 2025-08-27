@@ -13,10 +13,10 @@ import {
     ValidateNested,
 } from "class-validator";
 
-import { AcademicPerformanceRequest } from "@/dto/student/academic.performance.request.js";
-import { AptitudeTestRequest } from "@/dto/student/aptitude.test.request.js";
-import { AwardRequest } from "@/dto/student/award.request.js";
-import { CertificationRequest } from "@/dto/student/certification.request.js";
+import { AcademicPerformanceDTO } from "@/dto/student/academic.performance.dto.js";
+import { AptitudeTestDTO } from "@/dto/student/aptitude.test.dto.js";
+import { AwardDTO } from "@/dto/student/award.dto.js";
+import { CertificationDTO } from "@/dto/student/certification.dto.js";
 import {
     ExamSubject,
     VsatExamSubject,
@@ -33,9 +33,9 @@ export class StudentInfoDTO {
      * Each entry contains an academic performance rating and the corresponding grade level.
      * Valid academic performance values are defined in the AcademicPerformance enum.
      *
-     * @type {AcademicPerformanceRequest[]}
+     * @type {AcademicPerformanceDTO[]}
      * @required
-     * @see AcademicPerformanceRequest for detailed structure and validation rules
+     * @see AcademicPerformanceDTO for detailed structure and validation rules
      * @example [
      *   {
      *     "academicPerformance": "Tốt",
@@ -60,9 +60,9 @@ export class StudentInfoDTO {
     @Expose()
     @IsArray({ message: "Academic performance must be an array" })
     @IsNotEmpty({ message: "Academic performance is required" })
-    @Type(() => AcademicPerformanceRequest)
+    @Type(() => AcademicPerformanceDTO)
     @ValidateNested({ each: true })
-    academicPerformances!: AcademicPerformanceRequest[];
+    academicPerformances!: AcademicPerformanceDTO[];
 
     /**
      * Aptitude test information including exam type and score
@@ -71,41 +71,41 @@ export class StudentInfoDTO {
      */
     @Expose()
     @IsOptional()
-    @Type(() => AptitudeTestRequest)
+    @Type(() => AptitudeTestDTO)
     @ValidateNested()
-    aptitudeTestScore?: AptitudeTestRequest;
+    aptitudeTestScore?: AptitudeTestDTO;
 
     /**
      * List of awards and recognitions received by the student.
      * Optional field that can contain multiple award entries.
      * Each award includes details like name, category, level, and award date.
      *
-     * @type {AwardRequest[]}
+     * @type {AwardDTO[]}
      * @optional
-     * @see AwardRequest for detailed structure and validation rules
+     * @see AwardDTO for detailed structure and validation rules
      */
     @Expose()
     @IsArray({ message: "Awards must be an array" })
     @IsOptional()
-    @Type(() => AwardRequest)
+    @Type(() => AwardDTO)
     @ValidateNested({ each: true })
-    awards?: AwardRequest[];
+    awards?: AwardDTO[];
 
     /**
      * List of professional certifications earned by the student.
      * Optional field that can contain multiple certification entries.
      * Each certification includes details like name, issuing organization, and validity dates.
      *
-     * @type {CertificationRequest[]}
+     * @type {CertificationDTO[]}
      * @optional
-     * @see CertificationRequest for detailed structure and validation rules
+     * @see CertificationDTO for detailed structure and validation rules
      */
     @Expose()
     @IsArray({ message: "Certifications must be an array" })
     @IsOptional()
-    @Type(() => CertificationRequest)
+    @Type(() => CertificationDTO)
     @ValidateNested({ each: true })
-    certifications?: CertificationRequest[];
+    certifications?: CertificationDTO[];
 
     // /**
     //  * Geographic location or preferred study location of the student.
@@ -285,12 +285,18 @@ export class StudentInfoDTO {
     vsatScore?: VsatExamSubject[];
 
     getAptitudeTestScore(): number | undefined {
-        return this.aptitudeTestScore?.score;
+        if (
+            this.aptitudeTestScore &&
+            typeof this.aptitudeTestScore.score === "number" &&
+            this.aptitudeTestScore.score > 0
+        ) {
+            return this.aptitudeTestScore.score;
+        }
+        return undefined;
     }
-
     getCertificationsByExamType(
         type: "CCNN" | "CCQT" | "ĐGNL",
-    ): CertificationRequest[] {
+    ): CertificationDTO[] {
         if (!this.certifications) return [];
         return this.certifications.filter(
             (cert) =>
@@ -308,7 +314,11 @@ export class StudentInfoDTO {
     }
 
     hasAptitudeTestScore(): boolean {
-        return !!this.aptitudeTestScore;
+        return !!(
+            this.aptitudeTestScore &&
+            typeof this.aptitudeTestScore.score === "number" &&
+            this.aptitudeTestScore.score > 0
+        );
     }
 
     hasCertificationExamType(type: "CCNN" | "CCQT" | "ĐGNL"): boolean {

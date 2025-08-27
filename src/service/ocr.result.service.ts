@@ -110,7 +110,7 @@ export class OcrResultService {
 
         if (ocrResultEntities.length === 0) {
             throw new EntityNotFoundException(
-                `No OCR results found for student id ${studentId} with userId ${userId ?? Role.ANONYMOUS}`,
+                `No OCR results found for student id ${studentId}`,
             );
         }
         return ocrResultEntities;

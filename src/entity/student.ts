@@ -610,7 +610,7 @@ export class StudentEntity {
         if (scores.length === 3) {
             const defaultNames: VietnameseSubject[] = [
                 VietnameseSubject.TOAN,
-                VietnameseSubject.VAN,
+                VietnameseSubject.NGU_VAN,
                 VietnameseSubject.TIENG_ANH,
             ];
             const names: VietnameseSubject[] =

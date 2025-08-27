@@ -73,7 +73,11 @@ function createAuthenticationError(errorOrInfo: unknown): Error {
         const infoLower = errorOrInfo.message.toLowerCase();
 
         if (infoLower.includes("expired") || infoLower.includes("exp")) {
-            return new ExpiredJwtException(errorOrInfo.message);
+            const message = errorOrInfo.message
+                ? errorOrInfo.message.charAt(0).toUpperCase() +
+                  errorOrInfo.message.slice(1)
+                : "Token expired";
+            return new ExpiredJwtException(message);
         } else if (
             infoLower.includes("no auth token") ||
             infoLower.includes("missing token")
