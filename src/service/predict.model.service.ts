@@ -27,7 +27,6 @@ import {
     VietnameseSubject,
 } from "@/type/enum/subject.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
-import { HttpException } from "@/type/exception/http.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { config } from "@/util/validate.env.js";
@@ -37,9 +36,15 @@ interface ExamScenario {
     to_hop_mon: string;
     type: "ccqt" | "dgnl" | "national" | "vsat";
 }
+
 @injectable()
 export class PredictModelService {
     private readonly httpClient: AxiosInstance;
+
+    private readonly MAX_RETRIES = 2;
+    private readonly PREDICTION_CONCURRENCY = 10;
+    private readonly RETRY_BASE_DELAY_MS = 2000;
+    private readonly RETRY_ITERATION_DELAY_MS = 1000;
 
     constructor(
         @inject(TYPES.Logger) private readonly logger: ILogger,
@@ -65,7 +70,6 @@ export class PredictModelService {
     ): Promise<L2PredictResult[]> {
         // Data retrieval and validation
         const student = await this.fetchAndValidateStudent(studentId, userId);
-        await this.fetchAndValidateOcrResults(userId, student.id);
 
         const studentInfoDTO: StudentInfoDTO = plainToInstance(
             StudentInfoDTO,
@@ -75,28 +79,24 @@ export class PredictModelService {
             studentInfoDTO.getCertificationsByExamType("CCNN");
 
         // Create base template for user inputs
-        const baseTemplate: Omit<
-            UserInputL2,
-            | "diem_ccta"
-            | "diem_chuan"
-            | "nhom_nganh"
-            | "ten_ccta"
-            | "to_hop_mon"
-        > = this.createBaseUserInputTemplate(studentInfoDTO);
+        const baseTemplate = this.createBaseUserInputTemplate(studentInfoDTO);
 
         // Collect all possible exam scenarios
-        const examScenarios: ExamScenario[] = this.collectExamScenarios(
+        const examScenarios = this.collectExamScenarios(
             student,
             studentInfoDTO,
         );
 
         // Generate user inputs for all combinations
-        const userInputs: UserInputL2[] = this.generateUserInputCombinations(
+        const userInputs = this.generateUserInputCombinations(
             baseTemplate,
             examScenarios,
             ccnnCertifications,
             studentInfoDTO.majors,
         );
+
+        // Sort the userInputs array alphabetically by subject group to ensure consistent processing order
+        userInputs.sort((a, b) => a.to_hop_mon.localeCompare(b.to_hop_mon));
 
         if (userInputs.length === 0) {
             throw new IllegalArgumentException(
@@ -104,35 +104,15 @@ export class PredictModelService {
             );
         }
 
-        // Execute predictions for all inputs with p-limit concurrency control
-        const limit = pLimit(3);
-
-        const allResultsPromises = userInputs.map((userInput) =>
-            limit(async () => {
-                try {
-                    return await this.predictMajors(userInput);
-                } catch (error: unknown) {
-                    this.logger.warn("Prediction failed", {
-                        error: error instanceof Error ? error.message : error,
-                        userInput,
-                    });
-                    return []; // Return empty array on failure
-                }
-            }),
-        );
-
-        const allResults: L2PredictResult[][] =
-            await Promise.all(allResultsPromises);
-
-        // Flatten the results
-        const flatResults = allResults.flat();
+        // Execute predictions with improved error handling and retry logic
+        const results = await this.executePredictionsWithRetry(userInputs);
 
         // Deduplicate by ma_xet_tuyen, keeping the highest score
-        const deduplicatedResults = this.deduplicateByHighestScore(flatResults);
+        const deduplicatedResults = this.deduplicateByHighestScore(results);
 
         this.logger.info("Prediction results summary", {
-            duplicatesRemoved: flatResults.length - deduplicatedResults.length,
-            totalResults: flatResults.length,
+            duplicatesRemoved: results.length - deduplicatedResults.length,
+            totalResults: results.length,
             uniqueResults: deduplicatedResults.length,
         });
 
@@ -162,49 +142,42 @@ export class PredictModelService {
         return await this.predictMajors(userInput);
     }
 
-    private collectExamScenarios(
-        student: StudentEntity,
+    // =================================================================
+    // PRIVATE HELPER METHODS: SCENARIO & INPUT GENERATION
+    // =================================================================
+
+    private _createCcqtScenarios(
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
-        const scenarios: ExamScenario[] = [];
-
-        // Get all possible subject groups from national exam subjects
-        const vietnameseSubjects: VietnameseSubject[] =
-            studentInfoDTO.nationalExam.map((exam) => exam.name);
-        const possibleSubjectGroups: string[] =
-            getAllPossibleSubjectGroups(vietnameseSubjects);
-
-        if (possibleSubjectGroups.length === 0) {
-            this.logger.warn(
-                "Cannot determine any valid subject groups from national exam data",
-                { vietnameseSubjects },
-            );
-            return scenarios; // Return empty array if no valid subject groups
+        if (studentInfoDTO.hasCertificationExamType("CCQT")) {
+            const ccqtCerts =
+                studentInfoDTO.getCertificationsByExamType("CCQT");
+            return ccqtCerts.reduce<ExamScenario[]>((acc, cert) => {
+                if (
+                    cert.examType.type === "CCQT" &&
+                    cert.examType.value !== CCQTType.OTHER
+                ) {
+                    const score = this.getAndValidateScoreByCCQT(
+                        cert.examType.value,
+                        cert.level,
+                    );
+                    if (score !== undefined) {
+                        acc.push({
+                            diem_chuan: score,
+                            to_hop_mon: cert.examType.value,
+                            type: "ccqt",
+                        });
+                    }
+                }
+                return acc;
+            }, []);
         }
+        return [];
+    }
 
-        // National exam scenarios - create one for each possible subject group
-        if (student.hasValidNationalExamData()) {
-            for (const subjectGroup of possibleSubjectGroups) {
-                scenarios.push({
-                    diem_chuan: student.getTotalNationalExamScore(),
-                    to_hop_mon: subjectGroup,
-                    type: "national",
-                });
-            }
-        }
-
-        // VSAT scenarios - create one for each possible subject group
-        if (studentInfoDTO.hasValidVSATScores()) {
-            for (const subjectGroup of possibleSubjectGroups) {
-                scenarios.push({
-                    diem_chuan: studentInfoDTO.getTotalVSATScore(),
-                    to_hop_mon: subjectGroup,
-                    type: "vsat",
-                });
-            }
-        }
-
-        // DGNL scenario (these have their own specific group format)
+    private _createDgnlScenarios(
+        studentInfoDTO: StudentInfoDTO,
+    ): ExamScenario[] {
         if (studentInfoDTO.hasAptitudeTestScore()) {
             const examType = studentInfoDTO.aptitudeTestScore?.examType;
             const aptitudeScore = studentInfoDTO.getAptitudeTestScore();
@@ -215,50 +188,214 @@ export class PredictModelService {
                 examType.value !== DGNLType.OTHER &&
                 aptitudeScore !== undefined
             ) {
-                scenarios.push({
-                    diem_chuan: aptitudeScore,
-                    to_hop_mon: examType.value,
-                    type: "dgnl",
-                });
+                return [
+                    {
+                        diem_chuan: aptitudeScore,
+                        to_hop_mon: examType.value,
+                        type: "dgnl",
+                    },
+                ];
+            }
+        }
+        return [];
+    }
+
+    private _createNationalAndVsatScenarios(
+        student: StudentEntity,
+        studentInfoDTO: StudentInfoDTO,
+        possibleSubjectGroups: string[],
+    ): ExamScenario[] {
+        const scenarios: ExamScenario[] = [];
+        if (student.hasValidNationalExamData()) {
+            scenarios.push(
+                ...possibleSubjectGroups.map((subjectGroup) => ({
+                    diem_chuan: student.getTotalNationalExamScore(),
+                    to_hop_mon: subjectGroup,
+                    type: "national" as const,
+                })),
+            );
+        }
+        if (studentInfoDTO.hasValidVSATScores()) {
+            scenarios.push(
+                ...possibleSubjectGroups.map((subjectGroup) => ({
+                    diem_chuan: studentInfoDTO.getTotalVSATScore(),
+                    to_hop_mon: subjectGroup,
+                    type: "vsat" as const,
+                })),
+            );
+        }
+        return scenarios;
+    }
+
+    private async _performBatchPrediction(
+        inputsForGroup: UserInputL2[],
+        subjectGroup: string,
+    ): Promise<{
+        failedInputs: UserInputL2[];
+        successfulResults: L2PredictResult[];
+    }> {
+        const limit = pLimit(this.PREDICTION_CONCURRENCY);
+        const successfulResults: L2PredictResult[] = [];
+        const failedInputs: UserInputL2[] = [];
+
+        const batchResults = await Promise.allSettled(
+            inputsForGroup.map((userInput) =>
+                limit(async () => {
+                    try {
+                        return await this.predictMajors(userInput);
+                    } catch (error: unknown) {
+                        this.logger.warn(
+                            "Batch prediction failed for group, will retry sequentially",
+                            {
+                                error:
+                                    error instanceof Error
+                                        ? error.message
+                                        : String(error),
+                                subjectGroup,
+                            },
+                        );
+                        throw error;
+                    }
+                }),
+            ),
+        );
+
+        for (let i = 0; i < batchResults.length; i++) {
+            const result = batchResults[i];
+            if (result.status === "fulfilled") {
+                successfulResults.push(...result.value);
+            } else {
+                failedInputs.push(inputsForGroup[i]);
             }
         }
 
-        // CCQT scenarios (these also have their own specific group format)
-        if (studentInfoDTO.hasCertificationExamType("CCQT")) {
-            const ccqtCerts =
-                studentInfoDTO.getCertificationsByExamType("CCQT");
-            for (const cert of ccqtCerts) {
-                if (
-                    cert.examType.type === "CCQT" &&
-                    cert.examType.value !== CCQTType.OTHER
-                ) {
-                    const score = this.getAndValidateScoreByCCQT(
-                        cert.examType.value,
-                        cert.level,
+        this.logger.info(
+            `Batch processing for group ${subjectGroup} completed`,
+            {
+                failed: failedInputs.length,
+                successful: inputsForGroup.length - failedInputs.length,
+                total: inputsForGroup.length,
+            },
+        );
+
+        return { failedInputs, successfulResults };
+    }
+
+    private async _performSequentialRetry(
+        failedInputs: UserInputL2[],
+        subjectGroup: string,
+    ): Promise<L2PredictResult[]> {
+        this.logger.info(
+            `Starting sequential retry for failed predictions in group: ${subjectGroup}`,
+            {
+                failedCount: failedInputs.length,
+            },
+        );
+
+        const successfulRetryResults: L2PredictResult[] = [];
+        let retrySuccessCount = 0;
+
+        for (let i = 0; i < failedInputs.length; i++) {
+            const userInput = failedInputs[i];
+            let success = false;
+
+            for (
+                let attempt = 1;
+                attempt <= this.MAX_RETRIES && !success;
+                attempt++
+            ) {
+                try {
+                    this.logger.info(
+                        `Sequential retry attempt ${attempt.toString()} for input ${String(i + 1)}/${failedInputs.length.toString()} in group ${subjectGroup}`,
                     );
-                    if (score !== undefined) {
-                        scenarios.push({
-                            diem_chuan: score,
-                            to_hop_mon: cert.examType.value, // CCQT uses its own format
-                            type: "ccqt",
-                        });
+                    const results = await this.predictMajors(userInput);
+                    successfulRetryResults.push(...results);
+                    success = true;
+                    retrySuccessCount++;
+                    this.logger.info(
+                        `Sequential retry successful for group ${subjectGroup}`,
+                    );
+                } catch (error: unknown) {
+                    const errorMessage =
+                        error instanceof Error ? error.message : String(error);
+                    if (attempt === this.MAX_RETRIES) {
+                        this.logger.error(
+                            "Sequential retry failed after all attempts for group",
+                            {
+                                error: errorMessage,
+                                subjectGroup,
+                            },
+                        );
+                    } else {
+                        this.logger.warn(
+                            `Sequential retry attempt ${attempt.toString()} failed for group, will retry`,
+                            {
+                                error: errorMessage,
+                                subjectGroup,
+                            },
+                        );
+                        await this.delay(this.RETRY_BASE_DELAY_MS * attempt);
                     }
                 }
             }
+            if (i < failedInputs.length - 1) {
+                await this.delay(this.RETRY_ITERATION_DELAY_MS);
+            }
         }
+
+        this.logger.info(
+            `Sequential retry for group ${subjectGroup} completed`,
+            {
+                finallySuccessful: retrySuccessCount,
+                stillFailed: failedInputs.length - retrySuccessCount,
+                totalAttempted: failedInputs.length,
+            },
+        );
+
+        return successfulRetryResults;
+    }
+
+    private collectExamScenarios(
+        student: StudentEntity,
+        studentInfoDTO: StudentInfoDTO,
+    ): ExamScenario[] {
+        const vietnameseSubjects: VietnameseSubject[] =
+            studentInfoDTO.nationalExam.map((exam) => exam.name);
+        const possibleSubjectGroups: string[] =
+            getAllPossibleSubjectGroups(vietnameseSubjects);
+
+        if (possibleSubjectGroups.length === 0) {
+            this.logger.warn(
+                "Cannot determine any valid subject groups from national exam data",
+                { vietnameseSubjects },
+            );
+        }
+
+        const scenarios = [
+            ...this._createNationalAndVsatScenarios(
+                student,
+                studentInfoDTO,
+                possibleSubjectGroups,
+            ),
+            ...this._createDgnlScenarios(studentInfoDTO),
+            ...this._createCcqtScenarios(studentInfoDTO),
+        ];
 
         this.logger.info("Generated exam scenarios", {
             ccqtScenarios: scenarios.filter((s) => s.type === "ccqt").length,
             dgnlScenarios: scenarios.filter((s) => s.type === "dgnl").length,
             nationalScenarios: scenarios.filter((s) => s.type === "national")
                 .length,
-            possibleSubjectGroups,
             totalScenarios: scenarios.length,
             vsatScenarios: scenarios.filter((s) => s.type === "vsat").length,
         });
 
         return scenarios;
     }
+
+    // =================================================================
+    // PRIVATE HELPER METHODS: PREDICTION EXECUTION & RETRY LOGIC
+    // =================================================================
 
     private createBaseUserInputTemplate(
         studentInfoDTO: StudentInfoDTO,
@@ -294,9 +431,6 @@ export class PredictModelService {
         };
     }
 
-    /**
-     * Deduplicates L2PredictResult array by ma_xet_tuyen, keeping only the entry with the highest score
-     */
     private deduplicateByHighestScore(
         results: L2PredictResult[],
     ): L2PredictResult[] {
@@ -311,6 +445,53 @@ export class PredictModelService {
         }
 
         return Array.from(resultMap.values());
+    }
+
+    private delay(ms: number): Promise<void> {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    // =================================================================
+    // PRIVATE HELPER METHODS: DATA FETCHING & VALIDATION
+    // =================================================================
+
+    private async executePredictionsWithRetry(
+        userInputs: UserInputL2[],
+    ): Promise<L2PredictResult[]> {
+        const allResults: L2PredictResult[] = [];
+
+        const groupedInputs = userInputs.reduce((acc, input) => {
+            const group = acc.get(input.to_hop_mon) ?? [];
+            group.push(input);
+            acc.set(input.to_hop_mon, group);
+            return acc;
+        }, new Map<string, UserInputL2[]>());
+
+        for (const [subjectGroup, inputsForGroup] of groupedInputs.entries()) {
+            this.logger.info(
+                `Starting batch processing for subject group: ${subjectGroup}`,
+                {
+                    totalInputs: inputsForGroup.length,
+                },
+            );
+
+            const { failedInputs, successfulResults } =
+                await this._performBatchPrediction(
+                    inputsForGroup,
+                    subjectGroup,
+                );
+            allResults.push(...successfulResults);
+
+            if (failedInputs.length > 0) {
+                const retryResults = await this._performSequentialRetry(
+                    failedInputs,
+                    subjectGroup,
+                );
+                allResults.push(...retryResults);
+            }
+        }
+
+        return allResults;
     }
 
     private async fetchAndValidateOcrResults(
@@ -337,7 +518,7 @@ export class PredictModelService {
         userId: string,
     ): Promise<StudentEntity> {
         const student = await this.studentRepository.findOne({
-            relations: ["awards", "certifications", "files"],
+            relations: ["awards", "certifications"],
             where: { id: studentId, userId },
         });
 
@@ -350,6 +531,10 @@ export class PredictModelService {
         return student;
     }
 
+    // =================================================================
+    // PRIVATE HELPER METHODS: UTILITIES & API COMMUNICATION
+    // =================================================================
+
     private findAndValidatePerformance(
         performances: AcademicPerformanceDTO[],
         grade: number,
@@ -358,8 +543,6 @@ export class PredictModelService {
             (ap) => ap.grade === grade,
         )?.academicPerformance;
         if (!performance) {
-            // This error should be thrown if data is unexpectedly missing,
-            // which helps maintain data integrity.
             throw new IllegalArgumentException(
                 `Academic performance for grade ${grade.toString()} is missing.`,
             );
@@ -380,9 +563,6 @@ export class PredictModelService {
         ccnnCertifications: CertificationDTO[],
         majors: string[],
     ): UserInputL2[] {
-        const userInputs: UserInputL2[] = [];
-
-        // Get valid CCNN certifications
         const validCcnnCerts = ccnnCertifications.filter(
             (cert) =>
                 cert.cefr &&
@@ -390,38 +570,29 @@ export class PredictModelService {
                 cert.examType.value !== CCNNType.OTHER,
         );
 
-        // Generate combinations for each exam scenario
-        for (const scenario of examScenarios) {
-            for (const cert of validCcnnCerts) {
-                for (const major of majors) {
-                    const majorCode = getCodeByVietnameseName(major);
-                    if (!majorCode) {
-                        this.logger.warn(
-                            `Cannot find code for major: ${major}`,
-                        );
-                        continue;
-                    }
-
-                    const userInput: UserInputL2 = {
-                        ...baseTemplate,
-                        diem_ccta: cert.cefr,
-                        diem_chuan: scenario.diem_chuan,
-                        nhom_nganh: parseInt(majorCode, 10),
-                        ten_ccta: cert.examType.value,
-                        to_hop_mon: scenario.to_hop_mon,
-                    };
-
-                    userInputs.push(userInput);
-
-                    this.logger.info(
-                        `Generated user input for ${scenario.type} exam, major: ${major}`,
-                        { userInput },
-                    );
-                }
-            }
-        }
-
-        return userInputs;
+        return examScenarios.flatMap((scenario) =>
+            validCcnnCerts.flatMap((cert) =>
+                majors
+                    .map((major) => {
+                        const majorCode = getCodeByVietnameseName(major);
+                        if (!majorCode) {
+                            this.logger.warn(
+                                `Cannot find code for major: ${major}`,
+                            );
+                            return null;
+                        }
+                        return {
+                            ...baseTemplate,
+                            diem_ccta: cert.cefr,
+                            diem_chuan: scenario.diem_chuan,
+                            nhom_nganh: parseInt(majorCode, 10),
+                            ten_ccta: cert.examType.value,
+                            to_hop_mon: scenario.to_hop_mon,
+                        } as UserInputL2;
+                    })
+                    .filter((input): input is UserInputL2 => input !== null),
+            ),
+        );
     }
 
     private getAndValidateScoreByCCQT(
@@ -433,44 +604,34 @@ export class PredictModelService {
             return undefined;
 
         switch (type) {
-            case CCQTType.ACT: {
+            case CCQTType.ACT:
                 return 1 <= parsedScore && parsedScore <= 36
                     ? parsedScore
                     : undefined;
-            }
-            case CCQTType.IB: {
+            case CCQTType.IB:
                 return 0 <= parsedScore && parsedScore <= 45
                     ? parsedScore
                     : undefined;
-            }
-            case CCQTType.OSSD: {
+            case CCQTType.OSSD:
                 return 0 <= parsedScore && parsedScore <= 100
                     ? parsedScore
                     : undefined;
-            }
-            case CCQTType.OTHER: {
-                return undefined;
-            }
-            case CCQTType.SAT: {
+            case CCQTType.SAT:
                 return 400 <= parsedScore && parsedScore <= 1600
                     ? parsedScore
                     : undefined;
-            }
-            case CCQTType["A-Level"]: {
+            case CCQTType["A-Level"]:
                 return this.getAndValidateScoreByCCQT_Type_A_Level(
                     validateScore,
                 );
-            }
-            case CCQTType["Duolingo English Test"]: {
+            case CCQTType["Duolingo English Test"]:
                 return 10 <= parsedScore && parsedScore <= 160
                     ? parsedScore
                     : undefined;
-            }
-            case CCQTType["PTE Academic"]: {
+            case CCQTType["PTE Academic"]:
                 return 10 <= parsedScore && parsedScore <= 90
                     ? parsedScore
                     : undefined;
-            }
             default:
                 return undefined;
         }
@@ -480,65 +641,26 @@ export class PredictModelService {
         level: string,
     ): number | undefined {
         switch (level.toUpperCase()) {
-            case "A": {
+            case "A":
                 return 0.9;
-            }
-            case "A*": {
+            case "A*":
                 return 1.0;
-            }
-            case "B": {
+            case "B":
                 return 0.8;
-            }
-            case "C": {
+            case "C":
                 return 0.7;
-            }
-            case "D": {
+            case "D":
                 return 0.6;
-            }
-            case "E": {
+            case "E":
                 return 0.5;
-            }
-            case "F": // Failed
-            case "N": // Nearly passed
-            case "O": // O-level equivalent
-            case "U": {
+            case "F":
+            case "N":
+            case "O":
+            case "U":
                 return 0.0;
-            } // Ungraded
             default:
                 return undefined;
         }
-    }
-
-    private handleError(error: unknown, userId?: string): never {
-        if (axios.isAxiosError(error)) {
-            const axiosError = error as AxiosError;
-
-            // Handle validation errors (422)
-            if (
-                axiosError.response?.status === 422 &&
-                this.isValidationError(axiosError.response.data)
-            ) {
-                const details = axiosError.response.data.detail
-                    .map((err) => `${err.loc.join(".")}: ${err.msg}`)
-                    .join("; ");
-
-                this.logger.error("Validation error", { details, userId });
-                throw new Error(`Validation failed: ${details}`);
-            }
-
-            // Handle other HTTP errors
-            const status = axiosError.response?.status ?? "unknown";
-            const message = axiosError.message;
-
-            this.logger.error("API error", { message, status, userId });
-            throw new Error(`API error (${status.toString()}): ${message}`);
-        }
-
-        // Handle non-HTTP errors
-        const message =
-            error instanceof Error ? error.message : "Unknown error";
-        this.logger.error("Service error", { message, userId });
-        throw new Error(`Service error: ${message}`);
     }
 
     private isValidationError(data: unknown): data is HTTPValidationError {
@@ -554,22 +676,57 @@ export class PredictModelService {
         userInput: UserInputL2,
     ): Promise<L2PredictResult[]> {
         try {
-            this.logger.info("Starting prediction");
+            this.logger.info("Starting prediction", {
+                userInput,
+            });
 
             const response = await this.httpClient.post<L2PredictResult[]>(
                 "/predict/l2",
                 userInput,
             );
+
             const validatedResults = await this.validateResponse(response.data);
 
             this.logger.info("Prediction completed", {
                 count: validatedResults.length,
+                major: userInput.nhom_nganh,
+                subjectGroup: userInput.to_hop_mon,
             });
 
             return validatedResults;
         } catch (error) {
-            if (error instanceof HttpException) throw error;
-            return this.handleError(error);
+            const errorContext = {
+                examScore: userInput.diem_chuan,
+                major: userInput.nhom_nganh,
+                subjectGroup: userInput.to_hop_mon,
+            };
+
+            if (axios.isAxiosError(error)) {
+                const axiosError = error as AxiosError;
+                const status = axiosError.response?.status ?? "unknown";
+                const message = axiosError.message;
+
+                this.logger.error("API error", {
+                    message,
+                    status,
+                    ...errorContext,
+                });
+
+                throw new Error(
+                    `API error (${String(status)}): ${message} for ${userInput.to_hop_mon}`,
+                );
+            }
+
+            const message =
+                error instanceof Error ? error.message : "Unknown error";
+            this.logger.error("Service error", {
+                message,
+                ...errorContext,
+            });
+
+            throw new Error(
+                `Service error: ${message} for ${userInput.to_hop_mon}`,
+            );
         }
     }
 
