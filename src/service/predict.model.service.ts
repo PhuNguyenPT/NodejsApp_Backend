@@ -2,6 +2,7 @@ import axios, { AxiosError, AxiosInstance } from "axios";
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
+import pLimit from "p-limit";
 import { Repository } from "typeorm";
 
 import {
@@ -9,19 +10,41 @@ import {
     L2PredictResult,
     UserInputL2,
 } from "@/dto/predict/predict.js";
+import { AcademicPerformanceDTO } from "@/dto/student/academic.performance.dto.js";
+import { CertificationDTO } from "@/dto/student/certification.dto.js";
+import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { OcrResultEntity, OcrStatus } from "@/entity/ocr.result.entity.js";
 import { StudentEntity } from "@/entity/student.js";
 import { TYPES } from "@/type/container/types.js";
-import { CCQTType } from "@/type/enum/exam.js";
+import {
+    AcademicPerformance,
+    getRankByAcademicPerformance,
+} from "@/type/enum/academic.performance.js";
+import { CCNNType, CCQTType, DGNLType } from "@/type/enum/exam.js";
+import { getCodeByVietnameseName } from "@/type/enum/major.js";
+import {
+    getAllPossibleSubjectGroups,
+    VietnameseSubject,
+} from "@/type/enum/subject.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
-import { HttpException } from "@/type/exception/http.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { config } from "@/util/validate.env.js";
 
+interface ExamScenario {
+    diem_chuan: number;
+    to_hop_mon: string;
+    type: "ccqt" | "dgnl" | "national" | "vsat";
+}
+
 @injectable()
 export class PredictModelService {
     private readonly httpClient: AxiosInstance;
+
+    private readonly MAX_RETRIES = 2;
+    private readonly PREDICTION_CONCURRENCY = 10;
+    private readonly RETRY_BASE_DELAY_MS = 2000;
+    private readonly RETRY_ITERATION_DELAY_MS = 1000;
 
     constructor(
         @inject(TYPES.Logger) private readonly logger: ILogger,
@@ -45,206 +68,55 @@ export class PredictModelService {
         studentId: string,
         userId: string,
     ): Promise<L2PredictResult[]> {
-        // TODO: implement query result by event
-        const student: null | StudentEntity =
-            await this.studentRepository.findOne({
-                relations: ["awards", "certifications", "files"],
-                where: { id: studentId, userId },
-            });
+        // Data retrieval and validation
+        const student = await this.fetchAndValidateStudent(studentId, userId);
 
-        if (!student) {
-            throw new EntityNotFoundException(
-                `Student profile with id ${studentId} not found`,
-            );
-        }
+        const studentInfoDTO: StudentInfoDTO = plainToInstance(
+            StudentInfoDTO,
+            student,
+        );
+        const ccnnCertifications: CertificationDTO[] =
+            studentInfoDTO.getCertificationsByExamType("CCNN");
 
-        const ocrResultEntities: OcrResultEntity[] =
-            await this.ocrResultRepository.find({
-                where: {
-                    processedBy: userId,
-                    status: OcrStatus.COMPLETED,
-                    studentId: student.id,
-                },
-            });
+        // Create base template for user inputs
+        const baseTemplate = this.createBaseUserInputTemplate(studentInfoDTO);
 
-        if (ocrResultEntities.length !== 6) {
+        // Collect all possible exam scenarios
+        const examScenarios = this.collectExamScenarios(
+            student,
+            studentInfoDTO,
+        );
+
+        // Generate user inputs for all combinations
+        const userInputs = this.generateUserInputCombinations(
+            baseTemplate,
+            examScenarios,
+            ccnnCertifications,
+            studentInfoDTO.majors,
+        );
+
+        // Sort the userInputs array alphabetically by subject group to ensure consistent processing order
+        userInputs.sort((a, b) => a.to_hop_mon.localeCompare(b.to_hop_mon));
+
+        if (userInputs.length === 0) {
             throw new IllegalArgumentException(
-                `Cannot predict majors due to ocr array length ${ocrResultEntities.length.toString()} is not 6`,
+                "No valid user inputs could be generated for prediction",
             );
         }
 
-        // const studentInfoDTO: StudentInfoDTO = plainToInstance(
-        //     StudentInfoDTO,
-        //     student,
-        // );
-        // const subjectGroups = getSubjectGroup(
-        //     studentInfoDTO.nationalExam.map((exam) => exam.name),
-        // );
+        // Execute predictions with improved error handling and retry logic
+        const results = await this.executePredictionsWithRetry(userInputs);
 
-        // if (!subjectGroups) {
-        //     throw new IllegalArgumentException(
-        //         `Student subject group cannot be undefined`,
-        //     );
-        // }
+        // Deduplicate by ma_xet_tuyen, keeping the highest score
+        const deduplicatedResults = this.deduplicateByHighestScore(results);
 
-        // const userInputs: UserInputL2[] = [];
-        // const ccnnCertifications: CertificationRequest[] =
-        //     studentInfoDTO.getCertificationsByExamType("CCNN");
+        this.logger.info("Prediction results summary", {
+            duplicatesRemoved: results.length - deduplicatedResults.length,
+            totalResults: results.length,
+            uniqueResults: deduplicatedResults.length,
+        });
 
-        // const baseUserInput: Partial<UserInputL2> = {
-        //     cong_lap: 1,
-        //     diem_chuan: student.getTotalNationalExamScore(),
-        //     hk10: 1,
-        //     hk11: 1,
-        //     hk12: 1,
-        //     hl10: getRankByAcademicPerformance(
-        //         findAndValidatePerformance(
-        //             studentInfoDTO.academicPerformances,
-        //             10,
-        //         ),
-        //     ),
-        //     hl11: getRankByAcademicPerformance(
-        //         findAndValidatePerformance(
-        //             studentInfoDTO.academicPerformances,
-        //             11,
-        //         ),
-        //     ),
-        //     hl12: getRankByAcademicPerformance(
-        //         findAndValidatePerformance(
-        //             studentInfoDTO.academicPerformances,
-        //             12,
-        //         ),
-        //     ),
-        //     hoc_phi: studentInfoDTO.minBudget,
-        //     tinh_tp: studentInfoDTO.province,
-        //     to_hop_mon: subjectGroups,
-        // };
-
-        // if (student.hasValidNationalExamData()) {
-        //     for (const cert of ccnnCertifications) {
-        //         if (!cert.cefr || !cert.examType) {
-        //             throw new IllegalArgumentException(
-        //                 `Certification CEFR and type cannot be undefined`,
-        //             );
-        //         }
-
-        //         if (cert.examType.value !== CCNNType.OTHER) {
-        //             const tempUserInput: Partial<UserInputL2> = baseUserInput;
-        //             tempUserInput.diem_ccta = cert.cefr;
-        //             tempUserInput.ten_ccta = cert.examType.value;
-
-        //             for (const major of studentInfoDTO.majors) {
-        //                 const userInput: UserInputL2 = plainToInstance(
-        //                     UserInputL2,
-        //                     tempUserInput,
-        //                 );
-        //                 const majorCode = getCodeByVietnameseName(major);
-        //                 userInput.nhom_nganh = majorCode
-        //                     ? parseInt(majorCode, 10)
-        //                     : (() => {
-        //                           throw new IllegalArgumentException(
-        //                               `Cannot find code for major: ${major}`,
-        //                           );
-        //                       })();
-        //                 userInputs.push(userInput);
-        //             }
-        //         }
-        //     }
-        // }
-
-        // if (studentInfoDTO.hasValidVSATScores()) {
-        //     baseUserInput.diem_chuan = studentInfoDTO.getTotalVSATScore();
-
-        //     for (const cert of ccnnCertifications) {
-        //         if (!cert.cefr || !cert.examType) {
-        //             throw new IllegalArgumentException(
-        //                 `Certification CEFR and type cannot be undefined`,
-        //             );
-        //         }
-
-        //         if (cert.examType.value !== CCNNType.OTHER) {
-        //             const tempUserInput: Partial<UserInputL2> = baseUserInput;
-        //             tempUserInput.diem_ccta = cert.cefr;
-        //             tempUserInput.ten_ccta = cert.examType.value;
-
-        //             for (const major of studentInfoDTO.majors) {
-        //                 const userInput: UserInputL2 = plainToInstance(
-        //                     UserInputL2,
-        //                     tempUserInput,
-        //                 );
-        //                 const majorCode = getCodeByVietnameseName(major);
-        //                 userInput.nhom_nganh = majorCode
-        //                     ? parseInt(majorCode, 10)
-        //                     : (() => {
-        //                           throw new IllegalArgumentException(
-        //                               `Cannot find code for major: ${major}`,
-        //                           );
-        //                       })();
-        //                 userInputs.push(userInput);
-        //             }
-        //         }
-        //     }
-        // }
-
-        // if (studentInfoDTO.hasAptitudeTestScore()) {
-        //     const examType = studentInfoDTO.aptitudeTestScore?.examType;
-        //     if (!(examType?.type === "DGNL") || !(examType.value in DGNLType)) {
-        //         throw new IllegalArgumentException(
-        //             `Invalid aptitude test score's exam type or/and value`,
-        //         );
-        //     }
-
-        //     const examValue = student.aptitudeTestScore?.examType.value;
-        //     if (examValue !== DGNLType.OTHER) {
-        //         baseUserInput.diem_chuan =
-        //             studentInfoDTO.getAptitudeTestScore();
-        //         baseUserInput.to_hop_mon = examValue;
-
-        //         for (const cert of ccnnCertifications) {
-        //             if (!cert.cefr || !cert.examType) {
-        //                 throw new IllegalArgumentException(
-        //                     `Certification CEFR and type cannot be undefined`,
-        //                 );
-        //             }
-
-        //             if (cert.examType.value !== CCNNType.OTHER) {
-        //                 const tempUserInput: Partial<UserInputL2> =
-        //                     baseUserInput;
-        //                 tempUserInput.diem_ccta = cert.cefr;
-        //                 tempUserInput.ten_ccta = cert.examType.value;
-
-        //                 for (const major of studentInfoDTO.majors) {
-        //                     const userInput: UserInputL2 = plainToInstance(
-        //                         UserInputL2,
-        //                         tempUserInput,
-        //                     );
-        //                     const majorCode = getCodeByVietnameseName(major);
-        //                     userInput.nhom_nganh = majorCode
-        //                         ? parseInt(majorCode, 10)
-        //                         : (() => {
-        //                               throw new IllegalArgumentException(
-        //                                   `Cannot find code for major: ${major}`,
-        //                               );
-        //                           })();
-        //                     userInputs.push(userInput);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-
-        // if (studentInfoDTO.hasCertificationExamType("CCQT")) {
-        //     const ccqtCerts: CertificationRequest[] =
-        //         studentInfoDTO.getCertificationsByExamType("CCQT");
-        //     for (const cert of ccqtCerts) {
-        //         if (cert.examType.value !== CCNNType.OTHER) {
-        //             const tempUserInput: Partial<UserInputL2> = baseUserInput;
-        //             tempUserInput.to_hop_mon = cert.examType.value;
-        //         }
-        //     }
-        // }
-
-        return [];
+        return deduplicatedResults;
     }
 
     async healthCheck(): Promise<boolean> {
@@ -257,6 +129,7 @@ export class PredictModelService {
             return false;
         }
     }
+
     async predictMajorsByStudentIdAndUserId(
         userInput: UserInputL2,
         studentId: string,
@@ -269,6 +142,459 @@ export class PredictModelService {
         return await this.predictMajors(userInput);
     }
 
+    // =================================================================
+    // PRIVATE HELPER METHODS: SCENARIO & INPUT GENERATION
+    // =================================================================
+
+    private _createCcqtScenarios(
+        studentInfoDTO: StudentInfoDTO,
+    ): ExamScenario[] {
+        if (studentInfoDTO.hasCertificationExamType("CCQT")) {
+            const ccqtCerts =
+                studentInfoDTO.getCertificationsByExamType("CCQT");
+            return ccqtCerts.reduce<ExamScenario[]>((acc, cert) => {
+                if (
+                    cert.examType.type === "CCQT" &&
+                    cert.examType.value !== CCQTType.OTHER
+                ) {
+                    const score = this.getAndValidateScoreByCCQT(
+                        cert.examType.value,
+                        cert.level,
+                    );
+                    if (score !== undefined) {
+                        acc.push({
+                            diem_chuan: score,
+                            to_hop_mon: cert.examType.value,
+                            type: "ccqt",
+                        });
+                    }
+                }
+                return acc;
+            }, []);
+        }
+        return [];
+    }
+
+    private _createDgnlScenarios(
+        studentInfoDTO: StudentInfoDTO,
+    ): ExamScenario[] {
+        if (studentInfoDTO.hasAptitudeTestScore()) {
+            const examType = studentInfoDTO.aptitudeTestScore?.examType;
+            const aptitudeScore = studentInfoDTO.getAptitudeTestScore();
+
+            if (
+                examType?.type === "DGNL" &&
+                examType.value in DGNLType &&
+                examType.value !== DGNLType.OTHER &&
+                aptitudeScore !== undefined
+            ) {
+                return [
+                    {
+                        diem_chuan: aptitudeScore,
+                        to_hop_mon: examType.value,
+                        type: "dgnl",
+                    },
+                ];
+            }
+        }
+        return [];
+    }
+
+    private _createNationalAndVsatScenarios(
+        student: StudentEntity,
+        studentInfoDTO: StudentInfoDTO,
+        possibleSubjectGroups: string[],
+    ): ExamScenario[] {
+        const scenarios: ExamScenario[] = [];
+        if (student.hasValidNationalExamData()) {
+            scenarios.push(
+                ...possibleSubjectGroups.map((subjectGroup) => ({
+                    diem_chuan: student.getTotalNationalExamScore(),
+                    to_hop_mon: subjectGroup,
+                    type: "national" as const,
+                })),
+            );
+        }
+        if (studentInfoDTO.hasValidVSATScores()) {
+            scenarios.push(
+                ...possibleSubjectGroups.map((subjectGroup) => ({
+                    diem_chuan: studentInfoDTO.getTotalVSATScore(),
+                    to_hop_mon: subjectGroup,
+                    type: "vsat" as const,
+                })),
+            );
+        }
+        return scenarios;
+    }
+
+    private async _performBatchPrediction(
+        inputsForGroup: UserInputL2[],
+        subjectGroup: string,
+    ): Promise<{
+        failedInputs: UserInputL2[];
+        successfulResults: L2PredictResult[];
+    }> {
+        const limit = pLimit(this.PREDICTION_CONCURRENCY);
+        const successfulResults: L2PredictResult[] = [];
+        const failedInputs: UserInputL2[] = [];
+
+        const batchResults = await Promise.allSettled(
+            inputsForGroup.map((userInput) =>
+                limit(async () => {
+                    try {
+                        return await this.predictMajors(userInput);
+                    } catch (error: unknown) {
+                        this.logger.warn(
+                            "Batch prediction failed for group, will retry sequentially",
+                            {
+                                error:
+                                    error instanceof Error
+                                        ? error.message
+                                        : String(error),
+                                subjectGroup,
+                            },
+                        );
+                        throw error;
+                    }
+                }),
+            ),
+        );
+
+        for (let i = 0; i < batchResults.length; i++) {
+            const result = batchResults[i];
+            if (result.status === "fulfilled") {
+                successfulResults.push(...result.value);
+            } else {
+                failedInputs.push(inputsForGroup[i]);
+            }
+        }
+
+        this.logger.info(
+            `Batch processing for group ${subjectGroup} completed`,
+            {
+                failed: failedInputs.length,
+                successful: inputsForGroup.length - failedInputs.length,
+                total: inputsForGroup.length,
+            },
+        );
+
+        return { failedInputs, successfulResults };
+    }
+
+    private async _performSequentialRetry(
+        failedInputs: UserInputL2[],
+        subjectGroup: string,
+    ): Promise<L2PredictResult[]> {
+        this.logger.info(
+            `Starting sequential retry for failed predictions in group: ${subjectGroup}`,
+            {
+                failedCount: failedInputs.length,
+            },
+        );
+
+        const successfulRetryResults: L2PredictResult[] = [];
+        let retrySuccessCount = 0;
+
+        for (let i = 0; i < failedInputs.length; i++) {
+            const userInput = failedInputs[i];
+            let success = false;
+
+            for (
+                let attempt = 1;
+                attempt <= this.MAX_RETRIES && !success;
+                attempt++
+            ) {
+                try {
+                    this.logger.info(
+                        `Sequential retry attempt ${attempt.toString()} for input ${String(i + 1)}/${failedInputs.length.toString()} in group ${subjectGroup}`,
+                    );
+                    const results = await this.predictMajors(userInput);
+                    successfulRetryResults.push(...results);
+                    success = true;
+                    retrySuccessCount++;
+                    this.logger.info(
+                        `Sequential retry successful for group ${subjectGroup}`,
+                    );
+                } catch (error: unknown) {
+                    const errorMessage =
+                        error instanceof Error ? error.message : String(error);
+                    if (attempt === this.MAX_RETRIES) {
+                        this.logger.error(
+                            "Sequential retry failed after all attempts for group",
+                            {
+                                error: errorMessage,
+                                subjectGroup,
+                            },
+                        );
+                    } else {
+                        this.logger.warn(
+                            `Sequential retry attempt ${attempt.toString()} failed for group, will retry`,
+                            {
+                                error: errorMessage,
+                                subjectGroup,
+                            },
+                        );
+                        await this.delay(this.RETRY_BASE_DELAY_MS * attempt);
+                    }
+                }
+            }
+            if (i < failedInputs.length - 1) {
+                await this.delay(this.RETRY_ITERATION_DELAY_MS);
+            }
+        }
+
+        this.logger.info(
+            `Sequential retry for group ${subjectGroup} completed`,
+            {
+                finallySuccessful: retrySuccessCount,
+                stillFailed: failedInputs.length - retrySuccessCount,
+                totalAttempted: failedInputs.length,
+            },
+        );
+
+        return successfulRetryResults;
+    }
+
+    private collectExamScenarios(
+        student: StudentEntity,
+        studentInfoDTO: StudentInfoDTO,
+    ): ExamScenario[] {
+        const vietnameseSubjects: VietnameseSubject[] =
+            studentInfoDTO.nationalExam.map((exam) => exam.name);
+        const possibleSubjectGroups: string[] =
+            getAllPossibleSubjectGroups(vietnameseSubjects);
+
+        if (possibleSubjectGroups.length === 0) {
+            this.logger.warn(
+                "Cannot determine any valid subject groups from national exam data",
+                { vietnameseSubjects },
+            );
+        }
+
+        const scenarios = [
+            ...this._createNationalAndVsatScenarios(
+                student,
+                studentInfoDTO,
+                possibleSubjectGroups,
+            ),
+            ...this._createDgnlScenarios(studentInfoDTO),
+            ...this._createCcqtScenarios(studentInfoDTO),
+        ];
+
+        this.logger.info("Generated exam scenarios", {
+            ccqtScenarios: scenarios.filter((s) => s.type === "ccqt").length,
+            dgnlScenarios: scenarios.filter((s) => s.type === "dgnl").length,
+            nationalScenarios: scenarios.filter((s) => s.type === "national")
+                .length,
+            totalScenarios: scenarios.length,
+            vsatScenarios: scenarios.filter((s) => s.type === "vsat").length,
+        });
+
+        return scenarios;
+    }
+
+    // =================================================================
+    // PRIVATE HELPER METHODS: PREDICTION EXECUTION & RETRY LOGIC
+    // =================================================================
+
+    private createBaseUserInputTemplate(
+        studentInfoDTO: StudentInfoDTO,
+    ): Omit<
+        UserInputL2,
+        "diem_ccta" | "diem_chuan" | "nhom_nganh" | "ten_ccta" | "to_hop_mon"
+    > {
+        return {
+            cong_lap: 1,
+            hk10: 1,
+            hk11: 1,
+            hk12: 1,
+            hl10: getRankByAcademicPerformance(
+                this.findAndValidatePerformance(
+                    studentInfoDTO.academicPerformances,
+                    10,
+                ),
+            ),
+            hl11: getRankByAcademicPerformance(
+                this.findAndValidatePerformance(
+                    studentInfoDTO.academicPerformances,
+                    11,
+                ),
+            ),
+            hl12: getRankByAcademicPerformance(
+                this.findAndValidatePerformance(
+                    studentInfoDTO.academicPerformances,
+                    12,
+                ),
+            ),
+            hoc_phi: studentInfoDTO.minBudget,
+            tinh_tp: studentInfoDTO.province,
+        };
+    }
+
+    private deduplicateByHighestScore(
+        results: L2PredictResult[],
+    ): L2PredictResult[] {
+        const resultMap = new Map<string, L2PredictResult>();
+
+        for (const result of results) {
+            const existing = resultMap.get(result.ma_xet_tuyen);
+
+            if (!existing || result.score > existing.score) {
+                resultMap.set(result.ma_xet_tuyen, result);
+            }
+        }
+
+        return Array.from(resultMap.values());
+    }
+
+    private delay(ms: number): Promise<void> {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    // =================================================================
+    // PRIVATE HELPER METHODS: DATA FETCHING & VALIDATION
+    // =================================================================
+
+    private async executePredictionsWithRetry(
+        userInputs: UserInputL2[],
+    ): Promise<L2PredictResult[]> {
+        const allResults: L2PredictResult[] = [];
+
+        const groupedInputs = userInputs.reduce((acc, input) => {
+            const group = acc.get(input.to_hop_mon) ?? [];
+            group.push(input);
+            acc.set(input.to_hop_mon, group);
+            return acc;
+        }, new Map<string, UserInputL2[]>());
+
+        for (const [subjectGroup, inputsForGroup] of groupedInputs.entries()) {
+            this.logger.info(
+                `Starting batch processing for subject group: ${subjectGroup}`,
+                {
+                    totalInputs: inputsForGroup.length,
+                },
+            );
+
+            const { failedInputs, successfulResults } =
+                await this._performBatchPrediction(
+                    inputsForGroup,
+                    subjectGroup,
+                );
+            allResults.push(...successfulResults);
+
+            if (failedInputs.length > 0) {
+                const retryResults = await this._performSequentialRetry(
+                    failedInputs,
+                    subjectGroup,
+                );
+                allResults.push(...retryResults);
+            }
+        }
+
+        return allResults;
+    }
+
+    private async fetchAndValidateOcrResults(
+        userId: string,
+        studentId: string,
+    ): Promise<void> {
+        const ocrResultEntities = await this.ocrResultRepository.find({
+            where: {
+                processedBy: userId,
+                status: OcrStatus.COMPLETED,
+                studentId,
+            },
+        });
+
+        if (ocrResultEntities.length !== 6) {
+            throw new IllegalArgumentException(
+                `Cannot predict majors due to ocr array length ${ocrResultEntities.length.toString()} is not 6`,
+            );
+        }
+    }
+
+    private async fetchAndValidateStudent(
+        studentId: string,
+        userId: string,
+    ): Promise<StudentEntity> {
+        const student = await this.studentRepository.findOne({
+            relations: ["awards", "certifications"],
+            where: { id: studentId, userId },
+        });
+
+        if (!student) {
+            throw new EntityNotFoundException(
+                `Student profile with id ${studentId} not found`,
+            );
+        }
+
+        return student;
+    }
+
+    // =================================================================
+    // PRIVATE HELPER METHODS: UTILITIES & API COMMUNICATION
+    // =================================================================
+
+    private findAndValidatePerformance(
+        performances: AcademicPerformanceDTO[],
+        grade: number,
+    ): AcademicPerformance {
+        const performance = performances.find(
+            (ap) => ap.grade === grade,
+        )?.academicPerformance;
+        if (!performance) {
+            throw new IllegalArgumentException(
+                `Academic performance for grade ${grade.toString()} is missing.`,
+            );
+        }
+        return performance;
+    }
+
+    private generateUserInputCombinations(
+        baseTemplate: Omit<
+            UserInputL2,
+            | "diem_ccta"
+            | "diem_chuan"
+            | "nhom_nganh"
+            | "ten_ccta"
+            | "to_hop_mon"
+        >,
+        examScenarios: ExamScenario[],
+        ccnnCertifications: CertificationDTO[],
+        majors: string[],
+    ): UserInputL2[] {
+        const validCcnnCerts = ccnnCertifications.filter(
+            (cert) =>
+                cert.cefr &&
+                cert.examType.type === "CCNN" &&
+                cert.examType.value !== CCNNType.OTHER,
+        );
+
+        return examScenarios.flatMap((scenario) =>
+            validCcnnCerts.flatMap((cert) =>
+                majors
+                    .map((major) => {
+                        const majorCode = getCodeByVietnameseName(major);
+                        if (!majorCode) {
+                            this.logger.warn(
+                                `Cannot find code for major: ${major}`,
+                            );
+                            return null;
+                        }
+                        return {
+                            ...baseTemplate,
+                            diem_ccta: cert.cefr,
+                            diem_chuan: scenario.diem_chuan,
+                            nhom_nganh: parseInt(majorCode, 10),
+                            ten_ccta: cert.examType.value,
+                            to_hop_mon: scenario.to_hop_mon,
+                        } as UserInputL2;
+                    })
+                    .filter((input): input is UserInputL2 => input !== null),
+            ),
+        );
+    }
+
     private getAndValidateScoreByCCQT(
         type: CCQTType,
         validateScore: string,
@@ -278,44 +604,34 @@ export class PredictModelService {
             return undefined;
 
         switch (type) {
-            case CCQTType.ACT: {
+            case CCQTType.ACT:
                 return 1 <= parsedScore && parsedScore <= 36
                     ? parsedScore
                     : undefined;
-            }
-            case CCQTType.IB: {
+            case CCQTType.IB:
                 return 0 <= parsedScore && parsedScore <= 45
                     ? parsedScore
                     : undefined;
-            }
-            case CCQTType.OSSD: {
+            case CCQTType.OSSD:
                 return 0 <= parsedScore && parsedScore <= 100
                     ? parsedScore
                     : undefined;
-            }
-            case CCQTType.OTHER: {
-                return undefined;
-            }
-            case CCQTType.SAT: {
+            case CCQTType.SAT:
                 return 400 <= parsedScore && parsedScore <= 1600
                     ? parsedScore
                     : undefined;
-            }
-            case CCQTType["A-Level"]: {
+            case CCQTType["A-Level"]:
                 return this.getAndValidateScoreByCCQT_Type_A_Level(
                     validateScore,
                 );
-            }
-            case CCQTType["Duolingo English Test"]: {
+            case CCQTType["Duolingo English Test"]:
                 return 10 <= parsedScore && parsedScore <= 160
                     ? parsedScore
                     : undefined;
-            }
-            case CCQTType["PTE Academic"]: {
+            case CCQTType["PTE Academic"]:
                 return 10 <= parsedScore && parsedScore <= 90
                     ? parsedScore
                     : undefined;
-            }
             default:
                 return undefined;
         }
@@ -324,66 +640,27 @@ export class PredictModelService {
     private getAndValidateScoreByCCQT_Type_A_Level(
         level: string,
     ): number | undefined {
-        switch (level) {
-            case "A": {
+        switch (level.toUpperCase()) {
+            case "A":
                 return 0.9;
-            }
-            case "A*": {
+            case "A*":
                 return 1.0;
-            }
-            case "B": {
+            case "B":
                 return 0.8;
-            }
-            case "C": {
+            case "C":
                 return 0.7;
-            }
-            case "D": {
+            case "D":
                 return 0.6;
-            }
-            case "E": {
+            case "E":
                 return 0.5;
-            }
-            case "F": // Failed
-            case "N": // Nearly passed
-            case "O": // O-level equivalent
-            case "U": {
+            case "F":
+            case "N":
+            case "O":
+            case "U":
                 return 0.0;
-            } // Ungraded
             default:
                 return undefined;
         }
-    }
-
-    private handleError(error: unknown, userId?: string): never {
-        if (axios.isAxiosError(error)) {
-            const axiosError = error as AxiosError;
-
-            // Handle validation errors (422)
-            if (
-                axiosError.response?.status === 422 &&
-                this.isValidationError(axiosError.response.data)
-            ) {
-                const details = axiosError.response.data.detail
-                    .map((err) => `${err.loc.join(".")}: ${err.msg}`)
-                    .join("; ");
-
-                this.logger.error("Validation error", { details, userId });
-                throw new Error(`Validation failed: ${details}`);
-            }
-
-            // Handle other HTTP errors
-            const status = axiosError.response?.status ?? "unknown";
-            const message = axiosError.message;
-
-            this.logger.error("API error", { message, status, userId });
-            throw new Error(`API error (${status.toString()}): ${message}`);
-        }
-
-        // Handle non-HTTP errors
-        const message =
-            error instanceof Error ? error.message : "Unknown error";
-        this.logger.error("Service error", { message, userId });
-        throw new Error(`Service error: ${message}`);
     }
 
     private isValidationError(data: unknown): data is HTTPValidationError {
@@ -399,22 +676,57 @@ export class PredictModelService {
         userInput: UserInputL2,
     ): Promise<L2PredictResult[]> {
         try {
-            this.logger.info("Starting prediction");
+            this.logger.info("Starting prediction", {
+                userInput,
+            });
 
             const response = await this.httpClient.post<L2PredictResult[]>(
                 "/predict/l2",
                 userInput,
             );
+
             const validatedResults = await this.validateResponse(response.data);
 
             this.logger.info("Prediction completed", {
                 count: validatedResults.length,
+                major: userInput.nhom_nganh,
+                subjectGroup: userInput.to_hop_mon,
             });
 
             return validatedResults;
         } catch (error) {
-            if (error instanceof HttpException) throw error;
-            return this.handleError(error);
+            const errorContext = {
+                examScore: userInput.diem_chuan,
+                major: userInput.nhom_nganh,
+                subjectGroup: userInput.to_hop_mon,
+            };
+
+            if (axios.isAxiosError(error)) {
+                const axiosError = error as AxiosError;
+                const status = axiosError.response?.status ?? "unknown";
+                const message = axiosError.message;
+
+                this.logger.error("API error", {
+                    message,
+                    status,
+                    ...errorContext,
+                });
+
+                throw new Error(
+                    `API error (${String(status)}): ${message} for ${userInput.to_hop_mon}`,
+                );
+            }
+
+            const message =
+                error instanceof Error ? error.message : "Unknown error";
+            this.logger.error("Service error", {
+                message,
+                ...errorContext,
+            });
+
+            throw new Error(
+                `Service error: ${message} for ${userInput.to_hop_mon}`,
+            );
         }
     }
 
@@ -441,20 +753,3 @@ export class PredictModelService {
         return results;
     }
 }
-
-// const findAndValidatePerformance = (
-//     performances: AcademicPerformanceRequest[],
-//     grade: number,
-// ): AcademicPerformance => {
-//     const performance = performances.find(
-//         (ap) => ap.grade === grade,
-//     )?.academicPerformance;
-//     if (!performance) {
-//         // This error should be thrown if data is unexpectedly missing,
-//         // which helps maintain data integrity.
-//         throw new IllegalArgumentException(
-//             `Academic performance for grade ${grade.toString()} is missing.`,
-//         );
-//     }
-//     return performance;
-// };

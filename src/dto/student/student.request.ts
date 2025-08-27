@@ -66,7 +66,9 @@ export class StudentRequest {
     /**
      * Aptitude test information including exam type and score
      * Contains the exam type (DGNL, CCNN, or CCQT) and the numeric score achieved
-     * @example { "examType": { "type": "DGNL", "value": "VNUHCM" }, "score": 700 }
+     * @type {AptitudeTestRequest}
+     * @optional
+     * @see AptitudeTestRequest for detailed structure and validation rules
      */
     @Expose()
     @IsOptional()
@@ -82,6 +84,19 @@ export class StudentRequest {
      * @type {AwardRequest[]}
      * @optional
      * @see AwardRequest for detailed structure and validation rules
+     * @example
+     * [
+     *   {
+     *     "category": "Tiếng Anh",
+     *     "level": "Hạng Nhất",
+     *     "name": "Học sinh giỏi cấp quốc gia"
+     *     },
+     *   {
+     *     "category": "Tiếng Pháp",
+     *     "level": "Hạng Nhì",
+     *     "name": "Học sinh giỏi cấp tỉnh"
+     *   }
+     * ]
      */
     @Expose()
     @IsArray({ message: "Awards must be an array" })
@@ -98,6 +113,23 @@ export class StudentRequest {
      * @type {CertificationRequest[]}
      * @optional
      * @see CertificationRequest for detailed structure and validation rules
+     * @example
+     * [
+     *   {
+     *     "examType": {
+     *       "type": "CCNN",
+     *       "value": "IELTS"
+     *     },
+     *     "level": "6.5"
+     *   },
+     *   {
+     *     "examType": {
+     *       "type": "CCQT",
+     *       "value": "SAT"
+     *     },
+     *     "level": "1200"
+     *   }
+     * ]
      */
     @Expose()
     @IsArray({ message: "Certifications must be an array" })

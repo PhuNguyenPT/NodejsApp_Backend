@@ -12,7 +12,7 @@ import {
     ValidateNested,
 } from "class-validator";
 
-import { AptitudeTestRequest } from "@/dto/student/aptitude.test.request.js";
+import { AptitudeTestDTO } from "@/dto/student/aptitude.test.dto.js";
 import { ExamType } from "@/type/enum/exam.js";
 import { VietnameseSubject } from "@/type/enum/subject.js"; // Import VietnameseSubject enum
 
@@ -47,9 +47,9 @@ export class ExamProfileDTO {
      *  "examType": { "type": "DGNL", "value": "VNUHCM" },"score": 700 }
      */
     @IsOptional()
-    @Type(() => AptitudeTestRequest)
+    @Type(() => AptitudeTestDTO)
     @ValidateNested()
-    public aptitudeTestScore?: AptitudeTestRequest;
+    public aptitudeTestScore?: AptitudeTestDTO;
 
     /**
      * Array of exactly 4 exam subjects
@@ -99,12 +99,12 @@ export class ExamProfileDTO {
      * @param aptitudeTestData - Optional aptitude test DTO with type and score
      * @param vsatScores - Optional array of 3 VSAT scores (0-150 each)
      * @example [new ExamSubject(VietnameseSubject.TOAN, 8.0), new ExamSubject(VietnameseSubject.VAN, 7.0), new ExamSubject(VietnameseSubject.TIENG_ANH, 9.5), new ExamSubject(VietnameseSubject.VAT_LY, 8.75)]
-     * @example new AptitudeTestRequest()
+     * @example new AptitudeTestDTO()
      * @example [new VsatExamSubject(VietnameseSubject.TOAN, 120), new VsatExamSubject(VietnameseSubject.VAN, 130), new VsatExamSubject(VietnameseSubject.TIENG_ANH, 125)]
      */
     constructor(
         subjects: ExamSubject[],
-        aptitudeTestData?: AptitudeTestRequest,
+        aptitudeTestData?: AptitudeTestDTO,
         vsatScores?: VsatExamSubject[],
     ) {
         if (subjects.length !== 4) {
@@ -138,9 +138,9 @@ export class ExamProfileDTO {
             (s) => new ExamSubject(s.name, s.score),
         );
 
-        let aptitudeDTO: AptitudeTestRequest | undefined;
+        let aptitudeDTO: AptitudeTestDTO | undefined;
         if (aptitudeTestData) {
-            aptitudeDTO = new AptitudeTestRequest();
+            aptitudeDTO = new AptitudeTestDTO();
             aptitudeDTO.examType = aptitudeTestData.examType;
             aptitudeDTO.score = aptitudeTestData.score;
         }
@@ -184,7 +184,7 @@ export class ExamProfileDTO {
      * @param score - Test score
      */
     setAptitudeTest(examType: ExamType, score: number): void {
-        const aptitudeTest = new AptitudeTestRequest();
+        const aptitudeTest = new AptitudeTestDTO();
         aptitudeTest.examType = examType;
         aptitudeTest.score = score;
         this.aptitudeTestScore = aptitudeTest;

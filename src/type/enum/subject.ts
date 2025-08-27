@@ -5,11 +5,13 @@
 export enum VietnameseSubject {
     BIEU_DIEN_NGHE_THUAT = "Biểu diễn nghệ thuật",
     DIA_LY = "Địa Lý",
-    DOC_DIEN_CAM_HAT = "Đọc diễn cảm, Hát",
+    DOC_DIEN_CAM = "Đọc kể diễn cảm",
     DOC_HIEU = "Đọc hiểu",
     GDCD = "Giáo Dục Công Dân",
     GDKTPL = "Giáo dục Kinh tế và Pháp luật",
+    HAT = "Hát",
     HAT_BIEU_DIEN_NHAC_CU = "Hát hoặc biểu diễn nhạc cụ",
+    HAT_MUA = "Hát - Múa",
     HINH_HOA = "Hình họa",
     HOA_HOC = "Hóa Học",
     KY_XUONG_AM = "Ký xướng âm",
@@ -26,6 +28,7 @@ export enum VietnameseSubject {
     NANG_KHIEU_SKDA_2 = "Năng khiếu SKĐA 2",
     NANG_KHIEU_TDTT = "Năng khiếu TDTT",
     NANG_KHIEU_VE = "Vẽ Năng khiếu",
+    NGU_VAN = "Ngữ Văn",
     SINH_HOC = "Sinh Học",
     TIENG_ANH = "Tiếng Anh",
     TIENG_DUC = "Tiếng Đức",
@@ -35,8 +38,7 @@ export enum VietnameseSubject {
     TIENG_TRUNG = "Tiếng Trung",
     TOAN = "Toán",
     TRANG_TRI = "Trang trí",
-    TU_DUY_GIAI_QUYET_VAN_DE = "Tư duy Khoa học Giải quyết vấn đề",
-    VAN = "Ngữ Văn",
+    TU_DUY_GIAI_QUYET_NGU_VAN_DE = "Tư duy Khoa học Giải quyết vấn đề",
     VAT_LY = "Vật Lý",
     VE_HINH_HOA_MY_THUAT = "Vẽ Hình họa mỹ thuật",
     VE_MY_THUAT = "Vẽ Mỹ thuật",
@@ -139,7 +141,7 @@ export const SUBJECT_GROUPS = {
     B03: [
         VietnameseSubject.TOAN,
         VietnameseSubject.SINH_HOC,
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
     ],
     B04: [
         VietnameseSubject.TOAN,
@@ -154,99 +156,99 @@ export const SUBJECT_GROUPS = {
 
     // Khối C
     C00: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.LICH_SU,
         VietnameseSubject.DIA_LY,
     ],
     C01: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.VAT_LY,
     ],
     C02: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.HOA_HOC,
     ],
     C03: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.LICH_SU,
     ],
     C04: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.DIA_LY,
     ],
     C05: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.VAT_LY,
         VietnameseSubject.HOA_HOC,
     ],
     C08: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.HOA_HOC,
         VietnameseSubject.SINH_HOC,
     ],
     C12: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.LICH_SU,
         VietnameseSubject.SINH_HOC,
     ],
     C13: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.SINH_HOC,
         VietnameseSubject.DIA_LY,
     ],
     C14: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.GDKTPL,
     ],
     C17: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.HOA_HOC,
         VietnameseSubject.GDKTPL,
     ],
     C19: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.LICH_SU,
         VietnameseSubject.GDKTPL,
     ],
     C20: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.DIA_LY,
         VietnameseSubject.GDKTPL,
     ],
 
     // Khối D
     D01: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.TIENG_ANH,
     ],
     D02: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.TIENG_NGA,
     ],
     D03: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.TIENG_PHAP,
     ],
     D04: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.TIENG_TRUNG,
     ],
     D05: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.TIENG_DUC,
     ],
     D06: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
         VietnameseSubject.TIENG_NHAT,
     ],
@@ -271,27 +273,27 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.TIENG_ANH,
     ],
     D11: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.VAT_LY,
         VietnameseSubject.TIENG_ANH,
     ],
     D12: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.HOA_HOC,
         VietnameseSubject.TIENG_ANH,
     ],
     D13: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.SINH_HOC,
         VietnameseSubject.TIENG_ANH,
     ],
     D14: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.LICH_SU,
         VietnameseSubject.TIENG_ANH,
     ],
     D15: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.DIA_LY,
         VietnameseSubject.TIENG_ANH,
     ],
@@ -376,62 +378,62 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.TIENG_TRUNG,
     ],
     D42: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.DIA_LY,
         VietnameseSubject.TIENG_NGA,
     ],
     D43: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.DIA_LY,
         VietnameseSubject.TIENG_NHAT,
     ],
     D44: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.DIA_LY,
         VietnameseSubject.TIENG_PHAP,
     ],
     D45: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.DIA_LY,
         VietnameseSubject.TIENG_TRUNG,
     ],
     D55: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.VAT_LY,
         VietnameseSubject.TIENG_TRUNG,
     ],
     D63: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.LICH_SU,
         VietnameseSubject.TIENG_NHAT,
     ],
     D64: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.LICH_SU,
         VietnameseSubject.TIENG_PHAP,
     ],
     D65: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.LICH_SU,
         VietnameseSubject.TIENG_TRUNG,
     ],
     D66: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.GDKTPL,
         VietnameseSubject.TIENG_ANH,
     ],
     D68: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.GDKTPL,
         VietnameseSubject.TIENG_NGA,
     ],
     D70: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.GDKTPL,
         VietnameseSubject.TIENG_PHAP,
     ],
     D71: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.GDKTPL,
         VietnameseSubject.TIENG_TRUNG,
     ],
@@ -444,7 +446,7 @@ export const SUBJECT_GROUPS = {
     // Khối H
     H01: [
         VietnameseSubject.TOAN,
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.VE_MY_THUAT,
     ],
     H02: [
@@ -458,7 +460,7 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.NANG_KHIEU_VE,
     ],
     H06: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TIENG_ANH,
         VietnameseSubject.VE_MY_THUAT,
     ],
@@ -468,7 +470,7 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.TRANG_TRI,
     ],
     H08: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.LICH_SU,
         VietnameseSubject.VE_MY_THUAT,
     ],
@@ -477,16 +479,17 @@ export const SUBJECT_GROUPS = {
     K00: [
         VietnameseSubject.TOAN,
         VietnameseSubject.DOC_HIEU,
-        VietnameseSubject.TU_DUY_GIAI_QUYET_VAN_DE,
+        VietnameseSubject.TU_DUY_GIAI_QUYET_NGU_VAN_DE,
     ],
     // Khối M
     M00: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
-        VietnameseSubject.DOC_DIEN_CAM_HAT,
+        VietnameseSubject.DOC_DIEN_CAM,
+        VietnameseSubject.HAT,
     ],
     M01: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.LICH_SU,
         VietnameseSubject.NANG_KHIEU,
     ],
@@ -496,15 +499,15 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.NANG_KHIEU_2,
     ],
     M03: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.NANG_KHIEU_1,
         VietnameseSubject.NANG_KHIEU_2,
     ],
     M04: [
         VietnameseSubject.TOAN,
-        VietnameseSubject.DOC_DIEN_CAM_HAT,
-        VietnameseSubject.DOC_DIEN_CAM_HAT,
-    ], // Note: Hát-Múa combined under one for simplicity, can be split
+        VietnameseSubject.DOC_DIEN_CAM,
+        VietnameseSubject.HAT_MUA,
+    ],
     M09: [
         VietnameseSubject.TOAN,
         VietnameseSubject.NANG_KHIEU_MAM_NON_1,
@@ -516,7 +519,7 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.NANG_KHIEU_1,
     ],
     M11: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.NANG_KHIEU_BAO_CHI,
         VietnameseSubject.TIENG_ANH,
     ],
@@ -527,34 +530,34 @@ export const SUBJECT_GROUPS = {
     ],
 
     M14: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.NANG_KHIEU_BAO_CHI,
         VietnameseSubject.TOAN,
     ],
     // Khối N
     N00: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.NANG_KHIEU_AM_NHAC_1,
         VietnameseSubject.NANG_KHIEU_AM_NHAC_2,
     ],
     N01: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.XUONG_AM,
         VietnameseSubject.BIEU_DIEN_NGHE_THUAT,
     ],
     N02: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.KY_XUONG_AM,
         VietnameseSubject.HAT_BIEU_DIEN_NHAC_CU,
     ],
 
     N05: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.XAY_DUNG_KICH_BAN_SU_KIEN,
         VietnameseSubject.NANG_KHIEU,
     ],
     S00: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.NANG_KHIEU_SKDA_1,
         VietnameseSubject.NANG_KHIEU_SKDA_2,
     ],
@@ -566,16 +569,16 @@ export const SUBJECT_GROUPS = {
     ],
     T01: [
         VietnameseSubject.TOAN,
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.NANG_KHIEU_TDTT,
     ],
     T02: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.SINH_HOC,
         VietnameseSubject.NANG_KHIEU_TDTT,
     ],
     T03: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.DIA_LY,
         VietnameseSubject.NANG_KHIEU_TDTT,
     ],
@@ -586,7 +589,7 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.NANG_KHIEU_TDTT,
     ],
     T05: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.GDKTPL,
         VietnameseSubject.NANG_KHIEU_TDTT,
     ],
@@ -602,7 +605,7 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.HOA_HOC,
     ],
     V05: [
-        VietnameseSubject.VAN,
+        VietnameseSubject.NGU_VAN,
         VietnameseSubject.VAT_LY,
         VietnameseSubject.VE_MY_THUAT,
     ],
@@ -631,7 +634,7 @@ export const SUBJECT_GROUPS = {
  */
 export const CORE_SUBJECTS = [
     VietnameseSubject.TOAN,
-    VietnameseSubject.VAN,
+    VietnameseSubject.NGU_VAN,
     VietnameseSubject.TIENG_ANH,
     VietnameseSubject.VAT_LY,
     VietnameseSubject.HOA_HOC,
@@ -641,6 +644,28 @@ export const CORE_SUBJECTS = [
     VietnameseSubject.GDCD,
 ] as const;
 
+/**
+ * Get all possible subject groups that can be formed from the given subjects
+ * This function finds all groups where the group's subjects are a subset of the input subjects
+ */
+export function getAllPossibleSubjectGroups(
+    subjects: VietnameseSubject[],
+): string[] {
+    const possibleGroups: string[] = [];
+
+    for (const [groupName, groupSubjects] of Object.entries(SUBJECT_GROUPS)) {
+        // Check if all subjects in the group are present in the input subjects
+        if (
+            (groupSubjects as readonly VietnameseSubject[]).every(
+                (groupSubject) => subjects.includes(groupSubject),
+            )
+        ) {
+            possibleGroups.push(groupName);
+        }
+    }
+
+    return possibleGroups;
+}
 /**
  * Get subject group that contains the given subjects
  */
@@ -658,7 +683,6 @@ export function getSubjectGroup(
     }
     return undefined;
 }
-
 /**
  * Get all possible variations for a subject
  */
