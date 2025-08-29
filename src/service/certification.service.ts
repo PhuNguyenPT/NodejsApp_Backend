@@ -4,8 +4,7 @@ import { Repository } from "typeorm";
 import { CertificationRequest } from "@/dto/student/certification.request.js";
 import { CEFR, CertificationEntity } from "@/entity/certification.js";
 import { TYPES } from "@/type/container/types.js";
-import { CCNNType, ExamType } from "@/type/enum/exam.js";
-import { ValidationException } from "@/type/exception/validation.exception.js";
+import { CCNNType, ExamType, handleExamValidation } from "@/type/enum/exam.js";
 
 @injectable()
 export class CertificationService {
@@ -19,6 +18,11 @@ export class CertificationService {
     ): CertificationEntity[] {
         const certificationEntities: CertificationEntity[] = certifications.map(
             (certification) => {
+                handleExamValidation(
+                    certification.examType,
+                    certification.level,
+                );
+
                 const certificationEntity =
                     this.certificationRepository.create(certification);
                 certificationEntity.cefr = this.getCEFRLevel(
@@ -30,6 +34,7 @@ export class CertificationService {
         );
         return certificationEntities;
     }
+
     /**
      * Get CEFR level based on exam type and level
      * @param examType - The type of the exam
@@ -37,140 +42,125 @@ export class CertificationService {
      * @returns CEFR level or undefined if not applicable
      */
     public getCEFRLevel(examType: ExamType, level: string): CEFR | undefined {
+        // For CCNN exams, level must be a number. For others, it might not apply.
+        if (examType.type !== "CCNN") {
+            return undefined;
+        }
+
         const numberLevel = parseFloat(level);
         if (isNaN(numberLevel)) {
-            throw new ValidationException({
-                level: `Invalid level format: ${level}`,
-            });
-        }
-        // First check if it's a CCNN type exam
-        if (examType.type === "CCNN") {
-            switch (examType.value) {
-                case CCNNType.IELTS:
-                    return this.get_IELTS_CEFR_level(numberLevel);
-                case CCNNType.TOEFL_CBT:
-                    return this.get_TOEFL_CBT_level(numberLevel);
-                case CCNNType.TOEFL_iBT:
-                    return this.get_TOEFL_iBT_level(numberLevel);
-                case CCNNType.TOEFL_Paper:
-                    return this.get_TOEFL_Paper_level(numberLevel);
-                case CCNNType.TOEIC:
-                    return this.get_TOEIC_level(numberLevel);
-                default:
-                    return undefined; // Unsupported CCNN type
-            }
-        } else {
+            // If level is not a number for a CCNN exam, it's invalid for CEFR mapping.
             return undefined;
+        }
+
+        switch (examType.value) {
+            case CCNNType.IELTS:
+                return this.get_IELTS_CEFR_level(numberLevel);
+            case CCNNType.TOEFL_CBT:
+                return this.get_TOEFL_CBT_level(numberLevel);
+            case CCNNType.TOEFL_iBT:
+                return this.get_TOEFL_iBT_level(numberLevel);
+            case CCNNType.TOEFL_Paper:
+                return this.get_TOEFL_Paper_level(numberLevel);
+            case CCNNType.TOEIC:
+                return this.get_TOEIC_level(numberLevel);
+            default:
+                return undefined; // Unsupported CCNN type for CEFR mapping
         }
     }
 
     private get_IELTS_CEFR_level(level: number): CEFR | undefined {
         if (level < 1.0 || level > 9.0) {
             return undefined;
-        } else if (1.0 <= level && level < 3.5) {
+        } else if (level < 3.5) {
             return CEFR.A1;
-        } else if (3.5 <= level && level < 4.0) {
+        } else if (level < 4.0) {
             return CEFR.A2;
-        } else if (4.0 <= level && level <= 5.0) {
+        } else if (level <= 5.0) {
             return CEFR.B1;
-        } else if (5.5 <= level && level <= 6.5) {
+        } else if (level <= 6.5) {
             return CEFR.B2;
-        } else if (7.0 <= level && level <= 8.0) {
+        } else if (level <= 8.0) {
             return CEFR.C1;
-        } else if (8.0 < level && level <= 9.0) {
+        } else if (level <= 9.0) {
             return CEFR.C2;
-        } else {
-            throw new ValidationException({
-                level: `Invalid IELTS level: ${level.toString()}`,
-            });
         }
+        return undefined;
     }
 
     private get_TOEFL_CBT_level(level: number): CEFR | undefined {
-        if (level < 33 || level > 677) {
+        if (level < 33 || level > 300) {
             return undefined;
-        } else if (33 <= level && level <= 60) {
+        } else if (level <= 60) {
             return CEFR.A1;
-        } else if (63 <= level && level <= 90) {
+        } else if (level <= 90) {
             return CEFR.A2;
-        } else if (93 <= level && level <= 150) {
+        } else if (level <= 150) {
             return CEFR.B1;
-        } else if (153 <= level && level <= 210) {
+        } else if (level <= 210) {
             return CEFR.B2;
-        } else if (213 <= level && level <= 240) {
+        } else if (level <= 240) {
             return CEFR.C1;
-        } else if (243 <= level && level <= 300) {
+        } else if (level <= 300) {
             return CEFR.C2;
-        } else {
-            throw new ValidationException({
-                level: `Invalid TOEFL CBT level: ${level.toString()}`,
-            });
         }
+        return undefined;
     }
 
     private get_TOEFL_iBT_level(level: number): CEFR | undefined {
         if (level < 0 || level > 120) {
             return undefined;
-        } else if (0 <= level && level < 7) {
+        } else if (level < 7) {
             return CEFR.A1;
-        } else if (7 <= level && level < 14) {
+        } else if (level < 14) {
             return CEFR.A2;
-        } else if (14 <= level && level < 50) {
+        } else if (level < 50) {
             return CEFR.B1;
-        } else if (51 <= level && level < 90) {
+        } else if (level < 90) {
             return CEFR.B2;
-        } else if (91 <= level && level < 114) {
+        } else if (level < 114) {
             return CEFR.C1;
-        } else if (115 <= level && level <= 120) {
+        } else if (level <= 120) {
             return CEFR.C2;
-        } else {
-            throw new ValidationException({
-                level: `Invalid TOEFL iBT level: ${level.toString()}`,
-            });
         }
+        return undefined;
     }
 
     private get_TOEFL_Paper_level(level: number): CEFR | undefined {
         if (level < 310 || level > 677) {
             return undefined;
-        } else if (310 <= level && level < 347) {
+        } else if (level < 347) {
             return CEFR.A1;
-        } else if (347 <= level && level < 397) {
+        } else if (level < 397) {
             return CEFR.A2;
-        } else if (397 <= level && level < 477) {
+        } else if (level < 477) {
             return CEFR.B1;
-        } else if (477 <= level && level < 507) {
+        } else if (level < 507) {
             return CEFR.B2;
-        } else if (507 <= level && level < 560) {
+        } else if (level < 560) {
             return CEFR.C1;
-        } else if (560 <= level && level <= 677) {
+        } else if (level <= 677) {
             return CEFR.C2;
-        } else {
-            throw new ValidationException({
-                level: `Invalid TOEFL Paper level: ${level.toString()}`,
-            });
         }
+        return undefined;
     }
 
     private get_TOEIC_level(level: number): CEFR | undefined {
         if (level < 60 || level > 990) {
             return undefined;
-        } else if (60 <= level && level < 225) {
+        } else if (level < 225) {
             return CEFR.A1;
-        } else if (225 <= level && level < 550) {
+        } else if (level < 550) {
             return CEFR.A2;
-        } else if (550 <= level && level < 785) {
+        } else if (level < 785) {
             return CEFR.B1;
-        } else if (785 <= level && level < 945) {
+        } else if (level < 945) {
             return CEFR.B2;
-        } else if (945 <= level && level <= 980) {
+        } else if (level <= 980) {
             return CEFR.C1;
-        } else if (980 < level && level <= 990) {
+        } else if (level <= 990) {
             return CEFR.C2;
-        } else {
-            throw new ValidationException({
-                level: `Invalid TOEIC level: ${level.toString()}`,
-            });
         }
+        return undefined;
     }
 }

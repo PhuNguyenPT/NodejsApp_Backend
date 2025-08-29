@@ -9,6 +9,7 @@ import { AwardService } from "@/service/award.service.js";
 import { CertificationService } from "@/service/certification.service.js";
 import { MajorService } from "@/service/major.service.js";
 import { TYPES } from "@/type/container/types.js";
+import { handleExamValidation } from "@/type/enum/exam.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -43,6 +44,8 @@ export class StudentService {
     public async createStudentEntity(
         studentRequest: StudentRequest,
     ): Promise<StudentEntity> {
+        this.handleAptitudeTestScoreValidation(studentRequest);
+
         if (studentRequest.minBudget > studentRequest.maxBudget) {
             throw new ValidationException({
                 "budget.minBudget":
@@ -82,7 +85,6 @@ export class StudentService {
         );
         return savedStudent;
     }
-
     /**
      * Creates a student profile linked to an authenticated user.
      * Uses TypeORM cascades to save the student and their related awards/certifications in a single operation.
@@ -96,6 +98,8 @@ export class StudentService {
         studentRequest: StudentRequest,
         userId: string,
     ): Promise<StudentEntity> {
+        this.handleAptitudeTestScoreValidation(studentRequest);
+
         if (studentRequest.minBudget > studentRequest.maxBudget) {
             throw new ValidationException({
                 "budget.minBudget":
@@ -329,5 +333,24 @@ export class StudentService {
             );
         }
         return student;
+    }
+
+    /**
+     * Handles the validation of the aptitude test score for a student request.
+     * Delegates to the shared `handleExamValidation` function for core logic.
+     * @param studentRequest - The DTO containing the student's information, including aptitudeTestScore.
+     * @throws ValidationException if the aptitude test score is invalid.
+     */
+    private handleAptitudeTestScoreValidation(
+        studentRequest: StudentRequest,
+    ): void {
+        if (!studentRequest.aptitudeTestScore) return;
+
+        // Use the common handleExamValidation function with a prefix for the error key
+        handleExamValidation(
+            studentRequest.aptitudeTestScore.examType,
+            studentRequest.aptitudeTestScore.score.toString(),
+            "aptitudeTestScore", // This prefix will result in error keys like 'aptitudeTestScore.level'
+        );
     }
 }

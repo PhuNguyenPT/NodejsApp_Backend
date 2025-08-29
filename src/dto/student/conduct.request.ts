@@ -21,7 +21,7 @@ import { Conduct } from "@/type/enum/conduct.js";
  * }
  * @example
  * {
- *   "conduct": "Trung bình",
+ *   "conduct": "Đạt",
  *   "grade": 12
  * }
  */

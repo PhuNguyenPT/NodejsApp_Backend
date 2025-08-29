@@ -6,6 +6,7 @@ import { AcademicPerformanceResponse } from "@/dto/student/academic.performance.
 import { AptitudeTestResponse } from "@/dto/student/aptitude.test.response.js";
 import { AwardResponse } from "@/dto/student/award.response.js";
 import { CertificationResponse } from "@/dto/student/certification.response.js";
+import { ConductResponse } from "@/dto/student/conduct.response.js";
 import {
     ExamSubject,
     VsatExamSubject,
@@ -75,6 +76,33 @@ export class StudentProfileResponse {
     @Expose()
     @Type(() => CertificationResponse)
     certifications?: CertificationResponse[];
+
+    /**
+     * Student conduct/behavior assessment
+     * Array of conduct ratings that can include multiple evaluations for different grades/years.
+     * Each entry contains a conduct rating and the corresponding grade level.
+     *
+     * @type {ConductResponse[]}
+     * @optional
+     * @see ConductResponse for detailed structure
+     * @example [
+     *   {
+     *     "conduct": "Tốt",
+     *     "grade": 10
+     *   },
+     *   {
+     *     "conduct": "Khá",
+     *     "grade": 11
+     *   },
+     *   {
+     *     "conduct": "Đạt",
+     *     "grade": 12
+     *   }
+     * ]
+     */
+    @Expose()
+    @Type(() => ConductResponse)
+    conducts?: ConductResponse[];
 
     @Expose()
     @Type(() => FileResponse)

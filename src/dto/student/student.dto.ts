@@ -17,6 +17,7 @@ import { AcademicPerformanceDTO } from "@/dto/student/academic.performance.dto.j
 import { AptitudeTestDTO } from "@/dto/student/aptitude.test.dto.js";
 import { AwardDTO } from "@/dto/student/award.dto.js";
 import { CertificationDTO } from "@/dto/student/certification.dto.js";
+import { ConductDTO } from "@/dto/student/conduct.dto.js";
 import {
     ExamSubject,
     VsatExamSubject,
@@ -106,6 +107,48 @@ export class StudentInfoDTO {
     @Type(() => CertificationDTO)
     @ValidateNested({ each: true })
     certifications?: CertificationDTO[];
+
+    /**
+     * Student conduct/behavior assessment
+     * Array of conduct ratings that can include multiple evaluations for different grades/years.
+     * Each entry contains a conduct rating and the corresponding grade level.
+     * Valid conduct values are defined in the Conduct enum.
+     *
+     * @type {ConductDTO[]}
+     * @required
+     * @see ConductDTO for detailed structure and validation rules
+     * @example [
+     *   {
+     *     "conduct": "Tốt",
+     *     "grade": 10
+     *   },
+     *   {
+     *     "conduct": "Khá",
+     *     "grade": 11
+     *   },
+     *   {
+     *     "conduct": "Chưa Đạt",
+     *     "grade": 12
+     *   }
+     * ]
+     * @validation
+     * - Required field (cannot be null or undefined)
+     * - Must be an array of ConductDTO objects
+     * - Each ConductDTO must have valid conduct enum value and grade (1-12)
+     * - Array cannot be empty
+     */
+    @ArrayMaxSize(3, {
+        message: "Conduct must contain exactly 3 records",
+    })
+    @ArrayMinSize(3, {
+        message: "Conduct must contain exactly 3 records",
+    })
+    @Expose()
+    @IsArray({ message: "Conduct must be an array" })
+    @IsNotEmpty({ message: "Conduct is required" })
+    @Type(() => ConductDTO)
+    @ValidateNested({ each: true })
+    conducts!: ConductDTO[];
 
     // /**
     //  * Geographic location or preferred study location of the student.

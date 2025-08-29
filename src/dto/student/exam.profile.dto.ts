@@ -46,6 +46,7 @@ export class ExamProfileDTO {
      * {
      *  "examType": { "type": "DGNL", "value": "VNUHCM" },"score": 700 }
      */
+    @Expose()
     @IsOptional()
     @Type(() => AptitudeTestDTO)
     @ValidateNested()
@@ -57,6 +58,7 @@ export class ExamProfileDTO {
      */
     @ArrayMaxSize(4)
     @ArrayMinSize(4)
+    @Expose()
     @IsArray()
     @Type(() => ExamSubject)
     @ValidateNested({ each: true })
@@ -68,6 +70,7 @@ export class ExamProfileDTO {
      */
     @ArrayMaxSize(3)
     @ArrayMinSize(3)
+    @Expose()
     @IsArray()
     @IsOptional()
     @Max(150, { each: true })
