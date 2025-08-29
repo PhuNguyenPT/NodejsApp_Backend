@@ -7,8 +7,8 @@ import {
 import { Exam, validateExamTypeScore } from "@/type/enum/exam.js";
 
 /**
- * Custom validator constraint for AptitudeTestRequest score.
- * It uses the shared `validateExamTypeScore` logic to ensure the score
+ * Custom validator constraint for Exam level.
+ * It uses the shared `validateExamTypeScore` logic to ensure the level
  * is valid for the specified exam type and falls within its expected range.
  */
 @ValidatorConstraint({ async: false, name: "isValidExamLevel" })
@@ -24,9 +24,9 @@ export class IsValidExamLevelConstraint
     defaultMessage(args: ValidationArguments): string {
         const aptitudeTestRequest = args.object as Exam;
         const examType = aptitudeTestRequest.examType;
-        const score = aptitudeTestRequest.level;
+        const level = aptitudeTestRequest.level;
 
-        const errors = validateExamTypeScore(examType, score);
+        const errors = validateExamTypeScore(examType, level);
 
         return (
             errors.level ??
@@ -36,15 +36,15 @@ export class IsValidExamLevelConstraint
 
     /**
      * Validates if the provided score is valid for the associated examType.
-     * @param score - The score value being validated (can be number or string for A-Level).
-     * @param args - Validation arguments, including the object being validated (AptitudeTestRequest).
-     * @returns True if the score is valid, false otherwise.
+     * @param level - The level value being validated.
+     * @param args - Validation arguments, including the object being validated
+     * @returns True if the level is valid, false otherwise.
      */
-    validate(score: string, args: ValidationArguments): boolean {
+    validate(level: string, args: ValidationArguments): boolean {
         const aptitudeTestRequest = args.object as Exam;
         const examType = aptitudeTestRequest.examType;
 
-        const errors = validateExamTypeScore(examType, score);
+        const errors = validateExamTypeScore(examType, level);
 
         return Object.keys(errors).length === 0 || errors.level === undefined;
     }
