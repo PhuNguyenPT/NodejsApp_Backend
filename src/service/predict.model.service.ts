@@ -12,6 +12,7 @@ import {
 } from "@/dto/predict/predict.js";
 import { AcademicPerformanceDTO } from "@/dto/student/academic.performance.dto.js";
 import { CertificationDTO } from "@/dto/student/certification.dto.js";
+import { ConductDTO } from "@/dto/student/conduct.dto.js";
 import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { OcrResultEntity, OcrStatus } from "@/entity/ocr.result.entity.js";
 import { StudentEntity } from "@/entity/student.js";
@@ -20,6 +21,7 @@ import {
     AcademicPerformance,
     getRankByAcademicPerformance,
 } from "@/type/enum/academic.performance.js";
+import { Conduct, getRankByConduct } from "@/type/enum/conduct.js";
 import { CCNNType, CCQTType, DGNLType } from "@/type/enum/exam.js";
 import { getCodeByVietnameseName } from "@/type/enum/major.js";
 import {
@@ -405,9 +407,15 @@ export class PredictModelService {
     > {
         return {
             cong_lap: 1,
-            hk10: 1,
-            hk11: 1,
-            hk12: 1,
+            hk10: getRankByConduct(
+                this.findAndValidateConduct(studentInfoDTO.conducts, 10),
+            ),
+            hk11: getRankByConduct(
+                this.findAndValidateConduct(studentInfoDTO.conducts, 11),
+            ),
+            hk12: getRankByConduct(
+                this.findAndValidateConduct(studentInfoDTO.conducts, 12),
+            ),
             hl10: getRankByAcademicPerformance(
                 this.findAndValidatePerformance(
                     studentInfoDTO.academicPerformances,
@@ -534,6 +542,19 @@ export class PredictModelService {
     // =================================================================
     // PRIVATE HELPER METHODS: UTILITIES & API COMMUNICATION
     // =================================================================
+
+    private findAndValidateConduct(
+        conducts: ConductDTO[],
+        grade: number,
+    ): Conduct {
+        const conduct = conducts.find((c) => c.grade === grade)?.conduct;
+        if (!conduct) {
+            throw new IllegalArgumentException(
+                `Academic performance for grade ${grade.toString()} is missing.`,
+            );
+        }
+        return conduct;
+    }
 
     private findAndValidatePerformance(
         performances: AcademicPerformanceDTO[],
@@ -703,17 +724,30 @@ export class PredictModelService {
 
             if (axios.isAxiosError(error)) {
                 const axiosError = error as AxiosError;
-                const status = axiosError.response?.status ?? "unknown";
-                const message = axiosError.message;
+                const status = axiosError.response?.status;
+                let detailedMessage = axiosError.message;
+
+                if (
+                    status === 422 &&
+                    this.isValidationError(axiosError.response?.data)
+                ) {
+                    const validationError = axiosError.response.data;
+
+                    const specificErrors = validationError.detail
+                        .map((err) => `${err.loc.join(".")} - ${err.msg}`)
+                        .join("; ");
+
+                    detailedMessage = `API Validation Error: ${specificErrors}`;
+                }
 
                 this.logger.error("API error", {
-                    message,
-                    status,
+                    message: detailedMessage,
+                    status: status ?? "unknown",
                     ...errorContext,
                 });
 
                 throw new Error(
-                    `API error (${String(status)}): ${message} for ${userInput.to_hop_mon}`,
+                    `API error (${String(status)}): ${detailedMessage} for ${userInput.to_hop_mon}`,
                 );
             }
 
