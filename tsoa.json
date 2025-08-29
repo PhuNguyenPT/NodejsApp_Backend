@@ -19,7 +19,8 @@
       "@/repository/*": ["repository/*"],
       "@/service/*": ["service/*"],
       "@/type/*": ["type/*"],
-      "@/util/*": ["util/*"]
+      "@/util/*": ["util/*"],
+      "@/validator/*": ["validator/*"]
     }
   },
   "spec": {

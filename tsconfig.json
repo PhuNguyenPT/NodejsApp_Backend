@@ -35,7 +35,8 @@
       "@/service/*": ["service/*"],
       "@/token/*": ["token/*"],
       "@/type/*": ["type/*"],
-      "@/util/*": ["util/*"]
+      "@/util/*": ["util/*"],
+      "@/validator/*": ["validator/*"]
     },
     "incremental": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo",

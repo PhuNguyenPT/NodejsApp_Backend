@@ -1,8 +1,8 @@
 import { Expose } from "class-transformer";
 import { IsNotEmpty, Validate } from "class-validator";
 
-import { IsValidExamScoreConstraint } from "@/decorator/is.valid.aptitude.test.score.decorator.js";
 import { ExamType } from "@/type/enum/exam.js";
+import { IsValidAptitudeTestScoreConstraint } from "@/validator/is.valid.aptitude.test.score.decorator.js";
 
 /**
  * DTO for aptitude test information containing both type and score
@@ -15,6 +15,7 @@ import { ExamType } from "@/type/enum/exam.js";
  *   "score": 700
  * }
  */
+
 export class AptitudeTestRequest {
     /**
      * Type of exam/aptitude test
@@ -30,6 +31,6 @@ export class AptitudeTestRequest {
      */
     @Expose()
     @IsNotEmpty({ message: "Aptitude test score is required" })
-    @Validate(IsValidExamScoreConstraint)
+    @Validate(IsValidAptitudeTestScoreConstraint)
     score!: number;
 }

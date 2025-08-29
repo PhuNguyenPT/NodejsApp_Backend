@@ -4,8 +4,8 @@ import {
     ValidatorConstraintInterface,
 } from "class-validator";
 
-import { AptitudeTestRequest } from "../dto/student/aptitude.test.request.js"; // Adjust path as needed
-import { validateExamTypeScore } from "../type/enum/exam.js"; // Adjust path as needed
+import { AptitudeTestRequest } from "@/dto/student/aptitude.test.request.js";
+import { validateExamTypeScore } from "@/type/enum/exam.js";
 
 /**
  * Custom validator constraint for AptitudeTestRequest score.
@@ -13,7 +13,7 @@ import { validateExamTypeScore } from "../type/enum/exam.js"; // Adjust path as 
  * is valid for the specified exam type and falls within its expected range.
  */
 @ValidatorConstraint({ async: false, name: "isValidAptitudeTestScore" })
-export class IsValidExamScoreConstraint
+export class IsValidAptitudeTestScoreConstraint
     implements ValidatorConstraintInterface
 {
     /**
@@ -27,10 +27,8 @@ export class IsValidExamScoreConstraint
         const examType = aptitudeTestRequest.examType;
         const score = aptitudeTestRequest.score;
 
-        // examType is guaranteed to be present by @IsNotEmpty on AptitudeTestRequest.examType
         const errors = validateExamTypeScore(examType, score.toString());
 
-        // Return the specific error message, or a generic one if not found
         return (
             errors.level ??
             `The provided score for ${examType.value} is invalid.`
@@ -47,14 +45,8 @@ export class IsValidExamScoreConstraint
         const aptitudeTestRequest = args.object as AptitudeTestRequest;
         const examType = aptitudeTestRequest.examType;
 
-        // `examType` and `score` are guaranteed to be present due to `@IsNotEmpty`
-        // decorators on the `AptitudeTestRequest` properties.
-
-        // Use the shared validation logic to get detailed errors
         const errors = validateExamTypeScore(examType, score.toString());
 
-        // The score is valid if `validateExamTypeScore` returns an empty errors object
-        // or specifically if the 'level' error is undefined.
         return Object.keys(errors).length === 0 || errors.level === undefined;
     }
 }

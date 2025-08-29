@@ -1,7 +1,14 @@
 import { Expose } from "class-transformer";
-import { IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
+import {
+    IsNotEmpty,
+    IsString,
+    MaxLength,
+    MinLength,
+    Validate,
+} from "class-validator";
 
 import { ExamType } from "@/type/enum/exam.js";
+import { IsValidExamLevelConstraint } from "@/validator/is.valid.exam.level.validator.js";
 
 /**
  * Data Transfer Object for Certification information
@@ -82,6 +89,7 @@ export class CertificationRequest {
     @IsString({ message: "Level must be a string" })
     @MaxLength(50, { message: "Level cannot exceed 50 characters" })
     @MinLength(1, { message: "Level must be at least 1 character long" })
+    @Validate(IsValidExamLevelConstraint)
     level!: string;
 
     // @Expose()

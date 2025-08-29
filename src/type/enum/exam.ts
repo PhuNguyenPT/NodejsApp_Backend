@@ -27,11 +27,15 @@ export enum DGNLType {
     VNUHCM = "VNUHCM",
 }
 
+export interface Exam {
+    examType: ExamType;
+    level: string;
+}
+
 export type ExamType =
     | { type: "CCNN"; value: CCNNType }
     | { type: "CCQT"; value: CCQTType }
     | { type: "DGNL"; value: DGNLType };
-
 /**
  * Handles the validation of a single exam score/level and throws ValidationException if errors exist.
  * @param examType - The type of the exam.
