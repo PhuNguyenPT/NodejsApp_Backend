@@ -102,8 +102,7 @@ export class StudentService {
 
         if (studentRequest.minBudget > studentRequest.maxBudget) {
             throw new ValidationException({
-                "budget.minBudget":
-                    "Min budget cannot be greater than max budget",
+                minBudget: "Min budget cannot be greater than max budget",
             });
         }
         if (!userId) {
