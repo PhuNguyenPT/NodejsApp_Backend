@@ -708,11 +708,18 @@ export class PredictModelService {
 
             const validatedResults = await this.validateResponse(response.data);
 
-            this.logger.info("Prediction completed", {
-                count: validatedResults.length,
-                major: userInput.nhom_nganh,
-                subjectGroup: userInput.to_hop_mon,
-            });
+            if (validatedResults.length === 0) {
+                this.logger.info("No valid predictions found", {
+                    major: userInput.nhom_nganh,
+                    subjectGroup: userInput.to_hop_mon,
+                });
+            } else {
+                this.logger.info("Prediction completed", {
+                    count: validatedResults.length,
+                    major: userInput.nhom_nganh,
+                    subjectGroup: userInput.to_hop_mon,
+                });
+            }
 
             return validatedResults;
         } catch (error) {
@@ -769,6 +776,12 @@ export class PredictModelService {
             throw new Error("Invalid response format");
         }
 
+        // Handle empty array case - this is valid when no predictions are found
+        if (data.length === 0) {
+            this.logger.info("No predictions found for this input");
+            return [];
+        }
+
         const results: L2PredictResult[] = [];
 
         for (const item of data) {
@@ -777,13 +790,20 @@ export class PredictModelService {
 
             if (errors.length === 0) {
                 results.push(instance);
+            } else {
+                // Log validation errors for debugging
+                this.logger.warn("Invalid prediction result received", {
+                    errors: errors.map((err) => ({
+                        constraints: err.constraints,
+                        property: err.property,
+                    })),
+                    item,
+                });
             }
         }
 
-        if (results.length === 0) {
-            throw new Error("No valid predictions received");
-        }
-
+        // Return results even if empty after validation
+        // This allows the calling code to handle empty results appropriately
         return results;
     }
 }
