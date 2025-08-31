@@ -54,7 +54,6 @@ export interface ExamSubjectData {
 @Index("idx_student_budget", ["minBudget", "maxBudget"])
 @Index("idx_student_created_at", ["createdAt"])
 @Index("idx_student_modified_at", ["modifiedAt"])
-@Index("idx_student_talent_score", ["talentScore"])
 export class StudentEntity {
     /**
      * Academic performance data for different grades
@@ -148,11 +147,10 @@ export class StudentEntity {
     modifiedBy?: string;
 
     @Column({ nullable: true, type: "jsonb" })
-    nationalExam?: ExamSubjectData[];
+    nationalExams?: ExamSubjectData[];
 
     @Column({
         enum: VietnamSouthernProvinces,
-        length: 50,
         nullable: true,
         type: "varchar",
     })
@@ -160,7 +158,6 @@ export class StudentEntity {
 
     @Column({
         enum: SpecialStudentCase,
-        length: 255,
         nullable: true,
         type: "varchar",
     })
@@ -169,8 +166,8 @@ export class StudentEntity {
     /**
      * Talent score (0-10 scale with up to 2 decimal places)
      */
-    @Column({ nullable: true, precision: 4, scale: 2, type: "decimal" })
-    talentScore?: number;
+    @Column({ nullable: true, type: "jsonb" })
+    talentScores?: ExamSubjectData[];
 
     @JoinColumn({ name: "userId" })
     @ManyToOne("UserEntity", "studentEntities", {
@@ -303,10 +300,10 @@ export class StudentEntity {
     }
 
     getExamProfileDTO(): ExamProfileDTO | null {
-        if (!this.nationalExam) return null;
+        if (!this.nationalExams) return null;
 
         return ExamProfileDTO.fromStudentEntity(
-            this.nationalExam,
+            this.nationalExams,
             this.aptitudeTestScore,
             this.vsatScore,
         );
@@ -397,9 +394,9 @@ export class StudentEntity {
 
     // Updated to use VietnameseSubject for subjectName parameter
     getSubjectScore(subjectName: VietnameseSubject): null | number {
-        if (!this.nationalExam) return null;
+        if (!this.nationalExams) return null;
 
-        const subject = this.nationalExam.find((s) => s.name === subjectName);
+        const subject = this.nationalExams.find((s) => s.name === subjectName);
         return subject?.score ?? null;
     }
 
@@ -412,8 +409,8 @@ export class StudentEntity {
     }
 
     getTotalNationalExamScore(): number {
-        if (!this.nationalExam) return 0;
-        return this.nationalExam.reduce(
+        if (!this.nationalExams) return 0;
+        return this.nationalExams.reduce(
             (sum, subject) => sum + subject.score,
             0,
         );
@@ -478,7 +475,7 @@ export class StudentEntity {
 
     hasValidNationalExamData(): boolean {
         return (
-            this.nationalExam !== undefined && this.nationalExam.length === 4
+            this.nationalExams !== undefined && this.nationalExams.length === 4
         );
     }
 
@@ -567,7 +564,7 @@ export class StudentEntity {
 
     setExamProfileDTO(examProfile: ExamProfileDTO): void {
         const data = examProfile.toStudentEntityData();
-        this.nationalExam = data.nationalExam;
+        this.nationalExams = data.nationalExams;
         this.aptitudeTestScore = data.aptitudeTestScore;
         this.vsatScore = data.vsatScore;
     }

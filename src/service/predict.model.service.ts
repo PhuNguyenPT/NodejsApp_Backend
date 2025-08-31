@@ -362,7 +362,7 @@ export class PredictModelService {
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
         const vietnameseSubjects: VietnameseSubject[] =
-            studentInfoDTO.nationalExam.map((exam) => exam.name);
+            studentInfoDTO.nationalExams.map((exam) => exam.name);
         const possibleSubjectGroups: string[] =
             getAllPossibleSubjectGroups(vietnameseSubjects);
 

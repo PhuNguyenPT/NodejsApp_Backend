@@ -5,8 +5,8 @@
 export enum VietnameseSubject {
     BIEU_DIEN_NGHE_THUAT = "Biểu diễn nghệ thuật",
     DIA_LY = "Địa Lý",
-    DOC_DIEN_CAM = "Đọc kể diễn cảm",
     DOC_HIEU = "Đọc hiểu",
+    DOC_KE_DIEN_CAM = "Đọc kể diễn cảm",
     GDCD = "Giáo Dục Công Dân",
     GDKTPL = "Giáo dục Kinh tế và Pháp luật",
     HAT = "Hát",
@@ -485,7 +485,7 @@ export const SUBJECT_GROUPS = {
     M00: [
         VietnameseSubject.NGU_VAN,
         VietnameseSubject.TOAN,
-        VietnameseSubject.DOC_DIEN_CAM,
+        VietnameseSubject.DOC_KE_DIEN_CAM,
         VietnameseSubject.HAT,
     ],
     M01: [
@@ -505,7 +505,7 @@ export const SUBJECT_GROUPS = {
     ],
     M04: [
         VietnameseSubject.TOAN,
-        VietnameseSubject.DOC_DIEN_CAM,
+        VietnameseSubject.DOC_KE_DIEN_CAM,
         VietnameseSubject.HAT_MUA,
     ],
     M09: [

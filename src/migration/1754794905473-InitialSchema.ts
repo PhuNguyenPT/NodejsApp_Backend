@@ -26,28 +26,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "idx_ocr_student_id" ON "ocr_results" ("studentId") `,
         );
         await queryRunner.query(
-            `CREATE TABLE "majors" ("code" character varying(255) NOT NULL, "group_id" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(255) NOT NULL, CONSTRAINT "UQ_8b287db61b00b45e58c854f19da" UNIQUE ("code"), CONSTRAINT "PK_9d82cf80fe0593040e50ccb297e" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
-            `CREATE TABLE "awards" ("awardDate" date, "awardId" character varying(100), "awardingOrganization" character varying(200), "category" character varying(100), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "description" text, "examType" jsonb, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "level" character varying(50), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(200), "studentId" uuid NOT NULL, CONSTRAINT "PK_bc3f6adc548ff46c76c03e06377" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_award_modified_at" ON "awards" ("modifiedAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_award_created_at" ON "awards" ("createdAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_award_level" ON "awards" ("level") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_award_category" ON "awards" ("category") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_award_date" ON "awards" ("awardDate") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_award_student_id" ON "awards" ("studentId") `,
+            `CREATE TABLE "majors" ("code" character varying(255) NOT NULL, "group_id" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, CONSTRAINT "UQ_8b287db61b00b45e58c854f19da" UNIQUE ("code"), CONSTRAINT "PK_9d82cf80fe0593040e50ccb297e" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE TYPE "public"."certifications_cefr_enum" AS ENUM('A1', 'A2', 'B1', 'B2', 'C1', 'C2')`,
@@ -78,6 +57,27 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE INDEX "idx_certification_student_id" ON "certifications" ("studentId") `,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "awards" ("awardDate" date, "awardId" character varying(100), "awardingOrganization" character varying(200), "category" character varying(100), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "description" text, "examType" jsonb, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "level" character varying(50), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(200), "studentId" uuid NOT NULL, CONSTRAINT "PK_bc3f6adc548ff46c76c03e06377" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_award_modified_at" ON "awards" ("modifiedAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_award_created_at" ON "awards" ("createdAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_award_level" ON "awards" ("level") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_award_category" ON "awards" ("category") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_award_date" ON "awards" ("awardDate") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_award_student_id" ON "awards" ("studentId") `,
         );
         await queryRunner.query(
             `CREATE TYPE "public"."users_role_enum" AS ENUM('ADMIN', 'ANONYMOUS', 'MODERATOR', 'USER')`,
@@ -146,10 +146,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE TABLE "major_groups" ("code" character varying(255) NOT NULL, "english_name" character varying(255) NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" "public"."major_groups_name_enum" NOT NULL, CONSTRAINT "UQ_aed9ebe4ce2616b293ff84997a3" UNIQUE ("code"), CONSTRAINT "PK_81b0cba483bec614241a6d20369" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
-            `CREATE TABLE "students" ("academicPerformances" jsonb, "aptitudeTestScore" jsonb, "conducts" jsonb, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "location" character varying(500), "majors" jsonb, "maxBudget" numeric(14,2), "minBudget" numeric(14,2), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "nationalExam" jsonb, "province" character varying(50), "specialStudentCase" character varying(255), "talentScore" numeric(4,2), "userId" uuid, "vsatScore" jsonb, CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_student_talent_score" ON "students" ("talentScore") `,
+            `CREATE TABLE "students" ("academicPerformances" jsonb, "aptitudeTestScore" jsonb, "conducts" jsonb, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "location" character varying(500), "majors" jsonb, "maxBudget" numeric(14,2), "minBudget" numeric(14,2), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "nationalExams" jsonb, "province" character varying, "specialStudentCase" character varying, "talentScores" jsonb, "userId" uuid, "vsatScore" jsonb, CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_student_modified_at" ON "students" ("modifiedAt") `,
@@ -188,10 +185,10 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "majors" ADD CONSTRAINT "FK_10c322c60cd25c2c170a3302033" FOREIGN KEY ("group_id") REFERENCES "major_groups"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
-            `ALTER TABLE "awards" ADD CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+            `ALTER TABLE "certifications" ADD CONSTRAINT "FK_94ecc704512cfe5019d2577a994" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
-            `ALTER TABLE "certifications" ADD CONSTRAINT "FK_94ecc704512cfe5019d2577a994" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+            `ALTER TABLE "awards" ADD CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
             `ALTER TABLE "files" ADD CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
@@ -227,10 +224,10 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "files" DROP CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212"`,
         );
         await queryRunner.query(
-            `ALTER TABLE "certifications" DROP CONSTRAINT "FK_94ecc704512cfe5019d2577a994"`,
+            `ALTER TABLE "awards" DROP CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae"`,
         );
         await queryRunner.query(
-            `ALTER TABLE "awards" DROP CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae"`,
+            `ALTER TABLE "certifications" DROP CONSTRAINT "FK_94ecc704512cfe5019d2577a994"`,
         );
         await queryRunner.query(
             `ALTER TABLE "majors" DROP CONSTRAINT "FK_10c322c60cd25c2c170a3302033"`,
@@ -255,9 +252,6 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "public"."idx_student_created_at"`);
         await queryRunner.query(
             `DROP INDEX "public"."idx_student_modified_at"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "public"."idx_student_talent_score"`,
         );
         await queryRunner.query(`DROP TABLE "students"`);
         await queryRunner.query(`DROP TABLE "major_groups"`);
@@ -284,6 +278,13 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "users"`);
         await queryRunner.query(`DROP TYPE "public"."users_status_enum"`);
         await queryRunner.query(`DROP TYPE "public"."users_role_enum"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_student_id"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_date"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_category"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_level"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_created_at"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_modified_at"`);
+        await queryRunner.query(`DROP TABLE "awards"`);
         await queryRunner.query(
             `DROP INDEX "public"."idx_certification_student_id"`,
         );
@@ -310,13 +311,6 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(
             `DROP TYPE "public"."certifications_cefr_enum"`,
         );
-        await queryRunner.query(`DROP INDEX "public"."idx_award_student_id"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_date"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_category"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_level"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_created_at"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_modified_at"`);
-        await queryRunner.query(`DROP TABLE "awards"`);
         await queryRunner.query(`DROP TABLE "majors"`);
         await queryRunner.query(`DROP INDEX "public"."idx_ocr_student_id"`);
         await queryRunner.query(`DROP INDEX "public"."idx_ocr_file_id"`);
