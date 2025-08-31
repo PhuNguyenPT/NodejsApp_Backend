@@ -27,7 +27,7 @@ import { VietnameseSubject } from "@/type/enum/subject.js"; // Import Vietnamese
  *     },
  *     "score": 700
  *   },
- *   "nationalExam": [
+ *   "nationalExams": [
  *     { "name": "Toán", "score": 8.0 },
  *     { "name": "Ngữ Văn", "score": 7.0 },
  *     { "name": "Tiếng Anh", "score": 9.5 },
@@ -62,7 +62,7 @@ export class ExamProfileDTO {
     @IsArray()
     @Type(() => ExamSubject)
     @ValidateNested({ each: true })
-    public nationalExam: ExamSubject[];
+    public nationalExams: ExamSubject[];
 
     /**
      * VSAT scores - array of exactly 3 scores (0-150 each)
@@ -82,7 +82,7 @@ export class ExamProfileDTO {
      * @example 33.25
      */
     get totalSubjectScore(): number {
-        return this.nationalExam.reduce((sum, s) => sum + s.score, 0);
+        return this.nationalExams.reduce((sum, s) => sum + s.score, 0);
     }
 
     /**
@@ -120,7 +120,7 @@ export class ExamProfileDTO {
                 "VSAT scores must be an array of exactly 3 subjects.",
             );
         }
-        this.nationalExam = subjects;
+        this.nationalExams = subjects;
         this.aptitudeTestScore = aptitudeTestData;
         this.vsatScore = vsatScores;
     }
@@ -212,7 +212,7 @@ export class ExamProfileDTO {
      */
     toStudentEntityData(): {
         aptitudeTestScore?: { examType: ExamType; score: number };
-        nationalExam: { name: VietnameseSubject; score: number }[]; // Updated to VietnameseSubject
+        nationalExams: { name: VietnameseSubject; score: number }[]; // Updated to VietnameseSubject
         vsatScore?: VsatExamSubject[];
     } {
         return {
@@ -222,7 +222,7 @@ export class ExamProfileDTO {
                       score: this.aptitudeTestScore.score,
                   }
                 : undefined,
-            nationalExam: this.nationalExam.map((s) => ({
+            nationalExams: this.nationalExams.map((s) => ({
                 name: s.name,
                 score: s.score,
             })),

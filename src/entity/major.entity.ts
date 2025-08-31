@@ -31,7 +31,7 @@ export class MajorEntity {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ length: 255, nullable: false, type: "varchar" })
+    @Column({ nullable: false, type: "varchar" })
     name!: string; // The Vietnamese name of the major, e.g., "Khoa học giáo dục"
 
     constructor(major?: Partial<MajorEntity>) {

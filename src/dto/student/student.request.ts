@@ -8,7 +8,6 @@ import {
     IsNotEmpty,
     IsNumber,
     IsOptional,
-    Max,
     Min,
     ValidateNested,
 } from "class-validator";
@@ -209,7 +208,7 @@ export class StudentRequest {
      * Array of major group values that the student is interested in pursuing.
      * Must contain at least 1 and at most 3 valid MajorGroup values.
      *
-     * @type {MajorGroupValue[]}
+     * @type {MajorGroup[]}
      * @required
      * @example ["Kỹ thuật", "Máy tính và công nghệ thông tin", "Toán và thống kê"]
      * @example ["Kinh doanh và quản lý"]
@@ -240,7 +239,7 @@ export class StudentRequest {
      * @type {number}
      * @required
      * @minimum 1
-     * @example 20000000
+     * @example 90000000
      * @validation
      * - Required field (cannot be null or undefined)
      * - Must be a valid number
@@ -259,7 +258,7 @@ export class StudentRequest {
      * @type {number}
      * @required
      * @minimum 1
-     * @example 10000000
+     * @example 80000000
      * @validation
      * - Required field (cannot be null or undefined)
      * - Must be a valid number
@@ -285,9 +284,10 @@ export class StudentRequest {
     })
     @Expose()
     @IsArray()
+    @IsNotEmpty({ message: "National exams are required" })
     @Type(() => ExamSubject)
     @ValidateNested({ each: true })
-    nationalExam!: ExamSubject[];
+    nationalExams!: ExamSubject[];
 
     /**
      * Province or city where the student's university/college is located
@@ -319,21 +319,14 @@ export class StudentRequest {
     /**
      * Talent score representing the student's aptitude or potential
      * Optional field that can be used to indicate the student's talent level
-     * @example 9.5
-     * @validation
-     * - Must be a number
-     * - Must be between 0 and 10 (inclusive)
-     * - Optional field (can be null or undefined)
-     * - Maximum of 2 decimal places
-     * - Cannot exceed 10
-     * - Cannot be less than 0
+     * @example [{ "name": "Đọc kể diễn cảm", "score": 8.0 }, { "name": "Hát", "score": 7.0 }]
      */
     @Expose()
-    @IsNumber({ maxDecimalPlaces: 2 })
+    @IsArray()
     @IsOptional()
-    @Max(10, { message: "Talent score cannot exceed 10" })
-    @Min(0, { message: "Talent score must be at least 0" })
-    talentScore?: number;
+    @Type(() => ExamSubject)
+    @ValidateNested({ each: true })
+    talentScores?: ExamSubject[];
 
     /**
      * VSAT score (Vietnamese Scholastic Aptitude Test)

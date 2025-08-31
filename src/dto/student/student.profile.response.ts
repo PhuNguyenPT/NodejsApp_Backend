@@ -133,7 +133,7 @@ export class StudentProfileResponse {
      * Represents the upper limit of the budget range in Vietnamese Dong (VND).
      *
      * @type {number}
-     * @example 20000000
+     * @example 90000000
      */
     @Expose()
     @Transform(({ value }) => (value ? parseInt(String(value)) : undefined))
@@ -144,7 +144,7 @@ export class StudentProfileResponse {
      * Represents the lower limit of the budget range in Vietnamese Dong (VND).
      *
      * @type {number}
-     * @example 10000000
+     * @example 80000000
      */
     @Expose()
     @Transform(({ value }) => (value ? parseInt(String(value)) : undefined))
@@ -159,7 +159,7 @@ export class StudentProfileResponse {
      */
     @Expose()
     @Type(() => ExamSubject)
-    nationalExam!: ExamSubject[];
+    nationalExams!: ExamSubject[];
 
     /**
      * Province or city where the student's university/college is located
@@ -185,12 +185,12 @@ export class StudentProfileResponse {
     specialStudentCase?: SpecialStudentCase;
 
     /**
-     * Talent score (0-10 scale)
-     * @example 9.5
+     * Talent scores (0-10 scale)
+     * @example [{ "name": "Đọc kể diễn cảm", "score": 8.0 }, { "name": "Hát", "score": 7.0 }]
      */
     @Expose()
-    @Transform(({ value }) => (value ? parseFloat(String(value)) : undefined))
-    talentScore?: number;
+    @Type(() => ExamSubject)
+    talentScores?: ExamSubject[];
 
     /**
      * @example "863fe715-f516-4115-b97e-385fa77fd0d0"

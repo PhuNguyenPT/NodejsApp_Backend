@@ -65,7 +65,7 @@ export class MistralService {
             }
 
             const expectedSubjects =
-                student.nationalExam?.map((exam) => exam.name) ?? [];
+                student.nationalExams?.map((exam) => exam.name) ?? [];
             const model = "mistral-ocr-latest";
 
             const result: ScoreExtractionResult =
@@ -135,7 +135,7 @@ export class MistralService {
             }
 
             const expectedSubjects =
-                student.nationalExam?.map((exam) => exam.name) ?? [];
+                student.nationalExams?.map((exam) => exam.name) ?? [];
             const model = "mistral-ocr-latest";
 
             const result: ScoreExtractionResult =
@@ -205,7 +205,7 @@ export class MistralService {
             }
 
             const expectedSubjects =
-                student.nationalExam?.map((exam) => exam.name) ?? [];
+                student.nationalExams?.map((exam) => exam.name) ?? [];
             const model = "mistral-ocr-latest";
 
             const extractionPromises = filesToProcess.map(
@@ -290,7 +290,7 @@ export class MistralService {
             }
 
             const expectedSubjects =
-                student.nationalExam?.map((exam) => exam.name) ?? [];
+                student.nationalExams?.map((exam) => exam.name) ?? [];
             const model = "mistral-ocr-latest";
 
             const extractionPromises = filesToProcess.map(
@@ -362,7 +362,7 @@ export class MistralService {
             const student: null | StudentEntity =
                 await this.studentRepository.findOne({
                     relations: ["files"],
-                    select: ["id", "nationalExam", "userId", "files"],
+                    select: ["id", "nationalExams", "userId", "files"],
                     where: { id: studentId },
                 });
 
@@ -387,7 +387,7 @@ export class MistralService {
             }
 
             const expectedSubjects =
-                student.nationalExam?.map((exam) => exam.name) ?? [];
+                student.nationalExams?.map((exam) => exam.name) ?? [];
             const model = "mistral-ocr-latest";
 
             const extractionPromises = student.files.map(
