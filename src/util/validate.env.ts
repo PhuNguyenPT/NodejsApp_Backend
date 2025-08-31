@@ -70,6 +70,12 @@ interface Config {
     SERVER_PORT: number;
 
     // Predict model service config
+    SERVICE_BATCH_CONCURRENCY: number;
+    SERVICE_MAX_RETRIES: number;
+    SERVICE_PREDICTION_CONCURRENCY: number;
+    SERVICE_REQUEST_DELAY_MS: number;
+    SERVICE_RETRY_BASE_DELAY_MS: number;
+    SERVICE_RETRY_ITERATION_DELAY_MS: number;
     SERVICE_SERVER_HOSTNAME: string;
     SERVICE_SERVER_PATH: string;
     SERVICE_SERVER_PORT: number;
@@ -149,6 +155,12 @@ export const config: Config = cleanEnv(process.env, {
     SERVER_PORT: port({ default: 3000 }),
 
     // Predict model service config
+    SERVICE_BATCH_CONCURRENCY: num({ default: 3 }),
+    SERVICE_MAX_RETRIES: num({ default: 2 }),
+    SERVICE_PREDICTION_CONCURRENCY: num({ default: 5 }),
+    SERVICE_REQUEST_DELAY_MS: num({ default: 100 }),
+    SERVICE_RETRY_BASE_DELAY_MS: num({ default: 2000 }),
+    SERVICE_RETRY_ITERATION_DELAY_MS: num({ default: 1000 }),
     SERVICE_SERVER_HOSTNAME: str({ default: "localhost" }),
     SERVICE_SERVER_PATH: str({ default: "" }),
     SERVICE_SERVER_PORT: port({ default: 8000 }),
