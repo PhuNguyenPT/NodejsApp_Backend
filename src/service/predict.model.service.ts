@@ -478,7 +478,7 @@ export class PredictModelService {
                     12,
                 ),
             ),
-            hoc_phi: studentInfoDTO.minBudget,
+            hoc_phi: studentInfoDTO.maxBudget,
             tinh_tp: studentInfoDTO.province,
         };
     }
