@@ -684,7 +684,7 @@ export class PredictModelService {
                             diem_ccta: cert.cefr,
                             diem_chuan: scenario.diem_chuan,
                             nhom_nganh: parseInt(majorCode, 10),
-                            ten_ccta: cert.examType.value,
+                            ten_ccta: "CEFR",
                             to_hop_mon: scenario.to_hop_mon,
                         } as UserInputL2;
                     })
