@@ -8,6 +8,7 @@ import { TokenType } from "@/entity/jwt.entity.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { JwtEntityService } from "@/service/jwt.entity.service.js";
 import { TYPES } from "@/type/container/types.js";
+import { CustomJwtPayload } from "@/type/interface/jwt.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { strategyOptionsWithRequest } from "@/util/jwt.options.js";
 import { config } from "@/util/validate.env.js";
@@ -35,9 +36,18 @@ export class PassportConfig {
         passport.use(
             new JwtStrategy(
                 strategyOptions,
-                (req: Request, payload: Express.User, done) => {
+                (req: Request, payload: CustomJwtPayload, done) => {
                     void (async () => {
                         try {
+                            if (payload.type !== TokenType.ACCESS) {
+                                this.logger.warn(
+                                    `Incorrect token type used. Expected '${TokenType.ACCESS}', got '${payload.type}'.`,
+                                    { clientIP: req.ip, userId: payload.id },
+                                );
+                                done(null, false, {
+                                    message: `Invalid token type. This endpoint requires an '${TokenType.ACCESS}' token.`,
+                                });
+                            }
                             const clientIP = req.ip ?? "unknown";
                             const userAgent =
                                 req.headers["user-agent"] ?? "unknown";

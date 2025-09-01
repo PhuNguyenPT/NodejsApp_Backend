@@ -73,23 +73,36 @@ export class AuthService {
             }
 
             // Create JWT payload
-            const jwtPayload: CustomJwtPayload = {
+            const accessTokenJwtPayload: CustomJwtPayload = {
                 email: user.email,
                 id: user.id,
                 name: user.name,
                 permissions: user.permissions,
                 role: user.role,
                 status: user.status,
+                type: TokenType.ACCESS,
             };
 
             const familyId = randomUUID(); // Create ONE familyId for this session
 
             // Pass this familyId when generating tokens
             const accessToken: string =
-                await this.jwtService.generateAccessToken(jwtPayload, familyId);
+                await this.jwtService.generateAccessToken(
+                    accessTokenJwtPayload,
+                    familyId,
+                );
 
+            const refreshTokenJwtPayload: CustomJwtPayload = {
+                email: user.email,
+                id: user.id,
+                name: user.name,
+                permissions: user.permissions,
+                role: user.role,
+                status: user.status,
+                type: TokenType.REFRESH,
+            };
             const refreshToken = await this.jwtService.generateRefreshToken(
-                jwtPayload,
+                refreshTokenJwtPayload,
                 familyId,
             );
 
@@ -331,22 +344,32 @@ export class AuthService {
             const familyId = oldRefreshJwtEntity.familyId;
 
             // Create JWT payload with fresh user data from database
-            const jwtPayload: CustomJwtPayload = {
+            const accessTokenJwtPayload: CustomJwtPayload = {
                 email: user.email,
                 id: user.id,
                 name: user.name,
                 permissions: user.permissions,
                 role: user.role,
                 status: user.status,
+                type: TokenType.ACCESS,
             };
 
             // Generate new tokens
             const newAccessToken = await this.jwtService.generateAccessToken(
-                jwtPayload,
+                accessTokenJwtPayload,
                 familyId,
             );
+            const refreshTokenJwtPayload: CustomJwtPayload = {
+                email: user.email,
+                id: user.id,
+                name: user.name,
+                permissions: user.permissions,
+                role: user.role,
+                status: user.status,
+                type: TokenType.REFRESH,
+            };
             const newRefreshToken = await this.jwtService.generateRefreshToken(
-                jwtPayload,
+                refreshTokenJwtPayload,
                 familyId,
             );
 
@@ -400,23 +423,35 @@ export class AuthService {
             const savedUser = await this.createAndSaveUser(email, password);
 
             // Create JWT payload
-            const jwtPayload: CustomJwtPayload = {
+            const accessTokenJwtPayload: CustomJwtPayload = {
                 email: savedUser.email,
                 id: savedUser.id,
                 name: savedUser.name,
                 permissions: savedUser.permissions,
                 role: savedUser.role,
                 status: savedUser.status,
+                type: TokenType.ACCESS,
             };
 
             const familyId = randomUUID();
             // Generate tokens
             const accessToken = await this.jwtService.generateAccessToken(
-                jwtPayload,
+                accessTokenJwtPayload,
                 familyId,
             );
+
+            const refreshTokenJwtPayload: CustomJwtPayload = {
+                email: savedUser.email,
+                id: savedUser.id,
+                name: savedUser.name,
+                permissions: savedUser.permissions,
+                role: savedUser.role,
+                status: savedUser.status,
+                type: TokenType.REFRESH,
+            };
+
             const refreshToken = await this.jwtService.generateRefreshToken(
-                jwtPayload,
+                refreshTokenJwtPayload,
                 familyId,
             );
 
