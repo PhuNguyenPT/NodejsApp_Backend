@@ -156,7 +156,7 @@ export class PassportConfig {
                                     );
                                     done(null, false, {
                                         message:
-                                            "Invalid token. Please log in again.",
+                                            "Invalid token type. This endpoint requires an access token.",
                                     });
                                     return;
                                 }
