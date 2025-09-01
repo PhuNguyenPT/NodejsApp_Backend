@@ -108,6 +108,15 @@ function createAuthenticationError(errorOrInfo: unknown): Error {
         } else {
             return new AuthenticationException(errorOrInfo.message);
         }
+    } else if (
+        typeof errorOrInfo === "object" &&
+        errorOrInfo !== null &&
+        "message" in errorOrInfo &&
+        typeof (errorOrInfo as { message: unknown }).message === "string"
+    ) {
+        return new AuthenticationException(
+            (errorOrInfo as { message: string }).message,
+        );
     } else if (Array.isArray(errorOrInfo) && errorOrInfo.length > 0) {
         const message = errorOrInfo.filter(Boolean).join(", ");
         return new AuthenticationException(message);
