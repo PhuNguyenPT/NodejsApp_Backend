@@ -166,8 +166,18 @@ export const config: Config = cleanEnv(process.env, {
     SERVICE_SERVER_PORT: port({ default: 8000 }),
 });
 
-function validateEnv(): void {
-    console.info("Environment validating...");
-}
+// Function to create safe config object excluding sensitive password fields
+export function createSafeConfig() {
+    // Create a mutable copy by explicitly typing it as Config
+    const safeConfig: Config = {
+        ...config,
+        // Override sensitive fields with placeholders during copy
+        ADMIN_PASSWORD: "[HIDDEN]",
+        MISTRAL_API_KEY: "[HIDDEN]",
+        POSTGRES_PASSWORD: "[HIDDEN]",
+        REDIS_PASSWORD: "[HIDDEN]",
+        REDIS_USER_PASSWORD: "[HIDDEN]",
+    };
 
-export default validateEnv;
+    return safeConfig;
+}
