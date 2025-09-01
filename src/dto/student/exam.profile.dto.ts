@@ -33,7 +33,7 @@ import { VietnameseSubject } from "@/type/enum/subject.js"; // Import Vietnamese
  *     { "name": "Tiếng Anh", "score": 9.5 },
  *     { "name": "Vật Lý", "score": 8.75 }
  *   ],
- *   "vsatScore": [
+ *   "vsatScores": [
  *     { "name": "Toán", "score": 120 },
  *     { "name": "Ngữ Văn", "score": 130 },
  *     { "name": "Tiếng Anh", "score": 125 }
@@ -75,7 +75,7 @@ export class ExamProfileDTO {
     @IsOptional()
     @Max(150, { each: true })
     @Min(0, { each: true })
-    public vsatScore?: VsatExamSubject[];
+    public vsatScores?: VsatExamSubject[];
 
     /**
      * Calculates the total score of all 4 subjects
@@ -90,10 +90,10 @@ export class ExamProfileDTO {
      * @example 395
      */
     get totalVSATScore(): number {
-        if (!this.vsatScore || !Array.isArray(this.vsatScore)) return 0;
+        if (!this.vsatScores || !Array.isArray(this.vsatScores)) return 0;
 
         // Access the 'score' property of each object in the array
-        return this.vsatScore.reduce((sum, subject) => sum + subject.score, 0);
+        return this.vsatScores.reduce((sum, subject) => sum + subject.score, 0);
     }
 
     /**
@@ -122,7 +122,7 @@ export class ExamProfileDTO {
         }
         this.nationalExams = subjects;
         this.aptitudeTestScore = aptitudeTestData;
-        this.vsatScore = vsatScores;
+        this.vsatScores = vsatScores;
     }
 
     /**
@@ -157,8 +157,9 @@ export class ExamProfileDTO {
      * @returns VSAT score at the specified index
      */
     getVSATScore(index: number): undefined | VsatExamSubject {
-        if (!this.vsatScore || !Array.isArray(this.vsatScore)) return undefined;
-        return this.vsatScore[index];
+        if (!this.vsatScores || !Array.isArray(this.vsatScores))
+            return undefined;
+        return this.vsatScores[index];
     }
 
     /**
@@ -167,10 +168,10 @@ export class ExamProfileDTO {
      */
     hasValidVSATScores(): boolean {
         return (
-            this.vsatScore !== undefined &&
-            Array.isArray(this.vsatScore) &&
-            this.vsatScore.length === 3 &&
-            this.vsatScore.every(
+            this.vsatScores !== undefined &&
+            Array.isArray(this.vsatScores) &&
+            this.vsatScores.length === 3 &&
+            this.vsatScores.every(
                 (subject) =>
                     typeof subject === "object" && // Ensure it's an object
                     Object.values(VietnameseSubject).includes(subject.name) && // Validate enum value
@@ -203,7 +204,7 @@ export class ExamProfileDTO {
                 "VSAT scores must be an array of exactly 3 subjects",
             );
         }
-        this.vsatScore = scores;
+        this.vsatScores = scores;
     }
 
     /**
@@ -213,7 +214,7 @@ export class ExamProfileDTO {
     toStudentEntityData(): {
         aptitudeTestScore?: { examType: ExamType; score: number };
         nationalExams: { name: VietnameseSubject; score: number }[]; // Updated to VietnameseSubject
-        vsatScore?: VsatExamSubject[];
+        vsatScores?: VsatExamSubject[];
     } {
         return {
             aptitudeTestScore: this.aptitudeTestScore
@@ -226,7 +227,7 @@ export class ExamProfileDTO {
                 name: s.name,
                 score: s.score,
             })),
-            vsatScore: this.vsatScore,
+            vsatScores: this.vsatScores,
         };
     }
 }

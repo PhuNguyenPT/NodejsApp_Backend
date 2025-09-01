@@ -190,7 +190,7 @@ export class StudentEntity {
      * ]
      */
     @Column({ nullable: true, type: "jsonb" })
-    vsatScore?: ExamSubjectData[];
+    vsatScores?: ExamSubjectData[];
 
     constructor(student?: Partial<StudentEntity>) {
         if (student) {
@@ -305,7 +305,7 @@ export class StudentEntity {
         return ExamProfileDTO.fromStudentEntity(
             this.nationalExams,
             this.aptitudeTestScore,
-            this.vsatScore,
+            this.vsatScores,
         );
     }
 
@@ -418,8 +418,8 @@ export class StudentEntity {
 
     // Helper method to get total VSAT score
     getTotalVSATScore(): number {
-        if (!this.vsatScore || !Array.isArray(this.vsatScore)) return 0;
-        return this.vsatScore.reduce(
+        if (!this.vsatScores || !Array.isArray(this.vsatScores)) return 0;
+        return this.vsatScores.reduce(
             (sum, examSubject) => sum + examSubject.score,
             0,
         );
@@ -432,14 +432,16 @@ export class StudentEntity {
 
     // Helper method to get VSAT score by index (backward compatibility)
     getVSATScore(index: number): number | undefined {
-        if (!this.vsatScore || !Array.isArray(this.vsatScore)) return undefined;
-        return this.vsatScore[index]?.score;
+        if (!this.vsatScores || !Array.isArray(this.vsatScores))
+            return undefined;
+        return this.vsatScores[index]?.score;
     }
 
     // Updated to use VietnameseSubject for subjectName parameter
     getVSATScoreByName(subjectName: VietnameseSubject): number | undefined {
-        if (!this.vsatScore || !Array.isArray(this.vsatScore)) return undefined;
-        const subject = this.vsatScore.find((s) => s.name === subjectName);
+        if (!this.vsatScores || !Array.isArray(this.vsatScores))
+            return undefined;
+        const subject = this.vsatScores.find((s) => s.name === subjectName);
         return subject?.score;
     }
 
@@ -482,10 +484,10 @@ export class StudentEntity {
     // Helper method to check if VSAT scores are valid
     hasValidVSATScores(): boolean {
         return (
-            this.vsatScore !== undefined &&
-            Array.isArray(this.vsatScore) &&
-            this.vsatScore.length === 3 &&
-            this.vsatScore.every(
+            this.vsatScores !== undefined &&
+            Array.isArray(this.vsatScores) &&
+            this.vsatScores.length === 3 &&
+            this.vsatScores.every(
                 (examSubject) =>
                     typeof examSubject === "object" &&
                     Object.values(VietnameseSubject).includes(
@@ -566,7 +568,7 @@ export class StudentEntity {
         const data = examProfile.toStudentEntityData();
         this.nationalExams = data.nationalExams;
         this.aptitudeTestScore = data.aptitudeTestScore;
-        this.vsatScore = data.vsatScore;
+        this.vsatScores = data.vsatScores;
     }
 
     // Helper method to set VSAT scores with ExamSubjectData format
@@ -586,7 +588,7 @@ export class StudentEntity {
             );
 
             if (isValid) {
-                this.vsatScore = vsatScores;
+                this.vsatScores = vsatScores;
             } else {
                 throw new Error(
                     "VSAT scores must be an array of 3 valid ExamSubjectData objects with scores between 0-150 and valid subject names",

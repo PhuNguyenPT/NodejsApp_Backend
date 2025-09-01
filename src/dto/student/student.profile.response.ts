@@ -210,5 +210,5 @@ export class StudentProfileResponse {
      */
     @Expose()
     @Type(() => VsatExamSubject) // Ensure correct type mapping
-    vsatScore?: VsatExamSubject[];
+    vsatScores?: VsatExamSubject[];
 }

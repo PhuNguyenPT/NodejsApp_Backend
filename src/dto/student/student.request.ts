@@ -24,6 +24,8 @@ import {
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
+import { IsArrayUnique } from "@/validator/is.array.unique.validator.js";
+import { IsUniqueSubject } from "@/validator/is.unique.name.js";
 
 export class StudentRequest {
     /**
@@ -224,6 +226,7 @@ export class StudentRequest {
     @ArrayMinSize(1, { message: "Major groups must contain at least 1 record" })
     @Expose()
     @IsArray({ message: "Major groups must be an array" })
+    @IsArrayUnique({ message: "Major groups must be unique" })
     @IsEnum(MajorGroup, {
         each: true,
         message:
@@ -285,6 +288,7 @@ export class StudentRequest {
     @Expose()
     @IsArray()
     @IsNotEmpty({ message: "National exams are required" })
+    @IsUniqueSubject({ message: "National exams must have unique names" })
     @Type(() => ExamSubject)
     @ValidateNested({ each: true })
     nationalExams!: ExamSubject[];
@@ -324,6 +328,7 @@ export class StudentRequest {
     @Expose()
     @IsArray()
     @IsOptional()
+    @IsUniqueSubject({ message: "Talent scores must have unique names" })
     @Type(() => ExamSubject)
     @ValidateNested({ each: true })
     talentScores?: ExamSubject[];
@@ -342,12 +347,13 @@ export class StudentRequest {
      * - Each ExamSubject must have a valid name (string) and score (number 0-150)
      * - Optional field (can be null or undefined)
      */
-    @ArrayMaxSize(3, { message: "VSAT score must have exactly 3 subjects." })
-    @ArrayMinSize(3, { message: "VSAT score must have exactly 3 subjects." })
+    @ArrayMaxSize(3, { message: "VSAT scores must have exactly 3 subjects." })
+    @ArrayMinSize(3, { message: "VSAT scores must have exactly 3 subjects." })
     @Expose()
-    @IsArray({ message: "VSAT score must be an array" })
+    @IsArray({ message: "VSAT scores must be an array" })
     @IsOptional()
+    @IsUniqueSubject({ message: "VSAT scores must have unique names" })
     @Type(() => VsatExamSubject)
     @ValidateNested({ each: true })
-    vsatScore?: VsatExamSubject[];
+    vsatScores?: VsatExamSubject[];
 }
