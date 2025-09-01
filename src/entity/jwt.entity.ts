@@ -4,8 +4,8 @@ import { randomUUID } from "crypto";
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt.options.js";
 
 export enum TokenType {
-    ACCESS = "access",
-    REFRESH = "refresh",
+    ACCESS = "ACCESS",
+    REFRESH = "REFRESH",
 }
 
 export class JwtEntity {

@@ -4,6 +4,7 @@ import { inject, injectable } from "inversify";
 import passport from "passport";
 import { Strategy as JwtStrategy } from "passport-jwt";
 
+import { TokenType } from "@/entity/jwt.entity.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
 import { JwtEntityService } from "@/service/jwt.entity.service.js";
 import { TYPES } from "@/type/container/types.js";
@@ -133,6 +134,23 @@ export class PassportConfig {
                                         {
                                             clientIP,
                                             reason: "token_invalid_state",
+                                            userAgent,
+                                        },
+                                    );
+                                    done(null, false, {
+                                        message:
+                                            "Invalid token. Please log in again.",
+                                    });
+                                    return;
+                                }
+
+                                // 5. Validate token type if it is ACCESS token type
+                                if (!(tokenInfo.type === TokenType.ACCESS)) {
+                                    this.logger.warn(
+                                        `Invalid token type ${tokenInfo.type} for user: ${payload.id}`,
+                                        {
+                                            clientIP,
+                                            reason: "token_invalid_type",
                                             userAgent,
                                         },
                                     );
