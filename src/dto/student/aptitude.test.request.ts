@@ -2,7 +2,7 @@ import { Expose } from "class-transformer";
 import { IsNotEmpty, Validate } from "class-validator";
 
 import { ExamType } from "@/type/enum/exam.js";
-import { IsValidAptitudeTestScoreConstraint } from "@/validator/is.valid.aptitude.test.score.decorator.js";
+import { IsValidAptitudeTestScoreConstraint } from "@/validator/is.valid.aptitude.test.score.validator.js";
 
 /**
  * DTO for aptitude test information containing both type and score
