@@ -645,27 +645,53 @@ export const CORE_SUBJECTS = [
 ] as const;
 
 /**
+ * Type representing all possible subject group keys
+ * This ensures type safety when working with subject group names
+ */
+export type SubjectGroupKey = keyof typeof SUBJECT_GROUPS;
+/**
+ * Type representing the subjects in any group
+ */
+export type SubjectGroupSubjects = (typeof SUBJECT_GROUPS)[SubjectGroupKey];
+
+/**
+ * Helper type to get subjects for a specific group
+ */
+export type SubjectsForGroup<T extends SubjectGroupKey> =
+    (typeof SUBJECT_GROUPS)[T];
+
+/**
  * Get all possible subject groups that can be formed from the given subjects
  * This function finds all groups where the group's subjects are a subset of the input subjects
  */
 export function getAllPossibleSubjectGroups(
     subjects: VietnameseSubject[],
-): string[] {
-    const possibleGroups: string[] = [];
+): SubjectGroupKey[] {
+    const possibleGroups: SubjectGroupKey[] = [];
 
-    for (const [groupName, groupSubjects] of Object.entries(SUBJECT_GROUPS)) {
-        // Check if all subjects in the group are present in the input subjects
+    for (const [groupKey, groupSubjects] of Object.entries(SUBJECT_GROUPS) as [
+        SubjectGroupKey,
+        readonly VietnameseSubject[],
+    ][]) {
         if (
-            (groupSubjects as readonly VietnameseSubject[]).every(
-                (groupSubject) => subjects.includes(groupSubject),
+            groupSubjects.every((groupSubject) =>
+                subjects.includes(groupSubject),
             )
         ) {
-            possibleGroups.push(groupName);
+            possibleGroups.push(groupKey);
         }
     }
 
     return possibleGroups;
 }
+
+/**
+ * Get all subject group keys as a typed array
+ */
+export function getAllSubjectGroupKeys(): SubjectGroupKey[] {
+    return Object.keys(SUBJECT_GROUPS) as SubjectGroupKey[];
+}
+
 /**
  * Get subject group that contains the given subjects
  */
@@ -683,6 +709,37 @@ export function getSubjectGroup(
     }
     return undefined;
 }
+
+/**
+ * Get subject group key that contains the given subjects (type-safe version)
+ */
+export function getSubjectGroupKey(
+    subjects: VietnameseSubject[],
+): SubjectGroupKey | undefined {
+    for (const [groupKey, groupSubjects] of Object.entries(SUBJECT_GROUPS) as [
+        SubjectGroupKey,
+        readonly VietnameseSubject[],
+    ][]) {
+        if (
+            groupSubjects.every((groupSubject) =>
+                subjects.includes(groupSubject),
+            )
+        ) {
+            return groupKey;
+        }
+    }
+    return undefined;
+}
+
+/**
+ * Type-safe subject group lookup
+ */
+export function getSubjectGroupSubjects(
+    groupKey: SubjectGroupKey,
+): readonly VietnameseSubject[] {
+    return SUBJECT_GROUPS[groupKey];
+}
+
 /**
  * Get all possible variations for a subject
  */
@@ -703,6 +760,13 @@ export function getSubjectVariations(subject: VietnameseSubject): string[] {
  */
 export function isCoreSubject(subject: VietnameseSubject): boolean {
     return (CORE_SUBJECTS as readonly VietnameseSubject[]).includes(subject);
+}
+
+/**
+ * Check if a string is a valid subject group key
+ */
+export function isValidSubjectGroupKey(key: string): key is SubjectGroupKey {
+    return key in SUBJECT_GROUPS;
 }
 
 /**

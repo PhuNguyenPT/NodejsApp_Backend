@@ -26,6 +26,8 @@ import { CCNNType, CCQTType, DGNLType } from "@/type/enum/exam.js";
 import { getCodeByVietnameseName } from "@/type/enum/major.js";
 import {
     getAllPossibleSubjectGroups,
+    SUBJECT_GROUPS,
+    SubjectGroupKey,
     VietnameseSubject,
 } from "@/type/enum/subject.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
@@ -36,9 +38,15 @@ import { config } from "@/util/validate.env.js";
 interface ExamScenario {
     diem_chuan: number;
     to_hop_mon: string;
-    type: "ccqt" | "dgnl" | "national" | "vsat";
+    type: "ccqt" | "dgnl" | "national" | "talent" | "vsat";
 }
 
+interface SubjectGroupScore {
+    groupName: string;
+    scoreBreakdown: { score: number; subject: VietnameseSubject }[];
+    subjects: VietnameseSubject[];
+    totalScore: number;
+}
 @injectable()
 export class PredictModelService {
     private readonly BATCH_CONCURRENCY = config.SERVICE_BATCH_CONCURRENCY;
@@ -146,11 +154,6 @@ export class PredictModelService {
         });
         return await this.predictMajors(userInput);
     }
-
-    // =================================================================
-    // PRIVATE HELPER METHODS: SCENARIO & INPUT GENERATION
-    // =================================================================
-
     private _createCcqtScenarios(
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
@@ -180,6 +183,10 @@ export class PredictModelService {
         return [];
     }
 
+    // =================================================================
+    // PRIVATE HELPER METHODS: SCENARIO & INPUT GENERATION
+    // =================================================================
+
     private _createDgnlScenarios(
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
@@ -208,18 +215,33 @@ export class PredictModelService {
     private _createNationalAndVsatScenarios(
         student: StudentEntity,
         studentInfoDTO: StudentInfoDTO,
-        possibleSubjectGroups: string[],
+        possibleSubjectGroups: SubjectGroupKey[],
     ): ExamScenario[] {
         const scenarios: ExamScenario[] = [];
+
         if (student.hasValidNationalExamData()) {
+            const subjectGroupScores: SubjectGroupScore[] =
+                this.calculateSubjectGroupScores(studentInfoDTO);
+
+            // Filter to only groups that can be formed with national exam subjects only
+            const nationalSubjects = new Set(
+                studentInfoDTO.nationalExams.map((e) => e.name),
+            );
+            const nationalOnlyGroups = subjectGroupScores.filter((group) =>
+                group.subjects.every((subject) =>
+                    nationalSubjects.has(subject),
+                ),
+            );
+
             scenarios.push(
-                ...possibleSubjectGroups.map((subjectGroup) => ({
-                    diem_chuan: student.getTotalNationalExamScore(),
-                    to_hop_mon: subjectGroup,
+                ...nationalOnlyGroups.map((group) => ({
+                    diem_chuan: group.totalScore,
+                    to_hop_mon: group.groupName,
                     type: "national" as const,
                 })),
             );
         }
+
         if (studentInfoDTO.hasValidVSATScores()) {
             scenarios.push(
                 ...possibleSubjectGroups.map((subjectGroup) => ({
@@ -229,7 +251,44 @@ export class PredictModelService {
                 })),
             );
         }
+
         return scenarios;
+    }
+
+    private _createTalentScenarios(
+        studentInfoDTO: StudentInfoDTO,
+    ): ExamScenario[] {
+        if (
+            !studentInfoDTO.talentScores ||
+            studentInfoDTO.talentScores.length === 0
+        ) {
+            return [];
+        }
+
+        const subjectGroupScores =
+            this.calculateSubjectGroupScores(studentInfoDTO);
+
+        // Filter to only groups that include talent score subjects
+        const talentSubjects = new Set(
+            studentInfoDTO.talentScores.map((t) => t.name),
+        );
+        const talentScenarios = subjectGroupScores
+            .filter((group) =>
+                group.subjects.some((subject) => talentSubjects.has(subject)),
+            )
+            .map((group) => ({
+                diem_chuan: group.totalScore,
+                to_hop_mon: group.groupName,
+                type: "talent" as const,
+            }));
+
+        this.logger.info("Generated talent score scenarios", {
+            availableTalentSubjects: Array.from(talentSubjects),
+            subjectGroups: talentScenarios.map((s) => s.to_hop_mon),
+            talentScenarios: talentScenarios.length,
+        });
+
+        return talentScenarios;
     }
 
     private async _performBatchPrediction(
@@ -401,6 +460,63 @@ export class PredictModelService {
         return [...successfulResults, ...retryResults];
     }
 
+    private calculateSubjectGroupScores(
+        studentInfoDTO: StudentInfoDTO,
+    ): SubjectGroupScore[] {
+        // Combine all available subjects from national exams and talent scores
+        const subjectScoreMap = new Map<VietnameseSubject, number>();
+
+        // Add national exam scores (higher priority)
+        studentInfoDTO.nationalExams.forEach((exam) => {
+            subjectScoreMap.set(exam.name, exam.score);
+        });
+
+        // Add talent scores (only if not already present from national exams)
+        studentInfoDTO.talentScores?.forEach((talent) => {
+            if (!subjectScoreMap.has(talent.name)) {
+                subjectScoreMap.set(talent.name, talent.score);
+            }
+        });
+
+        const availableSubjects = Array.from(subjectScoreMap.keys());
+        const possibleSubjectGroups =
+            getAllPossibleSubjectGroups(availableSubjects);
+
+        const subjectGroupScores: SubjectGroupScore[] = [];
+
+        for (const groupName of possibleSubjectGroups) {
+            const groupSubjects = SUBJECT_GROUPS[groupName];
+
+            const scoreBreakdown: {
+                score: number;
+                subject: VietnameseSubject;
+            }[] = [];
+            let totalScore = 0;
+            let hasAllSubjects = true;
+
+            for (const subject of groupSubjects) {
+                const score = subjectScoreMap.get(subject);
+                if (score === undefined) {
+                    hasAllSubjects = false;
+                    break;
+                }
+                scoreBreakdown.push({ score, subject });
+                totalScore += score;
+            }
+
+            if (hasAllSubjects) {
+                subjectGroupScores.push({
+                    groupName,
+                    scoreBreakdown,
+                    subjects: [...groupSubjects],
+                    totalScore,
+                });
+            }
+        }
+
+        return subjectGroupScores;
+    }
+
     // =================================================================
     // PRIVATE HELPER METHODS: PREDICTION EXECUTION & RETRY LOGIC
     // =================================================================
@@ -411,7 +527,7 @@ export class PredictModelService {
     ): ExamScenario[] {
         const vietnameseSubjects: VietnameseSubject[] =
             studentInfoDTO.nationalExams.map((exam) => exam.name);
-        const possibleSubjectGroups: string[] =
+        const possibleSubjectGroups: SubjectGroupKey[] =
             getAllPossibleSubjectGroups(vietnameseSubjects);
 
         if (possibleSubjectGroups.length === 0) {
@@ -429,12 +545,15 @@ export class PredictModelService {
             ),
             ...this._createDgnlScenarios(studentInfoDTO),
             ...this._createCcqtScenarios(studentInfoDTO),
+            ...this._createTalentScenarios(studentInfoDTO),
         ];
 
         this.logger.info("Generated exam scenarios", {
             ccqtScenarios: scenarios.filter((s) => s.type === "ccqt").length,
             dgnlScenarios: scenarios.filter((s) => s.type === "dgnl").length,
             nationalScenarios: scenarios.filter((s) => s.type === "national")
+                .length,
+            talentScenarios: scenarios.filter((s) => s.type === "talent")
                 .length,
             totalScenarios: scenarios.length,
             vsatScenarios: scenarios.filter((s) => s.type === "vsat").length,
