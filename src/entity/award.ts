@@ -12,6 +12,7 @@ import {
 } from "typeorm";
 
 import { ExamType } from "@/type/enum/exam.js";
+import { Rank } from "@/type/enum/rank.js";
 
 import { StudentEntity } from "./student.js";
 
@@ -56,8 +57,8 @@ export class AwardEntity {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ length: 50, nullable: true, type: "varchar" })
-    level?: string;
+    @Column({ enum: Rank, nullable: true, type: "enum" })
+    level?: Rank;
 
     @UpdateDateColumn({ type: "timestamp with time zone" })
     modifiedAt!: Date;

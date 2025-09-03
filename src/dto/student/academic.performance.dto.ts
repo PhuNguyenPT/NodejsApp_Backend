@@ -38,9 +38,7 @@ export class AcademicPerformanceDTO {
      * @example "Trung bình"
      */
     @Expose()
-    @IsEnum(AcademicPerformance, {
-        message: "Academic performance must be a valid enum value",
-    })
+    @IsEnum(AcademicPerformance)
     @IsNotEmpty({ message: "Academic performance is required" })
     academicPerformance!: AcademicPerformance;
 

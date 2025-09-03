@@ -37,9 +37,7 @@ export class ConductRequest {
      * @example "Trung bình"
      */
     @Expose()
-    @IsEnum(Conduct, {
-        message: "Conduct must be a valid enum value",
-    })
+    @IsEnum(Conduct)
     @IsNotEmpty({ message: "Conduct is required" })
     conduct!: Conduct;
 

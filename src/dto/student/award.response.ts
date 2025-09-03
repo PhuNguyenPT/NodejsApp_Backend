@@ -1,5 +1,7 @@
-import { Expose } from "class-transformer";
+import { Expose, Type } from "class-transformer";
 import { IsNotEmpty } from "class-validator";
+
+import { Rank } from "@/type/enum/rank.js";
 
 /**
  * Data Transfer Object for Award information
@@ -49,7 +51,8 @@ export class AwardResponse {
 
     @Expose()
     @IsNotEmpty()
-    level!: string;
+    @Type(() => String)
+    level!: Rank;
 
     @Expose()
     @IsNotEmpty()
