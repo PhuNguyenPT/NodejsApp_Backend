@@ -1,7 +1,8 @@
 import { Expose } from "class-transformer";
-import { IsInt, IsNotEmpty, Max, Min } from "class-validator";
+import { IsInt, IsNotEmpty, Max, Min, Validate } from "class-validator";
 
 import { ExamType } from "@/type/enum/exam.js";
+import { IsValidDGNLExamTypeConstraint } from "@/validator/is.valid.exam.type.js";
 
 /**
  * DTO for aptitude test information containing both type and score
@@ -13,6 +14,7 @@ export class AptitudeTestDTO {
      */
     @Expose()
     @IsNotEmpty({ message: "Exam type is required" })
+    @Validate(IsValidDGNLExamTypeConstraint)
     examType!: ExamType;
 
     /**

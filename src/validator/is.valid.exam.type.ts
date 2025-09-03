@@ -20,7 +20,7 @@ export class IsValidExamTypeConstraint implements ValidatorConstraintInterface {
         const validationError = getExamTypeValidationError(this.examType);
         return (
             validationError ??
-            "ExamType must have a valid type and value combination"
+            "examType must have a valid type and value combination"
         );
     }
 
@@ -33,18 +33,18 @@ export class IsValidExamTypeConstraint implements ValidatorConstraintInterface {
 // Function to get detailed validation error message with better type safety
 export function getExamTypeValidationError(examType: unknown): null | string {
     if (!examType || typeof examType !== "object") {
-        return "ExamType must be an object with type and value properties";
+        return "examType must be an object with type and value properties";
     }
 
     const { type, value } = examType as { type: unknown; value: unknown };
 
     if (!type || typeof type !== "string") {
         const validTypes: ExamTypeKey[] = ["CCNN", "CCQT", "DGNL"];
-        return `ExamType.type is required and must be one of the following values: ${validTypes.join(", ")}`;
+        return `examType.type is required and must be one of the following values: ${validTypes.join(", ")}`;
     }
 
     if (!value || typeof value !== "string") {
-        return `ExamType.value is required`;
+        return `examType.value is required`;
     }
 
     // Type guard to check if type is a valid ExamTypeKey
@@ -161,7 +161,9 @@ export class IsValidCCNNExamTypeConstraint
         const validationError = this.getCCNNExamTypeValidationError(
             this.examType,
         );
-        return validationError ?? "ExamType must be CCNN with valid values";
+        return (
+            validationError ?? "examType.type must be CCNN with valid values"
+        );
     }
 
     validate(examType: unknown) {
@@ -170,17 +172,32 @@ export class IsValidCCNNExamTypeConstraint
     }
 
     private getCCNNExamTypeValidationError(examType: unknown): null | string {
-        const baseError = getExamTypeValidationError(examType);
-        if (baseError) {
-            return baseError;
+        // First check basic structure
+        if (!examType || typeof examType !== "object") {
+            return "examType must be an object with type and value properties";
         }
 
-        if (examType && typeof examType === "object") {
-            const { type } = examType as { type: string };
-            if (type !== "CCNN") {
-                const validCCNNValues = Object.values(CCNNType).join(", ");
-                return `ExamType must be CCNN, but got "${type}". Valid CCNN must be one of the following values: ${validCCNNValues}`;
-            }
+        const { type, value } = examType as { type: unknown; value: unknown };
+
+        // Check if type exists and is string
+        if (!type || typeof type !== "string") {
+            return "examType.type is required and must be a string";
+        }
+
+        // PRIORITY: Check if type is CCNN first (this is the main constraint)
+        if (type !== "CCNN") {
+            return `examType.type must be CCNN, but got "${type}"`;
+        }
+
+        // Then check if value exists and is string
+        if (!value || typeof value !== "string") {
+            return "examType.value is required and must be a string";
+        }
+
+        // Finally check if value is valid for CCNN type
+        const validValues = Object.values(CCNNType);
+        if (!validValues.includes(value as CCNNType)) {
+            return `Invalid examType.value "${value}" for type "CCNN". Must be one of the following values: ${validValues.join(", ")}`;
         }
 
         return null;
@@ -189,11 +206,23 @@ export class IsValidCCNNExamTypeConstraint
     private isValidCCNNExamType(
         examType: unknown,
     ): examType is Extract<ExamType, { type: "CCNN" }> {
+        if (!examType || typeof examType !== "object") {
+            return false;
+        }
+
+        const { type } = examType as { type: unknown; value: unknown };
+
+        // Check type is CCNN first
+        if (type !== "CCNN") {
+            return false;
+        }
+
+        // Then check if it's a valid exam type overall
         if (!isValidExamType(examType)) {
             return false;
         }
 
-        return examType.type === "CCNN";
+        return true;
     }
 }
 
@@ -207,7 +236,7 @@ export class IsValidDGNLExamTypeConstraint
         const validationError = this.getDGNLExamTypeValidationError(
             this.examType,
         );
-        return validationError ?? "ExamType must be DGNL with valid values";
+        return validationError ?? "examType must be DGNL with valid values";
     }
 
     validate(examType: unknown) {
@@ -216,34 +245,57 @@ export class IsValidDGNLExamTypeConstraint
     }
 
     private getDGNLExamTypeValidationError(examType: unknown): null | string {
-        // First, check for general validity (e.g., is the value correct for the type?)
-        const baseError = getExamTypeValidationError(examType);
-        if (baseError) {
-            return baseError;
+        // First check basic structure
+        if (!examType || typeof examType !== "object") {
+            return "examType must be an object with type and value properties";
         }
 
-        // Then, check if the type is specifically DGNL
-        if (examType && typeof examType === "object") {
-            const { type } = examType as { type: string };
-            if (type !== "DGNL") {
-                const validDGNLValues = Object.values(DGNLType).join(", ");
-                return `ExamType must be DGNL, but got "${type}". Valid DGNL must be one of the following values: ${validDGNLValues}`;
-            }
+        const { type, value } = examType as { type: unknown; value: unknown };
+
+        // Check if type exists and is string
+        if (!type || typeof type !== "string") {
+            return "examType.type is required and must be a string";
         }
 
-        return null; // No error
+        // PRIORITY: Check if type is DGNL first (this is the main constraint)
+        if (type !== "DGNL") {
+            return `examType.type must be DGNL, but got "${type}"`;
+        }
+
+        // Then check if value exists and is string
+        if (!value || typeof value !== "string") {
+            return "examType.value is required and must be a string";
+        }
+
+        // Finally check if value is valid for DGNL type
+        const validValues = Object.values(DGNLType);
+        if (!validValues.includes(value as DGNLType)) {
+            return `Invalid examType.value "${value}" for type "DGNL". Must be one of the following values: ${validValues.join(", ")}`;
+        }
+
+        return null;
     }
 
     private isValidDGNLExamType(
         examType: unknown,
     ): examType is Extract<ExamType, { type: "DGNL" }> {
-        // Check if it's a valid exam object overall
+        if (!examType || typeof examType !== "object") {
+            return false;
+        }
+
+        const { type } = examType as { type: unknown; value: unknown };
+
+        // Check type is DGNL first
+        if (type !== "DGNL") {
+            return false;
+        }
+
+        // Then check if it's a valid exam type overall
         if (!isValidExamType(examType)) {
             return false;
         }
 
-        // Enforce that the type must be 'DGNL'
-        return examType.type === "DGNL";
+        return true;
     }
 }
 
@@ -257,7 +309,7 @@ export class IsValidCCQTExamTypeConstraint
         const validationError = this.getCCQTExamTypeValidationError(
             this.examType,
         );
-        return validationError ?? "ExamType must be CCQT with valid values";
+        return validationError ?? "examType must be CCQT with valid values";
     }
 
     validate(examType: unknown) {
@@ -266,17 +318,32 @@ export class IsValidCCQTExamTypeConstraint
     }
 
     private getCCQTExamTypeValidationError(examType: unknown): null | string {
-        const baseError = getExamTypeValidationError(examType);
-        if (baseError) {
-            return baseError;
+        // First check basic structure
+        if (!examType || typeof examType !== "object") {
+            return "examType must be an object with type and value properties";
         }
 
-        if (examType && typeof examType === "object") {
-            const { type } = examType as { type: string };
-            if (type !== "CCQT") {
-                const validCCQTValues = Object.values(CCQTType).join(", ");
-                return `ExamType must be CCQT, but got "${type}". Valid CCQT must be one of the following values: ${validCCQTValues}`;
-            }
+        const { type, value } = examType as { type: unknown; value: unknown };
+
+        // Check if type exists and is string
+        if (!type || typeof type !== "string") {
+            return "examType.type is required and must be a string";
+        }
+
+        // PRIORITY: Check if type is CCQT first (this is the main constraint)
+        if (type !== "CCQT") {
+            return `examType.type must be CCQT, but got "${type}"`;
+        }
+
+        // Then check if value exists and is string
+        if (!value || typeof value !== "string") {
+            return "examType.value is required and must be a string";
+        }
+
+        // Finally check if value is valid for CCQT type
+        const validValues = Object.values(CCQTType);
+        if (!validValues.includes(value as CCQTType)) {
+            return `Invalid examType.value "${value}" for type "CCQT". Must be one of the following values: ${validValues.join(", ")}`;
         }
 
         return null;
@@ -285,11 +352,23 @@ export class IsValidCCQTExamTypeConstraint
     private isValidCCQTExamType(
         examType: unknown,
     ): examType is Extract<ExamType, { type: "CCQT" }> {
+        if (!examType || typeof examType !== "object") {
+            return false;
+        }
+
+        const { type } = examType as { type: unknown; value: unknown };
+
+        // Check type is CCQT first
+        if (type !== "CCQT") {
+            return false;
+        }
+
+        // Then check if it's a valid exam type overall
         if (!isValidExamType(examType)) {
             return false;
         }
 
-        return examType.type === "CCQT";
+        return true;
     }
 }
 
@@ -319,7 +398,7 @@ export class IsValidCertificationExamTypeConstraint
             return baseError;
         }
 
-        return "ExamType for certification is invalid.";
+        return "examType for certification is invalid.";
     }
 
     validate(examType: unknown): boolean {
