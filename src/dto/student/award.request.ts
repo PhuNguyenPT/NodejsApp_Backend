@@ -1,5 +1,13 @@
 import { Expose } from "class-transformer";
-import { IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
+import {
+    IsEnum,
+    IsNotEmpty,
+    IsString,
+    MaxLength,
+    MinLength,
+} from "class-validator";
+
+import { Rank } from "@/type/enum/rank.js";
 
 /**
  * Data Transfer Object for Award information
@@ -55,10 +63,9 @@ export class AwardRequest {
     // description?: string;
 
     @Expose()
+    @IsEnum(Rank)
     @IsNotEmpty({ message: "Level is required" })
-    @IsString({ message: "Level must be a string" })
-    @MaxLength(50, { message: "Level cannot exceed 50 characters" })
-    level!: string;
+    level!: Rank;
 
     @Expose()
     @IsNotEmpty({ message: "Award name is required" })

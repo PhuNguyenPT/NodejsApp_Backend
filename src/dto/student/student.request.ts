@@ -229,8 +229,6 @@ export class StudentRequest {
     @IsArrayUnique({ message: "Major groups must be unique" })
     @IsEnum(MajorGroup, {
         each: true,
-        message:
-            "Each major group must be a valid value from the MajorGroup enum",
     })
     @IsNotEmpty({ message: "Major groups are required" })
     majors!: MajorGroup[];
@@ -299,9 +297,7 @@ export class StudentRequest {
      * @see VietnamSouthernProvinces for valid enum values
      */
     @Expose()
-    @IsEnum(VietnamSouthernProvinces, {
-        message: "Province must be a valid Vietnamese southern province",
-    })
+    @IsEnum(VietnamSouthernProvinces)
     @IsNotEmpty({ message: "Province is required" })
     province!: VietnamSouthernProvinces;
 
@@ -321,7 +317,6 @@ export class StudentRequest {
     @IsArrayUnique({ message: "Special student cases must be unique" })
     @IsEnum(SpecialStudentCase, {
         each: true,
-        message: "Each special student case must be a valid enum value",
     })
     @IsOptional()
     specialStudentCases?: SpecialStudentCase[];
