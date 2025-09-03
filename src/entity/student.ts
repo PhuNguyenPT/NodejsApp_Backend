@@ -157,11 +157,10 @@ export class StudentEntity {
     province?: VietnamSouthernProvinces;
 
     @Column({
-        enum: SpecialStudentCase,
         nullable: true,
-        type: "varchar",
+        type: "jsonb",
     })
-    specialStudentCase?: SpecialStudentCase;
+    specialStudentCases?: SpecialStudentCase[];
 
     /**
      * Talent score (0-10 scale with up to 2 decimal places)

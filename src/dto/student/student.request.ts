@@ -306,19 +306,25 @@ export class StudentRequest {
     province!: VietnamSouthernProvinces;
 
     /**
-     * Special student case indicating unique circumstances or qualifications
-     * Optional field that can be used to specify if the student falls under any special category
+     * Special student cases indicating unique circumstances or qualifications
+     * Optional array field that can be used to specify if the student falls under any special categories
      * Valid values are defined in the SpecialStudentCase enum.
-     * @type {SpecialStudentCase}
+     * Students can have multiple special cases applied simultaneously.
+     *
+     * @type {SpecialStudentCase[]}
      * @optional
      * @see SpecialStudentCase for valid enum values
+     * @example ["Học sinh thuộc huyện nghèo, vùng đặc biệt khó khăn", "Dân tộc thiểu số rất ít người (Mông, La Ha,...)"]
      */
     @Expose()
+    @IsArray({ message: "Special student cases must be an array" })
+    @IsArrayUnique({ message: "Special student cases must be unique" })
     @IsEnum(SpecialStudentCase, {
-        message: "Special student case must be a valid enum value",
+        each: true,
+        message: "Each special student case must be a valid enum value",
     })
     @IsOptional()
-    specialStudentCase?: SpecialStudentCase;
+    specialStudentCases?: SpecialStudentCase[];
 
     /**
      * Talent score representing the student's aptitude or potential

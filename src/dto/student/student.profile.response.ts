@@ -172,17 +172,19 @@ export class StudentProfileResponse {
     province!: VietnamSouthernProvinces;
 
     /**
-     * Special student case indicating unique circumstances or qualifications
-     * Optional field that can be used to specify if the student falls under any special category
+     * Special student cases indicating unique circumstances or qualifications
+     * Optional array field that can be used to specify if the student falls under any special categories
      * Valid values are defined in the SpecialStudentCase enum.
-     * @type {SpecialStudentCase}
+     * Students can have multiple special cases applied simultaneously.
+     *
+     * @type {SpecialStudentCase[]}
      * @optional
      * @see SpecialStudentCase for valid enum values
+     * @example ["Học sinh thuộc huyện nghèo, vùng đặc biệt khó khăn", "Dân tộc thiểu số rất ít người (Mông, La Ha,...)"]
      */
     @Expose()
-    @Transform(({ value }) => (value ? String(value) : undefined))
     @Type(() => String)
-    specialStudentCase?: SpecialStudentCase;
+    specialStudentCases?: SpecialStudentCase[];
 
     /**
      * Talent scores (0-10 scale)
