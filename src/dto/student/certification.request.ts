@@ -9,6 +9,7 @@ import {
 
 import { ExamType } from "@/type/enum/exam.js";
 import { IsValidExamLevelConstraint } from "@/validator/is.valid.exam.level.validator.js";
+import { IsValidCertificationExamTypeConstraint } from "@/validator/is.valid.exam.type.js";
 
 /**
  * Data Transfer Object for Certification information
@@ -59,6 +60,7 @@ export class CertificationRequest {
      */
     @Expose()
     @IsNotEmpty({ message: "Exam type is required" })
+    @Validate(IsValidCertificationExamTypeConstraint)
     examType!: ExamType;
 
     // @Expose()
