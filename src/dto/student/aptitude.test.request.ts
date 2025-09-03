@@ -3,6 +3,7 @@ import { IsNotEmpty, Validate } from "class-validator";
 
 import { ExamType } from "@/type/enum/exam.js";
 import { IsValidAptitudeTestScoreConstraint } from "@/validator/is.valid.aptitude.test.score.validator.js";
+import { IsValidDGNLExamTypeConstraint } from "@/validator/is.valid.exam.type.js";
 
 /**
  * DTO for aptitude test information containing both type and score
@@ -23,6 +24,7 @@ export class AptitudeTestRequest {
      */
     @Expose()
     @IsNotEmpty({ message: "Exam type is required" })
+    @Validate(IsValidDGNLExamTypeConstraint)
     examType!: ExamType;
 
     /**

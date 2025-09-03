@@ -5,10 +5,12 @@ import {
     IsString,
     MaxLength,
     MinLength,
+    Validate,
 } from "class-validator";
 
 import { CEFR } from "@/entity/certification.js";
 import { ExamType } from "@/type/enum/exam.js";
+import { IsValidCertificationExamTypeConstraint } from "@/validator/is.valid.exam.type.js";
 
 /**
  * Data Transfer Object for Certification information
@@ -63,6 +65,7 @@ export class CertificationDTO {
      */
     @Expose()
     @IsNotEmpty({ message: "Exam type is required" })
+    @Validate(IsValidCertificationExamTypeConstraint)
     examType!: ExamType;
 
     // @Expose()
