@@ -49,15 +49,22 @@ interface SubjectGroupScore {
 }
 @injectable()
 export class PredictModelService {
-    private readonly BATCH_CONCURRENCY = config.SERVICE_BATCH_CONCURRENCY;
     private readonly httpClient: AxiosInstance;
-    private readonly MAX_RETRIES = config.SERVICE_MAX_RETRIES;
-    private readonly PREDICTION_CONCURRENCY =
+    private readonly SERVER_BATCH_CONCURRENCY = config.SERVER_BATCH_CONCURRENCY;
+    private readonly SERVICE_BATCH_CONCURRENCY =
+        config.SERVICE_BATCH_CONCURRENCY;
+    private readonly SERVICE_MAX_RETRIES = config.SERVICE_MAX_RETRIES;
+    private readonly SERVICE_PREDICTION_CONCURRENCY =
         config.SERVICE_PREDICTION_CONCURRENCY;
-    private readonly REQUEST_DELAY_MS = config.SERVICE_REQUEST_DELAY_MS;
-    private readonly RETRY_BASE_DELAY_MS = config.SERVICE_RETRY_BASE_DELAY_MS;
-    private readonly RETRY_ITERATION_DELAY_MS =
+    private readonly SERVICE_REQUEST_DELAY_MS = config.SERVICE_REQUEST_DELAY_MS;
+    private readonly SERVICE_RETRY_BASE_DELAY_MS =
+        config.SERVICE_RETRY_BASE_DELAY_MS;
+    private readonly SERVICE_RETRY_ITERATION_DELAY_MS =
         config.SERVICE_RETRY_ITERATION_DELAY_MS;
+    private readonly SERVICE_SERVER_HOSTNAME = config.SERVICE_SERVER_HOSTNAME;
+    private readonly SERVICE_SERVER_PATH = config.SERVICE_SERVER_PATH;
+    private readonly SERVICE_SERVER_PORT = config.SERVICE_SERVER_PORT;
+    private readonly SERVICE_TIMEOUT_IN_MS = config.SERVICE_TIMEOUT_IN_MS;
 
     constructor(
         @inject(TYPES.Logger) private readonly logger: ILogger,
@@ -66,12 +73,12 @@ export class PredictModelService {
         @inject(TYPES.OcrResultRepository)
         private readonly ocrResultRepository: Repository<OcrResultEntity>,
     ) {
-        const baseUrl = `http://${config.SERVICE_SERVER_HOSTNAME}:${config.SERVICE_SERVER_PORT.toString()}${config.SERVICE_SERVER_PATH}`;
+        const baseUrl = `http://${this.SERVICE_SERVER_HOSTNAME}:${this.SERVICE_SERVER_PORT.toString()}${this.SERVICE_SERVER_PATH}`;
 
         this.httpClient = axios.create({
             baseURL: baseUrl,
             headers: { "Content-Type": "application/json" },
-            timeout: 90000,
+            timeout: this.SERVICE_TIMEOUT_IN_MS,
         });
 
         this.logger.info("PredictModelService initialized", { baseUrl });
@@ -298,50 +305,91 @@ export class PredictModelService {
         failedInputs: UserInputL2[];
         successfulResults: L2PredictResult[];
     }> {
-        const limit = pLimit(this.PREDICTION_CONCURRENCY);
         const successfulResults: L2PredictResult[] = [];
         const failedInputs: UserInputL2[] = [];
 
-        const batchResults = await Promise.allSettled(
-            inputsForGroup.map((userInput) =>
-                limit(async () => {
-                    try {
-                        await this.delay(this.REQUEST_DELAY_MS);
-                        return await this.predictMajors(userInput);
-                    } catch (error: unknown) {
-                        this.logger.warn(
-                            "Batch prediction failed for group, will retry sequentially",
-                            {
-                                error:
-                                    error instanceof Error
-                                        ? error.message
-                                        : String(error),
-                                subjectGroup,
-                            },
-                        );
-                        throw error;
-                    }
-                }),
-            ),
-        );
+        try {
+            this.logger.info(
+                `Attempting batch prediction for group ${subjectGroup}`,
+                {
+                    inputCount: inputsForGroup.length,
+                    SERVICE_BATCH_CONCURRENCY: this.SERVICE_BATCH_CONCURRENCY,
+                },
+            );
 
-        for (let i = 0; i < batchResults.length; i++) {
-            const result = batchResults[i];
-            if (result.status === "fulfilled") {
-                successfulResults.push(...result.value);
-            } else {
-                failedInputs.push(inputsForGroup[i]);
+            const batchResults = await this.predictMajorsBatch(inputsForGroup);
+            successfulResults.push(...batchResults);
+
+            this.logger.info(
+                `Batch processing for group ${subjectGroup} completed successfully`,
+                {
+                    resultCount: batchResults.length,
+                    successful: inputsForGroup.length,
+                    total: inputsForGroup.length,
+                },
+            );
+        } catch (error: unknown) {
+            this.logger.warn(
+                "Batch prediction failed for group, falling back to individual predictions",
+                {
+                    error:
+                        error instanceof Error ? error.message : String(error),
+                    inputCount: inputsForGroup.length,
+                    subjectGroup,
+                },
+            );
+
+            // Add a brief delay before starting individual predictions
+            // to avoid overwhelming the server after a batch failure
+            await this.delay(this.SERVICE_RETRY_BASE_DELAY_MS);
+
+            // Fallback to individual predictions with concurrency limit and delays
+            const limit = pLimit(this.SERVICE_PREDICTION_CONCURRENCY);
+            const batchResults = await Promise.allSettled(
+                inputsForGroup.map((userInput, index) =>
+                    limit(async () => {
+                        try {
+                            // Stagger individual requests to avoid overwhelming the server
+                            if (index > 0) {
+                                await this.delay(this.SERVICE_REQUEST_DELAY_MS);
+                            }
+                            return await this.predictMajors(userInput);
+                        } catch (error: unknown) {
+                            this.logger.warn(
+                                "Individual prediction failed, will retry sequentially",
+                                {
+                                    error:
+                                        error instanceof Error
+                                            ? error.message
+                                            : String(error),
+                                    inputIndex: index,
+                                    subjectGroup,
+                                },
+                            );
+                            throw error;
+                        }
+                    }),
+                ),
+            );
+
+            for (let i = 0; i < batchResults.length; i++) {
+                const result = batchResults[i];
+                if (result.status === "fulfilled") {
+                    successfulResults.push(...result.value);
+                } else {
+                    failedInputs.push(inputsForGroup[i]);
+                }
             }
-        }
 
-        this.logger.info(
-            `Batch processing for group ${subjectGroup} completed`,
-            {
-                failed: failedInputs.length,
-                successful: inputsForGroup.length - failedInputs.length,
-                total: inputsForGroup.length,
-            },
-        );
+            this.logger.info(
+                `Fallback processing for group ${subjectGroup} completed`,
+                {
+                    failed: failedInputs.length,
+                    successful: successfulResults.length,
+                    total: inputsForGroup.length,
+                },
+            );
+        }
 
         return { failedInputs, successfulResults };
     }
@@ -366,7 +414,7 @@ export class PredictModelService {
 
             for (
                 let attempt = 1;
-                attempt <= this.MAX_RETRIES && !success;
+                attempt <= this.SERVICE_MAX_RETRIES && !success;
                 attempt++
             ) {
                 try {
@@ -383,7 +431,7 @@ export class PredictModelService {
                 } catch (error: unknown) {
                     const errorMessage =
                         error instanceof Error ? error.message : String(error);
-                    if (attempt === this.MAX_RETRIES) {
+                    if (attempt === this.SERVICE_MAX_RETRIES) {
                         this.logger.error(
                             "Sequential retry failed after all attempts for group",
                             {
@@ -399,12 +447,14 @@ export class PredictModelService {
                                 subjectGroup,
                             },
                         );
-                        await this.delay(this.RETRY_BASE_DELAY_MS * attempt);
+                        await this.delay(
+                            this.SERVICE_RETRY_BASE_DELAY_MS * attempt,
+                        );
                     }
                 }
             }
             if (i < failedInputs.length - 1) {
-                await this.delay(this.RETRY_ITERATION_DELAY_MS);
+                await this.delay(this.SERVICE_RETRY_ITERATION_DELAY_MS);
             }
         }
 
@@ -423,13 +473,21 @@ export class PredictModelService {
     private async _processSubjectGroup(
         subjectGroup: string,
         inputsForGroup: UserInputL2[],
+        groupIndex = 0, // Add index parameter
     ): Promise<L2PredictResult[]> {
         const startTime = Date.now();
 
+        // Add small delay between subject groups to avoid overwhelming the server
+        if (groupIndex > 0) {
+            await this.delay(500); // 500ms delay between groups
+        }
+
         this.logger.info(
-            `Starting batch processing for subject group: ${subjectGroup}`,
+            `Starting batch processing for subject group: ${subjectGroup} (${(groupIndex + 1).toString()})`,
             {
-                predictionConcurrency: this.PREDICTION_CONCURRENCY,
+                SERVICE_BATCH_CONCURRENCY: this.SERVICE_PREDICTION_CONCURRENCY,
+                SERVICE_PREDICTION_CONCURRENCY:
+                    this.SERVICE_PREDICTION_CONCURRENCY,
                 timestamp: new Date().toISOString(),
                 totalInputs: inputsForGroup.length,
             },
@@ -452,13 +510,17 @@ export class PredictModelService {
         this.logger.info(`Subject group ${subjectGroup} completed`, {
             duration: `${duration.toString()}ms`,
             failedInputs: failedInputs.length,
-            predictionConcurrency: this.PREDICTION_CONCURRENCY,
+            SERVICE_PREDICTION_CONCURRENCY: this.SERVICE_PREDICTION_CONCURRENCY,
             throughput: `${(totalResults / (duration / 1000)).toFixed(2)} predictions/sec`,
             totalResults,
         });
 
         return [...successfulResults, ...retryResults];
     }
+
+    // =================================================================
+    // PRIVATE HELPER METHODS: PREDICTION EXECUTION & RETRY LOGIC
+    // =================================================================
 
     private calculateSubjectGroupScores(
         studentInfoDTO: StudentInfoDTO,
@@ -516,10 +578,6 @@ export class PredictModelService {
 
         return subjectGroupScores;
     }
-
-    // =================================================================
-    // PRIVATE HELPER METHODS: PREDICTION EXECUTION & RETRY LOGIC
-    // =================================================================
 
     private collectExamScenarios(
         student: StudentEntity,
@@ -602,6 +660,10 @@ export class PredictModelService {
         };
     }
 
+    // =================================================================
+    // PRIVATE HELPER METHODS: DATA FETCHING & VALIDATION
+    // =================================================================
+
     private deduplicateByHighestScore(
         results: L2PredictResult[],
     ): L2PredictResult[] {
@@ -617,10 +679,6 @@ export class PredictModelService {
 
         return Array.from(resultMap.values());
     }
-
-    // =================================================================
-    // PRIVATE HELPER METHODS: DATA FETCHING & VALIDATION
-    // =================================================================
 
     private delay(ms: number): Promise<void> {
         return new Promise((resolve) => setTimeout(resolve, ms));
@@ -642,27 +700,29 @@ export class PredictModelService {
         const subjectGroups = Array.from(groupedInputs.entries());
 
         // Create concurrency limiter for subject groups
-        const batchLimit = pLimit(this.BATCH_CONCURRENCY);
+        const batchLimit = pLimit(this.SERVER_BATCH_CONCURRENCY);
 
         this.logger.info("Starting concurrent processing of subject groups", {
-            concurrency: this.BATCH_CONCURRENCY,
-            predictionConcurrency: this.PREDICTION_CONCURRENCY,
+            SERVER_BATCH_CONCURRENCY: this.SERVER_BATCH_CONCURRENCY,
+            SERVICE_BATCH_CONCURRENCY: this.SERVICE_BATCH_CONCURRENCY,
+            SERVICE_PREDICTION_CONCURRENCY: this.SERVICE_PREDICTION_CONCURRENCY,
             totalSubjectGroups: subjectGroups.length,
         });
 
-        // Process subject groups with limited concurrency
+        // Process subject groups with limited concurrency and group indexing
         const results = await Promise.allSettled(
-            subjectGroups.map(([subjectGroup, inputsForGroup]) =>
+            subjectGroups.map(([subjectGroup, inputsForGroup], index) =>
                 batchLimit(async () => {
                     return await this._processSubjectGroup(
                         subjectGroup,
                         inputsForGroup,
+                        index, // Pass the index for staggered processing
                     );
                 }),
             ),
         );
 
-        // Collect all successful results and log failures
+        // Rest of the method remains the same...
         for (let i = 0; i < results.length; i++) {
             const result = results[i];
             const [subjectGroup] = subjectGroups[i];
@@ -697,7 +757,38 @@ export class PredictModelService {
 
         return allResults;
     }
+    private async executePredictionsWithRetrySmallBatch(
+        userInputs: UserInputL2[],
+    ): Promise<L2PredictResult[]> {
+        this.logger.info("Starting single batch prediction for all inputs", {
+            SERVICE_BATCH_CONCURRENCY: this.SERVICE_BATCH_CONCURRENCY,
+            totalInputs: userInputs.length,
+        });
 
+        try {
+            // Try to process all inputs in one batch
+            const results = await this.predictMajorsBatch(userInputs);
+
+            this.logger.info("Single batch prediction completed successfully", {
+                inputCount: userInputs.length,
+                resultCount: results.length,
+            });
+
+            return results;
+        } catch (error: unknown) {
+            this.logger.warn(
+                "Single batch failed, falling back to chunked processing",
+                {
+                    error:
+                        error instanceof Error ? error.message : String(error),
+                    totalInputs: userInputs.length,
+                },
+            );
+
+            // Fallback: Process in smaller chunks
+            return await this.processSmallGroups(userInputs);
+        }
+    }
     private async fetchAndValidateOcrResults(
         userId: string,
         studentId: string,
@@ -716,7 +807,6 @@ export class PredictModelService {
             );
         }
     }
-
     private async fetchAndValidateStudent(
         studentId: string,
         userId: string,
@@ -853,7 +943,6 @@ export class PredictModelService {
                 return undefined;
         }
     }
-
     private getAndValidateScoreByCCQT_Type_A_Level(
         level: string,
     ): number | undefined {
@@ -888,7 +977,6 @@ export class PredictModelService {
             Array.isArray((data as HTTPValidationError).detail)
         );
     }
-
     private async predictMajors(
         userInput: UserInputL2,
     ): Promise<L2PredictResult[]> {
@@ -898,7 +986,7 @@ export class PredictModelService {
             });
 
             const response = await this.httpClient.post<L2PredictResult[]>(
-                "/predict/l2",
+                `/predict/l2`,
                 userInput,
             );
 
@@ -965,6 +1053,234 @@ export class PredictModelService {
                 `Service error: ${message} for ${userInput.to_hop_mon}`,
             );
         }
+    }
+
+    private async predictMajorsBatch(
+        userInputs: UserInputL2[], // Changed to accept array instead of single input
+    ): Promise<L2PredictResult[]> {
+        try {
+            this.logger.info("Starting batch prediction", {
+                inputCount: userInputs.length,
+                SERVICE_BATCH_CONCURRENCY: this.SERVICE_BATCH_CONCURRENCY,
+            });
+
+            // Create the proper batch request structure
+            const batchRequest = {
+                items: userInputs,
+            };
+
+            // Fix the URL construction - use proper query parameter
+            const response = await this.httpClient.post<L2PredictResult[][]>(
+                `/predict/l2/batch?concurrency=${this.SERVICE_BATCH_CONCURRENCY.toString()}`,
+                batchRequest,
+            );
+
+            // The batch endpoint returns an array of arrays, so we need to flatten it
+            const flattenedResults = response.data.flat();
+            const validatedResults =
+                await this.validateResponse(flattenedResults);
+
+            this.logger.info("Batch prediction completed", {
+                inputCount: userInputs.length,
+                resultCount: validatedResults.length,
+            });
+
+            return validatedResults;
+        } catch (error) {
+            const errorContext = {
+                inputCount: userInputs.length,
+                SERVICE_BATCH_CONCURRENCY: this.SERVICE_BATCH_CONCURRENCY,
+            };
+
+            if (axios.isAxiosError(error)) {
+                const axiosError = error as AxiosError;
+                const status = axiosError.response?.status;
+                let detailedMessage = axiosError.message;
+
+                if (
+                    status === 422 &&
+                    this.isValidationError(axiosError.response?.data)
+                ) {
+                    const validationError = axiosError.response.data;
+                    const specificErrors = validationError.detail
+                        .map((err) => `${err.loc.join(".")} - ${err.msg}`)
+                        .join("; ");
+                    detailedMessage = `API Validation Error: ${specificErrors}`;
+                }
+
+                this.logger.error("Batch API error", {
+                    message: detailedMessage,
+                    status: status ?? "unknown",
+                    ...errorContext,
+                });
+
+                throw new Error(
+                    `Batch API error (${String(status)}): ${detailedMessage}`,
+                );
+            }
+
+            const message =
+                error instanceof Error ? error.message : "Unknown error";
+            this.logger.error("Batch service error", {
+                message,
+                ...errorContext,
+            });
+
+            throw new Error(`Batch service error: ${message}`);
+        }
+    }
+
+    private async processIndividuallyWithRetry(
+        userInputs: UserInputL2[],
+        subjectGroup: string,
+    ): Promise<L2PredictResult[]> {
+        const allResults: L2PredictResult[] = [];
+
+        for (const userInput of userInputs) {
+            let success = false;
+
+            for (
+                let attempt = 1;
+                attempt <= this.SERVICE_MAX_RETRIES && !success;
+                attempt++
+            ) {
+                try {
+                    const results = await this.predictMajors(userInput);
+                    allResults.push(...results);
+                    success = true;
+                } catch (error: unknown) {
+                    if (attempt === this.SERVICE_MAX_RETRIES) {
+                        this.logger.error(
+                            `Failed all ${this.SERVICE_MAX_RETRIES.toString()} attempts for input in group ${subjectGroup}`,
+                            {
+                                error:
+                                    error instanceof Error
+                                        ? error.message
+                                        : String(error),
+                                major: userInput.nhom_nganh,
+                                subjectGroup: userInput.to_hop_mon,
+                            },
+                        );
+                    } else {
+                        this.logger.warn(
+                            `Attempt ${attempt.toString()} failed for group ${subjectGroup}, retrying`,
+                            {
+                                error:
+                                    error instanceof Error
+                                        ? error.message
+                                        : String(error),
+                            },
+                        );
+                        await this.delay(
+                            this.SERVICE_RETRY_BASE_DELAY_MS * attempt,
+                        );
+                    }
+                }
+            }
+        }
+
+        this.logger.info(
+            `Individual processing completed for group ${subjectGroup}`,
+            {
+                inputCount: userInputs.length,
+                resultCount: allResults.length,
+            },
+        );
+
+        return allResults;
+    }
+
+    private async processSmallGroup(
+        subjectGroup: string,
+        inputsForGroup: UserInputL2[],
+    ): Promise<L2PredictResult[]> {
+        this.logger.info(`Processing small group: ${subjectGroup}`, {
+            inputCount: inputsForGroup.length,
+        });
+
+        // Try batch first (since group is small ≤6)
+        try {
+            return await this.predictMajorsBatch(inputsForGroup);
+        } catch (error: unknown) {
+            this.logger.warn(
+                `Batch failed for group ${subjectGroup}, trying individual predictions`,
+                {
+                    error:
+                        error instanceof Error ? error.message : String(error),
+                },
+            );
+
+            // Fallback: individual predictions with simple retry
+            return await this.processIndividuallyWithRetry(
+                inputsForGroup,
+                subjectGroup,
+            );
+        }
+    }
+
+    private async processSmallGroups(
+        userInputs: UserInputL2[],
+    ): Promise<L2PredictResult[]> {
+        // Group inputs by subject group (each group will have ≤6 items)
+        const groupedInputs = userInputs.reduce((acc, input) => {
+            const group = acc.get(input.to_hop_mon) ?? [];
+            group.push(input);
+            acc.set(input.to_hop_mon, group);
+            return acc;
+        }, new Map<string, UserInputL2[]>());
+
+        const allResults: L2PredictResult[] = [];
+        const subjectGroups = Array.from(groupedInputs.entries());
+
+        this.logger.info("Processing small subject groups", {
+            averageGroupSize: Math.round(
+                userInputs.length / subjectGroups.length,
+            ),
+            totalGroups: subjectGroups.length,
+        });
+
+        // Since groups are small (≤6), process them with simple concurrency
+        const limit = pLimit(this.SERVER_BATCH_CONCURRENCY);
+
+        const results = await Promise.allSettled(
+            subjectGroups.map(([subjectGroup, inputsForGroup]) =>
+                limit(async () => {
+                    return await this.processSmallGroup(
+                        subjectGroup,
+                        inputsForGroup,
+                    );
+                }),
+            ),
+        );
+
+        // Collect results
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            const [subjectGroup] = subjectGroups[i];
+
+            if (result.status === "fulfilled") {
+                allResults.push(...result.value);
+                this.logger.info(`Small group ${subjectGroup} completed`, {
+                    resultsCount: result.value.length,
+                });
+            } else {
+                this.logger.error(`Small group ${subjectGroup} failed`, {
+                    error:
+                        result.reason instanceof Error
+                            ? result.reason.message
+                            : String(result.reason),
+                });
+            }
+        }
+
+        this.logger.info("All small groups processing completed", {
+            failedGroups: results.filter((r) => r.status === "rejected").length,
+            successfulGroups: results.filter((r) => r.status === "fulfilled")
+                .length,
+            totalResults: allResults.length,
+        });
+
+        return allResults;
     }
 
     private async validateResponse(data: unknown): Promise<L2PredictResult[]> {
