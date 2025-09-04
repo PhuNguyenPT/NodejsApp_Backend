@@ -65,6 +65,7 @@ interface Config {
     REDIS_USERNAME?: string;
 
     // Application config
+    SERVER_BATCH_CONCURRENCY: number;
     SERVER_HOSTNAME: string;
     SERVER_PATH: string;
     SERVER_PORT: number;
@@ -79,6 +80,7 @@ interface Config {
     SERVICE_SERVER_HOSTNAME: string;
     SERVICE_SERVER_PATH: string;
     SERVICE_SERVER_PORT: number;
+    SERVICE_TIMEOUT_IN_MS: number;
 }
 
 // Validate and export the typed config object
@@ -150,6 +152,7 @@ export const config: Config = cleanEnv(process.env, {
     REDIS_USERNAME: str({ default: undefined }),
 
     // Application config
+    SERVER_BATCH_CONCURRENCY: num({ default: 5 }),
     SERVER_HOSTNAME: str({ default: "localhost" }),
     SERVER_PATH: str({ default: "/api" }),
     SERVER_PORT: port({ default: 3000 }),
@@ -164,6 +167,7 @@ export const config: Config = cleanEnv(process.env, {
     SERVICE_SERVER_HOSTNAME: str({ default: "localhost" }),
     SERVICE_SERVER_PATH: str({ default: "" }),
     SERVICE_SERVER_PORT: port({ default: 8000 }),
+    SERVICE_TIMEOUT_IN_MS: num({ default: 90000 }),
 });
 
 // Function to create safe config object excluding sensitive password fields

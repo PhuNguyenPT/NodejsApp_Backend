@@ -19,6 +19,10 @@ export class HTTPValidationError {
     detail!: ValidationError[];
 }
 
+export class L2BatchRequest {
+    items!: UserInputL2[];
+}
+
 /**
  * API Response item representing a prediction result with admission code and confidence score.
  *
