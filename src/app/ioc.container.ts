@@ -43,7 +43,7 @@ import { OcrResultService } from "@/service/ocr.result.service.js";
 import {
     PredictionModelService,
     PredictModelServiceConfig,
-} from "@/service/predict.model.service.js";
+} from "@/service/prediction.model.service.js";
 import { StudentService } from "@/service/student.service.js";
 import { UserService } from "@/service/user.service.js";
 import { KeyStore } from "@/type/class/keystore.js";
