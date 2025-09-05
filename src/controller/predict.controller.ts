@@ -25,7 +25,7 @@ import { ILogger } from "@/type/interface/logger.js";
 
 @Route("predict")
 @Tags("Predict Model Service")
-export class PredictController extends Controller {
+export class PredictionController extends Controller {
     constructor(
         @inject(TYPES.PredictModelService)
         private readonly predictModelService: PredictModelService,

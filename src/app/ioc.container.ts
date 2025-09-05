@@ -14,7 +14,7 @@ import { redisClient, redisSubscriber } from "@/config/redis.js";
 import { AuthController } from "@/controller/auth.controller.js";
 import { FileController } from "@/controller/file.controller.js";
 import { OcrController } from "@/controller/ocr.controller.js";
-import { PredictController } from "@/controller/predict.controller.js";
+import { PredictionController } from "@/controller/predict.controller.js";
 import { StudentController } from "@/controller/student.controller.js";
 import { UserController } from "@/controller/user.controller.js";
 import { AwardEntity } from "@/entity/award.js";
@@ -221,7 +221,7 @@ iocContainer.bind<FileController>(FileController).toSelf().inRequestScope();
 iocContainer.bind<OcrController>(OcrController).toSelf().inRequestScope();
 
 iocContainer
-    .bind<PredictController>(PredictController)
+    .bind<PredictionController>(PredictionController)
     .toSelf()
     .inRequestScope();
 
