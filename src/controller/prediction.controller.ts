@@ -24,7 +24,7 @@ import { AuthenticatedRequest } from "@/type/express/express.js";
 import { ILogger } from "@/type/interface/logger.js";
 
 @Route("predict")
-@Tags("Predict Model Service")
+@Tags("Prediction Model Service")
 export class PredictionController extends Controller {
     constructor(
         @inject(TYPES.PredictModelService)
