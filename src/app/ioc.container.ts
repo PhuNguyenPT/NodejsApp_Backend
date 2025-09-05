@@ -14,7 +14,7 @@ import { redisClient, redisSubscriber } from "@/config/redis.js";
 import { AuthController } from "@/controller/auth.controller.js";
 import { FileController } from "@/controller/file.controller.js";
 import { OcrController } from "@/controller/ocr.controller.js";
-import { PredictionController } from "@/controller/predict.controller.js";
+import { PredictionController } from "@/controller/prediction.controller.js";
 import { StudentController } from "@/controller/student.controller.js";
 import { UserController } from "@/controller/user.controller.js";
 import { AwardEntity } from "@/entity/award.js";
