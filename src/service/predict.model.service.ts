@@ -33,10 +33,13 @@ import {
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
+
 export interface PredictModelServiceConfig {
     SERVER_BATCH_CONCURRENCY: number;
     SERVICE_BATCH_CONCURRENCY: number;
+    SERVICE_INPUTS_PER_WORKER: number;
     SERVICE_MAX_RETRIES: number;
+    SERVICE_MIN_BATCH_CONCURRENCY: number;
     SERVICE_PREDICTION_CONCURRENCY: number;
     SERVICE_REQUEST_DELAY_MS: number;
     SERVICE_RETRY_BASE_DELAY_MS: number;
@@ -287,16 +290,28 @@ export class PredictModelService {
         const failedInputs: UserInputL2[] = [];
 
         try {
+            // Calculate dynamic concurrency for this specific group
+            const dynamicConcurrency = this.calculateDynamicBatchConcurrency(
+                inputsForGroup.length,
+                this.config.SERVICE_INPUTS_PER_WORKER, // inputs per worker
+                this.config.SERVICE_BATCH_CONCURRENCY, // Max limit from config
+                this.config.SERVICE_MIN_BATCH_CONCURRENCY, // Min concurrency
+            );
+
             this.logger.info(
                 `Attempting batch prediction for group ${subjectGroup}`,
                 {
+                    calculatedConcurrency: dynamicConcurrency,
+                    configMaxConcurrency: this.config.SERVICE_BATCH_CONCURRENCY,
                     inputCount: inputsForGroup.length,
-                    SERVICE_BATCH_CONCURRENCY:
-                        this.config.SERVICE_BATCH_CONCURRENCY,
                 },
             );
 
-            const batchResults = await this.predictMajorsBatch(inputsForGroup);
+            // Use dynamic concurrency in the batch call
+            const batchResults = await this.predictMajorsBatch(
+                inputsForGroup,
+                dynamicConcurrency,
+            );
             successfulResults.push(...batchResults);
 
             this.logger.info(
@@ -305,6 +320,7 @@ export class PredictModelService {
                     resultCount: batchResults.length,
                     successful: inputsForGroup.length,
                     total: inputsForGroup.length,
+                    usedConcurrency: dynamicConcurrency,
                 },
             );
         } catch (error: unknown) {
@@ -318,17 +334,13 @@ export class PredictModelService {
                 },
             );
 
-            // Add a brief delay before starting individual predictions
-            // to avoid overwhelming the server after a batch failure
             await this.delay(this.config.SERVICE_RETRY_BASE_DELAY_MS);
 
-            // Fallback to individual predictions with concurrency limit and delays
             const limit = pLimit(this.config.SERVICE_PREDICTION_CONCURRENCY);
             const batchResults = await Promise.allSettled(
                 inputsForGroup.map((userInput, index) =>
                     limit(async () => {
                         try {
-                            // Stagger individual requests to avoid overwhelming the server
                             if (index > 0) {
                                 await this.delay(
                                     this.config.SERVICE_REQUEST_DELAY_MS,
@@ -505,6 +517,42 @@ export class PredictModelService {
     // PRIVATE HELPER METHODS: PREDICTION EXECUTION & RETRY LOGIC
     // =================================================================
 
+    /**
+     * Calculates optimal batch concurrency based on user input count
+     * @param userInputCount Total number of user inputs to process
+     * @param inputsPerWorker Target number of inputs per worker (2-3)
+     * @param maxConcurrency Maximum allowed concurrency (optional safety limit)
+     * @param minConcurrency Minimum allowed concurrency (default: 1)
+     * @returns Calculated batch concurrency
+     */
+    private calculateDynamicBatchConcurrency(
+        userInputCount: number,
+        inputsPerWorker = 3, // Default to 3 inputs per worker
+        maxConcurrency?: number,
+        minConcurrency = 1,
+    ): number {
+        // Calculate needed workers based on inputs per worker
+        const neededWorkers = Math.ceil(userInputCount / inputsPerWorker);
+
+        // Apply constraints
+        let concurrency = Math.max(neededWorkers, minConcurrency);
+
+        if (maxConcurrency) {
+            concurrency = Math.min(concurrency, maxConcurrency);
+        }
+
+        this.logger.info("Calculated dynamic batch concurrency", {
+            finalConcurrency: concurrency,
+            inputsPerWorker,
+            maxConcurrency: maxConcurrency ?? "none",
+            minConcurrency,
+            neededWorkers,
+            userInputCount,
+        });
+
+        return concurrency;
+    }
+
     private calculateSubjectGroupScores(
         studentInfoDTO: StudentInfoDTO,
     ): SubjectGroupScore[] {
@@ -602,7 +650,6 @@ export class PredictModelService {
 
         return scenarios;
     }
-
     private createBaseUserInputTemplate(
         studentInfoDTO: StudentInfoDTO,
     ): Omit<
@@ -642,7 +689,6 @@ export class PredictModelService {
             tinh_tp: studentInfoDTO.province,
         };
     }
-
     // =================================================================
     // PRIVATE HELPER METHODS: DATA FETCHING & VALIDATION
     // =================================================================
@@ -1040,27 +1086,35 @@ export class PredictModelService {
     }
 
     private async predictMajorsBatch(
-        userInputs: UserInputL2[], // Changed to accept array instead of single input
+        userInputs: UserInputL2[],
+        dynamicConcurrency?: number, // Optional override
     ): Promise<L2PredictResult[]> {
         try {
+            // Calculate dynamic concurrency if not provided
+            const batchConcurrency =
+                dynamicConcurrency ??
+                this.calculateDynamicBatchConcurrency(
+                    userInputs.length,
+                    this.config.SERVICE_INPUTS_PER_WORKER, // inputs per worker
+                    this.config.SERVICE_BATCH_CONCURRENCY, // Use config as max limit
+                    this.config.SERVICE_MIN_BATCH_CONCURRENCY, // Min concurrency
+                );
+
             this.logger.info("Starting batch prediction", {
+                calculatedConcurrency: batchConcurrency,
+                configuredMaxConcurrency: this.config.SERVICE_BATCH_CONCURRENCY,
                 inputCount: userInputs.length,
-                SERVICE_BATCH_CONCURRENCY:
-                    this.config.SERVICE_BATCH_CONCURRENCY,
             });
 
-            // Create the proper batch request structure
             const batchRequest = {
                 items: userInputs,
             };
 
-            // Fix the URL construction - use proper query parameter
             const response = await this.httpClient.post<L2PredictResult[][]>(
-                `/predict/l2/batch?concurrency=${this.config.SERVICE_BATCH_CONCURRENCY.toString()}`,
+                `/predict/l2/batch?concurrency=${batchConcurrency.toString()}`,
                 batchRequest,
             );
 
-            // The batch endpoint returns an array of arrays, so we need to flatten it
             const flattenedResults = response.data.flat();
             const validatedResults =
                 await this.validateResponse(flattenedResults);
@@ -1068,14 +1122,14 @@ export class PredictModelService {
             this.logger.info("Batch prediction completed", {
                 inputCount: userInputs.length,
                 resultCount: validatedResults.length,
+                usedConcurrency: batchConcurrency,
             });
 
             return validatedResults;
         } catch (error) {
             const errorContext = {
                 inputCount: userInputs.length,
-                SERVICE_BATCH_CONCURRENCY:
-                    this.config.SERVICE_BATCH_CONCURRENCY,
+                usedConcurrency: dynamicConcurrency ?? "calculated",
             };
 
             if (axios.isAxiosError(error)) {

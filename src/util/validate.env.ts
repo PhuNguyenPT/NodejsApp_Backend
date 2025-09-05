@@ -72,7 +72,9 @@ interface Config {
 
     // Predict model service config
     SERVICE_BATCH_CONCURRENCY: number;
+    SERVICE_INPUTS_PER_WORKER: number;
     SERVICE_MAX_RETRIES: number;
+    SERVICE_MIN_BATCH_CONCURRENCY: number;
     SERVICE_PREDICTION_CONCURRENCY: number;
     SERVICE_REQUEST_DELAY_MS: number;
     SERVICE_RETRY_BASE_DELAY_MS: number;
@@ -159,7 +161,9 @@ export const config: Config = cleanEnv(process.env, {
 
     // Predict model service config
     SERVICE_BATCH_CONCURRENCY: num({ default: 3 }),
+    SERVICE_INPUTS_PER_WORKER: num({ default: 3 }),
     SERVICE_MAX_RETRIES: num({ default: 2 }),
+    SERVICE_MIN_BATCH_CONCURRENCY: num({ default: 1 }),
     SERVICE_PREDICTION_CONCURRENCY: num({ default: 5 }),
     SERVICE_REQUEST_DELAY_MS: num({ default: 100 }),
     SERVICE_RETRY_BASE_DELAY_MS: num({ default: 2000 }),
