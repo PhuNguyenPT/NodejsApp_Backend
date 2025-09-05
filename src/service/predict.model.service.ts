@@ -37,6 +37,7 @@ import { ILogger } from "@/type/interface/logger.js";
 export interface PredictModelServiceConfig {
     SERVER_BATCH_CONCURRENCY: number;
     SERVICE_BATCH_CONCURRENCY: number;
+    SERVICE_CHUNK_SIZE_INPUT_ARRAY: number;
     SERVICE_INPUTS_PER_WORKER: number;
     SERVICE_MAX_RETRIES: number;
     SERVICE_MIN_BATCH_CONCURRENCY: number;
@@ -117,7 +118,10 @@ export class PredictModelService {
         }
 
         // Execute predictions with improved error handling and retry logic
-        const results = await this.executePredictionsWithRetry(userInputs);
+        const results = await this.executePredictionsWithRetry(
+            userInputs,
+            this.config.SERVICE_CHUNK_SIZE_INPUT_ARRAY,
+        );
 
         // Deduplicate by ma_xet_tuyen, keeping the highest score
         const deduplicatedResults = this.deduplicateByHighestScore(results);
@@ -513,10 +517,6 @@ export class PredictModelService {
         return [...successfulResults, ...retryResults];
     }
 
-    // =================================================================
-    // PRIVATE HELPER METHODS: PREDICTION EXECUTION & RETRY LOGIC
-    // =================================================================
-
     /**
      * Calculates optimal batch concurrency based on user input count
      * @param userInputCount Total number of user inputs to process
@@ -610,6 +610,14 @@ export class PredictModelService {
         return subjectGroupScores;
     }
 
+    private chunkArray<T>(array: T[], chunkSize: number): T[][] {
+        const chunks: T[][] = [];
+        for (let i = 0; i < array.length; i += chunkSize) {
+            chunks.push(array.slice(i, i + chunkSize));
+        }
+        return chunks;
+    }
+
     private collectExamScenarios(
         student: StudentEntity,
         studentInfoDTO: StudentInfoDTO,
@@ -689,9 +697,6 @@ export class PredictModelService {
             tinh_tp: studentInfoDTO.province,
         };
     }
-    // =================================================================
-    // PRIVATE HELPER METHODS: DATA FETCHING & VALIDATION
-    // =================================================================
 
     private deduplicateByHighestScore(
         results: L2PredictResult[],
@@ -715,9 +720,24 @@ export class PredictModelService {
 
     private async executePredictionsWithRetry(
         userInputs: UserInputL2[],
+        maxChunkSize = 10, // Configurable chunk size
     ): Promise<L2PredictResult[]> {
         const allResults: L2PredictResult[] = [];
+        const optimalChunkSize = this.getOptimalChunkSize(
+            userInputs.length,
+            maxChunkSize,
+            {
+                processingComplexity: "medium", // Adjust based on your typical workload
+                serverConcurrency: this.config.SERVER_BATCH_CONCURRENCY,
+            },
+        );
 
+        this.logger.info("Calculated optimal chunk size", {
+            optimalChunkSize,
+            totalInputs: userInputs.length,
+        });
+
+        // Group inputs by subject group first
         const groupedInputs = userInputs.reduce((acc, input) => {
             const group = acc.get(input.to_hop_mon) ?? [];
             group.push(input);
@@ -725,68 +745,80 @@ export class PredictModelService {
             return acc;
         }, new Map<string, UserInputL2[]>());
 
-        // Convert to array for concurrent processing
-        const subjectGroups = Array.from(groupedInputs.entries());
+        // Now chunk each subject group
+        const chunkedGroups: {
+            chunk: UserInputL2[];
+            chunkIndex: number;
+            subjectGroup: string;
+        }[] = [];
 
-        // Create concurrency limiter for subject groups
+        for (const [subjectGroup, inputs] of groupedInputs.entries()) {
+            const chunks = this.chunkArray(inputs, optimalChunkSize);
+            chunks.forEach((chunk, index) => {
+                chunkedGroups.push({
+                    chunk,
+                    chunkIndex: index,
+                    subjectGroup: `${subjectGroup}_chunk_${index.toString()}`,
+                });
+            });
+        }
+
+        // Create concurrency limiter for chunks
         const batchLimit = pLimit(this.config.SERVER_BATCH_CONCURRENCY);
 
-        this.logger.info("Starting concurrent processing of subject groups", {
-            SERVER_BATCH_CONCURRENCY: this.config.SERVER_BATCH_CONCURRENCY,
-            SERVICE_BATCH_CONCURRENCY: this.config.SERVICE_BATCH_CONCURRENCY,
-            SERVICE_PREDICTION_CONCURRENCY:
-                this.config.SERVICE_PREDICTION_CONCURRENCY,
-            totalSubjectGroups: subjectGroups.length,
+        this.logger.info("Starting concurrent processing with chunking", {
+            optimalChunkSize,
+            originalInputCount: userInputs.length,
+            totalChunks: chunkedGroups.length,
+            totalSubjectGroups: groupedInputs.size,
         });
 
-        // Process subject groups with limited concurrency and group indexing
+        // Process chunks with limited concurrency
         const results = await Promise.allSettled(
-            subjectGroups.map(([subjectGroup, inputsForGroup], index) =>
+            chunkedGroups.map(({ chunk, subjectGroup }, globalIndex) =>
                 batchLimit(async () => {
                     return await this._processSubjectGroup(
                         subjectGroup,
-                        inputsForGroup,
-                        index, // Pass the index for staggered processing
+                        chunk,
+                        globalIndex,
                     );
                 }),
             ),
         );
 
-        // Rest of the method remains the same...
+        // Collect results
         for (let i = 0; i < results.length; i++) {
             const result = results[i];
-            const [subjectGroup] = subjectGroups[i];
+            const { subjectGroup } = chunkedGroups[i];
 
             if (result.status === "fulfilled") {
                 allResults.push(...result.value);
                 this.logger.info(
-                    `Subject group ${subjectGroup} completed successfully`,
+                    `Chunk ${subjectGroup} completed successfully`,
                     {
                         resultsCount: result.value.length,
                     },
                 );
             } else {
-                this.logger.error(
-                    `Subject group ${subjectGroup} failed completely`,
-                    {
-                        error:
-                            result.reason instanceof Error
-                                ? result.reason.message
-                                : String(result.reason),
-                    },
-                );
+                this.logger.error(`Chunk ${subjectGroup} failed completely`, {
+                    error:
+                        result.reason instanceof Error
+                            ? result.reason.message
+                            : String(result.reason),
+                });
             }
         }
 
-        this.logger.info("All subject groups processing completed", {
-            failedGroups: results.filter((r) => r.status === "rejected").length,
-            successfulGroups: results.filter((r) => r.status === "fulfilled")
+        this.logger.info("All chunks processing completed", {
+            failedChunks: results.filter((r) => r.status === "rejected").length,
+            successfulChunks: results.filter((r) => r.status === "fulfilled")
                 .length,
             totalResults: allResults.length,
         });
 
         return allResults;
     }
+
     private async executePredictionsWithRetrySmallBatch(
         userInputs: UserInputL2[],
     ): Promise<L2PredictResult[]> {
@@ -819,6 +851,7 @@ export class PredictModelService {
             return await this.processSmallGroups(userInputs);
         }
     }
+
     private async fetchAndValidateOcrResults(
         userId: string,
         studentId: string,
@@ -854,11 +887,6 @@ export class PredictModelService {
 
         return student;
     }
-
-    // =================================================================
-    // PRIVATE HELPER METHODS: UTILITIES & API COMMUNICATION
-    // =================================================================
-
     private findAndValidateConduct(
         conducts: ConductDTO[],
         grade: number,
@@ -973,6 +1001,7 @@ export class PredictModelService {
                 return undefined;
         }
     }
+
     private getAndValidateScoreByCCQT_Type_A_Level(
         level: string,
     ): number | undefined {
@@ -997,6 +1026,84 @@ export class PredictModelService {
             default:
                 return undefined;
         }
+    }
+
+    private getOptimalChunkSize(
+        totalInputs: number,
+        maxChunkSize = 10,
+        factors?: {
+            memoryLimit?: number;
+            networkLatency?: number;
+            processingComplexity?: "high" | "low" | "medium";
+            serverConcurrency?: number;
+        },
+    ): number {
+        const {
+            memoryLimit = 1000, // Default memory limit per chunk
+            networkLatency = 100, // ms
+            processingComplexity = "medium",
+            serverConcurrency = this.config.SERVER_BATCH_CONCURRENCY,
+        } = factors ?? {};
+
+        // Factor 1: Balance with server concurrency
+        // Aim for chunks that can be processed efficiently in parallel
+        const concurrencyBasedSize = Math.ceil(totalInputs / serverConcurrency);
+
+        // Factor 2: Processing complexity adjustment
+        const complexityMultiplier = {
+            high: 0.7,
+            low: 1.5,
+            medium: 1.0,
+        }[processingComplexity];
+
+        // Factor 3: Network efficiency - avoid too many small requests
+        const networkOptimalSize = Math.max(
+            3,
+            Math.min(maxChunkSize, networkLatency / 10),
+        );
+
+        // Factor 4: Memory constraints
+        const memoryBasedSize = Math.floor(memoryLimit / 50); // Assuming ~50 memory units per input
+
+        // Calculate optimal size considering all factors
+        let optimalSize = Math.floor(
+            Math.min(
+                concurrencyBasedSize * complexityMultiplier,
+                networkOptimalSize,
+                memoryBasedSize,
+                maxChunkSize,
+            ),
+        );
+
+        // Ensure minimum viable chunk size
+        optimalSize = Math.max(optimalSize, 1);
+
+        // If total inputs is small, don't over-chunk
+        if (totalInputs <= maxChunkSize) {
+            optimalSize = Math.min(optimalSize, totalInputs);
+        }
+
+        // Calculate efficiency metrics
+        const numChunks = Math.ceil(totalInputs / optimalSize);
+        const remainder = totalInputs % optimalSize;
+        const efficiency = 1 - remainder / totalInputs;
+
+        this.logger.info("Calculated optimal chunk size with factors", {
+            efficiency: `${(efficiency * 100).toFixed(1)}%`,
+            factors: {
+                complexityAdjusted: Math.floor(
+                    concurrencyBasedSize * complexityMultiplier,
+                ),
+                concurrencyBased: concurrencyBasedSize,
+                memoryBased: memoryBasedSize,
+                networkOptimal: networkOptimalSize,
+            },
+            numChunks,
+            optimalSize,
+            totalInputs,
+        });
+
+        return optimalSize;
     }
 
     private isValidationError(data: unknown): data is HTTPValidationError {
