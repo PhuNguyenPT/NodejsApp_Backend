@@ -1,0 +1,20 @@
+import { PredictModelServiceConfig } from "@/service/predict.model.service.js";
+import { PredictModelServerConfig } from "@/type/class/predict.model.server.js";
+import { config } from "@/util/validate.env.js";
+
+export const predictModelServiceConfig: PredictModelServiceConfig = {
+    SERVER_BATCH_CONCURRENCY: config.SERVER_BATCH_CONCURRENCY,
+    SERVICE_BATCH_CONCURRENCY: config.SERVICE_BATCH_CONCURRENCY,
+    SERVICE_MAX_RETRIES: config.SERVICE_MAX_RETRIES,
+    SERVICE_PREDICTION_CONCURRENCY: config.SERVICE_PREDICTION_CONCURRENCY,
+    SERVICE_REQUEST_DELAY_MS: config.SERVICE_REQUEST_DELAY_MS,
+    SERVICE_RETRY_BASE_DELAY_MS: config.SERVICE_RETRY_BASE_DELAY_MS,
+    SERVICE_RETRY_ITERATION_DELAY_MS: config.SERVICE_RETRY_ITERATION_DELAY_MS,
+};
+
+export const predictModelServerConfig: PredictModelServerConfig = {
+    SERVICE_SERVER_HOSTNAME: config.SERVICE_SERVER_HOSTNAME,
+    SERVICE_SERVER_PATH: config.SERVICE_SERVER_PATH,
+    SERVICE_SERVER_PORT: config.SERVICE_SERVER_PORT,
+    SERVICE_TIMEOUT_IN_MS: config.SERVICE_TIMEOUT_IN_MS,
+};
