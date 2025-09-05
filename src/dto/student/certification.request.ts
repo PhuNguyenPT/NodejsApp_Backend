@@ -1,6 +1,7 @@
 import { Expose } from "class-transformer";
 import {
     IsNotEmpty,
+    IsOptional,
     IsString,
     MaxLength,
     MinLength,
@@ -102,14 +103,14 @@ export class CertificationRequest {
     // })
     // levelDescription?: string;
 
-    // @Expose()
-    // @IsOptional()
-    // @IsString({ message: "Certification name must be a string" })
-    // @MaxLength(200, {
-    //     message: "Certification name cannot exceed 200 characters",
-    // })
-    // @MinLength(1, {
-    //     message: "Certification name must be at least 1 character long",
-    // })
-    // name?: string;
+    @Expose()
+    @IsOptional()
+    @IsString({ message: "Certification name must be a string" })
+    @MaxLength(200, {
+        message: "Certification name cannot exceed 200 characters",
+    })
+    @MinLength(1, {
+        message: "Certification name must be at least 1 character long",
+    })
+    name?: string;
 }
