@@ -41,7 +41,7 @@ import { MajorService } from "@/service/major.service.js";
 import { MistralService } from "@/service/mistral.service.js";
 import { OcrResultService } from "@/service/ocr.result.service.js";
 import {
-    PredictModelService,
+    PredictionModelService,
     PredictModelServiceConfig,
 } from "@/service/predict.model.service.js";
 import { StudentService } from "@/service/student.service.js";
@@ -173,8 +173,8 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
-    .bind<PredictModelService>(TYPES.PredictModelService)
-    .to(PredictModelService)
+    .bind<PredictionModelService>(TYPES.PredictionModelService)
+    .to(PredictionModelService)
     .inSingletonScope();
 
 iocContainer

@@ -17,7 +17,7 @@ import {
 import { L2PredictResult, UserInputL2 } from "@/dto/predict/predict.js";
 import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
 import validateDTO from "@/middleware/validation.middleware.js";
-import { PredictModelService } from "@/service/predict.model.service.js";
+import { PredictionModelService } from "@/service/predict.model.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http.status.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
@@ -27,8 +27,8 @@ import { ILogger } from "@/type/interface/logger.js";
 @Tags("Prediction Model Service")
 export class PredictionController extends Controller {
     constructor(
-        @inject(TYPES.PredictModelService)
-        private readonly predictModelService: PredictModelService,
+        @inject(TYPES.PredictionModelService)
+        private readonly predictionModelService: PredictionModelService,
         @inject(TYPES.Logger)
         private readonly logger: ILogger,
     ) {
@@ -47,7 +47,7 @@ export class PredictionController extends Controller {
     ): Promise<L2PredictResult[]> {
         const user: Express.User = request.user;
         const predictResults: L2PredictResult[] =
-            await this.predictModelService.predictMajorsByStudentIdAndUserId(
+            await this.predictionModelService.predictMajorsByStudentIdAndUserId(
                 userInput,
                 studentId,
                 user.id,
@@ -69,7 +69,7 @@ export class PredictionController extends Controller {
     ) {
         const user: Express.User = request.user;
         const predictResults: L2PredictResult[] =
-            await this.predictModelService.getPredictedResults(
+            await this.predictionModelService.getPredictedResults(
                 studentId,
                 user.id,
             );
