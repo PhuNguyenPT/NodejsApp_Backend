@@ -15,6 +15,7 @@ export enum VietnamSouthernProvinces {
     BINH_PHUOC = "Bình Phước",
     CA_MAU = "Cà Mau",
     CAN_THO = "Cần Thơ",
+    DA_LAT = "Đà Lạt",
     DONG_NAI = "Ðồng Nai",
     DONG_THAP = "Đồng Tháp",
     HAU_GIANG = "Hậu Giang",

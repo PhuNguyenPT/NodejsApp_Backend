@@ -21,7 +21,7 @@ import { OcrEventListenerService } from "@/event/orc.event.listener.service.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import { TokenCleanupJob } from "@/job/token.cleanup.job.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
-import { PredictModelService } from "@/service/predict.model.service.js";
+import { PredictModelServer } from "@/type/class/predict.model.server.js";
 import { TYPES } from "@/type/container/types.js";
 import { keyStore } from "@/util/key.js";
 import logger from "@/util/logger.js";
@@ -59,7 +59,7 @@ class App {
         this.initializePassportStrategies();
         this.initializeTokenCleanup();
         await this.initializeEventListeners();
-        await this.initializePredictModelService();
+        await this.initializePredictModelServer();
     }
 
     public listen(): void {
@@ -270,13 +270,12 @@ class App {
         }
     }
 
-    private async initializePredictModelService(): Promise<void> {
+    private async initializePredictModelServer(): Promise<void> {
         try {
-            logger.info("🔗 Initializing Predict Model Service...");
+            logger.info("🔗 Predict Model Server: Initializing...");
 
-            const predictModelService = iocContainer.get<PredictModelService>(
-                TYPES.PredictModelService,
-            );
+            const predictModelSErver: PredictModelServer =
+                iocContainer.get<PredictModelServer>(TYPES.PredictModelServer);
 
             // Perform health check with retry logic
             const maxRetries = 3;
@@ -286,23 +285,23 @@ class App {
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
                     logger.info(
-                        `🏥 Health check attempt ${attempt.toString()}/${maxRetries.toString()}`,
+                        `🏥 Predict Model Server: Health check attempt ${attempt.toString()}/${maxRetries.toString()}`,
                     );
-                    connected = await predictModelService.healthCheck();
+                    connected = await predictModelSErver.healthCheck();
 
                     if (connected) {
                         logger.info(
-                            "✅ Predict Model Service is healthy and ready",
+                            "✅ Predict Model Server: Is Healthy and Ready",
                         );
                         break;
                     } else {
                         logger.warn(
-                            `⚠️ Health check failed on attempt ${attempt.toString()}`,
+                            `⚠️ Predict Model Server: Health check failed on attempt ${attempt.toString()}`,
                         );
 
                         if (attempt < maxRetries) {
                             logger.info(
-                                `⏳ Retrying in ${retryDelay.toString()}ms...`,
+                                `⏳ Predict Model Server: Retrying in ${retryDelay.toString()}ms...`,
                             );
                             await new Promise((resolve) =>
                                 setTimeout(resolve, retryDelay),
@@ -311,7 +310,7 @@ class App {
                     }
                 } catch (error) {
                     logger.error(
-                        `❌ Health check error on attempt ${attempt.toString()}:`,
+                        `❌ Predict Model Server: Health check error on attempt ${attempt.toString()}:`,
                         error,
                     );
 
@@ -321,7 +320,7 @@ class App {
 
                     if (attempt < maxRetries) {
                         logger.info(
-                            `⏳ Retrying in ${retryDelay.toString()}ms...`,
+                            `⏳ Predict Model Server: Retrying in ${retryDelay.toString()}ms...`,
                         );
                         await new Promise((resolve) =>
                             setTimeout(resolve, retryDelay),
@@ -332,14 +331,14 @@ class App {
 
             if (!connected) {
                 const errorMessage =
-                    "Failed to establish connection to Predict Model Service after all retry attempts";
+                    "Predict Model Server: Failed to establish connection after all retry attempts";
                 logger.error("❌ " + errorMessage);
 
                 throw new Error(errorMessage);
             }
         } catch (error) {
             logger.error(
-                "❌ Failed to initialize Predict Model Service:",
+                "❌ Predict Model Server: Failed to initialize Predict Model Server:",
                 error,
             );
             throw error;

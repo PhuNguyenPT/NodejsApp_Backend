@@ -33,7 +33,15 @@ import {
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
-import { config } from "@/util/validate.env.js";
+export interface PredictModelServiceConfig {
+    SERVER_BATCH_CONCURRENCY: number;
+    SERVICE_BATCH_CONCURRENCY: number;
+    SERVICE_MAX_RETRIES: number;
+    SERVICE_PREDICTION_CONCURRENCY: number;
+    SERVICE_REQUEST_DELAY_MS: number;
+    SERVICE_RETRY_BASE_DELAY_MS: number;
+    SERVICE_RETRY_ITERATION_DELAY_MS: number;
+}
 
 interface ExamScenario {
     diem_chuan: number;
@@ -49,22 +57,7 @@ interface SubjectGroupScore {
 }
 @injectable()
 export class PredictModelService {
-    private readonly httpClient: AxiosInstance;
-    private readonly SERVER_BATCH_CONCURRENCY = config.SERVER_BATCH_CONCURRENCY;
-    private readonly SERVICE_BATCH_CONCURRENCY =
-        config.SERVICE_BATCH_CONCURRENCY;
-    private readonly SERVICE_MAX_RETRIES = config.SERVICE_MAX_RETRIES;
-    private readonly SERVICE_PREDICTION_CONCURRENCY =
-        config.SERVICE_PREDICTION_CONCURRENCY;
-    private readonly SERVICE_REQUEST_DELAY_MS = config.SERVICE_REQUEST_DELAY_MS;
-    private readonly SERVICE_RETRY_BASE_DELAY_MS =
-        config.SERVICE_RETRY_BASE_DELAY_MS;
-    private readonly SERVICE_RETRY_ITERATION_DELAY_MS =
-        config.SERVICE_RETRY_ITERATION_DELAY_MS;
-    private readonly SERVICE_SERVER_HOSTNAME = config.SERVICE_SERVER_HOSTNAME;
-    private readonly SERVICE_SERVER_PATH = config.SERVICE_SERVER_PATH;
-    private readonly SERVICE_SERVER_PORT = config.SERVICE_SERVER_PORT;
-    private readonly SERVICE_TIMEOUT_IN_MS = config.SERVICE_TIMEOUT_IN_MS;
+    private readonly config: PredictModelServiceConfig;
 
     constructor(
         @inject(TYPES.Logger) private readonly logger: ILogger,
@@ -72,16 +65,12 @@ export class PredictModelService {
         private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.OcrResultRepository)
         private readonly ocrResultRepository: Repository<OcrResultEntity>,
+        @inject(TYPES.PredictHttpClient)
+        private readonly httpClient: AxiosInstance,
+        @inject(TYPES.PredictModelServiceConfig)
+        config: PredictModelServiceConfig,
     ) {
-        const baseUrl = `http://${this.SERVICE_SERVER_HOSTNAME}:${this.SERVICE_SERVER_PORT.toString()}${this.SERVICE_SERVER_PATH}`;
-
-        this.httpClient = axios.create({
-            baseURL: baseUrl,
-            headers: { "Content-Type": "application/json" },
-            timeout: this.SERVICE_TIMEOUT_IN_MS,
-        });
-
-        this.logger.info("PredictModelService initialized", { baseUrl });
+        this.config = config;
     }
 
     async getPredictedResults(
@@ -137,17 +126,6 @@ export class PredictModelService {
         });
 
         return deduplicatedResults;
-    }
-
-    async healthCheck(): Promise<boolean> {
-        try {
-            const response = await this.httpClient.get("/health", {
-                timeout: 5000,
-            });
-            return response.status === 200;
-        } catch {
-            return false;
-        }
     }
 
     async predictMajorsByStudentIdAndUserId(
@@ -313,7 +291,8 @@ export class PredictModelService {
                 `Attempting batch prediction for group ${subjectGroup}`,
                 {
                     inputCount: inputsForGroup.length,
-                    SERVICE_BATCH_CONCURRENCY: this.SERVICE_BATCH_CONCURRENCY,
+                    SERVICE_BATCH_CONCURRENCY:
+                        this.config.SERVICE_BATCH_CONCURRENCY,
                 },
             );
 
@@ -341,17 +320,19 @@ export class PredictModelService {
 
             // Add a brief delay before starting individual predictions
             // to avoid overwhelming the server after a batch failure
-            await this.delay(this.SERVICE_RETRY_BASE_DELAY_MS);
+            await this.delay(this.config.SERVICE_RETRY_BASE_DELAY_MS);
 
             // Fallback to individual predictions with concurrency limit and delays
-            const limit = pLimit(this.SERVICE_PREDICTION_CONCURRENCY);
+            const limit = pLimit(this.config.SERVICE_PREDICTION_CONCURRENCY);
             const batchResults = await Promise.allSettled(
                 inputsForGroup.map((userInput, index) =>
                     limit(async () => {
                         try {
                             // Stagger individual requests to avoid overwhelming the server
                             if (index > 0) {
-                                await this.delay(this.SERVICE_REQUEST_DELAY_MS);
+                                await this.delay(
+                                    this.config.SERVICE_REQUEST_DELAY_MS,
+                                );
                             }
                             return await this.predictMajors(userInput);
                         } catch (error: unknown) {
@@ -414,7 +395,7 @@ export class PredictModelService {
 
             for (
                 let attempt = 1;
-                attempt <= this.SERVICE_MAX_RETRIES && !success;
+                attempt <= this.config.SERVICE_MAX_RETRIES && !success;
                 attempt++
             ) {
                 try {
@@ -431,7 +412,7 @@ export class PredictModelService {
                 } catch (error: unknown) {
                     const errorMessage =
                         error instanceof Error ? error.message : String(error);
-                    if (attempt === this.SERVICE_MAX_RETRIES) {
+                    if (attempt === this.config.SERVICE_MAX_RETRIES) {
                         this.logger.error(
                             "Sequential retry failed after all attempts for group",
                             {
@@ -448,13 +429,13 @@ export class PredictModelService {
                             },
                         );
                         await this.delay(
-                            this.SERVICE_RETRY_BASE_DELAY_MS * attempt,
+                            this.config.SERVICE_RETRY_BASE_DELAY_MS * attempt,
                         );
                     }
                 }
             }
             if (i < failedInputs.length - 1) {
-                await this.delay(this.SERVICE_RETRY_ITERATION_DELAY_MS);
+                await this.delay(this.config.SERVICE_RETRY_ITERATION_DELAY_MS);
             }
         }
 
@@ -485,9 +466,10 @@ export class PredictModelService {
         this.logger.info(
             `Starting batch processing for subject group: ${subjectGroup} (${(groupIndex + 1).toString()})`,
             {
-                SERVICE_BATCH_CONCURRENCY: this.SERVICE_PREDICTION_CONCURRENCY,
+                SERVICE_BATCH_CONCURRENCY:
+                    this.config.SERVICE_PREDICTION_CONCURRENCY,
                 SERVICE_PREDICTION_CONCURRENCY:
-                    this.SERVICE_PREDICTION_CONCURRENCY,
+                    this.config.SERVICE_PREDICTION_CONCURRENCY,
                 timestamp: new Date().toISOString(),
                 totalInputs: inputsForGroup.length,
             },
@@ -510,7 +492,8 @@ export class PredictModelService {
         this.logger.info(`Subject group ${subjectGroup} completed`, {
             duration: `${duration.toString()}ms`,
             failedInputs: failedInputs.length,
-            SERVICE_PREDICTION_CONCURRENCY: this.SERVICE_PREDICTION_CONCURRENCY,
+            SERVICE_PREDICTION_CONCURRENCY:
+                this.config.SERVICE_PREDICTION_CONCURRENCY,
             throughput: `${(totalResults / (duration / 1000)).toFixed(2)} predictions/sec`,
             totalResults,
         });
@@ -700,12 +683,13 @@ export class PredictModelService {
         const subjectGroups = Array.from(groupedInputs.entries());
 
         // Create concurrency limiter for subject groups
-        const batchLimit = pLimit(this.SERVER_BATCH_CONCURRENCY);
+        const batchLimit = pLimit(this.config.SERVER_BATCH_CONCURRENCY);
 
         this.logger.info("Starting concurrent processing of subject groups", {
-            SERVER_BATCH_CONCURRENCY: this.SERVER_BATCH_CONCURRENCY,
-            SERVICE_BATCH_CONCURRENCY: this.SERVICE_BATCH_CONCURRENCY,
-            SERVICE_PREDICTION_CONCURRENCY: this.SERVICE_PREDICTION_CONCURRENCY,
+            SERVER_BATCH_CONCURRENCY: this.config.SERVER_BATCH_CONCURRENCY,
+            SERVICE_BATCH_CONCURRENCY: this.config.SERVICE_BATCH_CONCURRENCY,
+            SERVICE_PREDICTION_CONCURRENCY:
+                this.config.SERVICE_PREDICTION_CONCURRENCY,
             totalSubjectGroups: subjectGroups.length,
         });
 
@@ -761,7 +745,7 @@ export class PredictModelService {
         userInputs: UserInputL2[],
     ): Promise<L2PredictResult[]> {
         this.logger.info("Starting single batch prediction for all inputs", {
-            SERVICE_BATCH_CONCURRENCY: this.SERVICE_BATCH_CONCURRENCY,
+            SERVICE_BATCH_CONCURRENCY: this.config.SERVICE_BATCH_CONCURRENCY,
             totalInputs: userInputs.length,
         });
 
@@ -1061,7 +1045,8 @@ export class PredictModelService {
         try {
             this.logger.info("Starting batch prediction", {
                 inputCount: userInputs.length,
-                SERVICE_BATCH_CONCURRENCY: this.SERVICE_BATCH_CONCURRENCY,
+                SERVICE_BATCH_CONCURRENCY:
+                    this.config.SERVICE_BATCH_CONCURRENCY,
             });
 
             // Create the proper batch request structure
@@ -1071,7 +1056,7 @@ export class PredictModelService {
 
             // Fix the URL construction - use proper query parameter
             const response = await this.httpClient.post<L2PredictResult[][]>(
-                `/predict/l2/batch?concurrency=${this.SERVICE_BATCH_CONCURRENCY.toString()}`,
+                `/predict/l2/batch?concurrency=${this.config.SERVICE_BATCH_CONCURRENCY.toString()}`,
                 batchRequest,
             );
 
@@ -1089,7 +1074,8 @@ export class PredictModelService {
         } catch (error) {
             const errorContext = {
                 inputCount: userInputs.length,
-                SERVICE_BATCH_CONCURRENCY: this.SERVICE_BATCH_CONCURRENCY,
+                SERVICE_BATCH_CONCURRENCY:
+                    this.config.SERVICE_BATCH_CONCURRENCY,
             };
 
             if (axios.isAxiosError(error)) {
@@ -1141,7 +1127,7 @@ export class PredictModelService {
 
             for (
                 let attempt = 1;
-                attempt <= this.SERVICE_MAX_RETRIES && !success;
+                attempt <= this.config.SERVICE_MAX_RETRIES && !success;
                 attempt++
             ) {
                 try {
@@ -1149,9 +1135,9 @@ export class PredictModelService {
                     allResults.push(...results);
                     success = true;
                 } catch (error: unknown) {
-                    if (attempt === this.SERVICE_MAX_RETRIES) {
+                    if (attempt === this.config.SERVICE_MAX_RETRIES) {
                         this.logger.error(
-                            `Failed all ${this.SERVICE_MAX_RETRIES.toString()} attempts for input in group ${subjectGroup}`,
+                            `Failed all ${this.config.SERVICE_MAX_RETRIES.toString()} attempts for input in group ${subjectGroup}`,
                             {
                                 error:
                                     error instanceof Error
@@ -1172,7 +1158,7 @@ export class PredictModelService {
                             },
                         );
                         await this.delay(
-                            this.SERVICE_RETRY_BASE_DELAY_MS * attempt,
+                            this.config.SERVICE_RETRY_BASE_DELAY_MS * attempt,
                         );
                     }
                 }
@@ -1240,7 +1226,7 @@ export class PredictModelService {
         });
 
         // Since groups are small (≤6), process them with simple concurrency
-        const limit = pLimit(this.SERVER_BATCH_CONCURRENCY);
+        const limit = pLimit(this.config.SERVER_BATCH_CONCURRENCY);
 
         const results = await Promise.allSettled(
             subjectGroups.map(([subjectGroup, inputsForGroup]) =>

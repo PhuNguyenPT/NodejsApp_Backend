@@ -1,3 +1,4 @@
+import { AxiosInstance } from "axios";
 // src/app/ioc.container.ts
 import { Container } from "inversify";
 import { RedisClientType } from "redis";
@@ -5,6 +6,10 @@ import { Repository } from "typeorm";
 
 import { postgresDataSource } from "@/config/data.source.js";
 import { PassportConfig } from "@/config/passport.config.js";
+import {
+    predictModelServerConfig,
+    predictModelServiceConfig,
+} from "@/config/predict.model.config.js";
 import { redisClient, redisSubscriber } from "@/config/redis.js";
 import { AuthController } from "@/controller/auth.controller.js";
 import { FileController } from "@/controller/file.controller.js";
@@ -35,10 +40,17 @@ import { JWTService } from "@/service/jwt.service.js";
 import { MajorService } from "@/service/major.service.js";
 import { MistralService } from "@/service/mistral.service.js";
 import { OcrResultService } from "@/service/ocr.result.service.js";
-import { PredictModelService } from "@/service/predict.model.service.js";
+import {
+    PredictModelService,
+    PredictModelServiceConfig,
+} from "@/service/predict.model.service.js";
 import { StudentService } from "@/service/student.service.js";
 import { UserService } from "@/service/user.service.js";
 import { KeyStore } from "@/type/class/keystore.js";
+import {
+    PredictModelServer,
+    PredictModelServerConfig,
+} from "@/type/class/predict.model.server.js";
 import { TYPES } from "@/type/container/types.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { WinstonLoggerService } from "@/util/logger.js";
@@ -165,6 +177,28 @@ iocContainer
     .to(PredictModelService)
     .inSingletonScope();
 
+iocContainer
+    .bind<PredictModelServer>(TYPES.PredictModelServer)
+    .to(PredictModelServer)
+    .inSingletonScope();
+
+iocContainer
+    .bind<AxiosInstance>(TYPES.PredictHttpClient)
+    .toDynamicValue((context) => {
+        const predictServer = context.get<PredictModelServer>(
+            TYPES.PredictModelServer,
+        );
+        return predictServer.getHttpClient();
+    })
+    .inSingletonScope();
+
+iocContainer
+    .bind<PredictModelServiceConfig>(TYPES.PredictModelServiceConfig)
+    .toConstantValue(predictModelServiceConfig);
+
+iocContainer
+    .bind<PredictModelServerConfig>(TYPES.PredictModelServerConfig)
+    .toConstantValue(predictModelServerConfig);
 iocContainer
     .bind<PassportConfig>(TYPES.PassportConfig)
     .to(PassportConfig)
