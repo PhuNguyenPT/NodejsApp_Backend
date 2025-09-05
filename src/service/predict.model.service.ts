@@ -41,6 +41,7 @@ export interface PredictModelServiceConfig {
     SERVICE_INPUTS_PER_WORKER: number;
     SERVICE_MAX_RETRIES: number;
     SERVICE_MIN_BATCH_CONCURRENCY: number;
+    SERVICE_NETWORK_LATENCY_MS: number;
     SERVICE_PREDICTION_CONCURRENCY: number;
     SERVICE_REQUEST_DELAY_MS: number;
     SERVICE_RETRY_BASE_DELAY_MS: number;
@@ -1040,7 +1041,7 @@ export class PredictModelService {
     ): number {
         const {
             memoryLimit = 1000, // Default memory limit per chunk
-            networkLatency = 100, // ms
+            networkLatency = this.config.SERVICE_NETWORK_LATENCY_MS, // ms
             processingComplexity = "medium",
             serverConcurrency = this.config.SERVER_BATCH_CONCURRENCY,
         } = factors ?? {};
