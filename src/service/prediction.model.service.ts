@@ -61,7 +61,7 @@ interface SubjectGroupScore {
     totalScore: number;
 }
 @injectable()
-export class PredictModelService {
+export class PredictionModelService {
     private readonly config: PredictModelServiceConfig;
 
     constructor(

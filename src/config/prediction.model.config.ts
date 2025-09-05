@@ -1,5 +1,5 @@
-import { PredictModelServiceConfig } from "@/service/predict.model.service.js";
-import { PredictModelServerConfig } from "@/type/class/predict.model.server.js";
+import { PredictModelServiceConfig } from "@/service/prediction.model.service.js";
+import { ClientConfig } from "@/type/class/prediction.service.client.js";
 import { config } from "@/util/validate.env.js";
 
 export const predictModelServiceConfig: PredictModelServiceConfig = {
@@ -14,11 +14,11 @@ export const predictModelServiceConfig: PredictModelServiceConfig = {
     SERVICE_REQUEST_DELAY_MS: config.SERVICE_REQUEST_DELAY_MS,
     SERVICE_RETRY_BASE_DELAY_MS: config.SERVICE_RETRY_BASE_DELAY_MS,
     SERVICE_RETRY_ITERATION_DELAY_MS: config.SERVICE_RETRY_ITERATION_DELAY_MS,
-};
+} as const;
 
-export const predictModelServerConfig: PredictModelServerConfig = {
+export const predictModelServerConfig: ClientConfig = {
     SERVICE_SERVER_HOSTNAME: config.SERVICE_SERVER_HOSTNAME,
     SERVICE_SERVER_PATH: config.SERVICE_SERVER_PATH,
     SERVICE_SERVER_PORT: config.SERVICE_SERVER_PORT,
     SERVICE_TIMEOUT_IN_MS: config.SERVICE_TIMEOUT_IN_MS,
-};
+} as const;

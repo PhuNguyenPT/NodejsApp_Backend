@@ -9,12 +9,12 @@ import { PassportConfig } from "@/config/passport.config.js";
 import {
     predictModelServerConfig,
     predictModelServiceConfig,
-} from "@/config/predict.model.config.js";
+} from "@/config/prediction.model.config.js";
 import { redisClient, redisSubscriber } from "@/config/redis.js";
 import { AuthController } from "@/controller/auth.controller.js";
 import { FileController } from "@/controller/file.controller.js";
 import { OcrController } from "@/controller/ocr.controller.js";
-import { PredictController } from "@/controller/predict.controller.js";
+import { PredictionController } from "@/controller/prediction.controller.js";
 import { StudentController } from "@/controller/student.controller.js";
 import { UserController } from "@/controller/user.controller.js";
 import { AwardEntity } from "@/entity/award.js";
@@ -41,16 +41,16 @@ import { MajorService } from "@/service/major.service.js";
 import { MistralService } from "@/service/mistral.service.js";
 import { OcrResultService } from "@/service/ocr.result.service.js";
 import {
-    PredictModelService,
+    PredictionModelService,
     PredictModelServiceConfig,
-} from "@/service/predict.model.service.js";
+} from "@/service/prediction.model.service.js";
 import { StudentService } from "@/service/student.service.js";
 import { UserService } from "@/service/user.service.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import {
-    PredictModelServer,
-    PredictModelServerConfig,
-} from "@/type/class/predict.model.server.js";
+    ClientConfig,
+    PredictionServiceClient,
+} from "@/type/class/prediction.service.client.js";
 import { TYPES } from "@/type/container/types.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { WinstonLoggerService } from "@/util/logger.js";
@@ -173,20 +173,20 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
-    .bind<PredictModelService>(TYPES.PredictModelService)
-    .to(PredictModelService)
+    .bind<PredictionModelService>(TYPES.PredictionModelService)
+    .to(PredictionModelService)
     .inSingletonScope();
 
 iocContainer
-    .bind<PredictModelServer>(TYPES.PredictModelServer)
-    .to(PredictModelServer)
+    .bind<PredictionServiceClient>(TYPES.PredictionServiceClient)
+    .to(PredictionServiceClient)
     .inSingletonScope();
 
 iocContainer
     .bind<AxiosInstance>(TYPES.PredictHttpClient)
     .toDynamicValue((context) => {
-        const predictServer = context.get<PredictModelServer>(
-            TYPES.PredictModelServer,
+        const predictServer = context.get<PredictionServiceClient>(
+            TYPES.PredictionServiceClient,
         );
         return predictServer.getHttpClient();
     })
@@ -197,8 +197,9 @@ iocContainer
     .toConstantValue(predictModelServiceConfig);
 
 iocContainer
-    .bind<PredictModelServerConfig>(TYPES.PredictModelServerConfig)
+    .bind<ClientConfig>(TYPES.ClientConfig)
     .toConstantValue(predictModelServerConfig);
+
 iocContainer
     .bind<PassportConfig>(TYPES.PassportConfig)
     .to(PassportConfig)
@@ -220,7 +221,7 @@ iocContainer.bind<FileController>(FileController).toSelf().inRequestScope();
 iocContainer.bind<OcrController>(OcrController).toSelf().inRequestScope();
 
 iocContainer
-    .bind<PredictController>(PredictController)
+    .bind<PredictionController>(PredictionController)
     .toSelf()
     .inRequestScope();
 
