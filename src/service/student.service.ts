@@ -74,9 +74,10 @@ export class StudentService {
             studentRequest.certifications &&
             studentRequest.certifications.length > 0
         ) {
-            studentEntity.certifications = this.certificationService.create(
-                studentRequest.certifications,
-            );
+            studentEntity.certifications =
+                this.certificationService.createCertificationEntities(
+                    studentRequest.certifications,
+                );
         }
 
         const savedStudent = await this.studentRepository.save(studentEntity);
@@ -144,9 +145,10 @@ export class StudentService {
             studentRequest.certifications &&
             studentRequest.certifications.length > 0
         ) {
-            studentEntity.certifications = this.certificationService.create(
-                studentRequest.certifications,
-            );
+            studentEntity.certifications =
+                this.certificationService.createCertificationEntities(
+                    studentRequest.certifications,
+                );
             studentEntity.certifications.forEach(
                 (cert) => (cert.createdBy = userEntity.email),
             );

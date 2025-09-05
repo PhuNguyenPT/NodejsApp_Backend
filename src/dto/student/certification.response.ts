@@ -1,5 +1,5 @@
 import { Expose } from "class-transformer";
-import { IsNotEmpty } from "class-validator";
+import { IsNotEmpty, IsOptional } from "class-validator";
 
 import { CEFR } from "@/entity/certification.js";
 import { ExamType } from "@/type/enum/exam.js";
@@ -72,7 +72,7 @@ export class CertificationResponse {
     // @IsOptional()
     // levelDescription?: string;
 
-    // @Expose()
-    // @IsOptional()
-    // name?: string;
+    @Expose()
+    @IsOptional()
+    name?: string;
 }
