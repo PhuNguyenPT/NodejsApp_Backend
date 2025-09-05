@@ -48,9 +48,9 @@ import { StudentService } from "@/service/student.service.js";
 import { UserService } from "@/service/user.service.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import {
-    PredictModelServer,
-    PredictModelServerConfig,
-} from "@/type/class/predict.model.server.js";
+    ClientConfig,
+    PredictionServiceClient,
+} from "@/type/class/prediction.service.client.js";
 import { TYPES } from "@/type/container/types.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { WinstonLoggerService } from "@/util/logger.js";
@@ -178,15 +178,15 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
-    .bind<PredictModelServer>(TYPES.PredictModelServer)
-    .to(PredictModelServer)
+    .bind<PredictionServiceClient>(TYPES.PredictionServiceClient)
+    .to(PredictionServiceClient)
     .inSingletonScope();
 
 iocContainer
     .bind<AxiosInstance>(TYPES.PredictHttpClient)
     .toDynamicValue((context) => {
-        const predictServer = context.get<PredictModelServer>(
-            TYPES.PredictModelServer,
+        const predictServer = context.get<PredictionServiceClient>(
+            TYPES.PredictionServiceClient,
         );
         return predictServer.getHttpClient();
     })
@@ -197,8 +197,9 @@ iocContainer
     .toConstantValue(predictModelServiceConfig);
 
 iocContainer
-    .bind<PredictModelServerConfig>(TYPES.PredictModelServerConfig)
+    .bind<ClientConfig>(TYPES.ClientConfig)
     .toConstantValue(predictModelServerConfig);
+
 iocContainer
     .bind<PassportConfig>(TYPES.PassportConfig)
     .to(PassportConfig)

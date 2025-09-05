@@ -21,12 +21,11 @@ import { OcrEventListenerService } from "@/event/orc.event.listener.service.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import { TokenCleanupJob } from "@/job/token.cleanup.job.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
-import { PredictModelServer } from "@/type/class/predict.model.server.js";
+import { PredictionServiceClient } from "@/type/class/prediction.service.client.js";
 import { TYPES } from "@/type/container/types.js";
 import { keyStore } from "@/util/key.js";
 import logger from "@/util/logger.js";
 import { config } from "@/util/validate.env.js";
-
 class App {
     public basePath!: string;
     public express!: Express;
@@ -274,8 +273,10 @@ class App {
         try {
             logger.info("🔗 Predict Model Server: Initializing...");
 
-            const predictModelSErver: PredictModelServer =
-                iocContainer.get<PredictModelServer>(TYPES.PredictModelServer);
+            const predictModelServer: PredictionServiceClient =
+                iocContainer.get<PredictionServiceClient>(
+                    TYPES.PredictionServiceClient,
+                );
 
             // Perform health check with retry logic
             const maxRetries = 3;
@@ -287,7 +288,7 @@ class App {
                     logger.info(
                         `🏥 Predict Model Server: Health check attempt ${attempt.toString()}/${maxRetries.toString()}`,
                     );
-                    connected = await predictModelSErver.healthCheck();
+                    connected = await predictModelServer.healthCheck();
 
                     if (connected) {
                         logger.info(
