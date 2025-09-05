@@ -9,7 +9,7 @@ import { PassportConfig } from "@/config/passport.config.js";
 import {
     predictModelServerConfig,
     predictModelServiceConfig,
-} from "@/config/predict.model.config.js";
+} from "@/config/prediction.model.config.js";
 import { redisClient, redisSubscriber } from "@/config/redis.js";
 import { AuthController } from "@/controller/auth.controller.js";
 import { FileController } from "@/controller/file.controller.js";
