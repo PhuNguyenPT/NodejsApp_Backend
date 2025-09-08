@@ -67,18 +67,5 @@ export function RedisEventListener(channel: string) {
             listeners,
             target.constructor,
         );
-
-        // Check if the service identifier is already registered
-        const serviceIdentifier = Reflect.getMetadata(
-            SERVICE_IDENTIFIER_METADATA,
-            target.constructor,
-        ) as symbol | undefined;
-
-        if (!serviceIdentifier) {
-            console.warn(
-                `Warning: ${target.constructor.name} has @RedisEventListener methods but no @EventListener class decorator. ` +
-                    `Please add @EventListener(TYPES.YourServiceType) to the class.`,
-            );
-        }
     };
 }
