@@ -13,7 +13,7 @@ import {
 
 import { StudentEntity } from "@/entity/student.js";
 import { ExamType } from "@/type/enum/exam.js";
-import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.award.js";
+import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.subject.js";
 import { Rank } from "@/type/enum/rank.js";
 
 @Entity({ name: "awards" })

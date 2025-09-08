@@ -24,7 +24,7 @@ import { PredictionResultEntity } from "@/entity/prediction.result.js";
 import { UserEntity } from "@/entity/user.js";
 import { ExamType } from "@/type/enum/exam.js";
 import { MajorGroup } from "@/type/enum/major.js";
-import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.award.js";
+import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.subject.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";

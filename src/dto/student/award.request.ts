@@ -7,7 +7,7 @@ import {
     MinLength,
 } from "class-validator";
 
-import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.award.js";
+import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.subject.js";
 import { Rank } from "@/type/enum/rank.js";
 
 /**
