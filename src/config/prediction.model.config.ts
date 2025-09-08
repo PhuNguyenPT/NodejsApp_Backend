@@ -1,8 +1,8 @@
-import { PredictModelServiceConfig } from "@/service/prediction.model.service.js";
+import { PredictionModelServiceConfig } from "@/service/prediction.model.service.js";
 import { ClientConfig } from "@/type/class/prediction.service.client.js";
 import { config } from "@/util/validate.env.js";
 
-export const predictModelServiceConfig: PredictModelServiceConfig = {
+export const predictionModelServiceConfig: PredictionModelServiceConfig = {
     SERVER_BATCH_CONCURRENCY: config.SERVER_BATCH_CONCURRENCY,
     SERVICE_BATCH_CONCURRENCY: config.SERVICE_BATCH_CONCURRENCY,
     SERVICE_CHUNK_SIZE_INPUT_ARRAY: config.SERVICE_CHUNK_SIZE_INPUT_ARRAY,
@@ -16,7 +16,7 @@ export const predictModelServiceConfig: PredictModelServiceConfig = {
     SERVICE_RETRY_ITERATION_DELAY_MS: config.SERVICE_RETRY_ITERATION_DELAY_MS,
 } as const;
 
-export const predictModelServerConfig: ClientConfig = {
+export const predictionServiceClientConfig: ClientConfig = {
     SERVICE_SERVER_HOSTNAME: config.SERVICE_SERVER_HOSTNAME,
     SERVICE_SERVER_PATH: config.SERVICE_SERVER_PATH,
     SERVICE_SERVER_PORT: config.SERVICE_SERVER_PORT,

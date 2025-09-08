@@ -34,7 +34,7 @@ import { EntityNotFoundException } from "@/type/exception/entity.not.found.excep
 import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
 
-export interface PredictModelServiceConfig {
+export interface PredictionModelServiceConfig {
     SERVER_BATCH_CONCURRENCY: number;
     SERVICE_BATCH_CONCURRENCY: number;
     SERVICE_CHUNK_SIZE_INPUT_ARRAY: number;
@@ -62,7 +62,7 @@ interface SubjectGroupScore {
 }
 @injectable()
 export class PredictionModelService {
-    private readonly config: PredictModelServiceConfig;
+    private readonly config: PredictionModelServiceConfig;
 
     constructor(
         @inject(TYPES.Logger) private readonly logger: ILogger,
@@ -72,8 +72,8 @@ export class PredictionModelService {
         private readonly ocrResultRepository: Repository<OcrResultEntity>,
         @inject(TYPES.PredictHttpClient)
         private readonly httpClient: AxiosInstance,
-        @inject(TYPES.PredictModelServiceConfig)
-        config: PredictModelServiceConfig,
+        @inject(TYPES.PredictionModelServiceConfig)
+        config: PredictionModelServiceConfig,
     ) {
         this.config = config;
     }
