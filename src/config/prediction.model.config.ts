@@ -1,8 +1,8 @@
-import { PredictModelServiceConfig } from "@/service/prediction.model.service.js";
+import { PredictionModelServiceConfig } from "@/service/prediction.model.service.js";
 import { ClientConfig } from "@/type/class/prediction.service.client.js";
 import { config } from "@/util/validate.env.js";
 
-export const predictModelServiceConfig: PredictModelServiceConfig = {
+export const predictModelServiceConfig: PredictionModelServiceConfig = {
     SERVER_BATCH_CONCURRENCY: config.SERVER_BATCH_CONCURRENCY,
     SERVICE_BATCH_CONCURRENCY: config.SERVICE_BATCH_CONCURRENCY,
     SERVICE_CHUNK_SIZE_INPUT_ARRAY: config.SERVICE_CHUNK_SIZE_INPUT_ARRAY,

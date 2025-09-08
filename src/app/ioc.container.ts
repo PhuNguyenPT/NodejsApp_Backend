@@ -43,7 +43,7 @@ import { MistralService } from "@/service/mistral.service.js";
 import { OcrResultService } from "@/service/ocr.result.service.js";
 import {
     PredictionModelService,
-    PredictModelServiceConfig,
+    PredictionModelServiceConfig,
 } from "@/service/prediction.model.service.js";
 import { StudentService } from "@/service/student.service.js";
 import { UserService } from "@/service/user.service.js";
@@ -194,7 +194,7 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
-    .bind<PredictModelServiceConfig>(TYPES.PredictModelServiceConfig)
+    .bind<PredictionModelServiceConfig>(TYPES.PredictionModelServiceConfig)
     .toConstantValue(predictModelServiceConfig);
 
 iocContainer
