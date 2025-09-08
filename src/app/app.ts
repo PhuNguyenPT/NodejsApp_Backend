@@ -17,9 +17,9 @@ import { getMorganConfig, setupRequestTracking } from "@/config/morgan.js";
 import { PassportConfig } from "@/config/passport.config.js";
 import { initializeRedis, redisClient } from "@/config/redis.js";
 import swaggerDocs from "@/config/swagger.js";
-import { OcrEventListenerService } from "@/event/orc.event.listener.service.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import { TokenCleanupJob } from "@/job/token.cleanup.job.js";
+import { EventListenerManager } from "@/manager/event.listener.manager.js";
 import ErrorMiddleware from "@/middleware/error.middleware.js";
 import { PredictionServiceClient } from "@/type/class/prediction.service.client.js";
 import { TYPES } from "@/type/container/types.js";
@@ -111,13 +111,13 @@ class App {
                 logger.warn("⚠️ Error stopping token cleanup job:", error);
             }
 
-            // Stop event listeners
+            // Spring-style: Use EventListenerManager for cleanup individual services
             try {
-                const ocrEventListener =
-                    iocContainer.get<OcrEventListenerService>(
-                        TYPES.OcrEventListenerService,
+                const eventListenerManager =
+                    iocContainer.get<EventListenerManager>(
+                        TYPES.EventListenerManager,
                     );
-                await ocrEventListener.cleanup();
+                await eventListenerManager.cleanup();
                 logger.info("✅ Event listeners cleaned up");
             } catch (error: unknown) {
                 logger.warn("⚠️ Error cleaning up event listeners:", error);
@@ -213,16 +213,16 @@ class App {
     private initializeErrorHandling(): void {
         this.express.use(ErrorMiddleware);
     }
+
     private async initializeEventListeners(): Promise<void> {
         try {
-            logger.info("Initializing event listeners...");
-
-            // Initialize OCR event listener with proper type assertion
-            const ocrEventListener = iocContainer.get<OcrEventListenerService>(
-                TYPES.OcrEventListenerService,
+            // Spring-style: Just get the EventListenerManager and call initialize()
+            // It will automatically discover all services decorated with @EventListener
+            const eventListenerManager = iocContainer.get<EventListenerManager>(
+                TYPES.EventListenerManager,
             );
 
-            await ocrEventListener.initialize();
+            await eventListenerManager.initialize();
 
             logger.info("✅ Event listeners initialized successfully");
         } catch (error) {

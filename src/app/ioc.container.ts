@@ -1,6 +1,7 @@
 import { AxiosInstance } from "axios";
 // src/app/ioc.container.ts
 import { Container } from "inversify";
+import { EventListenerManager } from "manager/event.listener.manager.js";
 import { RedisClientType } from "redis";
 import { Repository } from "typeorm";
 
@@ -237,5 +238,14 @@ iocContainer
 iocContainer
     .bind<RedisClientType>(TYPES.RedisSubscriber)
     .toConstantValue(redisSubscriber);
+
+iocContainer
+    .bind<Container>(TYPES.InversifyContainer)
+    .toConstantValue(iocContainer);
+
+iocContainer
+    .bind<EventListenerManager>(TYPES.EventListenerManager)
+    .to(EventListenerManager)
+    .inSingletonScope();
 
 export { iocContainer };

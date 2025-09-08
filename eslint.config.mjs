@@ -6,7 +6,6 @@ import vitest from "@vitest/eslint-plugin";
 
 export default tseslint.config(
   {
-    // 👇 Add the config file to the ignores list here
     ignores: [
       "**/*.js",
       "dist/**/*",
@@ -27,6 +26,18 @@ export default tseslint.config(
     },
   },
   perfectionist.configs["recommended-natural"],
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
   {
     files: ["**/*.test.ts", "**/*.spec.ts"],
     plugins: {

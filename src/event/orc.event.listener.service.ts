@@ -1,8 +1,11 @@
 import { inject, injectable } from "inversify";
-import { type RedisClientType } from "redis";
 import { Repository } from "typeorm";
 import { z } from "zod";
 
+import {
+    EventListener,
+    RedisEventListener,
+} from "@/decorator/redis.event.listener.decorator.js";
 import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
@@ -44,11 +47,11 @@ const OcrEventSchema = z.union([
 
 export const OCR_CHANNEL = "ocr:file_created";
 
+// Spring-style: Register this service for automatic event listener discovery
+@EventListener(TYPES.OcrEventListenerService)
 @injectable()
 export class OcrEventListenerService {
     constructor(
-        @inject(TYPES.RedisSubscriber)
-        private readonly redisSubscriber: RedisClientType,
         @inject(TYPES.MistralService)
         private readonly mistralService: MistralService,
         @inject(TYPES.OcrResultService)
@@ -60,44 +63,9 @@ export class OcrEventListenerService {
         @inject(TYPES.Logger) private readonly logger: ILogger,
     ) {}
 
-    public async cleanup(): Promise<void> {
-        try {
-            await this.redisSubscriber.unsubscribe(OCR_CHANNEL);
-            this.logger.info(`Unsubscribed from channel: ${OCR_CHANNEL}`);
-        } catch (error: unknown) {
-            const errorMessage =
-                error instanceof Error ? error.message : String(error);
-            this.logger.error(`Error unsubscribing from ${OCR_CHANNEL}:`, {
-                errorMessage,
-            });
-            throw error;
-        }
-    }
-
-    public async initialize(): Promise<void> {
-        this.logger.info(
-            `Initializing Redis listener for channel: ${OCR_CHANNEL}`,
-        );
-        try {
-            await this.redisSubscriber.subscribe(
-                OCR_CHANNEL,
-                (message: string) => {
-                    void this.handleMessage(message);
-                },
-            );
-            this.logger.info(
-                `Successfully subscribed to channel: ${OCR_CHANNEL}`,
-            );
-        } catch (error) {
-            this.logger.error(
-                `Failed to subscribe to channel: ${OCR_CHANNEL}`,
-                { error },
-            );
-            throw error;
-        }
-    }
-
-    private async handleMessage(message: string): Promise<void> {
+    // Spring-style: Automatically handles OCR file created events
+    @RedisEventListener(OCR_CHANNEL)
+    private async handleOcrFileCreated(message: string): Promise<void> {
         try {
             const rawPayload: unknown = JSON.parse(message);
             const parsed = OcrEventSchema.safeParse(rawPayload);
