@@ -1,11 +1,34 @@
+import * as bcrypt from "bcrypt";
 // src/migration/1754022674557-CreateDefaultAdmin.ts
 import { MigrationInterface, QueryRunner } from "typeorm";
-import * as bcrypt from "bcrypt";
-import { Role, getDefaultPermissionsByRole } from "@/type/enum/user.js";
+
+import { UserEntity } from "@/entity/user.js";
+import { getDefaultPermissionsByRole, Role } from "@/type/enum/user.js";
 import { config } from "@/util/validate.env.js";
 
 export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
     name = "CreateDefaultAdmin1754794920377";
+
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        const adminEmail = process.env.ADMIN_EMAIL;
+
+        if (!adminEmail) {
+            console.warn(
+                "ADMIN_EMAIL environment variable is required to remove default admin user",
+            );
+            return;
+        }
+
+        // Remove the admin user
+        await queryRunner.query(
+            `DELETE FROM users WHERE email = $1 AND "createdBy" = 'system'`,
+            [adminEmail],
+        );
+
+        console.info(
+            `Default admin user with email ${adminEmail} has been removed`,
+        );
+    }
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Get admin credentials from environment variables
@@ -21,12 +44,12 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
         }
 
         // Check if admin user already exists
-        const existingAdmin = await queryRunner.query(
+        const existingAdminResult = (await queryRunner.query(
             `SELECT id FROM users WHERE email = $1`,
             [adminEmail],
-        );
+        )) as Pick<UserEntity, "id">[];
 
-        if (existingAdmin.length > 0) {
+        if (existingAdminResult.length > 0) {
             console.info(
                 `Admin user with email ${adminEmail} already exists, skipping creation`,
             );
@@ -69,26 +92,5 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
         );
 
         console.info(`Default admin user created with email: ${adminEmail}`);
-    }
-
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        const adminEmail = process.env.ADMIN_EMAIL;
-
-        if (!adminEmail) {
-            console.warn(
-                "ADMIN_EMAIL environment variable is required to remove default admin user",
-            );
-            return;
-        }
-
-        // Remove the admin user
-        await queryRunner.query(
-            `DELETE FROM users WHERE email = $1 AND "createdBy" = 'system'`,
-            [adminEmail],
-        );
-
-        console.info(
-            `Default admin user with email ${adminEmail} has been removed`,
-        );
     }
 }

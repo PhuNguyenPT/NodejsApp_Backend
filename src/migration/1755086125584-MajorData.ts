@@ -1,25 +1,25 @@
+import { MigrationInterface, QueryRunner } from "typeorm";
+
 import { MajorEntity } from "@/entity/major.entity.js";
 import { MajorGroupEntity } from "@/entity/major.group.entity.js";
 import {
     getEnglishKeyByVietnameseName,
     MajorGroup,
 } from "@/type/enum/major.js";
-import { MigrationInterface, QueryRunner } from "typeorm";
 
 // Raw data extracted from the PDF
 const majorData = [
     {
         code: "714",
-        name: "Khoa học giáo dục và đào tạo giáo viên",
         majors: [
             { code: "71401", name: "Khoa học giáo dục" },
             { code: "71402", name: "Đào tạo giáo viên" },
             { code: "71490", name: "Khác" },
         ],
+        name: "Khoa học giáo dục và đào tạo giáo viên",
     },
     {
         code: "721",
-        name: "Nghệ thuật",
         majors: [
             { code: "72101", name: "Mỹ thuật" },
             { code: "72102", name: "Nghệ thuật trình diễn" },
@@ -27,19 +27,19 @@ const majorData = [
             { code: "72104", name: "Mỹ thuật ứng dụng" },
             { code: "72190", name: "Khác" },
         ],
+        name: "Nghệ thuật",
     },
     {
         code: "722",
-        name: "Nhân văn",
         majors: [
             { code: "72201", name: "Ngôn ngữ, văn học và văn hóa Việt Nam" },
             { code: "72202", name: "Ngôn ngữ, văn học và văn hóa nước ngoài" },
             { code: "72290", name: "Khác" },
         ],
+        name: "Nhân văn",
     },
     {
         code: "731",
-        name: "Khoa học xã hội và hành vi",
         majors: [
             { code: "73101", name: "Kinh tế học" },
             { code: "73102", name: "Khoa học chính trị" },
@@ -49,10 +49,10 @@ const majorData = [
             { code: "73106", name: "Khu vực học" },
             { code: "73190", name: "Khác" },
         ],
+        name: "Khoa học xã hội và hành vi",
     },
     {
         code: "732",
-        name: "Báo chí và thông tin",
         majors: [
             { code: "73201", name: "Báo chí và truyền thông" },
             { code: "73202", name: "Thông tin - Thư viện" },
@@ -60,10 +60,10 @@ const majorData = [
             { code: "73204", name: "Xuất bản - Phát hành" },
             { code: "73290", name: "Khác" },
         ],
+        name: "Báo chí và thông tin",
     },
     {
         code: "734",
-        name: "Kinh doanh và quản lý",
         majors: [
             { code: "73401", name: "Kinh doanh" },
             { code: "73402", name: "Tài chính - Ngân hàng - Bảo hiểm" },
@@ -71,46 +71,46 @@ const majorData = [
             { code: "73404", name: "Quản trị - Quản lý" },
             { code: "73490", name: "Khác" },
         ],
+        name: "Kinh doanh và quản lý",
     },
     {
         code: "738",
-        name: "Pháp luật",
         majors: [
             { code: "73801", name: "Luật" },
             { code: "73890", name: "Khác" },
         ],
+        name: "Pháp luật",
     },
     {
         code: "742",
-        name: "Khoa học sự sống",
         majors: [
             { code: "74201", name: "Sinh học" },
             { code: "74202", name: "Sinh học ứng dụng" },
             { code: "74290", name: "Khác" },
         ],
+        name: "Khoa học sự sống",
     },
     {
         code: "744",
-        name: "Khoa học tự nhiên",
         majors: [
             { code: "74401", name: "Khoa học vật chất" },
             { code: "74402", name: "Khoa học trái đất" },
             { code: "74403", name: "Khoa học môi trường" },
             { code: "74490", name: "Khác" },
         ],
+        name: "Khoa học tự nhiên",
     },
     {
         code: "746",
-        name: "Toán và thống kê",
         majors: [
             { code: "74601", name: "Toán học" },
             { code: "74602", name: "Thống kê" },
             { code: "74690", name: "Khác" },
         ],
+        name: "Toán và thống kê",
     },
     {
         code: "748",
-        name: "Máy tính và công nghệ thông tin",
         majors: [
             { code: "74801", name: "Khoa học máy tính" },
             { code: "74802", name: "Mạng máy tính và truyền thông dữ liệu" },
@@ -119,10 +119,10 @@ const majorData = [
             { code: "74805", name: "Kỹ thuật máy tính" },
             { code: "74890", name: "Khác" },
         ],
+        name: "Máy tính và công nghệ thông tin",
     },
     {
         code: "751",
-        name: "Công nghệ kỹ thuật",
         majors: [
             {
                 code: "75101",
@@ -138,10 +138,10 @@ const majorData = [
             { code: "75108", name: "Công nghệ kỹ thuật in" },
             { code: "75190", name: "Khác" },
         ],
+        name: "Công nghệ kỹ thuật",
     },
     {
         code: "752",
-        name: "Kỹ thuật",
         majors: [
             { code: "75201", name: "Kỹ thuật cơ khí và cơ kỹ thuật" },
             { code: "75202", name: "Kỹ thuật điện, điện tử và viễn thông" },
@@ -157,10 +157,10 @@ const majorData = [
             { code: "75206", name: "Kỹ thuật mỏ" },
             { code: "75290", name: "Khác" },
         ],
+        name: "Kỹ thuật",
     },
     {
         code: "754",
-        name: "Sản xuất và chế biến",
         majors: [
             {
                 code: "75401",
@@ -169,38 +169,38 @@ const majorData = [
             { code: "75402", name: "Sản xuất, chế biến sợi, vải, giày, da" },
             { code: "75490", name: "Khác" },
         ],
+        name: "Sản xuất và chế biến",
     },
     {
         code: "758",
-        name: "Kiến trúc và xây dựng",
         majors: [
             { code: "75801", name: "Kiến trúc và quy hoạch" },
             { code: "75802", name: "Xây dựng" },
             { code: "75803", name: "Quản lý xây dựng" },
             { code: "75890", name: "Khác" },
         ],
+        name: "Kiến trúc và xây dựng",
     },
     {
         code: "762",
-        name: "Nông, lâm nghiệp và thủy sản",
         majors: [
             { code: "76201", name: "Nông nghiệp" },
             { code: "76202", name: "Lâm nghiệp" },
             { code: "76203", name: "Thủy sản" },
             { code: "76290", name: "Khác" },
         ],
+        name: "Nông, lâm nghiệp và thủy sản",
     },
     {
         code: "764",
-        name: "Thú y",
         majors: [
             { code: "76401", name: "Thú y" },
             { code: "76490", name: "Khác" },
         ],
+        name: "Thú y",
     },
     {
         code: "772",
-        name: "Sức khỏe",
         majors: [
             { code: "77201", name: "Y học" },
             { code: "77202", name: "Dược học" },
@@ -211,18 +211,18 @@ const majorData = [
             { code: "77207", name: "Y tế công cộng" },
             { code: "77290", name: "Khác" },
         ],
+        name: "Sức khỏe",
     },
     {
         code: "776",
-        name: "Dịch vụ xã hội",
         majors: [
             { code: "77601", name: "Công tác xã hội" },
             { code: "77690", name: "Khác" },
         ],
+        name: "Dịch vụ xã hội",
     },
     {
         code: "781",
-        name: "Du lịch, khách sạn, thể thao và dịch vụ cá nhân",
         majors: [
             { code: "78101", name: "Du lịch" },
             { code: "78102", name: "Khách sạn, nhà hàng" },
@@ -230,37 +230,44 @@ const majorData = [
             { code: "78104", name: "Dịch vụ cá nhân" },
             { code: "78190", name: "Khác" },
         ],
+        name: "Du lịch, khách sạn, thể thao và dịch vụ cá nhân",
     },
     {
         code: "784",
-        name: "Dịch vụ vận tải",
         majors: [
             { code: "78401", name: "Khai thác vận tải" },
             { code: "78490", name: "Khác" },
         ],
+        name: "Dịch vụ vận tải",
     },
     {
         code: "785",
-        name: "Môi trường và bảo vệ môi trường",
         majors: [
             { code: "78501", name: "Khoa học môi trường" },
             { code: "78502", name: "Bảo vệ môi trường" },
             { code: "78590", name: "Khác" },
         ],
+        name: "Môi trường và bảo vệ môi trường",
     },
     {
         code: "786",
-        name: "An ninh, Quốc phòng",
         majors: [
             { code: "78601", name: "An ninh và trật tự xã hội" },
             { code: "78602", name: "Quân sự" },
             { code: "78690", name: "Khác" },
         ],
+        name: "An ninh, Quốc phòng",
     },
-    { code: "790", name: "Khác", majors: [{ code: "79090", name: "Khác" }] },
+    { code: "790", majors: [{ code: "79090", name: "Khác" }], name: "Khác" },
 ];
 
 export class MajorData1755086125584 implements MigrationInterface {
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        // The order is important due to foreign key constraints
+        await queryRunner.query(`DELETE FROM "majors"`);
+        await queryRunner.query(`DELETE FROM "major_groups"`);
+    }
+
     public async up(queryRunner: QueryRunner): Promise<void> {
         // 1. Seed Major Groups
         const majorGroupsToInsert = majorData.map((groupData) => {
@@ -277,8 +284,8 @@ export class MajorData1755086125584 implements MigrationInterface {
 
             return new MajorGroupEntity({
                 code: groupData.code,
-                name: groupData.name as MajorGroup,
                 englishName: englishName,
+                name: groupData.name as MajorGroup,
             });
         });
 
@@ -298,19 +305,13 @@ export class MajorData1755086125584 implements MigrationInterface {
                     majorsToInsert.push(
                         new MajorEntity({
                             code: major.code,
-                            name: major.name,
                             group_id: groupId,
+                            name: major.name,
                         }),
                     );
                 });
             }
         });
         await queryRunner.manager.save(MajorEntity, majorsToInsert);
-    }
-
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        // The order is important due to foreign key constraints
-        await queryRunner.query(`DELETE FROM "majors"`);
-        await queryRunner.query(`DELETE FROM "major_groups"`);
     }
 }

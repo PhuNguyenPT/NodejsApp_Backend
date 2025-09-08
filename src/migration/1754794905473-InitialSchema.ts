@@ -3,6 +3,121 @@ import { MigrationInterface, QueryRunner } from "typeorm";
 export class InitialSchema1754794905473 implements MigrationInterface {
     name = "InitialSchema1754794905473";
 
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(
+            `ALTER TABLE "student_major_groups" DROP CONSTRAINT "FK_80f55c50a4aee989a2ed83a681c"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "student_major_groups" DROP CONSTRAINT "FK_b4b7e67064e4ac35b50bd19a59e"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "students" DROP CONSTRAINT "FK_e0208b4f964e609959aff431bf9"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "awards" DROP CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "files" DROP CONSTRAINT "FK_7e7425b17f9e707331e9a6c7335"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "files" DROP CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "certifications" DROP CONSTRAINT "FK_94ecc704512cfe5019d2577a994"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "majors" DROP CONSTRAINT "FK_10c322c60cd25c2c170a3302033"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "ocr_results" DROP CONSTRAINT "FK_4067652cc759950247f03b4a002"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "ocr_results" DROP CONSTRAINT "FK_0787a97b8492c2aebe1dc2cc644"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "public"."IDX_80f55c50a4aee989a2ed83a681"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "public"."IDX_b4b7e67064e4ac35b50bd19a59"`,
+        );
+        await queryRunner.query(`DROP TABLE "student_major_groups"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_student_user_id"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_student_location"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_student_province"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_student_budget"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_student_created_at"`);
+        await queryRunner.query(
+            `DROP INDEX "public"."idx_student_modified_at"`,
+        );
+        await queryRunner.query(`DROP TABLE "students"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_student_id"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_date"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_category"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_level"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_created_at"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_award_modified_at"`);
+        await queryRunner.query(`DROP TABLE "awards"`);
+        await queryRunner.query(`DROP TYPE "public"."awards_level_enum"`);
+        await queryRunner.query(`DROP TABLE "major_groups"`);
+        await queryRunner.query(`DROP TYPE "public"."major_groups_name_enum"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_file_student_id"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_file_type"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_file_status"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_file_created_at"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_file_modified_at"`);
+        await queryRunner.query(`DROP TABLE "files"`);
+        await queryRunner.query(`DROP TYPE "public"."files_status_enum"`);
+        await queryRunner.query(`DROP TYPE "public"."files_filetype_enum"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_user_id_name"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_user_email"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_user_status"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_user_role"`);
+        await queryRunner.query(
+            `DROP INDEX "public"."idx_user_account_status"`,
+        );
+        await queryRunner.query(`DROP INDEX "public"."idx_user_created_at"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_user_modified_at"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_user_permissions"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_user_phone_numbers"`);
+        await queryRunner.query(`DROP TABLE "users"`);
+        await queryRunner.query(`DROP TYPE "public"."users_status_enum"`);
+        await queryRunner.query(`DROP TYPE "public"."users_role_enum"`);
+        await queryRunner.query(
+            `DROP INDEX "public"."idx_certification_student_id"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "public"."idx_certification_issue_date"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "public"."idx_certification_expiration_date"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "public"."idx_certification_issuing_org"`,
+        );
+        await queryRunner.query(`DROP INDEX "public"."idx_certification_name"`);
+        await queryRunner.query(
+            `DROP INDEX "public"."idx_certification_level"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "public"."idx_certification_created_at"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "public"."idx_certification_modified_at"`,
+        );
+        await queryRunner.query(`DROP TABLE "certifications"`);
+        await queryRunner.query(
+            `DROP TYPE "public"."certifications_cefr_enum"`,
+        );
+        await queryRunner.query(`DROP TABLE "majors"`);
+        await queryRunner.query(`DROP TABLE "posts"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_ocr_student_id"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_ocr_file_id"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_ocr_status"`);
+        await queryRunner.query(`DROP INDEX "public"."idx_ocr_created_at"`);
+        await queryRunner.query(`DROP TABLE "ocr_results"`);
+        await queryRunner.query(`DROP TYPE "public"."ocr_results_status_enum"`);
+    }
+
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(
             `CREATE TYPE "public"."ocr_results_status_enum" AS ENUM('completed', 'failed', 'partial', 'pending', 'processing')`,
@@ -208,120 +323,5 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(
             `ALTER TABLE "student_major_groups" ADD CONSTRAINT "FK_80f55c50a4aee989a2ed83a681c" FOREIGN KEY ("major_group_id") REFERENCES "major_groups"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
         );
-    }
-
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(
-            `ALTER TABLE "student_major_groups" DROP CONSTRAINT "FK_80f55c50a4aee989a2ed83a681c"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "student_major_groups" DROP CONSTRAINT "FK_b4b7e67064e4ac35b50bd19a59e"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "students" DROP CONSTRAINT "FK_e0208b4f964e609959aff431bf9"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "awards" DROP CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "files" DROP CONSTRAINT "FK_7e7425b17f9e707331e9a6c7335"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "files" DROP CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "certifications" DROP CONSTRAINT "FK_94ecc704512cfe5019d2577a994"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "majors" DROP CONSTRAINT "FK_10c322c60cd25c2c170a3302033"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "ocr_results" DROP CONSTRAINT "FK_4067652cc759950247f03b4a002"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "ocr_results" DROP CONSTRAINT "FK_0787a97b8492c2aebe1dc2cc644"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "public"."IDX_80f55c50a4aee989a2ed83a681"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "public"."IDX_b4b7e67064e4ac35b50bd19a59"`,
-        );
-        await queryRunner.query(`DROP TABLE "student_major_groups"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_student_user_id"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_student_location"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_student_province"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_student_budget"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_student_created_at"`);
-        await queryRunner.query(
-            `DROP INDEX "public"."idx_student_modified_at"`,
-        );
-        await queryRunner.query(`DROP TABLE "students"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_student_id"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_date"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_category"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_level"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_created_at"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_award_modified_at"`);
-        await queryRunner.query(`DROP TABLE "awards"`);
-        await queryRunner.query(`DROP TYPE "public"."awards_level_enum"`);
-        await queryRunner.query(`DROP TABLE "major_groups"`);
-        await queryRunner.query(`DROP TYPE "public"."major_groups_name_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_file_student_id"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_file_type"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_file_status"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_file_created_at"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_file_modified_at"`);
-        await queryRunner.query(`DROP TABLE "files"`);
-        await queryRunner.query(`DROP TYPE "public"."files_status_enum"`);
-        await queryRunner.query(`DROP TYPE "public"."files_filetype_enum"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_user_id_name"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_user_email"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_user_status"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_user_role"`);
-        await queryRunner.query(
-            `DROP INDEX "public"."idx_user_account_status"`,
-        );
-        await queryRunner.query(`DROP INDEX "public"."idx_user_created_at"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_user_modified_at"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_user_permissions"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_user_phone_numbers"`);
-        await queryRunner.query(`DROP TABLE "users"`);
-        await queryRunner.query(`DROP TYPE "public"."users_status_enum"`);
-        await queryRunner.query(`DROP TYPE "public"."users_role_enum"`);
-        await queryRunner.query(
-            `DROP INDEX "public"."idx_certification_student_id"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "public"."idx_certification_issue_date"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "public"."idx_certification_expiration_date"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "public"."idx_certification_issuing_org"`,
-        );
-        await queryRunner.query(`DROP INDEX "public"."idx_certification_name"`);
-        await queryRunner.query(
-            `DROP INDEX "public"."idx_certification_level"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "public"."idx_certification_created_at"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "public"."idx_certification_modified_at"`,
-        );
-        await queryRunner.query(`DROP TABLE "certifications"`);
-        await queryRunner.query(
-            `DROP TYPE "public"."certifications_cefr_enum"`,
-        );
-        await queryRunner.query(`DROP TABLE "majors"`);
-        await queryRunner.query(`DROP TABLE "posts"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_ocr_student_id"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_ocr_file_id"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_ocr_status"`);
-        await queryRunner.query(`DROP INDEX "public"."idx_ocr_created_at"`);
-        await queryRunner.query(`DROP TABLE "ocr_results"`);
-        await queryRunner.query(`DROP TYPE "public"."ocr_results_status_enum"`);
     }
 }
