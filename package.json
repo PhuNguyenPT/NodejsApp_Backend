@@ -68,13 +68,17 @@
     "@/generated": "dist/generated",
     "@/handler": "dist/handler",
     "@/job": "dist/job",
+    "@/manager/*": [
+      "dist/manager"
+    ],
     "@/mapper": "dist/mapper",
     "@/middleware": "dist/middleware",
     "@/repository": "dist/repository",
     "@/service": "dist/service",
     "@/token": "dist/token",
     "@/type": "dist/type",
-    "@/util": "dist/util"
+    "@/util": "dist/util",
+    "@/validator/*": "dist/validator"
   },
   "repository": {
     "type": "git",
