@@ -3,7 +3,7 @@ import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
 import pLimit from "p-limit";
-import { Repository } from "typeorm";
+import { IsNull, Repository } from "typeorm";
 
 import {
     HTTPValidationError,
@@ -80,7 +80,7 @@ export class PredictionModelService {
 
     async getPredictedResults(
         studentId: string,
-        userId: string,
+        userId?: string,
     ): Promise<L2PredictResult[]> {
         // Data retrieval and validation
         const student = await this.fetchAndValidateStudent(studentId, userId);
@@ -873,11 +873,11 @@ export class PredictionModelService {
     }
     private async fetchAndValidateStudent(
         studentId: string,
-        userId: string,
+        userId?: string,
     ): Promise<StudentEntity> {
         const student = await this.studentRepository.findOne({
             relations: ["awards", "certifications"],
-            where: { id: studentId, userId },
+            where: { id: studentId, userId: userId ?? IsNull() },
         });
 
         if (!student) {

@@ -1,6 +1,7 @@
 import { Expose, Type } from "class-transformer";
 import { IsNotEmpty } from "class-validator";
 
+import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.award.js";
 import { Rank } from "@/type/enum/rank.js";
 
 /**
@@ -11,16 +12,6 @@ import { Rank } from "@/type/enum/rank.js";
  *   "category": "Tiếng Anh",
  *   "level": "Hạng Nhất",
  *   "name": "Học sinh giỏi cấp quốc gia"
- * }
- * @example
- * {
- *   "awardDate": "2023-12-15",
- *   "awardId": "AWD-2023-001",
- *   "awardingOrganization": "International Science Foundation",
- *   "category": "Academic Excellence",
- *   "description": "Outstanding performance in advanced mathematics and research methodology.",
- *   "level": "Gold Medal",
- *   "name": "Excellence in Mathematics Award"
  * }
  */
 export class AwardResponse {
@@ -39,7 +30,8 @@ export class AwardResponse {
 
     @Expose()
     @IsNotEmpty()
-    category!: string;
+    @Type(() => String)
+    category!: NationalExcellentStudentExamSubject;
 
     // @Expose()
     // @IsOptional()

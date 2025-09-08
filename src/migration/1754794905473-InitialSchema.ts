@@ -58,6 +58,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "public"."idx_award_modified_at"`);
         await queryRunner.query(`DROP TABLE "awards"`);
         await queryRunner.query(`DROP TYPE "public"."awards_level_enum"`);
+        await queryRunner.query(`DROP TYPE "public"."awards_category_enum"`);
         await queryRunner.query(`DROP TABLE "major_groups"`);
         await queryRunner.query(`DROP TYPE "public"."major_groups_name_enum"`);
         await queryRunner.query(`DROP INDEX "public"."idx_file_student_id"`);
@@ -109,21 +110,34 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `DROP TYPE "public"."certifications_cefr_enum"`,
         );
         await queryRunner.query(`DROP TABLE "majors"`);
-        await queryRunner.query(`DROP TABLE "posts"`);
         await queryRunner.query(`DROP INDEX "public"."idx_ocr_student_id"`);
         await queryRunner.query(`DROP INDEX "public"."idx_ocr_file_id"`);
         await queryRunner.query(`DROP INDEX "public"."idx_ocr_status"`);
         await queryRunner.query(`DROP INDEX "public"."idx_ocr_created_at"`);
         await queryRunner.query(`DROP TABLE "ocr_results"`);
         await queryRunner.query(`DROP TYPE "public"."ocr_results_status_enum"`);
+        await queryRunner.query(`DROP TABLE "posts"`);
+        await queryRunner.query(`DROP TABLE "prediction_result"`);
+        await queryRunner.query(
+            `DROP TYPE "public"."prediction_result_status_enum"`,
+        );
     }
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(
-            `CREATE TYPE "public"."ocr_results_status_enum" AS ENUM('completed', 'failed', 'partial', 'pending', 'processing')`,
+            `CREATE TYPE "public"."prediction_result_status_enum" AS ENUM('completed', 'failed', 'processing')`,
         );
         await queryRunner.query(
-            `CREATE TABLE "ocr_results" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "documentAnnotation" text, "errorMessage" text, "fileId" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "processedBy" character varying(255), "scores" jsonb, "status" "public"."ocr_results_status_enum" NOT NULL DEFAULT 'pending', "studentId" uuid NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "UQ_ocr_student_file" UNIQUE ("studentId", "fileId"), CONSTRAINT "REL_0787a97b8492c2aebe1dc2cc64" UNIQUE ("fileId"), CONSTRAINT "PK_562c4e52268d72e5b1a6833beb5" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "prediction_result" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "l1PredictResults" jsonb, "l2PredictResults" jsonb, "status" "public"."prediction_result_status_enum" NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "userId" uuid, CONSTRAINT "PK_fe3737241aefda2c4490379a394" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "posts" ("body" character varying(255) NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying, "title" character varying(255) NOT NULL, CONSTRAINT "PK_2829ac61eff60fcec60d7274b9e" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE TYPE "public"."ocr_results_status_enum" AS ENUM('completed', 'failed', 'processing')`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "ocr_results" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "documentAnnotation" text, "errorMessage" text, "fileId" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "processedBy" character varying(255), "scores" jsonb, "status" "public"."ocr_results_status_enum" NOT NULL, "studentId" uuid NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "UQ_ocr_student_file" UNIQUE ("studentId", "fileId"), CONSTRAINT "REL_0787a97b8492c2aebe1dc2cc64" UNIQUE ("fileId"), CONSTRAINT "PK_562c4e52268d72e5b1a6833beb5" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_ocr_created_at" ON "ocr_results" ("createdAt") `,
@@ -136,9 +150,6 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE INDEX "idx_ocr_student_id" ON "ocr_results" ("studentId") `,
-        );
-        await queryRunner.query(
-            `CREATE TABLE "posts" ("body" character varying(255) NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying, "title" character varying(255) NOT NULL, CONSTRAINT "PK_2829ac61eff60fcec60d7274b9e" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE TABLE "majors" ("code" character varying(255) NOT NULL, "group_id" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, CONSTRAINT "UQ_8b287db61b00b45e58c854f19da" UNIQUE ("code"), CONSTRAINT "PK_9d82cf80fe0593040e50ccb297e" PRIMARY KEY ("id"))`,
@@ -240,10 +251,13 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE TABLE "major_groups" ("code" character varying(255) NOT NULL, "english_name" character varying(255) NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" "public"."major_groups_name_enum" NOT NULL, CONSTRAINT "UQ_aed9ebe4ce2616b293ff84997a3" UNIQUE ("code"), CONSTRAINT "PK_81b0cba483bec614241a6d20369" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
+            `CREATE TYPE "public"."awards_category_enum" AS ENUM('Sinh Học', 'Hoá Học', 'Tiếng Trung', 'Tiếng Anh', 'Tiếng Pháp', 'Địa Lý', 'Lịch Sử', 'Tin Học', 'Tiếng Nhật', 'Ngữ Văn', 'Toán', 'Vật Lý', 'Tiếng Nga')`,
+        );
+        await queryRunner.query(
             `CREATE TYPE "public"."awards_level_enum" AS ENUM('Hạng Nhất', 'Hạng Nhì', 'Hạng Ba')`,
         );
         await queryRunner.query(
-            `CREATE TABLE "awards" ("awardDate" date, "awardId" character varying(100), "awardingOrganization" character varying(200), "category" character varying(100), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "description" text, "examType" jsonb, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "level" "public"."awards_level_enum", "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(200), "studentId" uuid NOT NULL, CONSTRAINT "PK_bc3f6adc548ff46c76c03e06377" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "awards" ("awardDate" date, "awardId" character varying(100), "awardingOrganization" character varying(200), "category" "public"."awards_category_enum", "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "description" text, "examType" jsonb, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "level" "public"."awards_level_enum", "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(200), "studentId" uuid NOT NULL, CONSTRAINT "PK_bc3f6adc548ff46c76c03e06377" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_award_modified_at" ON "awards" ("modifiedAt") `,
