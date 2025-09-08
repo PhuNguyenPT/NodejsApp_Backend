@@ -8,8 +8,8 @@ import { Repository } from "typeorm";
 import { postgresDataSource } from "@/config/data.source.js";
 import { PassportConfig } from "@/config/passport.config.js";
 import {
-    predictModelServerConfig,
-    predictModelServiceConfig,
+    predictionModelServiceConfig,
+    predictionServiceClientConfig,
 } from "@/config/prediction.model.config.js";
 import { redisClient, redisSubscriber } from "@/config/redis.js";
 import { AuthController } from "@/controller/auth.controller.js";
@@ -195,11 +195,11 @@ iocContainer
 
 iocContainer
     .bind<PredictionModelServiceConfig>(TYPES.PredictionModelServiceConfig)
-    .toConstantValue(predictModelServiceConfig);
+    .toConstantValue(predictionModelServiceConfig);
 
 iocContainer
     .bind<ClientConfig>(TYPES.ClientConfig)
-    .toConstantValue(predictModelServerConfig);
+    .toConstantValue(predictionServiceClientConfig);
 
 iocContainer
     .bind<PassportConfig>(TYPES.PassportConfig)
