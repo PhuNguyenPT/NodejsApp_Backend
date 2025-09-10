@@ -180,6 +180,7 @@ export class PredictionModelService {
 
         return deduplicatedResults;
     }
+
     async predictMajorsByStudentIdAndUserId(
         userInput: UserInputL2,
         studentId: string,
@@ -189,7 +190,7 @@ export class PredictionModelService {
             studentId: studentId,
             userId: userId,
         });
-        return await this.predictMajors(userInput);
+        return await this.predictMajorsL2(userInput);
     }
 
     private _createCcqtScenarios(
@@ -392,7 +393,7 @@ export class PredictionModelService {
                                     this.config.SERVICE_REQUEST_DELAY_MS,
                                 );
                             }
-                            return await this.predictMajors(userInput);
+                            return await this.predictMajorsL2(userInput);
                         } catch (error: unknown) {
                             this.logger.warn(
                                 "Individual prediction failed, will retry sequentially",
@@ -460,7 +461,7 @@ export class PredictionModelService {
                     this.logger.info(
                         `Sequential retry attempt ${attempt.toString()} for input ${String(i + 1)}/${failedInputs.length.toString()} in group ${subjectGroup}`,
                     );
-                    const results = await this.predictMajors(userInput);
+                    const results = await this.predictMajorsL2(userInput);
                     successfulRetryResults.push(...results);
                     success = true;
                     retrySuccessCount++;
@@ -651,6 +652,7 @@ export class PredictionModelService {
 
         return subjectGroupScores;
     }
+
     private chunkArray<T>(array: T[], chunkSize: number): T[][] {
         const chunks: T[][] = [];
         for (let i = 0; i < array.length; i += chunkSize) {
@@ -1447,86 +1449,6 @@ export class PredictionModelService {
         return flags;
     }
 
-    private async predictMajors(
-        userInput: UserInputL2,
-    ): Promise<L2PredictResult[]> {
-        try {
-            this.logger.info("Starting prediction", {
-                userInput,
-            });
-
-            const response = await this.httpClient.post<L2PredictResult[]>(
-                `/predict/l2`,
-                userInput,
-            );
-
-            const validatedResults = await this.validateL2PredictResponse(
-                response.data,
-            );
-
-            if (validatedResults.length === 0) {
-                this.logger.info("No valid predictions found", {
-                    major: userInput.nhom_nganh,
-                    subjectGroup: userInput.to_hop_mon,
-                });
-            } else {
-                this.logger.info("Prediction completed", {
-                    count: validatedResults.length,
-                    major: userInput.nhom_nganh,
-                    subjectGroup: userInput.to_hop_mon,
-                });
-            }
-
-            return validatedResults;
-        } catch (error) {
-            const errorContext = {
-                examScore: userInput.diem_chuan,
-                major: userInput.nhom_nganh,
-                subjectGroup: userInput.to_hop_mon,
-            };
-
-            if (axios.isAxiosError(error)) {
-                const axiosError = error as AxiosError;
-                const status = axiosError.response?.status;
-                let detailedMessage = axiosError.message;
-
-                if (
-                    status === 422 &&
-                    this.isValidationError(axiosError.response?.data)
-                ) {
-                    const validationError = axiosError.response.data;
-
-                    const specificErrors = validationError.detail
-                        .map((err) => `${err.loc.join(".")} - ${err.msg}`)
-                        .join("; ");
-
-                    detailedMessage = `API Validation Error: ${specificErrors}`;
-                }
-
-                this.logger.error("API error", {
-                    message: detailedMessage,
-                    status: status ?? "unknown",
-                    ...errorContext,
-                });
-
-                throw new Error(
-                    `API error (${String(status)}): ${detailedMessage} for ${userInput.to_hop_mon}`,
-                );
-            }
-
-            const message =
-                error instanceof Error ? error.message : "Unknown error";
-            this.logger.error("Service error", {
-                message,
-                ...errorContext,
-            });
-
-            throw new Error(
-                `Service error: ${message} for ${userInput.to_hop_mon}`,
-            );
-        }
-    }
-
     private async predictMajorsBatch(
         userInputs: UserInputL2[],
         dynamicConcurrency?: number, // Optional override
@@ -1611,6 +1533,7 @@ export class PredictionModelService {
             throw new Error(`Batch service error: ${message}`);
         }
     }
+
     private async predictMajorsL1(
         userInput: UserInputL1,
     ): Promise<L1PredictResult[]> {
@@ -1685,64 +1608,84 @@ export class PredictionModelService {
         }
     }
 
-    private async processIndividuallyWithRetry(
-        userInputs: UserInputL2[],
-        subjectGroup: string,
+    private async predictMajorsL2(
+        userInput: UserInputL2,
     ): Promise<L2PredictResult[]> {
-        const allResults: L2PredictResult[] = [];
+        try {
+            this.logger.info("Starting prediction", {
+                userInput,
+            });
 
-        for (const userInput of userInputs) {
-            let success = false;
+            const response = await this.httpClient.post<L2PredictResult[]>(
+                `/predict/l2`,
+                userInput,
+            );
 
-            for (
-                let attempt = 1;
-                attempt <= this.config.SERVICE_MAX_RETRIES && !success;
-                attempt++
-            ) {
-                try {
-                    const results = await this.predictMajors(userInput);
-                    allResults.push(...results);
-                    success = true;
-                } catch (error: unknown) {
-                    if (attempt === this.config.SERVICE_MAX_RETRIES) {
-                        this.logger.error(
-                            `Failed all ${this.config.SERVICE_MAX_RETRIES.toString()} attempts for input in group ${subjectGroup}`,
-                            {
-                                error:
-                                    error instanceof Error
-                                        ? error.message
-                                        : String(error),
-                                major: userInput.nhom_nganh,
-                                subjectGroup: userInput.to_hop_mon,
-                            },
-                        );
-                    } else {
-                        this.logger.warn(
-                            `Attempt ${attempt.toString()} failed for group ${subjectGroup}, retrying`,
-                            {
-                                error:
-                                    error instanceof Error
-                                        ? error.message
-                                        : String(error),
-                            },
-                        );
-                        await this.delay(
-                            this.config.SERVICE_RETRY_BASE_DELAY_MS * attempt,
-                        );
-                    }
-                }
+            const validatedResults = await this.validateL2PredictResponse(
+                response.data,
+            );
+
+            if (validatedResults.length === 0) {
+                this.logger.info("No valid predictions found", {
+                    major: userInput.nhom_nganh,
+                    subjectGroup: userInput.to_hop_mon,
+                });
+            } else {
+                this.logger.info("Prediction completed", {
+                    count: validatedResults.length,
+                    major: userInput.nhom_nganh,
+                    subjectGroup: userInput.to_hop_mon,
+                });
             }
+
+            return validatedResults;
+        } catch (error) {
+            const errorContext = {
+                examScore: userInput.diem_chuan,
+                major: userInput.nhom_nganh,
+                subjectGroup: userInput.to_hop_mon,
+            };
+
+            if (axios.isAxiosError(error)) {
+                const axiosError = error as AxiosError;
+                const status = axiosError.response?.status;
+                let detailedMessage = axiosError.message;
+
+                if (
+                    status === 422 &&
+                    this.isValidationError(axiosError.response?.data)
+                ) {
+                    const validationError = axiosError.response.data;
+
+                    const specificErrors = validationError.detail
+                        .map((err) => `${err.loc.join(".")} - ${err.msg}`)
+                        .join("; ");
+
+                    detailedMessage = `API Validation Error: ${specificErrors}`;
+                }
+
+                this.logger.error("API error", {
+                    message: detailedMessage,
+                    status: status ?? "unknown",
+                    ...errorContext,
+                });
+
+                throw new Error(
+                    `API error (${String(status)}): ${detailedMessage} for ${userInput.to_hop_mon}`,
+                );
+            }
+
+            const message =
+                error instanceof Error ? error.message : "Unknown error";
+            this.logger.error("Service error", {
+                message,
+                ...errorContext,
+            });
+
+            throw new Error(
+                `Service error: ${message} for ${userInput.to_hop_mon}`,
+            );
         }
-
-        this.logger.info(
-            `Individual processing completed for group ${subjectGroup}`,
-            {
-                inputCount: userInputs.length,
-                resultCount: allResults.length,
-            },
-        );
-
-        return allResults;
     }
 
     private async validateL1PredictResponse(
