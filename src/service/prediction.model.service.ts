@@ -37,6 +37,7 @@ import {
     SubjectGroupKey,
     VietnameseSubject,
 } from "@/type/enum/subject.js";
+import { UniType } from "@/type/enum/uni.type.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
@@ -784,7 +785,7 @@ export class PredictionModelService {
         "diem_ccta" | "diem_chuan" | "nhom_nganh" | "ten_ccta" | "to_hop_mon"
     > {
         return {
-            cong_lap: 1,
+            cong_lap: this.mapUniTypeToBinaryFlag(studentInfoDTO.uniType),
             hk10: getRankByConduct(
                 this.findAndValidateConduct(studentInfoDTO.conducts, 10),
             ),
@@ -833,7 +834,7 @@ export class PredictionModelService {
 
         return {
             ahld,
-            cong_lap: 1, // Assuming public university preference, adjust as needed
+            cong_lap: this.mapUniTypeToBinaryFlag(studentInfoDTO.uniType),
             dan_toc_thieu_so,
             haimuoi_huyen_ngheo_tnb,
             hoc_phi: studentInfoDTO.maxBudget,
@@ -1402,27 +1403,27 @@ export class PredictionModelService {
     ): HsgSubject {
         const mapping: Record<NationalExcellentStudentExamSubject, HsgSubject> =
             {
-                [NationalExcellentStudentExamSubject.Biology]: HsgSubject.Sinh,
-                [NationalExcellentStudentExamSubject.Chemistry]: HsgSubject.Hoa,
-                [NationalExcellentStudentExamSubject.Chinese]:
-                    HsgSubject.Tieng_Trung,
-                [NationalExcellentStudentExamSubject.English]: HsgSubject.Anh,
-                [NationalExcellentStudentExamSubject.French]:
-                    HsgSubject.Tieng_Phap,
-                [NationalExcellentStudentExamSubject.Geography]: HsgSubject.Dia,
-                [NationalExcellentStudentExamSubject.History]: HsgSubject.Su,
-                [NationalExcellentStudentExamSubject.Information_Technology]:
-                    HsgSubject.Tin,
-                [NationalExcellentStudentExamSubject.Japanese]:
-                    HsgSubject.Tieng_Nhat,
-                [NationalExcellentStudentExamSubject.Literature]:
-                    HsgSubject.Van,
-                [NationalExcellentStudentExamSubject.Mathematics]:
-                    HsgSubject.Toan,
-                [NationalExcellentStudentExamSubject.Physics]: HsgSubject.Ly,
-                [NationalExcellentStudentExamSubject.Russian]:
-                    HsgSubject.Tieng_Nga,
-            };
+                [NationalExcellentStudentExamSubject.BIOLOGY]: HsgSubject.SINH,
+                [NationalExcellentStudentExamSubject.CHEMISTRY]: HsgSubject.HOA,
+                [NationalExcellentStudentExamSubject.CHINESE]:
+                    HsgSubject.TIENG_TRUNG,
+                [NationalExcellentStudentExamSubject.ENGLISH]: HsgSubject.ANH,
+                [NationalExcellentStudentExamSubject.FRENCH]:
+                    HsgSubject.TIENG_PHAP,
+                [NationalExcellentStudentExamSubject.GEOGRAPHY]: HsgSubject.DIA,
+                [NationalExcellentStudentExamSubject.HISTORY]: HsgSubject.SU,
+                [NationalExcellentStudentExamSubject.INFORMATION_TECHNOLOGY]:
+                    HsgSubject.TIN,
+                [NationalExcellentStudentExamSubject.JAPANESE]:
+                    HsgSubject.TIENG_NHAT,
+                [NationalExcellentStudentExamSubject.LITERATURE]:
+                    HsgSubject.VAN,
+                [NationalExcellentStudentExamSubject.MATHEMATICS]:
+                    HsgSubject.TOAN,
+                [NationalExcellentStudentExamSubject.PHYSICS]: HsgSubject.LY,
+                [NationalExcellentStudentExamSubject.RUSSIAN]:
+                    HsgSubject.TIENG_NGA,
+            } as const;
 
         return mapping[subject];
     }
@@ -1464,6 +1465,15 @@ export class PredictionModelService {
         }
 
         return flags;
+    }
+
+    private mapUniTypeToBinaryFlag(uniType: UniType): number {
+        switch (uniType) {
+            case UniType.PRIVATE:
+                return 0;
+            case UniType.PUBLIC:
+                return 1;
+        }
     }
 
     private async predictL2MajorsBatch(

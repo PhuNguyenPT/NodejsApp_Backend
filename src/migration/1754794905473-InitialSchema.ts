@@ -50,6 +50,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `DROP INDEX "public"."idx_student_modified_at"`,
         );
         await queryRunner.query(`DROP TABLE "students"`);
+        await queryRunner.query(`DROP TYPE "public"."students_unitype_enum"`);
         await queryRunner.query(`DROP INDEX "public"."idx_award_student_id"`);
         await queryRunner.query(`DROP INDEX "public"."idx_award_date"`);
         await queryRunner.query(`DROP INDEX "public"."idx_award_category"`);
@@ -282,7 +283,10 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "idx_award_student_id" ON "awards" ("studentId") `,
         );
         await queryRunner.query(
-            `CREATE TABLE "students" ("academicPerformances" jsonb, "aptitudeTestScore" jsonb, "conducts" jsonb, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "location" character varying(500), "majors" jsonb, "maxBudget" numeric(14,2), "minBudget" numeric(14,2), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "nationalExams" jsonb, "province" character varying, "specialStudentCases" jsonb, "talentScores" jsonb, "userId" uuid, "vsatScores" jsonb, CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`,
+            `CREATE TYPE "public"."students_unitype_enum" AS ENUM('Tư thục', 'Công lập')`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "students" ("academicPerformances" jsonb, "aptitudeTestScore" jsonb, "conducts" jsonb, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "location" character varying(500), "majors" jsonb, "maxBudget" numeric(14,2), "minBudget" numeric(14,2), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "nationalExams" jsonb, "province" character varying, "specialStudentCases" jsonb, "talentScores" jsonb, "uniType" "public"."students_unitype_enum", "userId" uuid, "vsatScores" jsonb, CONSTRAINT "PK_7d7f07271ad4ce999880713f05e" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_student_modified_at" ON "students" ("modifiedAt") `,
