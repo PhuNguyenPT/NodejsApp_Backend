@@ -40,6 +40,16 @@ export class HTTPValidationError {
 }
 
 /**
+ * Batch request for L1 predictions - contains multiple User Inputs L1 for initial prioritization.
+ */
+export class L1BatchRequest {
+    @IsArray()
+    @Type(() => UserInputL1)
+    @ValidateNested({ each: true })
+    items!: UserInputL1[];
+}
+
+/**
  * API Response for L1 prediction results with priority type and admission codes with scores.
  * L1 returns results grouped by priority type (loai_uu_tien) with multiple admission codes and their scores.
  *
@@ -72,7 +82,13 @@ export class L1PredictResult {
     ma_xet_tuyen!: Record<string, number>;
 }
 
+/**
+ * Batch request for L2 predictions - contains multiple User Inputs L2 for initial prioritization.
+ */
 export class L2BatchRequest {
+    @IsArray()
+    @Type(() => UserInputL2)
+    @ValidateNested({ each: true })
     items!: UserInputL2[];
 }
 
