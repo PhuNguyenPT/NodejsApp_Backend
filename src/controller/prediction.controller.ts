@@ -69,7 +69,7 @@ export class PredictionController extends Controller {
     ) {
         const user: Express.User = request.user;
         const predictResults: L2PredictResult[] =
-            await this.predictionModelService.getPredictedResults(
+            await this.predictionModelService.getL2PredictResults(
                 studentId,
                 user.id,
             );

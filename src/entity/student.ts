@@ -8,6 +8,7 @@ import {
     ManyToMany,
     ManyToOne,
     OneToMany,
+    OneToOne,
     PrimaryGeneratedColumn,
     Relation,
     UpdateDateColumn,
@@ -19,9 +20,11 @@ import { CertificationEntity } from "@/entity/certification.js";
 import { FileEntity } from "@/entity/file.js";
 import { FileType } from "@/entity/file.js";
 import { MajorGroupEntity } from "@/entity/major.group.entity.js";
+import { PredictionResultEntity } from "@/entity/prediction.result.js";
 import { UserEntity } from "@/entity/user.js";
 import { ExamType } from "@/type/enum/exam.js";
 import { MajorGroup } from "@/type/enum/major.js";
+import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.subject.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
@@ -149,6 +152,12 @@ export class StudentEntity {
     @Column({ nullable: true, type: "jsonb" })
     nationalExams?: ExamSubjectData[];
 
+    @OneToOne("PredictionResultEntity", "student", {
+        cascade: true,
+        nullable: true,
+    })
+    predictionResult?: Relation<PredictionResultEntity>;
+
     @Column({
         enum: VietnamSouthernProvinces,
         nullable: true,
@@ -258,7 +267,9 @@ export class StudentEntity {
     }
 
     // Helper method to get awards by category
-    getAwardsByCategory(category: string): AwardEntity[] {
+    getAwardsByCategory(
+        category: NationalExcellentStudentExamSubject,
+    ): AwardEntity[] {
         if (!this.awards) return [];
         return this.awards.filter((award) => award.category === category);
     }

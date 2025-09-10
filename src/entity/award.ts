@@ -11,10 +11,10 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import { StudentEntity } from "@/entity/student.js";
 import { ExamType } from "@/type/enum/exam.js";
+import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.subject.js";
 import { Rank } from "@/type/enum/rank.js";
-
-import { StudentEntity } from "./student.js";
 
 @Entity({ name: "awards" })
 @Index("idx_award_student_id", ["studentId"])
@@ -33,8 +33,12 @@ export class AwardEntity {
     @Column({ length: 200, nullable: true, type: "varchar" })
     awardingOrganization?: string;
 
-    @Column({ length: 100, nullable: true, type: "varchar" })
-    category?: string;
+    @Column({
+        enum: NationalExcellentStudentExamSubject,
+        nullable: true,
+        type: "enum",
+    })
+    category?: NationalExcellentStudentExamSubject;
 
     @CreateDateColumn({ type: "timestamp with time zone" })
     createdAt!: Date;

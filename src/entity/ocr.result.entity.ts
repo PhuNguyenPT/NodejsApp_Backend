@@ -23,8 +23,6 @@ import { StudentEntity } from "@/entity/student.js";
 export enum OcrStatus {
     COMPLETED = "completed",
     FAILED = "failed",
-    PARTIAL = "partial", // Some files processed, some failed
-    PENDING = "pending",
     PROCESSING = "processing",
 }
 
@@ -76,7 +74,6 @@ export class OcrResultEntity {
     scores?: SubjectScore[];
 
     @Column({
-        default: OcrStatus.PENDING,
         enum: OcrStatus,
         type: "enum",
     })

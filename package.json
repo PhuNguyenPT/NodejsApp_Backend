@@ -99,6 +99,7 @@
     "class-validator": "^0.14.2",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
     "date-fns": "^4.1.0",
     "envalid": "^8.1.0",
     "express": "^5.1.0",

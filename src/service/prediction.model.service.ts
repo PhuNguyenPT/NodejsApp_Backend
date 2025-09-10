@@ -3,7 +3,7 @@ import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
 import pLimit from "p-limit";
-import { Repository } from "typeorm";
+import { IsNull, Repository } from "typeorm";
 
 import {
     HTTPValidationError,
@@ -78,9 +78,9 @@ export class PredictionModelService {
         this.config = config;
     }
 
-    async getPredictedResults(
+    async getL2PredictResults(
         studentId: string,
-        userId: string,
+        userId?: string,
     ): Promise<L2PredictResult[]> {
         // Data retrieval and validation
         const student = await this.fetchAndValidateStudent(studentId, userId);
@@ -93,7 +93,7 @@ export class PredictionModelService {
             studentInfoDTO.getCertificationsByExamType("CCNN");
 
         // Create base template for user inputs
-        const baseTemplate = this.createBaseUserInputTemplate(studentInfoDTO);
+        const baseTemplate = this.createBaseL2UserInputTemplate(studentInfoDTO);
 
         // Collect all possible exam scenarios
         const examScenarios = this.collectExamScenarios(
@@ -102,7 +102,7 @@ export class PredictionModelService {
         );
 
         // Generate user inputs for all combinations
-        const userInputs = this.generateUserInputCombinations(
+        const userInputs = this.generateL2UserInputCombinations(
             baseTemplate,
             examScenarios,
             ccnnCertifications,
@@ -119,7 +119,7 @@ export class PredictionModelService {
         }
 
         // Execute predictions with improved error handling and retry logic
-        const results = await this.executePredictionsWithRetry(
+        const results = await this.executeL2PredictionsWithRetry(
             userInputs,
             this.config.SERVICE_CHUNK_SIZE_INPUT_ARRAY,
         );
@@ -659,7 +659,7 @@ export class PredictionModelService {
 
         return scenarios;
     }
-    private createBaseUserInputTemplate(
+    private createBaseL2UserInputTemplate(
         studentInfoDTO: StudentInfoDTO,
     ): Omit<
         UserInputL2,
@@ -719,7 +719,7 @@ export class PredictionModelService {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    private async executePredictionsWithRetry(
+    private async executeL2PredictionsWithRetry(
         userInputs: UserInputL2[],
         maxChunkSize = 10, // Configurable chunk size
     ): Promise<L2PredictResult[]> {
@@ -820,39 +820,6 @@ export class PredictionModelService {
         return allResults;
     }
 
-    private async executePredictionsWithRetrySmallBatch(
-        userInputs: UserInputL2[],
-    ): Promise<L2PredictResult[]> {
-        this.logger.info("Starting single batch prediction for all inputs", {
-            SERVICE_BATCH_CONCURRENCY: this.config.SERVICE_BATCH_CONCURRENCY,
-            totalInputs: userInputs.length,
-        });
-
-        try {
-            // Try to process all inputs in one batch
-            const results = await this.predictMajorsBatch(userInputs);
-
-            this.logger.info("Single batch prediction completed successfully", {
-                inputCount: userInputs.length,
-                resultCount: results.length,
-            });
-
-            return results;
-        } catch (error: unknown) {
-            this.logger.warn(
-                "Single batch failed, falling back to chunked processing",
-                {
-                    error:
-                        error instanceof Error ? error.message : String(error),
-                    totalInputs: userInputs.length,
-                },
-            );
-
-            // Fallback: Process in smaller chunks
-            return await this.processSmallGroups(userInputs);
-        }
-    }
-
     private async fetchAndValidateOcrResults(
         userId: string,
         studentId: string,
@@ -873,11 +840,11 @@ export class PredictionModelService {
     }
     private async fetchAndValidateStudent(
         studentId: string,
-        userId: string,
+        userId?: string,
     ): Promise<StudentEntity> {
         const student = await this.studentRepository.findOne({
             relations: ["awards", "certifications"],
-            where: { id: studentId, userId },
+            where: { id: studentId, userId: userId ?? IsNull() },
         });
 
         if (!student) {
@@ -916,7 +883,7 @@ export class PredictionModelService {
         return performance;
     }
 
-    private generateUserInputCombinations(
+    private generateL2UserInputCombinations(
         baseTemplate: Omit<
             UserInputL2,
             | "diem_ccta"
@@ -1128,7 +1095,9 @@ export class PredictionModelService {
                 userInput,
             );
 
-            const validatedResults = await this.validateResponse(response.data);
+            const validatedResults = await this.validateL2PredictResponse(
+                response.data,
+            );
 
             if (validatedResults.length === 0) {
                 this.logger.info("No valid predictions found", {
@@ -1225,7 +1194,7 @@ export class PredictionModelService {
 
             const flattenedResults = response.data.flat();
             const validatedResults =
-                await this.validateResponse(flattenedResults);
+                await this.validateL2PredictResponse(flattenedResults);
 
             this.logger.info("Batch prediction completed", {
                 inputCount: userInputs.length,
@@ -1338,100 +1307,9 @@ export class PredictionModelService {
         return allResults;
     }
 
-    private async processSmallGroup(
-        subjectGroup: string,
-        inputsForGroup: UserInputL2[],
+    private async validateL2PredictResponse(
+        data: unknown,
     ): Promise<L2PredictResult[]> {
-        this.logger.info(`Processing small group: ${subjectGroup}`, {
-            inputCount: inputsForGroup.length,
-        });
-
-        // Try batch first (since group is small ≤6)
-        try {
-            return await this.predictMajorsBatch(inputsForGroup);
-        } catch (error: unknown) {
-            this.logger.warn(
-                `Batch failed for group ${subjectGroup}, trying individual predictions`,
-                {
-                    error:
-                        error instanceof Error ? error.message : String(error),
-                },
-            );
-
-            // Fallback: individual predictions with simple retry
-            return await this.processIndividuallyWithRetry(
-                inputsForGroup,
-                subjectGroup,
-            );
-        }
-    }
-
-    private async processSmallGroups(
-        userInputs: UserInputL2[],
-    ): Promise<L2PredictResult[]> {
-        // Group inputs by subject group (each group will have ≤6 items)
-        const groupedInputs = userInputs.reduce((acc, input) => {
-            const group = acc.get(input.to_hop_mon) ?? [];
-            group.push(input);
-            acc.set(input.to_hop_mon, group);
-            return acc;
-        }, new Map<string, UserInputL2[]>());
-
-        const allResults: L2PredictResult[] = [];
-        const subjectGroups = Array.from(groupedInputs.entries());
-
-        this.logger.info("Processing small subject groups", {
-            averageGroupSize: Math.round(
-                userInputs.length / subjectGroups.length,
-            ),
-            totalGroups: subjectGroups.length,
-        });
-
-        // Since groups are small (≤6), process them with simple concurrency
-        const limit = pLimit(this.config.SERVER_BATCH_CONCURRENCY);
-
-        const results = await Promise.allSettled(
-            subjectGroups.map(([subjectGroup, inputsForGroup]) =>
-                limit(async () => {
-                    return await this.processSmallGroup(
-                        subjectGroup,
-                        inputsForGroup,
-                    );
-                }),
-            ),
-        );
-
-        // Collect results
-        for (let i = 0; i < results.length; i++) {
-            const result = results[i];
-            const [subjectGroup] = subjectGroups[i];
-
-            if (result.status === "fulfilled") {
-                allResults.push(...result.value);
-                this.logger.info(`Small group ${subjectGroup} completed`, {
-                    resultsCount: result.value.length,
-                });
-            } else {
-                this.logger.error(`Small group ${subjectGroup} failed`, {
-                    error:
-                        result.reason instanceof Error
-                            ? result.reason.message
-                            : String(result.reason),
-                });
-            }
-        }
-
-        this.logger.info("All small groups processing completed", {
-            failedGroups: results.filter((r) => r.status === "rejected").length,
-            successfulGroups: results.filter((r) => r.status === "fulfilled")
-                .length,
-            totalResults: allResults.length,
-        });
-
-        return allResults;
-    }
-
-    private async validateResponse(data: unknown): Promise<L2PredictResult[]> {
         if (!Array.isArray(data)) {
             throw new Error("Invalid response format");
         }
