@@ -15,19 +15,19 @@ import {
 
 // Define the enum for the National Excellent Student Award subjects
 export enum HsgSubject {
-    Anh = "Anh",
-    Dia = "Địa",
-    Hoa = "Hoá",
-    Ly = "Lý",
-    Sinh = "Sinh",
-    Su = "Sử",
-    Tieng_Nga = "Tiếng Nga",
-    Tieng_Nhat = "Tiếng Nhật",
-    Tieng_Phap = "Tiếng Pháp",
-    Tieng_Trung = "Tiếng Trung",
-    Tin = "Tin",
-    Toan = "Toán",
-    Van = "Văn",
+    ANH = "Anh",
+    DIA = "Địa",
+    HOA = "Hoá",
+    LY = "Lý",
+    SINH = "Sinh",
+    SU = "Sử",
+    TIENG_NGA = "Tiếng Nga",
+    TIENG_NHAT = "Tiếng Nhật",
+    TIENG_PHAP = "Tiếng Pháp",
+    TIENG_TRUNG = "Tiếng Trung",
+    TIN = "Tin",
+    TOAN = "Toán",
+    VAN = "Văn",
 }
 /**
  * HTTP validation error that wraps multiple validation issues.

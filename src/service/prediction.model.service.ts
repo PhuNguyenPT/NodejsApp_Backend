@@ -1402,27 +1402,27 @@ export class PredictionModelService {
     ): HsgSubject {
         const mapping: Record<NationalExcellentStudentExamSubject, HsgSubject> =
             {
-                [NationalExcellentStudentExamSubject.Biology]: HsgSubject.Sinh,
-                [NationalExcellentStudentExamSubject.Chemistry]: HsgSubject.Hoa,
-                [NationalExcellentStudentExamSubject.Chinese]:
-                    HsgSubject.Tieng_Trung,
-                [NationalExcellentStudentExamSubject.English]: HsgSubject.Anh,
-                [NationalExcellentStudentExamSubject.French]:
-                    HsgSubject.Tieng_Phap,
-                [NationalExcellentStudentExamSubject.Geography]: HsgSubject.Dia,
-                [NationalExcellentStudentExamSubject.History]: HsgSubject.Su,
-                [NationalExcellentStudentExamSubject.Information_Technology]:
-                    HsgSubject.Tin,
-                [NationalExcellentStudentExamSubject.Japanese]:
-                    HsgSubject.Tieng_Nhat,
-                [NationalExcellentStudentExamSubject.Literature]:
-                    HsgSubject.Van,
-                [NationalExcellentStudentExamSubject.Mathematics]:
-                    HsgSubject.Toan,
-                [NationalExcellentStudentExamSubject.Physics]: HsgSubject.Ly,
-                [NationalExcellentStudentExamSubject.Russian]:
-                    HsgSubject.Tieng_Nga,
-            };
+                [NationalExcellentStudentExamSubject.BIOLOGY]: HsgSubject.SINH,
+                [NationalExcellentStudentExamSubject.CHEMISTRY]: HsgSubject.HOA,
+                [NationalExcellentStudentExamSubject.CHINESE]:
+                    HsgSubject.TIENG_TRUNG,
+                [NationalExcellentStudentExamSubject.ENGLISH]: HsgSubject.ANH,
+                [NationalExcellentStudentExamSubject.FRENCH]:
+                    HsgSubject.TIENG_PHAP,
+                [NationalExcellentStudentExamSubject.GEOGRAPHY]: HsgSubject.DIA,
+                [NationalExcellentStudentExamSubject.HISTORY]: HsgSubject.SU,
+                [NationalExcellentStudentExamSubject.INFORMATION_TECHNOLOGY]:
+                    HsgSubject.TIN,
+                [NationalExcellentStudentExamSubject.JAPANESE]:
+                    HsgSubject.TIENG_NHAT,
+                [NationalExcellentStudentExamSubject.LITERATURE]:
+                    HsgSubject.VAN,
+                [NationalExcellentStudentExamSubject.MATHEMATICS]:
+                    HsgSubject.TOAN,
+                [NationalExcellentStudentExamSubject.PHYSICS]: HsgSubject.LY,
+                [NationalExcellentStudentExamSubject.RUSSIAN]:
+                    HsgSubject.TIENG_NGA,
+            } as const;
 
         return mapping[subject];
     }
