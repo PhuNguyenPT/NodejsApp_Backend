@@ -115,7 +115,7 @@ export class PredictionModelService {
 
         const combinedResults = this.combineL1Results(results);
 
-        this.logger.info("L1 Prediction results summary", {
+        this.logger.info("L1 Prediction: Results summary", {
             totalInputs: userInputs.length,
             totalResults: combinedResults.length,
         });
@@ -865,7 +865,7 @@ export class PredictionModelService {
         // Use concurrency limiter for L1 predictions
         const limit = pLimit(this.config.SERVICE_PREDICTION_CONCURRENCY);
 
-        this.logger.info("Starting L1 predictions", {
+        this.logger.info("L1 Prediction: Starting L1 predictions", {
             totalInputs: userInputs.length,
         });
 
@@ -880,7 +880,7 @@ export class PredictionModelService {
                         }
                         return await this.predictMajorsL1(userInput);
                     } catch (error: unknown) {
-                        this.logger.warn("L1 prediction failed, will retry", {
+                        this.logger.warn("L1 Prediction: Failed, will retry", {
                             error:
                                 error instanceof Error
                                     ? error.message
@@ -909,7 +909,7 @@ export class PredictionModelService {
         // Retry failed predictions with exponential backoff
         if (failedInputs.length > 0) {
             this.logger.info(
-                `Retrying ${failedInputs.length.toString()} failed L1 predictions`,
+                `L1 Prediction: Retrying ${failedInputs.length.toString()} failed L1 predictions`,
             );
 
             for (const { input } of failedInputs) {
@@ -924,12 +924,12 @@ export class PredictionModelService {
                         allResults.push(...results);
                         success = true;
                         this.logger.info(
-                            `L1 retry successful for major ${input.nhom_nganh.toString()}`,
+                            `L1 Prediction: Retry successful for major ${input.nhom_nganh.toString()}`,
                         );
                     } catch (error: unknown) {
                         if (attempt === this.config.SERVICE_MAX_RETRIES) {
                             this.logger.error(
-                                `L1 prediction failed after all attempts`,
+                                `L1 Prediction: Failed after all attempts`,
                                 {
                                     error:
                                         error instanceof Error
@@ -949,7 +949,7 @@ export class PredictionModelService {
             }
         }
 
-        this.logger.info("L1 predictions completed", {
+        this.logger.info("L1 Prediction: Completed", {
             failedInputs: failedInputs.length,
             totalResults: allResults.length,
         });
@@ -1176,7 +1176,9 @@ export class PredictionModelService {
             .map((major) => {
                 const majorCode = getCodeByVietnameseName(major);
                 if (!majorCode) {
-                    this.logger.warn(`Cannot find code for major: ${major}`);
+                    this.logger.warn(
+                        `L2 Prediction: Cannot find code for major: ${major}`,
+                    );
                     return null;
                 }
                 return {
@@ -1538,7 +1540,7 @@ export class PredictionModelService {
         userInput: UserInputL1,
     ): Promise<L1PredictResult[]> {
         try {
-            this.logger.info("Starting L1 prediction", {
+            this.logger.info("L1 Prediction: Predicting...", {
                 majorGroup: userInput.nhom_nganh,
             });
 
@@ -1552,11 +1554,14 @@ export class PredictionModelService {
             );
 
             if (validatedResults.length === 0) {
-                this.logger.info("No valid L1 predictions found", {
-                    majorGroup: userInput.nhom_nganh,
-                });
+                this.logger.info(
+                    "L1 Prediction: : No valid L1 Prediction Results found",
+                    {
+                        majorGroup: userInput.nhom_nganh,
+                    },
+                );
             } else {
-                this.logger.info("L1 prediction completed", {
+                this.logger.info("L1 Prediction: Completed", {
                     count: validatedResults.length,
                     majorGroup: userInput.nhom_nganh,
                 });
@@ -1584,26 +1589,26 @@ export class PredictionModelService {
                     detailedMessage = `API Validation Error: ${specificErrors}`;
                 }
 
-                this.logger.error("L1 API error", {
+                this.logger.error("L1 Prediction: API error", {
                     message: detailedMessage,
                     status: status ?? "unknown",
                     ...errorContext,
                 });
 
                 throw new Error(
-                    `L1 API error (${String(status)}): ${detailedMessage} for major ${userInput.nhom_nganh.toString()}`,
+                    `L1 Prediction: API error (${String(status)}): ${detailedMessage} for major ${userInput.nhom_nganh.toString()}`,
                 );
             }
 
             const message =
                 error instanceof Error ? error.message : "Unknown error";
-            this.logger.error("L1 service error", {
+            this.logger.error("L1 Prediction: Service error", {
                 message,
                 ...errorContext,
             });
 
             throw new Error(
-                `L1 service error: ${message} for major ${userInput.nhom_nganh.toString()}`,
+                `L1 Prediction: Service error: ${message} for major ${userInput.nhom_nganh.toString()}`,
             );
         }
     }
@@ -1692,12 +1697,14 @@ export class PredictionModelService {
         data: unknown,
     ): Promise<L1PredictResult[]> {
         if (!Array.isArray(data)) {
-            throw new Error("Invalid L1 response format");
+            throw new Error("L1 Prediction: Invalid L1 response format");
         }
 
         // Handle empty array case
         if (data.length === 0) {
-            this.logger.info("No L1 predictions found for this input");
+            this.logger.info(
+                "L1 Prediction: No L1 predictions found for this input",
+            );
             return [];
         }
 
@@ -1710,13 +1717,16 @@ export class PredictionModelService {
             if (errors.length === 0) {
                 results.push(instance);
             } else {
-                this.logger.warn("Invalid L1 prediction result received", {
-                    errors: errors.map((err) => ({
-                        constraints: err.constraints,
-                        property: err.property,
-                    })),
-                    item,
-                });
+                this.logger.warn(
+                    "L1 Prediction: Invalid L1 Prediction Result received",
+                    {
+                        errors: errors.map((err) => ({
+                            constraints: err.constraints,
+                            property: err.property,
+                        })),
+                        item,
+                    },
+                );
             }
         }
 
