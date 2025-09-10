@@ -1095,7 +1095,9 @@ export class PredictionModelService {
                 userInput,
             );
 
-            const validatedResults = await this.validateResponse(response.data);
+            const validatedResults = await this.validateL2PredictResponse(
+                response.data,
+            );
 
             if (validatedResults.length === 0) {
                 this.logger.info("No valid predictions found", {
@@ -1192,7 +1194,7 @@ export class PredictionModelService {
 
             const flattenedResults = response.data.flat();
             const validatedResults =
-                await this.validateResponse(flattenedResults);
+                await this.validateL2PredictResponse(flattenedResults);
 
             this.logger.info("Batch prediction completed", {
                 inputCount: userInputs.length,
@@ -1305,7 +1307,9 @@ export class PredictionModelService {
         return allResults;
     }
 
-    private async validateResponse(data: unknown): Promise<L2PredictResult[]> {
+    private async validateL2PredictResponse(
+        data: unknown,
+    ): Promise<L2PredictResult[]> {
         if (!Array.isArray(data)) {
             throw new Error("Invalid response format");
         }
