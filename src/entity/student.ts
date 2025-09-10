@@ -27,6 +27,7 @@ import { MajorGroup } from "@/type/enum/major.js";
 import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.subject.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
+import { UniType } from "@/type/enum/uni.type.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
 export interface AcademicPerformanceData {
@@ -176,6 +177,9 @@ export class StudentEntity {
      */
     @Column({ nullable: true, type: "jsonb" })
     talentScores?: ExamSubjectData[];
+
+    @Column({ enum: UniType, nullable: true, type: "enum" })
+    uniType?: UniType;
 
     @JoinColumn({ name: "userId" })
     @ManyToOne("UserEntity", "studentEntities", {

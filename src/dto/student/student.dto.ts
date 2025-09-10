@@ -24,6 +24,7 @@ import {
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
+import { UniType } from "@/type/enum/uni.type.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 import { IsArrayUnique } from "@/validator/is.array.unique.validator.js";
 import { IsUniqueSubject } from "@/validator/is.unique.name.js";
@@ -302,6 +303,17 @@ export class StudentInfoDTO {
     @Type(() => ExamSubject)
     @ValidateNested({ each: true })
     talentScores?: ExamSubject[];
+
+    /**
+     * @example "Công lập"
+     * @description The type of university (public or private).
+     * @type {UniType}
+     * @see UniType For the list of possible university types.
+     */
+    @Expose()
+    @IsEnum(UniType)
+    @IsNotEmpty({ message: "University Type is required" })
+    uniType!: UniType;
 
     /**
      * VSAT score (Vietnamese Scholastic Aptitude Test)

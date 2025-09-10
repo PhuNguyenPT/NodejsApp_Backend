@@ -13,6 +13,7 @@ import {
 } from "@/dto/student/exam.profile.dto.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
+import { UniType } from "@/type/enum/uni.type.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese.provinces.js";
 
 export class StudentProfileResponse {
@@ -193,6 +194,15 @@ export class StudentProfileResponse {
     @Expose()
     @Type(() => ExamSubject)
     talentScores?: ExamSubject[];
+
+    /**
+     * @example "Công lập"
+     * @description The type of university (public or private).
+     * @type {UniType}
+     */
+    @Expose()
+    @Type(() => String)
+    uniType!: UniType;
 
     /**
      * @example "863fe715-f516-4115-b97e-385fa77fd0d0"
