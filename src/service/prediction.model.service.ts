@@ -6,11 +6,15 @@ import pLimit from "p-limit";
 import { IsNull, Repository } from "typeorm";
 
 import {
+    HsgSubject,
     HTTPValidationError,
+    L1PredictResult,
     L2PredictResult,
+    UserInputL1,
     UserInputL2,
 } from "@/dto/predict/predict.js";
 import { AcademicPerformanceDTO } from "@/dto/student/academic.performance.dto.js";
+import { AwardDTO } from "@/dto/student/award.dto.js";
 import { CertificationDTO } from "@/dto/student/certification.dto.js";
 import { ConductDTO } from "@/dto/student/conduct.dto.js";
 import { StudentInfoDTO } from "@/dto/student/student.dto.js";
@@ -24,6 +28,9 @@ import {
 import { Conduct, getRankByConduct } from "@/type/enum/conduct.js";
 import { CCNNType, CCQTType, DGNLType } from "@/type/enum/exam.js";
 import { getCodeByVietnameseName } from "@/type/enum/major.js";
+import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.subject.js";
+import { Rank } from "@/type/enum/rank.js";
+import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import {
     getAllPossibleSubjectGroups,
     SUBJECT_GROUPS,
@@ -76,6 +83,44 @@ export class PredictionModelService {
         config: PredictionModelServiceConfig,
     ) {
         this.config = config;
+    }
+
+    async getL1PredictResults(
+        studentId: string,
+        userId?: string,
+    ): Promise<L1PredictResult[]> {
+        const student = await this.fetchAndValidateStudent(studentId, userId);
+        const studentInfoDTO: StudentInfoDTO = plainToInstance(
+            StudentInfoDTO,
+            student,
+        );
+
+        // Create base template for L1 user inputs
+        const baseTemplate = this.createBaseUserInputL1Template(studentInfoDTO);
+
+        // Generate L1 user inputs for all major combinations
+        const userInputs = this.generateUserInputL1Combinations(
+            baseTemplate,
+            studentInfoDTO.majors,
+        );
+
+        if (userInputs.length === 0) {
+            throw new IllegalArgumentException(
+                "No valid user inputs could be generated for L1 prediction",
+            );
+        }
+
+        // Execute L1 predictions
+        const results = await this.executeL1PredictionsWithRetry(userInputs);
+
+        const combinedResults = this.combineL1Results(results);
+
+        this.logger.info("L1 Prediction results summary", {
+            totalInputs: userInputs.length,
+            totalResults: combinedResults.length,
+        });
+
+        return combinedResults;
     }
 
     async getL2PredictResults(
@@ -135,7 +180,6 @@ export class PredictionModelService {
 
         return deduplicatedResults;
     }
-
     async predictMajorsByStudentIdAndUserId(
         userInput: UserInputL2,
         studentId: string,
@@ -147,6 +191,7 @@ export class PredictionModelService {
         });
         return await this.predictMajors(userInput);
     }
+
     private _createCcqtScenarios(
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
@@ -175,10 +220,6 @@ export class PredictionModelService {
         }
         return [];
     }
-
-    // =================================================================
-    // PRIVATE HELPER METHODS: SCENARIO & INPUT GENERATION
-    // =================================================================
 
     private _createDgnlScenarios(
         studentInfoDTO: StudentInfoDTO,
@@ -610,7 +651,6 @@ export class PredictionModelService {
 
         return subjectGroupScores;
     }
-
     private chunkArray<T>(array: T[], chunkSize: number): T[][] {
         const chunks: T[][] = [];
         for (let i = 0; i < array.length; i += chunkSize) {
@@ -659,6 +699,75 @@ export class PredictionModelService {
 
         return scenarios;
     }
+
+    /**
+     * Combines L1 prediction results by keeping only the highest score for each admission code
+     * and removing duplicates across all priority types.
+     * @param results Array of L1PredictResult objects
+     * @returns Combined results with highest scores and no duplicates
+     */
+    private combineL1Results(results: L1PredictResult[]): L1PredictResult[] {
+        // Map to store the highest score for each admission code
+        const admissionCodeScores = new Map<
+            string,
+            {
+                loai_uu_tien: string;
+                score: number;
+            }
+        >();
+
+        // Collect all admission codes with their highest scores
+        for (const result of results) {
+            for (const [admissionCode, score] of Object.entries(
+                result.ma_xet_tuyen,
+            )) {
+                const existing = admissionCodeScores.get(admissionCode);
+
+                if (!existing || score > existing.score) {
+                    admissionCodeScores.set(admissionCode, {
+                        loai_uu_tien: result.loai_uu_tien,
+                        score,
+                    });
+                }
+            }
+        }
+
+        // Group by priority type
+        const groupedResults = new Map<string, Record<string, number>>();
+
+        for (const [admissionCode, data] of admissionCodeScores.entries()) {
+            if (!groupedResults.has(data.loai_uu_tien)) {
+                groupedResults.set(data.loai_uu_tien, {});
+            }
+
+            const group = groupedResults.get(data.loai_uu_tien);
+            if (group) {
+                group[admissionCode] = data.score;
+            }
+        }
+
+        // Convert back to L1PredictResult array
+        return Array.from(groupedResults.entries()).map(
+            ([loai_uu_tien, ma_xet_tuyen]) => ({
+                loai_uu_tien,
+                ma_xet_tuyen,
+            }),
+        );
+    }
+
+    // =================================================================
+    // PRIVATE HELPER METHODS: SCENARIO & INPUT GENERATION
+    // =================================================================
+
+    private compareRanks(rankA: Rank, rankB: Rank): number {
+        const rankOrder = {
+            [Rank.FIRST]: 1,
+            [Rank.SECOND]: 2,
+            [Rank.THIRD]: 3,
+        };
+        return rankOrder[rankA] - rankOrder[rankB];
+    }
+
     private createBaseL2UserInputTemplate(
         studentInfoDTO: StudentInfoDTO,
     ): Omit<
@@ -699,6 +808,33 @@ export class PredictionModelService {
         };
     }
 
+    private createBaseUserInputL1Template(
+        studentInfoDTO: StudentInfoDTO,
+    ): Omit<UserInputL1, "nhom_nganh"> {
+        // Map awards to HSG subjects
+        const { hsg_1, hsg_2, hsg_3 } = this.mapAwardsToHsgSubjects(
+            studentInfoDTO.awards,
+        );
+
+        // Map special cases to binary flags
+        const { ahld, dan_toc_thieu_so, haimuoi_huyen_ngheo_tnb } =
+            this.mapSpecialCasesToBinaryFlags(
+                studentInfoDTO.specialStudentCases,
+            );
+
+        return {
+            ahld,
+            cong_lap: 1, // Assuming public university preference, adjust as needed
+            dan_toc_thieu_so,
+            haimuoi_huyen_ngheo_tnb,
+            hoc_phi: studentInfoDTO.maxBudget,
+            hsg_1,
+            hsg_2,
+            hsg_3,
+            tinh_tp: studentInfoDTO.province,
+        };
+    }
+
     private deduplicateByHighestScore(
         results: L2PredictResult[],
     ): L2PredictResult[] {
@@ -717,6 +853,106 @@ export class PredictionModelService {
 
     private delay(ms: number): Promise<void> {
         return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    private async executeL1PredictionsWithRetry(
+        userInputs: UserInputL1[],
+    ): Promise<L1PredictResult[]> {
+        const allResults: L1PredictResult[] = [];
+
+        // Use concurrency limiter for L1 predictions
+        const limit = pLimit(this.config.SERVICE_PREDICTION_CONCURRENCY);
+
+        this.logger.info("Starting L1 predictions", {
+            totalInputs: userInputs.length,
+        });
+
+        const results = await Promise.allSettled(
+            userInputs.map((userInput, index) =>
+                limit(async () => {
+                    try {
+                        if (index > 0) {
+                            await this.delay(
+                                this.config.SERVICE_REQUEST_DELAY_MS,
+                            );
+                        }
+                        return await this.predictMajorsL1(userInput);
+                    } catch (error: unknown) {
+                        this.logger.warn("L1 prediction failed, will retry", {
+                            error:
+                                error instanceof Error
+                                    ? error.message
+                                    : String(error),
+                            inputIndex: index,
+                            majorGroup: userInput.nhom_nganh,
+                        });
+                        throw error;
+                    }
+                }),
+            ),
+        );
+
+        // Process results and handle retries for failed predictions
+        const failedInputs: { index: number; input: UserInputL1 }[] = [];
+
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            if (result.status === "fulfilled") {
+                allResults.push(...result.value);
+            } else {
+                failedInputs.push({ index: i, input: userInputs[i] });
+            }
+        }
+
+        // Retry failed predictions with exponential backoff
+        if (failedInputs.length > 0) {
+            this.logger.info(
+                `Retrying ${failedInputs.length.toString()} failed L1 predictions`,
+            );
+
+            for (const { input } of failedInputs) {
+                let success = false;
+                for (
+                    let attempt = 1;
+                    attempt <= this.config.SERVICE_MAX_RETRIES && !success;
+                    attempt++
+                ) {
+                    try {
+                        const results = await this.predictMajorsL1(input);
+                        allResults.push(...results);
+                        success = true;
+                        this.logger.info(
+                            `L1 retry successful for major ${input.nhom_nganh.toString()}`,
+                        );
+                    } catch (error: unknown) {
+                        if (attempt === this.config.SERVICE_MAX_RETRIES) {
+                            this.logger.error(
+                                `L1 prediction failed after all attempts`,
+                                {
+                                    error:
+                                        error instanceof Error
+                                            ? error.message
+                                            : String(error),
+                                    majorGroup: input.nhom_nganh,
+                                },
+                            );
+                        } else {
+                            await this.delay(
+                                this.config.SERVICE_RETRY_BASE_DELAY_MS *
+                                    attempt,
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        this.logger.info("L1 predictions completed", {
+            failedInputs: failedInputs.length,
+            totalResults: allResults.length,
+        });
+
+        return allResults;
     }
 
     private async executeL2PredictionsWithRetry(
@@ -838,6 +1074,7 @@ export class PredictionModelService {
             );
         }
     }
+
     private async fetchAndValidateStudent(
         studentId: string,
         userId?: string,
@@ -855,6 +1092,7 @@ export class PredictionModelService {
 
         return student;
     }
+
     private findAndValidateConduct(
         conducts: ConductDTO[],
         grade: number,
@@ -928,6 +1166,25 @@ export class PredictionModelService {
         );
     }
 
+    private generateUserInputL1Combinations(
+        baseTemplate: Omit<UserInputL1, "nhom_nganh">,
+        majors: string[],
+    ): UserInputL1[] {
+        return majors
+            .map((major) => {
+                const majorCode = getCodeByVietnameseName(major);
+                if (!majorCode) {
+                    this.logger.warn(`Cannot find code for major: ${major}`);
+                    return null;
+                }
+                return {
+                    ...baseTemplate,
+                    nhom_nganh: parseInt(majorCode, 10),
+                } as UserInputL1;
+            })
+            .filter((input): input is UserInputL1 => input !== null);
+    }
+
     private getAndValidateScoreByCCQT(
         type: CCQTType,
         validateScore: string,
@@ -969,7 +1226,6 @@ export class PredictionModelService {
                 return undefined;
         }
     }
-
     private getAndValidateScoreByCCQT_Type_A_Level(
         level: string,
     ): number | undefined {
@@ -995,7 +1251,6 @@ export class PredictionModelService {
                 return undefined;
         }
     }
-
     private getOptimalChunkSize(
         totalInputs: number,
         maxChunkSize = 10,
@@ -1082,6 +1337,116 @@ export class PredictionModelService {
             Array.isArray((data as HTTPValidationError).detail)
         );
     }
+
+    private mapAwardsToHsgSubjects(awards?: AwardDTO[]): {
+        hsg_1?: HsgSubject;
+        hsg_2?: HsgSubject;
+        hsg_3?: HsgSubject;
+    } {
+        if (!awards || awards.length === 0) {
+            return { hsg_1: undefined, hsg_2: undefined, hsg_3: undefined };
+        }
+
+        // Sort awards by rank priority (First > Second > Third)
+        const sortedAwards = awards
+            .filter((award) => award.name === "Học sinh giỏi cấp quốc gia") // Only national excellent student awards
+            .sort((a, b) => this.compareRanks(a.level, b.level));
+
+        const result: {
+            hsg_1?: HsgSubject;
+            hsg_2?: HsgSubject;
+            hsg_3?: HsgSubject;
+        } = {};
+
+        // Map up to 3 awards to HSG subjects
+        if (sortedAwards.length > 0) {
+            result.hsg_1 = this.mapNationalExcellentStudentSubjectToHsgSubject(
+                sortedAwards[0].category,
+            );
+        }
+        if (sortedAwards.length > 1) {
+            result.hsg_2 = this.mapNationalExcellentStudentSubjectToHsgSubject(
+                sortedAwards[1].category,
+            );
+        }
+        if (sortedAwards.length > 2) {
+            result.hsg_3 = this.mapNationalExcellentStudentSubjectToHsgSubject(
+                sortedAwards[2].category,
+            );
+        }
+
+        return result;
+    }
+
+    private mapNationalExcellentStudentSubjectToHsgSubject(
+        subject: NationalExcellentStudentExamSubject,
+    ): HsgSubject {
+        const mapping: Record<NationalExcellentStudentExamSubject, HsgSubject> =
+            {
+                [NationalExcellentStudentExamSubject.Biology]: HsgSubject.Sinh,
+                [NationalExcellentStudentExamSubject.Chemistry]: HsgSubject.Hoa,
+                [NationalExcellentStudentExamSubject.Chinese]:
+                    HsgSubject.Tieng_Trung,
+                [NationalExcellentStudentExamSubject.English]: HsgSubject.Anh,
+                [NationalExcellentStudentExamSubject.French]:
+                    HsgSubject.Tieng_Phap,
+                [NationalExcellentStudentExamSubject.Geography]: HsgSubject.Dia,
+                [NationalExcellentStudentExamSubject.History]: HsgSubject.Su,
+                [NationalExcellentStudentExamSubject.Information_Technology]:
+                    HsgSubject.Tin,
+                [NationalExcellentStudentExamSubject.Japanese]:
+                    HsgSubject.Tieng_Nhat,
+                [NationalExcellentStudentExamSubject.Literature]:
+                    HsgSubject.Van,
+                [NationalExcellentStudentExamSubject.Mathematics]:
+                    HsgSubject.Toan,
+                [NationalExcellentStudentExamSubject.Physics]: HsgSubject.Ly,
+                [NationalExcellentStudentExamSubject.Russian]:
+                    HsgSubject.Tieng_Nga,
+            };
+
+        return mapping[subject];
+    }
+
+    private mapSpecialCasesToBinaryFlags(specialCases?: SpecialStudentCase[]): {
+        ahld: number;
+        dan_toc_thieu_so: number;
+        haimuoi_huyen_ngheo_tnb: number;
+    } {
+        if (!specialCases || specialCases.length === 0) {
+            return {
+                ahld: 0,
+                dan_toc_thieu_so: 0,
+                haimuoi_huyen_ngheo_tnb: 0,
+            };
+        }
+
+        const flags = {
+            ahld: 0,
+            dan_toc_thieu_so: 0,
+            haimuoi_huyen_ngheo_tnb: 0,
+        };
+
+        for (const specialCase of specialCases) {
+            switch (specialCase) {
+                case SpecialStudentCase.ETHNIC_MINORITY_STUDENT:
+                    flags.haimuoi_huyen_ngheo_tnb = 1;
+                    break;
+                case SpecialStudentCase.HEROES_AND_CONTRIBUTORS:
+                    flags.ahld = 1;
+                    break;
+                case SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY:
+                    flags.dan_toc_thieu_so = 1;
+                    break;
+                // Note: TRANSFER_STUDENT doesn't map to any of these flags
+                default:
+                    break;
+            }
+        }
+
+        return flags;
+    }
+
     private async predictMajors(
         userInput: UserInputL2,
     ): Promise<L2PredictResult[]> {
@@ -1246,6 +1611,79 @@ export class PredictionModelService {
             throw new Error(`Batch service error: ${message}`);
         }
     }
+    private async predictMajorsL1(
+        userInput: UserInputL1,
+    ): Promise<L1PredictResult[]> {
+        try {
+            this.logger.info("Starting L1 prediction", {
+                majorGroup: userInput.nhom_nganh,
+            });
+
+            const response = await this.httpClient.post<L1PredictResult[]>(
+                `/predict/l1`,
+                userInput,
+            );
+
+            const validatedResults = await this.validateL1PredictResponse(
+                response.data,
+            );
+
+            if (validatedResults.length === 0) {
+                this.logger.info("No valid L1 predictions found", {
+                    majorGroup: userInput.nhom_nganh,
+                });
+            } else {
+                this.logger.info("L1 prediction completed", {
+                    count: validatedResults.length,
+                    majorGroup: userInput.nhom_nganh,
+                });
+            }
+
+            return validatedResults;
+        } catch (error) {
+            const errorContext = {
+                majorGroup: userInput.nhom_nganh,
+            };
+
+            if (axios.isAxiosError(error)) {
+                const axiosError = error as AxiosError;
+                const status = axiosError.response?.status;
+                let detailedMessage = axiosError.message;
+
+                if (
+                    status === 422 &&
+                    this.isValidationError(axiosError.response?.data)
+                ) {
+                    const validationError = axiosError.response.data;
+                    const specificErrors = validationError.detail
+                        .map((err) => `${err.loc.join(".")} - ${err.msg}`)
+                        .join("; ");
+                    detailedMessage = `API Validation Error: ${specificErrors}`;
+                }
+
+                this.logger.error("L1 API error", {
+                    message: detailedMessage,
+                    status: status ?? "unknown",
+                    ...errorContext,
+                });
+
+                throw new Error(
+                    `L1 API error (${String(status)}): ${detailedMessage} for major ${userInput.nhom_nganh.toString()}`,
+                );
+            }
+
+            const message =
+                error instanceof Error ? error.message : "Unknown error";
+            this.logger.error("L1 service error", {
+                message,
+                ...errorContext,
+            });
+
+            throw new Error(
+                `L1 service error: ${message} for major ${userInput.nhom_nganh.toString()}`,
+            );
+        }
+    }
 
     private async processIndividuallyWithRetry(
         userInputs: UserInputL2[],
@@ -1305,6 +1743,41 @@ export class PredictionModelService {
         );
 
         return allResults;
+    }
+
+    private async validateL1PredictResponse(
+        data: unknown,
+    ): Promise<L1PredictResult[]> {
+        if (!Array.isArray(data)) {
+            throw new Error("Invalid L1 response format");
+        }
+
+        // Handle empty array case
+        if (data.length === 0) {
+            this.logger.info("No L1 predictions found for this input");
+            return [];
+        }
+
+        const results: L1PredictResult[] = [];
+
+        for (const item of data) {
+            const instance = plainToInstance(L1PredictResult, item);
+            const errors = await validate(instance);
+
+            if (errors.length === 0) {
+                results.push(instance);
+            } else {
+                this.logger.warn("Invalid L1 prediction result received", {
+                    errors: errors.map((err) => ({
+                        constraints: err.constraints,
+                        property: err.property,
+                    })),
+                    item,
+                });
+            }
+        }
+
+        return results;
     }
 
     private async validateL2PredictResponse(

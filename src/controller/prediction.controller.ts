@@ -14,7 +14,11 @@ import {
     Tags,
 } from "tsoa";
 
-import { L2PredictResult, UserInputL2 } from "@/dto/predict/predict.js";
+import {
+    L1PredictResult,
+    L2PredictResult,
+    UserInputL2,
+} from "@/dto/predict/predict.js";
 import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
 import validateDTO from "@/middleware/validation.middleware.js";
 import { PredictionModelService } from "@/service/prediction.model.service.js";
@@ -35,10 +39,45 @@ export class PredictionController extends Controller {
         super();
     }
 
+    @Get("model/v1/{studentId}")
+    @Middlewares(validateUuidParam("studentId"))
+    @Produces("application/json")
+    @Security("bearerAuth", ["api:read"])
+    @SuccessResponse(HttpStatus.OK, "Predict result created successfully")
+    public async getL1PredictResults(
+        @Path() studentId: string,
+        @Request() request: AuthenticatedRequest,
+    ): Promise<L1PredictResult[]> {
+        const user: Express.User = request.user;
+        const predictResults: L1PredictResult[] =
+            await this.predictionModelService.getL1PredictResults(
+                studentId,
+                user.id,
+            );
+        return predictResults;
+    }
+    @Get("model/v2/{studentId}")
+    @Middlewares(validateUuidParam("studentId"))
+    @Produces("application/json")
+    @Security("bearerAuth", ["file:read"])
+    @SuccessResponse(HttpStatus.OK, "Predict result created successfully")
+    public async getL2PredictResults(
+        @Path() studentId: string,
+        @Request() request: AuthenticatedRequest,
+    ): Promise<L2PredictResult[]> {
+        const user: Express.User = request.user;
+        const predictResults: L2PredictResult[] =
+            await this.predictionModelService.getL2PredictResults(
+                studentId,
+                user.id,
+            );
+        return predictResults;
+    }
+
     @Middlewares(validateUuidParam("studentId"), validateDTO(UserInputL2))
     @Post("model/v2/{studentId}")
     @Produces("application/json")
-    @Security("bearerAuth", ["file:read"])
+    @Security("bearerAuth", ["api:read"])
     @SuccessResponse(HttpStatus.OK, "Predict result created successfully")
     public async getPredictedMajors(
         @Body() userInput: UserInputL2,
@@ -55,24 +94,6 @@ export class PredictionController extends Controller {
         this.logger.info("Predict major successfully for user", {
             id: user.id,
         });
-        return predictResults;
-    }
-
-    @Get("model/v2/{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
-    @Produces("application/json")
-    @Security("bearerAuth", ["file:read"])
-    @SuccessResponse(HttpStatus.OK, "Predict result created successfully")
-    public async predictMajors(
-        @Path() studentId: string,
-        @Request() request: AuthenticatedRequest,
-    ) {
-        const user: Express.User = request.user;
-        const predictResults: L2PredictResult[] =
-            await this.predictionModelService.getL2PredictResults(
-                studentId,
-                user.id,
-            );
         return predictResults;
     }
 }
