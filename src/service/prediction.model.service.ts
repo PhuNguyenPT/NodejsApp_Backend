@@ -326,7 +326,7 @@ export class PredictionModelService {
         return talentScenarios;
     }
 
-    private async _performBatchPrediction(
+    private async _performL2BatchPrediction(
         inputsForGroup: UserInputL2[],
         subjectGroup: string,
     ): Promise<{
@@ -355,7 +355,7 @@ export class PredictionModelService {
             );
 
             // Use dynamic concurrency in the batch call
-            const batchResults = await this.predictMajorsBatch(
+            const batchResults = await this.predictL2MajorsBatch(
                 inputsForGroup,
                 dynamicConcurrency,
             );
@@ -434,7 +434,7 @@ export class PredictionModelService {
         return { failedInputs, successfulResults };
     }
 
-    private async _performSequentialRetry(
+    private async _performL2SequentialRetry(
         failedInputs: UserInputL2[],
         subjectGroup: string,
     ): Promise<L2PredictResult[]> {
@@ -535,11 +535,11 @@ export class PredictionModelService {
         );
 
         const { failedInputs, successfulResults } =
-            await this._performBatchPrediction(inputsForGroup, subjectGroup);
+            await this._performL2BatchPrediction(inputsForGroup, subjectGroup);
 
         let retryResults: L2PredictResult[] = [];
         if (failedInputs.length > 0) {
-            retryResults = await this._performSequentialRetry(
+            retryResults = await this._performL2SequentialRetry(
                 failedInputs,
                 subjectGroup,
             );
@@ -1449,7 +1449,7 @@ export class PredictionModelService {
         return flags;
     }
 
-    private async predictMajorsBatch(
+    private async predictL2MajorsBatch(
         userInputs: UserInputL2[],
         dynamicConcurrency?: number, // Optional override
     ): Promise<L2PredictResult[]> {
