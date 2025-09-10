@@ -109,6 +109,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(
             `DROP TYPE "public"."certifications_cefr_enum"`,
         );
+        await queryRunner.query(`DROP TABLE "enrollment"`);
         await queryRunner.query(`DROP TABLE "majors"`);
         await queryRunner.query(`DROP INDEX "public"."idx_ocr_student_id"`);
         await queryRunner.query(`DROP INDEX "public"."idx_ocr_file_id"`);
@@ -153,6 +154,9 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE TABLE "majors" ("code" character varying(255) NOT NULL, "group_id" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, CONSTRAINT "UQ_8b287db61b00b45e58c854f19da" UNIQUE ("code"), CONSTRAINT "PK_9d82cf80fe0593040e50ccb297e" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "enrollment" ("enroll_code" character varying NOT NULL, "enroll_type" character varying NOT NULL, "enroll_type_name" character varying NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "major_code" integer NOT NULL, "major_name" character varying NOT NULL, "province" character varying NOT NULL, "study_program" character varying NOT NULL, "subject_combination" character varying NOT NULL, "tuition_fee" bigint NOT NULL, "uni_code" character varying NOT NULL, "uni_name" character varying NOT NULL, "uni_type" character varying NOT NULL, "uni_web_link" character varying NOT NULL, CONSTRAINT "PK_7e200c699fa93865cdcdd025885" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE TYPE "public"."certifications_cefr_enum" AS ENUM('A1', 'A2', 'B1', 'B2', 'C1', 'C2')`,
