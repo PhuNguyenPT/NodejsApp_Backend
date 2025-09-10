@@ -41,7 +41,7 @@ export class PredictionModelEventListener {
             }
 
             const payload = parsed.data;
-            await this.predictionModelService.getPredictedResults(
+            await this.predictionModelService.getL2PredictResults(
                 payload.studentId,
                 payload.studentId,
             );
