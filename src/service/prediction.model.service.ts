@@ -115,7 +115,7 @@ export class PredictionModelService {
 
         const combinedResults = this.combineL1Results(results);
 
-        this.logger.info("L1 Prediction results summary", {
+        this.logger.info("L1 Prediction: Results summary", {
             totalInputs: userInputs.length,
             totalResults: combinedResults.length,
         });
@@ -146,6 +146,21 @@ export class PredictionModelService {
             studentInfoDTO,
         );
 
+        this.logger.info("L2 Prediction: Generated exam scenarios", {
+            ccqtScenarios: examScenarios.filter((s) => s.type === "ccqt")
+                .length,
+            dgnlScenarios: examScenarios.filter((s) => s.type === "dgnl")
+                .length,
+            nationalScenarios: examScenarios.filter(
+                (s) => s.type === "national",
+            ).length,
+            talentScenarios: examScenarios.filter((s) => s.type === "talent")
+                .length,
+            totalScenarios: examScenarios.length,
+            vsatScenarios: examScenarios.filter((s) => s.type === "vsat")
+                .length,
+        });
+
         // Generate user inputs for all combinations
         const userInputs = this.generateL2UserInputCombinations(
             baseTemplate,
@@ -172,7 +187,7 @@ export class PredictionModelService {
         // Deduplicate by ma_xet_tuyen, keeping the highest score
         const deduplicatedResults = this.deduplicateByHighestScore(results);
 
-        this.logger.info("Prediction results summary", {
+        this.logger.info("L2 Prediction: Results summary", {
             duplicatesRemoved: results.length - deduplicatedResults.length,
             totalResults: results.length,
             uniqueResults: deduplicatedResults.length,
@@ -317,7 +332,7 @@ export class PredictionModelService {
                 type: "talent" as const,
             }));
 
-        this.logger.info("Generated talent score scenarios", {
+        this.logger.info("L2 Prediction: Generated talent score scenarios", {
             availableTalentSubjects: Array.from(talentSubjects),
             subjectGroups: talentScenarios.map((s) => s.to_hop_mon),
             talentScenarios: talentScenarios.length,
@@ -326,7 +341,7 @@ export class PredictionModelService {
         return talentScenarios;
     }
 
-    private async _performBatchPrediction(
+    private async _performL2BatchPrediction(
         inputsForGroup: UserInputL2[],
         subjectGroup: string,
     ): Promise<{
@@ -346,7 +361,7 @@ export class PredictionModelService {
             );
 
             this.logger.info(
-                `Attempting batch prediction for group ${subjectGroup}`,
+                `L2 Prediction: Attempting batch prediction for group ${subjectGroup}`,
                 {
                     calculatedConcurrency: dynamicConcurrency,
                     configMaxConcurrency: this.config.SERVICE_BATCH_CONCURRENCY,
@@ -355,14 +370,14 @@ export class PredictionModelService {
             );
 
             // Use dynamic concurrency in the batch call
-            const batchResults = await this.predictMajorsBatch(
+            const batchResults = await this.predictL2MajorsBatch(
                 inputsForGroup,
                 dynamicConcurrency,
             );
             successfulResults.push(...batchResults);
 
             this.logger.info(
-                `Batch processing for group ${subjectGroup} completed successfully`,
+                `L2 Prediction: Batch processing for group ${subjectGroup} completed successfully`,
                 {
                     resultCount: batchResults.length,
                     successful: inputsForGroup.length,
@@ -372,7 +387,7 @@ export class PredictionModelService {
             );
         } catch (error: unknown) {
             this.logger.warn(
-                "Batch prediction failed for group, falling back to individual predictions",
+                "L2 Prediction: Batch prediction failed for group, falling back to individual predictions",
                 {
                     error:
                         error instanceof Error ? error.message : String(error),
@@ -396,7 +411,7 @@ export class PredictionModelService {
                             return await this.predictMajorsL2(userInput);
                         } catch (error: unknown) {
                             this.logger.warn(
-                                "Individual prediction failed, will retry sequentially",
+                                "L2 Prediction: Individual prediction failed, will retry sequentially",
                                 {
                                     error:
                                         error instanceof Error
@@ -422,7 +437,7 @@ export class PredictionModelService {
             }
 
             this.logger.info(
-                `Fallback processing for group ${subjectGroup} completed`,
+                `L2 Prediction: Fallback processing for group ${subjectGroup} completed`,
                 {
                     failed: failedInputs.length,
                     successful: successfulResults.length,
@@ -434,7 +449,7 @@ export class PredictionModelService {
         return { failedInputs, successfulResults };
     }
 
-    private async _performSequentialRetry(
+    private async _performL2SequentialRetry(
         failedInputs: UserInputL2[],
         subjectGroup: string,
     ): Promise<L2PredictResult[]> {
@@ -523,7 +538,7 @@ export class PredictionModelService {
         }
 
         this.logger.info(
-            `Starting batch processing for subject group: ${subjectGroup} (${(groupIndex + 1).toString()})`,
+            `L2 Prediction: Starting batch processing for subject group: ${subjectGroup} (${(groupIndex + 1).toString()})`,
             {
                 SERVICE_BATCH_CONCURRENCY:
                     this.config.SERVICE_PREDICTION_CONCURRENCY,
@@ -535,11 +550,11 @@ export class PredictionModelService {
         );
 
         const { failedInputs, successfulResults } =
-            await this._performBatchPrediction(inputsForGroup, subjectGroup);
+            await this._performL2BatchPrediction(inputsForGroup, subjectGroup);
 
         let retryResults: L2PredictResult[] = [];
         if (failedInputs.length > 0) {
-            retryResults = await this._performSequentialRetry(
+            retryResults = await this._performL2SequentialRetry(
                 failedInputs,
                 subjectGroup,
             );
@@ -548,14 +563,17 @@ export class PredictionModelService {
         const duration = Date.now() - startTime;
         const totalResults = successfulResults.length + retryResults.length;
 
-        this.logger.info(`Subject group ${subjectGroup} completed`, {
-            duration: `${duration.toString()}ms`,
-            failedInputs: failedInputs.length,
-            SERVICE_PREDICTION_CONCURRENCY:
-                this.config.SERVICE_PREDICTION_CONCURRENCY,
-            throughput: `${(totalResults / (duration / 1000)).toFixed(2)} predictions/sec`,
-            totalResults,
-        });
+        this.logger.info(
+            `L2 Prediction: Subject group ${subjectGroup} completed`,
+            {
+                duration: `${duration.toString()}ms`,
+                failedInputs: failedInputs.length,
+                SERVICE_PREDICTION_CONCURRENCY:
+                    this.config.SERVICE_PREDICTION_CONCURRENCY,
+                throughput: `${(totalResults / (duration / 1000)).toFixed(2)} predictions/sec`,
+                totalResults,
+            },
+        );
 
         return [...successfulResults, ...retryResults];
     }
@@ -672,7 +690,7 @@ export class PredictionModelService {
 
         if (possibleSubjectGroups.length === 0) {
             this.logger.warn(
-                "Cannot determine any valid subject groups from national exam data",
+                "L2 Prediction: Cannot determine any valid subject groups from national exam data",
                 { vietnameseSubjects },
             );
         }
@@ -687,17 +705,6 @@ export class PredictionModelService {
             ...this._createCcqtScenarios(studentInfoDTO),
             ...this._createTalentScenarios(studentInfoDTO),
         ];
-
-        this.logger.info("Generated exam scenarios", {
-            ccqtScenarios: scenarios.filter((s) => s.type === "ccqt").length,
-            dgnlScenarios: scenarios.filter((s) => s.type === "dgnl").length,
-            nationalScenarios: scenarios.filter((s) => s.type === "national")
-                .length,
-            talentScenarios: scenarios.filter((s) => s.type === "talent")
-                .length,
-            totalScenarios: scenarios.length,
-            vsatScenarios: scenarios.filter((s) => s.type === "vsat").length,
-        });
 
         return scenarios;
     }
@@ -865,7 +872,7 @@ export class PredictionModelService {
         // Use concurrency limiter for L1 predictions
         const limit = pLimit(this.config.SERVICE_PREDICTION_CONCURRENCY);
 
-        this.logger.info("Starting L1 predictions", {
+        this.logger.info("L1 Prediction: Starting L1 predictions", {
             totalInputs: userInputs.length,
         });
 
@@ -880,7 +887,7 @@ export class PredictionModelService {
                         }
                         return await this.predictMajorsL1(userInput);
                     } catch (error: unknown) {
-                        this.logger.warn("L1 prediction failed, will retry", {
+                        this.logger.warn("L1 Prediction: Failed, will retry", {
                             error:
                                 error instanceof Error
                                     ? error.message
@@ -909,7 +916,7 @@ export class PredictionModelService {
         // Retry failed predictions with exponential backoff
         if (failedInputs.length > 0) {
             this.logger.info(
-                `Retrying ${failedInputs.length.toString()} failed L1 predictions`,
+                `L1 Prediction: Retrying ${failedInputs.length.toString()} failed L1 predictions`,
             );
 
             for (const { input } of failedInputs) {
@@ -924,12 +931,12 @@ export class PredictionModelService {
                         allResults.push(...results);
                         success = true;
                         this.logger.info(
-                            `L1 retry successful for major ${input.nhom_nganh.toString()}`,
+                            `L1 Prediction: Retry successful for major ${input.nhom_nganh.toString()}`,
                         );
                     } catch (error: unknown) {
                         if (attempt === this.config.SERVICE_MAX_RETRIES) {
                             this.logger.error(
-                                `L1 prediction failed after all attempts`,
+                                `L1 Prediction: Failed after all attempts`,
                                 {
                                     error:
                                         error instanceof Error
@@ -949,7 +956,7 @@ export class PredictionModelService {
             }
         }
 
-        this.logger.info("L1 predictions completed", {
+        this.logger.info("L1 Prediction: Completed", {
             failedInputs: failedInputs.length,
             totalResults: allResults.length,
         });
@@ -971,7 +978,7 @@ export class PredictionModelService {
             },
         );
 
-        this.logger.info("Calculated optimal chunk size", {
+        this.logger.info("L2 Prediction: Calculated optimal chunk size", {
             optimalChunkSize,
             totalInputs: userInputs.length,
         });
@@ -1005,12 +1012,15 @@ export class PredictionModelService {
         // Create concurrency limiter for chunks
         const batchLimit = pLimit(this.config.SERVER_BATCH_CONCURRENCY);
 
-        this.logger.info("Starting concurrent processing with chunking", {
-            optimalChunkSize,
-            originalInputCount: userInputs.length,
-            totalChunks: chunkedGroups.length,
-            totalSubjectGroups: groupedInputs.size,
-        });
+        this.logger.info(
+            "L2 Prediction: Starting concurrent processing with chunking",
+            {
+                optimalChunkSize,
+                originalInputCount: userInputs.length,
+                totalChunks: chunkedGroups.length,
+                totalSubjectGroups: groupedInputs.size,
+            },
+        );
 
         // Process chunks with limited concurrency
         const results = await Promise.allSettled(
@@ -1033,22 +1043,25 @@ export class PredictionModelService {
             if (result.status === "fulfilled") {
                 allResults.push(...result.value);
                 this.logger.info(
-                    `Chunk ${subjectGroup} completed successfully`,
+                    `L2 Prediction: Chunk ${subjectGroup} completed successfully`,
                     {
                         resultsCount: result.value.length,
                     },
                 );
             } else {
-                this.logger.error(`Chunk ${subjectGroup} failed completely`, {
-                    error:
-                        result.reason instanceof Error
-                            ? result.reason.message
-                            : String(result.reason),
-                });
+                this.logger.error(
+                    `L2 Prediction: Chunk ${subjectGroup} failed completely`,
+                    {
+                        error:
+                            result.reason instanceof Error
+                                ? result.reason.message
+                                : String(result.reason),
+                    },
+                );
             }
         }
 
-        this.logger.info("All chunks processing completed", {
+        this.logger.info("L2 Prediction: All chunks processing completed", {
             failedChunks: results.filter((r) => r.status === "rejected").length,
             successfulChunks: results.filter((r) => r.status === "fulfilled")
                 .length,
@@ -1150,7 +1163,7 @@ export class PredictionModelService {
                         const majorCode = getCodeByVietnameseName(major);
                         if (!majorCode) {
                             this.logger.warn(
-                                `Cannot find code for major: ${major}`,
+                                `L2 Prediction: Cannot find code for major: ${major}`,
                             );
                             return null;
                         }
@@ -1176,7 +1189,9 @@ export class PredictionModelService {
             .map((major) => {
                 const majorCode = getCodeByVietnameseName(major);
                 if (!majorCode) {
-                    this.logger.warn(`Cannot find code for major: ${major}`);
+                    this.logger.warn(
+                        `L2 Prediction: Cannot find code for major: ${major}`,
+                    );
                     return null;
                 }
                 return {
@@ -1228,6 +1243,7 @@ export class PredictionModelService {
                 return undefined;
         }
     }
+
     private getAndValidateScoreByCCQT_Type_A_Level(
         level: string,
     ): number | undefined {
@@ -1253,6 +1269,7 @@ export class PredictionModelService {
                 return undefined;
         }
     }
+
     private getOptimalChunkSize(
         totalInputs: number,
         maxChunkSize = 10,
@@ -1449,7 +1466,7 @@ export class PredictionModelService {
         return flags;
     }
 
-    private async predictMajorsBatch(
+    private async predictL2MajorsBatch(
         userInputs: UserInputL2[],
         dynamicConcurrency?: number, // Optional override
     ): Promise<L2PredictResult[]> {
@@ -1464,7 +1481,7 @@ export class PredictionModelService {
                     this.config.SERVICE_MIN_BATCH_CONCURRENCY, // Min concurrency
                 );
 
-            this.logger.info("Starting batch prediction", {
+            this.logger.info("L2 Prediction: Starting batch prediction", {
                 calculatedConcurrency: batchConcurrency,
                 configuredMaxConcurrency: this.config.SERVICE_BATCH_CONCURRENCY,
                 inputCount: userInputs.length,
@@ -1483,7 +1500,7 @@ export class PredictionModelService {
             const validatedResults =
                 await this.validateL2PredictResponse(flattenedResults);
 
-            this.logger.info("Batch prediction completed", {
+            this.logger.info("L2 Prediction: Batch prediction completed", {
                 inputCount: userInputs.length,
                 resultCount: validatedResults.length,
                 usedConcurrency: batchConcurrency,
@@ -1512,25 +1529,25 @@ export class PredictionModelService {
                     detailedMessage = `API Validation Error: ${specificErrors}`;
                 }
 
-                this.logger.error("Batch API error", {
+                this.logger.error("L2 Prediction: Batch API error", {
                     message: detailedMessage,
                     status: status ?? "unknown",
                     ...errorContext,
                 });
 
                 throw new Error(
-                    `Batch API error (${String(status)}): ${detailedMessage}`,
+                    `L2 Prediction: Batch API error (${String(status)}): ${detailedMessage}`,
                 );
             }
 
             const message =
                 error instanceof Error ? error.message : "Unknown error";
-            this.logger.error("Batch service error", {
+            this.logger.error("L2 Prediction: Batch service error", {
                 message,
                 ...errorContext,
             });
 
-            throw new Error(`Batch service error: ${message}`);
+            throw new Error(`L2 Prediction: Batch service error: ${message}`);
         }
     }
 
@@ -1538,7 +1555,7 @@ export class PredictionModelService {
         userInput: UserInputL1,
     ): Promise<L1PredictResult[]> {
         try {
-            this.logger.info("Starting L1 prediction", {
+            this.logger.info("L1 Prediction: Predicting...", {
                 majorGroup: userInput.nhom_nganh,
             });
 
@@ -1552,11 +1569,14 @@ export class PredictionModelService {
             );
 
             if (validatedResults.length === 0) {
-                this.logger.info("No valid L1 predictions found", {
-                    majorGroup: userInput.nhom_nganh,
-                });
+                this.logger.info(
+                    "L1 Prediction: : No valid L1 Prediction Results found",
+                    {
+                        majorGroup: userInput.nhom_nganh,
+                    },
+                );
             } else {
-                this.logger.info("L1 prediction completed", {
+                this.logger.info("L1 Prediction: Completed", {
                     count: validatedResults.length,
                     majorGroup: userInput.nhom_nganh,
                 });
@@ -1584,26 +1604,26 @@ export class PredictionModelService {
                     detailedMessage = `API Validation Error: ${specificErrors}`;
                 }
 
-                this.logger.error("L1 API error", {
+                this.logger.error("L1 Prediction: API error", {
                     message: detailedMessage,
                     status: status ?? "unknown",
                     ...errorContext,
                 });
 
                 throw new Error(
-                    `L1 API error (${String(status)}): ${detailedMessage} for major ${userInput.nhom_nganh.toString()}`,
+                    `L1 Prediction: API error (${String(status)}): ${detailedMessage} for major ${userInput.nhom_nganh.toString()}`,
                 );
             }
 
             const message =
                 error instanceof Error ? error.message : "Unknown error";
-            this.logger.error("L1 service error", {
+            this.logger.error("L1 Prediction: Service error", {
                 message,
                 ...errorContext,
             });
 
             throw new Error(
-                `L1 service error: ${message} for major ${userInput.nhom_nganh.toString()}`,
+                `L1 Prediction: Service error: ${message} for major ${userInput.nhom_nganh.toString()}`,
             );
         }
     }
@@ -1612,7 +1632,7 @@ export class PredictionModelService {
         userInput: UserInputL2,
     ): Promise<L2PredictResult[]> {
         try {
-            this.logger.info("Starting prediction", {
+            this.logger.info("L2 Prediction: Predicting", {
                 userInput,
             });
 
@@ -1626,12 +1646,12 @@ export class PredictionModelService {
             );
 
             if (validatedResults.length === 0) {
-                this.logger.info("No valid predictions found", {
+                this.logger.info("L2 Prediction: No valid predictions found", {
                     major: userInput.nhom_nganh,
                     subjectGroup: userInput.to_hop_mon,
                 });
             } else {
-                this.logger.info("Prediction completed", {
+                this.logger.info("L2 Prediction: Prediction completed", {
                     count: validatedResults.length,
                     major: userInput.nhom_nganh,
                     subjectGroup: userInput.to_hop_mon,
@@ -1664,26 +1684,26 @@ export class PredictionModelService {
                     detailedMessage = `API Validation Error: ${specificErrors}`;
                 }
 
-                this.logger.error("API error", {
+                this.logger.error("L2 Prediction: API error", {
                     message: detailedMessage,
                     status: status ?? "unknown",
                     ...errorContext,
                 });
 
                 throw new Error(
-                    `API error (${String(status)}): ${detailedMessage} for ${userInput.to_hop_mon}`,
+                    `L2 Prediction: API error (${String(status)}): ${detailedMessage} for ${userInput.to_hop_mon}`,
                 );
             }
 
             const message =
                 error instanceof Error ? error.message : "Unknown error";
-            this.logger.error("Service error", {
+            this.logger.error("L2 Prediction: Service error", {
                 message,
                 ...errorContext,
             });
 
             throw new Error(
-                `Service error: ${message} for ${userInput.to_hop_mon}`,
+                `L2 Prediction: Service error: ${message} for ${userInput.to_hop_mon}`,
             );
         }
     }
@@ -1692,12 +1712,14 @@ export class PredictionModelService {
         data: unknown,
     ): Promise<L1PredictResult[]> {
         if (!Array.isArray(data)) {
-            throw new Error("Invalid L1 response format");
+            throw new Error("L1 Prediction: Invalid L1 response format");
         }
 
         // Handle empty array case
         if (data.length === 0) {
-            this.logger.info("No L1 predictions found for this input");
+            this.logger.info(
+                "L1 Prediction: No L1 predictions found for this input",
+            );
             return [];
         }
 
@@ -1710,13 +1732,16 @@ export class PredictionModelService {
             if (errors.length === 0) {
                 results.push(instance);
             } else {
-                this.logger.warn("Invalid L1 prediction result received", {
-                    errors: errors.map((err) => ({
-                        constraints: err.constraints,
-                        property: err.property,
-                    })),
-                    item,
-                });
+                this.logger.warn(
+                    "L1 Prediction: Invalid L1 Prediction Result received",
+                    {
+                        errors: errors.map((err) => ({
+                            constraints: err.constraints,
+                            property: err.property,
+                        })),
+                        item,
+                    },
+                );
             }
         }
 
@@ -1727,12 +1752,14 @@ export class PredictionModelService {
         data: unknown,
     ): Promise<L2PredictResult[]> {
         if (!Array.isArray(data)) {
-            throw new Error("Invalid response format");
+            throw new Error("L2 Prediction: Invalid response format");
         }
 
         // Handle empty array case - this is valid when no predictions are found
         if (data.length === 0) {
-            this.logger.info("No predictions found for this input");
+            this.logger.info(
+                "L2 Prediction: No predictions found for this input",
+            );
             return [];
         }
 
@@ -1746,13 +1773,16 @@ export class PredictionModelService {
                 results.push(instance);
             } else {
                 // Log validation errors for debugging
-                this.logger.warn("Invalid prediction result received", {
-                    errors: errors.map((err) => ({
-                        constraints: err.constraints,
-                        property: err.property,
-                    })),
-                    item,
-                });
+                this.logger.warn(
+                    "L2 Prediction: Invalid Prediction Result received",
+                    {
+                        errors: errors.map((err) => ({
+                            constraints: err.constraints,
+                            property: err.property,
+                        })),
+                        item,
+                    },
+                );
             }
         }
 
