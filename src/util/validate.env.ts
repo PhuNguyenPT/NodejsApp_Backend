@@ -72,8 +72,11 @@ interface Config {
 
     // Predict model service config
     SERVICE_BATCH_CONCURRENCY: number;
-    SERVICE_CHUNK_SIZE_INPUT_ARRAY: number;
     SERVICE_INPUTS_PER_WORKER: number;
+    SERVICE_L1_CHUNK_DELAY_MS: number;
+    SERVICE_L1_CHUNK_SIZE_INPUT_ARRAY: number;
+    SERVICE_L2_CHUNK_DELAY_MS: number;
+    SERVICE_L2_CHUNK_SIZE_INPUT_ARRAY: number;
     SERVICE_MAX_RETRIES: number;
     SERVICE_MIN_BATCH_CONCURRENCY: number;
     SERVICE_NETWORK_LATENCY_MS: number;
@@ -163,8 +166,11 @@ export const config: Config = cleanEnv(process.env, {
 
     // Predict model service config
     SERVICE_BATCH_CONCURRENCY: num({ default: 3 }),
-    SERVICE_CHUNK_SIZE_INPUT_ARRAY: num({ default: 10 }),
     SERVICE_INPUTS_PER_WORKER: num({ default: 3 }),
+    SERVICE_L1_CHUNK_DELAY_MS: num({ default: 100 }),
+    SERVICE_L1_CHUNK_SIZE_INPUT_ARRAY: num({ default: 10 }),
+    SERVICE_L2_CHUNK_DELAY_MS: num({ default: 100 }),
+    SERVICE_L2_CHUNK_SIZE_INPUT_ARRAY: num({ default: 3 }),
     SERVICE_MAX_RETRIES: num({ default: 2 }),
     SERVICE_MIN_BATCH_CONCURRENCY: num({ default: 1 }),
     SERVICE_NETWORK_LATENCY_MS: num({ default: 100 }),

@@ -8,7 +8,9 @@ import { IsNull, Repository } from "typeorm";
 import {
     HsgSubject,
     HTTPValidationError,
+    L1BatchRequest,
     L1PredictResult,
+    L2BatchRequest,
     L2PredictResult,
     UserInputL1,
     UserInputL2,
@@ -45,8 +47,11 @@ import { ILogger } from "@/type/interface/logger.js";
 export interface PredictionModelServiceConfig {
     SERVER_BATCH_CONCURRENCY: number;
     SERVICE_BATCH_CONCURRENCY: number;
-    SERVICE_CHUNK_SIZE_INPUT_ARRAY: number;
     SERVICE_INPUTS_PER_WORKER: number;
+    SERVICE_L1_CHUNK_DELAY_MS: number;
+    SERVICE_L1_CHUNK_SIZE_INPUT_ARRAY: number;
+    SERVICE_L2_CHUNK_DELAY_MS: number;
+    SERVICE_L2_CHUNK_SIZE_INPUT_ARRAY: number;
     SERVICE_MAX_RETRIES: number;
     SERVICE_MIN_BATCH_CONCURRENCY: number;
     SERVICE_NETWORK_LATENCY_MS: number;
@@ -112,13 +117,16 @@ export class PredictionModelService {
         }
 
         // Execute L1 predictions
-        const results = await this.executeL1PredictionsWithRetry(userInputs);
+        const results = await this.executeL1PredictionsWithRetry(
+            userInputs,
+            this.config.SERVICE_L1_CHUNK_SIZE_INPUT_ARRAY,
+        );
 
         const combinedResults = this.combineL1Results(results);
 
         this.logger.info("L1 Prediction: Results summary", {
+            combinedResults: combinedResults.length,
             totalInputs: userInputs.length,
-            totalResults: combinedResults.length,
         });
 
         return combinedResults;
@@ -182,7 +190,7 @@ export class PredictionModelService {
         // Execute predictions with improved error handling and retry logic
         const results = await this.executeL2PredictionsWithRetry(
             userInputs,
-            this.config.SERVICE_CHUNK_SIZE_INPUT_ARRAY,
+            this.config.SERVICE_L2_CHUNK_SIZE_INPUT_ARRAY,
         );
 
         // Deduplicate by ma_xet_tuyen, keeping the highest score
@@ -342,6 +350,190 @@ export class PredictionModelService {
         return talentScenarios;
     }
 
+    private async _performL1BatchPrediction(
+        inputsForGroup: UserInputL1[],
+        groupName: string,
+    ): Promise<{
+        failedInputs: UserInputL1[];
+        successfulResults: L1PredictResult[];
+    }> {
+        const successfulResults: L1PredictResult[] = [];
+        const failedInputs: UserInputL1[] = [];
+
+        try {
+            // Calculate dynamic concurrency for this specific group
+            const dynamicConcurrency = this.calculateDynamicBatchConcurrency(
+                inputsForGroup.length,
+                this.config.SERVICE_INPUTS_PER_WORKER, // inputs per worker
+                this.config.SERVICE_BATCH_CONCURRENCY, // Max limit from config
+                this.config.SERVICE_MIN_BATCH_CONCURRENCY, // Min concurrency
+            );
+
+            this.logger.info(
+                `L1 Prediction: Attempting batch prediction for group ${groupName}`,
+                {
+                    calculatedConcurrency: dynamicConcurrency,
+                    configMaxConcurrency: this.config.SERVICE_BATCH_CONCURRENCY,
+                    inputCount: inputsForGroup.length,
+                },
+            );
+
+            // Use dynamic concurrency in the batch call
+            const batchResults = await this.predictL1MajorsBatch(
+                inputsForGroup,
+                dynamicConcurrency,
+            );
+            successfulResults.push(...batchResults);
+
+            this.logger.info(
+                `L1 Prediction: Batch processing for group ${groupName} completed successfully`,
+                {
+                    resultCount: batchResults.length,
+                    successful: inputsForGroup.length,
+                    total: inputsForGroup.length,
+                    usedConcurrency: dynamicConcurrency,
+                },
+            );
+        } catch (error: unknown) {
+            this.logger.warn(
+                "L1 Prediction: Batch prediction failed for group, falling back to individual predictions",
+                {
+                    error:
+                        error instanceof Error ? error.message : String(error),
+                    groupName,
+                    inputCount: inputsForGroup.length,
+                },
+            );
+
+            await this.delay(this.config.SERVICE_RETRY_BASE_DELAY_MS);
+
+            const limit = pLimit(this.config.SERVICE_PREDICTION_CONCURRENCY);
+            const batchResults = await Promise.allSettled(
+                inputsForGroup.map((userInput, index) =>
+                    limit(async () => {
+                        try {
+                            if (index > 0) {
+                                await this.delay(
+                                    this.config.SERVICE_REQUEST_DELAY_MS,
+                                );
+                            }
+                            return await this.predictMajorsL1(userInput);
+                        } catch (error: unknown) {
+                            this.logger.warn(
+                                "L1 Prediction: Individual prediction failed, will retry sequentially",
+                                {
+                                    error:
+                                        error instanceof Error
+                                            ? error.message
+                                            : String(error),
+                                    groupName,
+                                    inputIndex: index,
+                                },
+                            );
+                            throw error;
+                        }
+                    }),
+                ),
+            );
+
+            for (let i = 0; i < batchResults.length; i++) {
+                const result = batchResults[i];
+                if (result.status === "fulfilled") {
+                    successfulResults.push(...result.value);
+                } else {
+                    failedInputs.push(inputsForGroup[i]);
+                }
+            }
+
+            this.logger.info(
+                `L1 Prediction: Fallback processing for group ${groupName} completed`,
+                {
+                    failed: failedInputs.length,
+                    successful: successfulResults.length,
+                    total: inputsForGroup.length,
+                },
+            );
+        }
+
+        return { failedInputs, successfulResults };
+    }
+
+    private async _performL1SequentialRetry(
+        failedInputs: UserInputL1[],
+        subjectGroup: string,
+    ): Promise<L1PredictResult[]> {
+        this.logger.info(
+            `L1 Prediction: Starting sequential retry for failed predictions in group: ${subjectGroup}`,
+            {
+                failedCount: failedInputs.length,
+            },
+        );
+
+        const successfulRetryResults: L1PredictResult[] = [];
+        let retrySuccessCount = 0;
+
+        for (let i = 0; i < failedInputs.length; i++) {
+            const userInput = failedInputs[i];
+            let success = false;
+
+            for (
+                let attempt = 1;
+                attempt <= this.config.SERVICE_MAX_RETRIES && !success;
+                attempt++
+            ) {
+                try {
+                    this.logger.info(
+                        `L1 Prediction: Sequential retry attempt ${attempt.toString()} for input ${String(i + 1)}/${failedInputs.length.toString()} in group ${subjectGroup}`,
+                    );
+                    const results = await this.predictMajorsL1(userInput);
+                    successfulRetryResults.push(...results);
+                    success = true;
+                    retrySuccessCount++;
+                    this.logger.info(
+                        `L1 Prediction: Sequential retry successful for group ${subjectGroup}`,
+                    );
+                } catch (error: unknown) {
+                    const errorMessage =
+                        error instanceof Error ? error.message : String(error);
+                    if (attempt === this.config.SERVICE_MAX_RETRIES) {
+                        this.logger.error(
+                            "L1 Prediction: Sequential retry failed after all attempts for group",
+                            {
+                                error: errorMessage,
+                                subjectGroup,
+                            },
+                        );
+                    } else {
+                        this.logger.warn(
+                            `L1 Prediction: Sequential retry attempt ${attempt.toString()} failed for group, will retry`,
+                            {
+                                error: errorMessage,
+                                subjectGroup,
+                            },
+                        );
+                        await this.delay(
+                            this.config.SERVICE_RETRY_BASE_DELAY_MS * attempt,
+                        );
+                    }
+                }
+            }
+            if (i < failedInputs.length - 1) {
+                await this.delay(this.config.SERVICE_RETRY_ITERATION_DELAY_MS);
+            }
+        }
+
+        this.logger.info(
+            `L1 Prediction: Sequential retry for group ${subjectGroup} completed`,
+            {
+                finallySuccessful: retrySuccessCount,
+                stillFailed: failedInputs.length - retrySuccessCount,
+                totalAttempted: failedInputs.length,
+            },
+        );
+
+        return successfulRetryResults;
+    }
+
     private async _performL2BatchPrediction(
         inputsForGroup: UserInputL2[],
         subjectGroup: string,
@@ -455,7 +647,7 @@ export class PredictionModelService {
         subjectGroup: string,
     ): Promise<L2PredictResult[]> {
         this.logger.info(
-            `Starting sequential retry for failed predictions in group: ${subjectGroup}`,
+            `L2 Prediction: Starting sequential retry for failed predictions in group: ${subjectGroup}`,
             {
                 failedCount: failedInputs.length,
             },
@@ -475,21 +667,21 @@ export class PredictionModelService {
             ) {
                 try {
                     this.logger.info(
-                        `Sequential retry attempt ${attempt.toString()} for input ${String(i + 1)}/${failedInputs.length.toString()} in group ${subjectGroup}`,
+                        `L2 Prediction: Sequential retry attempt ${attempt.toString()} for input ${String(i + 1)}/${failedInputs.length.toString()} in group ${subjectGroup}`,
                     );
                     const results = await this.predictMajorsL2(userInput);
                     successfulRetryResults.push(...results);
                     success = true;
                     retrySuccessCount++;
                     this.logger.info(
-                        `Sequential retry successful for group ${subjectGroup}`,
+                        `L2 Prediction: Sequential retry successful for group ${subjectGroup}`,
                     );
                 } catch (error: unknown) {
                     const errorMessage =
                         error instanceof Error ? error.message : String(error);
                     if (attempt === this.config.SERVICE_MAX_RETRIES) {
                         this.logger.error(
-                            "Sequential retry failed after all attempts for group",
+                            "L2 Prediction: Sequential retry failed after all attempts for group",
                             {
                                 error: errorMessage,
                                 subjectGroup,
@@ -497,7 +689,7 @@ export class PredictionModelService {
                         );
                     } else {
                         this.logger.warn(
-                            `Sequential retry attempt ${attempt.toString()} failed for group, will retry`,
+                            `L2 Prediction: Sequential retry attempt ${attempt.toString()} failed for group, will retry`,
                             {
                                 error: errorMessage,
                                 subjectGroup,
@@ -515,7 +707,7 @@ export class PredictionModelService {
         }
 
         this.logger.info(
-            `Sequential retry for group ${subjectGroup} completed`,
+            `L2 Prediction: Sequential retry for group ${subjectGroup} completed`,
             {
                 finallySuccessful: retrySuccessCount,
                 stillFailed: failedInputs.length - retrySuccessCount,
@@ -524,6 +716,59 @@ export class PredictionModelService {
         );
 
         return successfulRetryResults;
+    }
+
+    private async _processL1Chunk(
+        subjectGroup: string,
+        inputsForGroup: UserInputL1[],
+        groupIndex = 0, // Add index parameter
+    ): Promise<L1PredictResult[]> {
+        const startTime = Date.now();
+
+        // Add small delay between subject groups to avoid overwhelming the server
+        if (groupIndex > 0) {
+            await this.delay(this.config.SERVICE_L1_CHUNK_DELAY_MS);
+        }
+
+        this.logger.info(
+            `L1 Prediction: Starting batch processing for subject group: ${subjectGroup} (${(groupIndex + 1).toString()})`,
+            {
+                SERVICE_BATCH_CONCURRENCY:
+                    this.config.SERVICE_PREDICTION_CONCURRENCY,
+                SERVICE_PREDICTION_CONCURRENCY:
+                    this.config.SERVICE_PREDICTION_CONCURRENCY,
+                timestamp: new Date().toISOString(),
+                totalInputs: inputsForGroup.length,
+            },
+        );
+
+        const { failedInputs, successfulResults } =
+            await this._performL1BatchPrediction(inputsForGroup, subjectGroup);
+
+        let retryResults: L1PredictResult[] = [];
+        if (failedInputs.length > 0) {
+            retryResults = await this._performL1SequentialRetry(
+                failedInputs,
+                subjectGroup,
+            );
+        }
+
+        const duration = Date.now() - startTime;
+        const totalResults = successfulResults.length + retryResults.length;
+
+        this.logger.info(
+            `L1 Prediction: Subject group ${subjectGroup} completed`,
+            {
+                duration: `${duration.toString()}ms`,
+                failedInputs: failedInputs.length,
+                SERVICE_PREDICTION_CONCURRENCY:
+                    this.config.SERVICE_PREDICTION_CONCURRENCY,
+                throughput: `${(totalResults / (duration / 1000)).toFixed(2)} predictions/sec`,
+                totalResults,
+            },
+        );
+
+        return [...successfulResults, ...retryResults];
     }
 
     private async _processSubjectGroup(
@@ -535,7 +780,7 @@ export class PredictionModelService {
 
         // Add small delay between subject groups to avoid overwhelming the server
         if (groupIndex > 0) {
-            await this.delay(500); // 500ms delay between groups
+            await this.delay(this.config.SERVICE_L2_CHUNK_DELAY_MS); // delay between groups
         }
 
         this.logger.info(
@@ -710,6 +955,10 @@ export class PredictionModelService {
         return scenarios;
     }
 
+    // =================================================================
+    // PRIVATE HELPER METHODS: SCENARIO & INPUT GENERATION
+    // =================================================================
+
     /**
      * Combines L1 prediction results by keeping only the highest score for each admission code
      * and removing duplicates across all priority types.
@@ -764,10 +1013,6 @@ export class PredictionModelService {
             }),
         );
     }
-
-    // =================================================================
-    // PRIVATE HELPER METHODS: SCENARIO & INPUT GENERATION
-    // =================================================================
 
     private compareRanks(rankA: Rank, rankB: Rank): number {
         const rankOrder = {
@@ -865,100 +1110,138 @@ export class PredictionModelService {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
+    /**
+     * Helper method to determine which factor limited the chunk size
+     */
+    private determineLimitingFactor(factors: {
+        concurrencyAdjusted: number;
+        finalOptimal: number;
+        maxChunkSize: number;
+        memoryBased: number;
+        networkOptimal: number;
+    }): string {
+        const {
+            concurrencyAdjusted,
+            finalOptimal,
+            maxChunkSize,
+            memoryBased,
+            networkOptimal,
+        } = factors;
+
+        // Find which factor produced the final result
+        if (finalOptimal === concurrencyAdjusted) {
+            return "concurrency_complexity";
+        } else if (finalOptimal === networkOptimal) {
+            return "network_latency";
+        } else if (finalOptimal === memoryBased) {
+            return "memory_constraint";
+        } else if (finalOptimal === maxChunkSize) {
+            return "max_chunk_size_limit";
+        } else {
+            return "total_inputs_constraint";
+        }
+    }
+
     private async executeL1PredictionsWithRetry(
         userInputs: UserInputL1[],
+        maxChunkSize = 10,
     ): Promise<L1PredictResult[]> {
         const allResults: L1PredictResult[] = [];
+        const optimalChunkSize = this.getOptimalChunkSize(
+            userInputs.length,
+            maxChunkSize,
+            {
+                processingComplexity: "medium", // Adjust based on your typical workload
+                serverConcurrency: this.config.SERVER_BATCH_CONCURRENCY,
+            },
+        );
 
-        // Use concurrency limiter for L1 predictions
-        const limit = pLimit(this.config.SERVICE_PREDICTION_CONCURRENCY);
-
-        this.logger.info("L1 Prediction: Starting L1 predictions", {
+        this.logger.info("L1 Prediction: Calculated optimal chunk size", {
+            optimalChunkSize,
             totalInputs: userInputs.length,
         });
 
+        const groupedInputs = userInputs.reduce((acc, input) => {
+            const majorCode = input.nhom_nganh;
+            const group = acc.get(majorCode) ?? [];
+            group.push(input);
+            acc.set(majorCode, group);
+            return acc;
+        }, new Map<number, UserInputL1[]>());
+
+        const chunkedGroups: {
+            chunk: UserInputL1[];
+            chunkIndex: number;
+            groupName: string;
+        }[] = [];
+
+        for (const [majorGroup, inputs] of groupedInputs.entries()) {
+            const chunks = this.chunkArray(inputs, optimalChunkSize);
+            chunks.forEach((chunk, index) => {
+                chunkedGroups.push({
+                    chunk,
+                    chunkIndex: index,
+                    groupName: `${majorGroup.toString()}_chunk_${index.toString()}`,
+                });
+            });
+        }
+
+        // Create a concurrency limiter for processing chunks
+        const batchLimit = pLimit(this.config.SERVER_BATCH_CONCURRENCY);
+
+        this.logger.info(
+            "L1 Prediction: Starting concurrent processing with chunking",
+            {
+                optimalChunkSize,
+                originalInputCount: userInputs.length,
+                totalChunks: chunkedGroups.length,
+                totalGroups: groupedInputs.size,
+            },
+        );
+
+        // Process chunks with limited concurrency
         const results = await Promise.allSettled(
-            userInputs.map((userInput, index) =>
-                limit(async () => {
-                    try {
-                        if (index > 0) {
-                            await this.delay(
-                                this.config.SERVICE_REQUEST_DELAY_MS,
-                            );
-                        }
-                        return await this.predictMajorsL1(userInput);
-                    } catch (error: unknown) {
-                        this.logger.warn("L1 Prediction: Failed, will retry", {
-                            error:
-                                error instanceof Error
-                                    ? error.message
-                                    : String(error),
-                            inputIndex: index,
-                            majorGroup: userInput.nhom_nganh,
-                        });
-                        throw error;
-                    }
+            chunkedGroups.map(({ chunk, groupName }, globalIndex) =>
+                batchLimit(async () => {
+                    return await this._processL1Chunk(
+                        groupName,
+                        chunk,
+                        globalIndex,
+                    );
                 }),
             ),
         );
 
-        // Process results and handle retries for failed predictions
-        const failedInputs: { index: number; input: UserInputL1 }[] = [];
-
+        // Collect results
         for (let i = 0; i < results.length; i++) {
             const result = results[i];
+            const { groupName } = chunkedGroups[i];
+
             if (result.status === "fulfilled") {
                 allResults.push(...result.value);
+                this.logger.info(
+                    `L1 Prediction: Chunk ${groupName} completed successfully`,
+                    {
+                        resultsCount: result.value.length,
+                    },
+                );
             } else {
-                failedInputs.push({ index: i, input: userInputs[i] });
+                this.logger.error(
+                    `L1 Prediction: Chunk ${groupName} failed completely`,
+                    {
+                        error:
+                            result.reason instanceof Error
+                                ? result.reason.message
+                                : String(result.reason),
+                    },
+                );
             }
         }
 
-        // Retry failed predictions with exponential backoff
-        if (failedInputs.length > 0) {
-            this.logger.info(
-                `L1 Prediction: Retrying ${failedInputs.length.toString()} failed L1 predictions`,
-            );
-
-            for (const { input } of failedInputs) {
-                let success = false;
-                for (
-                    let attempt = 1;
-                    attempt <= this.config.SERVICE_MAX_RETRIES && !success;
-                    attempt++
-                ) {
-                    try {
-                        const results = await this.predictMajorsL1(input);
-                        allResults.push(...results);
-                        success = true;
-                        this.logger.info(
-                            `L1 Prediction: Retry successful for major ${input.nhom_nganh.toString()}`,
-                        );
-                    } catch (error: unknown) {
-                        if (attempt === this.config.SERVICE_MAX_RETRIES) {
-                            this.logger.error(
-                                `L1 Prediction: Failed after all attempts`,
-                                {
-                                    error:
-                                        error instanceof Error
-                                            ? error.message
-                                            : String(error),
-                                    majorGroup: input.nhom_nganh,
-                                },
-                            );
-                        } else {
-                            await this.delay(
-                                this.config.SERVICE_RETRY_BASE_DELAY_MS *
-                                    attempt,
-                            );
-                        }
-                    }
-                }
-            }
-        }
-
-        this.logger.info("L1 Prediction: Completed", {
-            failedInputs: failedInputs.length,
+        this.logger.info("L1 Prediction: All chunks processing completed", {
+            failedChunks: results.filter((r) => r.status === "rejected").length,
+            successfulChunks: results.filter((r) => r.status === "fulfilled")
+                .length,
             totalResults: allResults.length,
         });
 
@@ -1288,6 +1571,36 @@ export class PredictionModelService {
             serverConcurrency = this.config.SERVER_BATCH_CONCURRENCY,
         } = factors ?? {};
 
+        // For small datasets, prioritize parallelism
+        const smallDatasetThreshold = serverConcurrency * 2;
+        if (totalInputs <= smallDatasetThreshold) {
+            const optimalSize = 1;
+            const numChunks = totalInputs; // Each input gets its own chunk
+            const efficiency = 100; // Perfect efficiency for small datasets
+
+            this.logger.info(
+                "Small dataset detected - using maximum parallelism strategy",
+                {
+                    efficiency: `${efficiency.toString()}%`,
+                    factors: {
+                        concurrencyUtilization: `${Math.min((numChunks / serverConcurrency) * 100, 100).toFixed(1)}%`,
+                        smallDatasetOptimization: true,
+                    },
+                    numChunks,
+                    optimalSize,
+                    reasoning:
+                        "Maximizing parallelism for small dataset to minimize latency",
+                    serverConcurrency,
+                    strategy: "small_dataset_parallelism",
+                    threshold: smallDatasetThreshold,
+                    totalInputs,
+                },
+            );
+
+            return optimalSize;
+        }
+
+        // Standard algorithm for larger datasets
         // Factor 1: Balance with server concurrency
         // Aim for chunks that can be processed efficiently in parallel
         const concurrencyBasedSize = Math.ceil(totalInputs / serverConcurrency);
@@ -1331,18 +1644,39 @@ export class PredictionModelService {
         const remainder = totalInputs % optimalSize;
         const efficiency = 1 - remainder / totalInputs;
 
+        // Determine which factor was the limiting constraint
+        const limitingFactor = this.determineLimitingFactor({
+            concurrencyAdjusted: Math.floor(
+                concurrencyBasedSize * complexityMultiplier,
+            ),
+            finalOptimal: optimalSize,
+            maxChunkSize,
+            memoryBased: memoryBasedSize,
+            networkOptimal: networkOptimalSize,
+        });
+
         this.logger.info("Calculated optimal chunk size with factors", {
+            concurrencyUtilization: `${Math.min((numChunks / serverConcurrency) * 100, 100).toFixed(1)}%`,
+            config: {
+                maxChunkSize,
+                memoryLimit,
+                networkLatency,
+                serverConcurrency,
+            },
             efficiency: `${(efficiency * 100).toFixed(1)}%`,
             factors: {
                 complexityAdjusted: Math.floor(
                     concurrencyBasedSize * complexityMultiplier,
                 ),
                 concurrencyBased: concurrencyBasedSize,
+                limitingFactor: limitingFactor,
                 memoryBased: memoryBasedSize,
                 networkOptimal: networkOptimalSize,
             },
             numChunks,
             optimalSize,
+            processingComplexity,
+            strategy: "standard_algorithm",
             totalInputs,
         });
 
@@ -1476,6 +1810,91 @@ export class PredictionModelService {
         }
     }
 
+    private async predictL1MajorsBatch(
+        userInputs: UserInputL1[],
+        dynamicConcurrency?: number, // Optional override
+    ): Promise<L1PredictResult[]> {
+        try {
+            // Calculate dynamic concurrency if not provided
+            const batchConcurrency =
+                dynamicConcurrency ??
+                this.calculateDynamicBatchConcurrency(
+                    userInputs.length,
+                    this.config.SERVICE_INPUTS_PER_WORKER, // inputs per worker
+                    this.config.SERVICE_BATCH_CONCURRENCY, // Use config as max limit
+                    this.config.SERVICE_MIN_BATCH_CONCURRENCY, // Min concurrency
+                );
+
+            this.logger.info("L1 Prediction: Starting batch prediction", {
+                calculatedConcurrency: batchConcurrency,
+                configuredMaxConcurrency: this.config.SERVICE_BATCH_CONCURRENCY,
+                inputCount: userInputs.length,
+            });
+
+            const batchRequest: L1BatchRequest = {
+                items: userInputs,
+            };
+
+            const response = await this.httpClient.post<L1PredictResult[][]>(
+                `/predict/l1/batch?concurrency=${batchConcurrency.toString()}`,
+                batchRequest,
+            );
+
+            const flattenedResults = response.data.flat();
+            const validatedResults =
+                await this.validateL1PredictResponse(flattenedResults);
+
+            this.logger.info("L1 Prediction: Batch prediction completed", {
+                inputCount: userInputs.length,
+                resultCount: validatedResults.length,
+                usedConcurrency: batchConcurrency,
+            });
+
+            return validatedResults;
+        } catch (error) {
+            const errorContext = {
+                inputCount: userInputs.length,
+                usedConcurrency: dynamicConcurrency ?? "calculated",
+            };
+
+            if (axios.isAxiosError(error)) {
+                const axiosError = error as AxiosError;
+                const status = axiosError.response?.status;
+                let detailedMessage = axiosError.message;
+
+                if (
+                    status === 422 &&
+                    this.isValidationError(axiosError.response?.data)
+                ) {
+                    const validationError = axiosError.response.data;
+                    const specificErrors = validationError.detail
+                        .map((err) => `${err.loc.join(".")} - ${err.msg}`)
+                        .join("; ");
+                    detailedMessage = `API Validation Error: ${specificErrors}`;
+                }
+
+                this.logger.error("L1 Prediction: Batch API error", {
+                    message: detailedMessage,
+                    status: status ?? "unknown",
+                    ...errorContext,
+                });
+
+                throw new Error(
+                    `L1 Prediction: Batch API error (${String(status)}): ${detailedMessage}`,
+                );
+            }
+
+            const message =
+                error instanceof Error ? error.message : "Unknown error";
+            this.logger.error("L1 Prediction: Batch service error", {
+                message,
+                ...errorContext,
+            });
+
+            throw new Error(`L1 Prediction: Batch service error: ${message}`);
+        }
+    }
+
     private async predictL2MajorsBatch(
         userInputs: UserInputL2[],
         dynamicConcurrency?: number, // Optional override
@@ -1497,7 +1916,7 @@ export class PredictionModelService {
                 inputCount: userInputs.length,
             });
 
-            const batchRequest = {
+            const batchRequest: L2BatchRequest = {
                 items: userInputs,
             };
 
