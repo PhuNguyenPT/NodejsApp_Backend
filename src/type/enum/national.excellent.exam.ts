@@ -1,3 +1,7 @@
+export enum NationalExcellentExamType {
+    NATIONAL = "Học sinh giỏi cấp Quốc Gia",
+}
+
 // Define the enum for the National Excellent Student Exam subjects
 export enum NationalExcellentStudentExamSubject {
     BIOLOGY = "Sinh Học",

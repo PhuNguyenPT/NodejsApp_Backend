@@ -28,7 +28,7 @@ import {
 import { Conduct, getRankByConduct } from "@/type/enum/conduct.js";
 import { CCNNType, CCQTType, DGNLType } from "@/type/enum/exam.js";
 import { getCodeByVietnameseName } from "@/type/enum/major.js";
-import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.subject.js";
+import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.exam.js";
 import { Rank } from "@/type/enum/rank.js";
 import { SpecialStudentCase } from "@/type/enum/special.student.case.js";
 import {
@@ -1368,9 +1368,9 @@ export class PredictionModelService {
         }
 
         // Sort awards by rank priority (First > Second > Third)
-        const sortedAwards = awards
-            .filter((award) => award.name === "Học sinh giỏi cấp quốc gia") // Only national excellent student awards
-            .sort((a, b) => this.compareRanks(a.level, b.level));
+        const sortedAwards = awards.sort((a, b) =>
+            this.compareRanks(a.level, b.level),
+        );
 
         const result: {
             hsg_1?: HsgSubject;

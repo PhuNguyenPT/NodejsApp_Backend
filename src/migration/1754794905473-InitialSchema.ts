@@ -51,6 +51,8 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(`DROP TABLE "students"`);
         await queryRunner.query(`DROP TYPE "public"."students_unitype_enum"`);
+        await queryRunner.query(`DROP TABLE "major_groups"`);
+        await queryRunner.query(`DROP TYPE "public"."major_groups_name_enum"`);
         await queryRunner.query(`DROP INDEX "public"."idx_award_student_id"`);
         await queryRunner.query(`DROP INDEX "public"."idx_award_date"`);
         await queryRunner.query(`DROP INDEX "public"."idx_award_category"`);
@@ -58,10 +60,9 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(`DROP INDEX "public"."idx_award_created_at"`);
         await queryRunner.query(`DROP INDEX "public"."idx_award_modified_at"`);
         await queryRunner.query(`DROP TABLE "awards"`);
+        await queryRunner.query(`DROP TYPE "public"."awards_name_enum"`);
         await queryRunner.query(`DROP TYPE "public"."awards_level_enum"`);
         await queryRunner.query(`DROP TYPE "public"."awards_category_enum"`);
-        await queryRunner.query(`DROP TABLE "major_groups"`);
-        await queryRunner.query(`DROP TYPE "public"."major_groups_name_enum"`);
         await queryRunner.query(`DROP INDEX "public"."idx_file_student_id"`);
         await queryRunner.query(`DROP INDEX "public"."idx_file_type"`);
         await queryRunner.query(`DROP INDEX "public"."idx_file_status"`);
@@ -250,19 +251,16 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "idx_file_student_id" ON "files" ("studentId") `,
         );
         await queryRunner.query(
-            `CREATE TYPE "public"."major_groups_name_enum" AS ENUM('Nông, lâm nghiệp và thủy sản', 'Kiến trúc và xây dựng', 'Nghệ thuật', 'Kinh doanh và quản lý', 'Máy tính và công nghệ thông tin', 'Khoa học giáo dục và đào tạo giáo viên', 'Kỹ thuật', 'Công nghệ kỹ thuật', 'Môi trường và bảo vệ môi trường', 'Sức khỏe', 'Nhân văn', 'Báo chí và thông tin', 'Pháp luật', 'Khoa học sự sống', 'Sản xuất và chế biến', 'Toán và thống kê', 'Khoa học tự nhiên', 'Khác', 'An ninh, Quốc phòng', 'Khoa học xã hội và hành vi', 'Dịch vụ xã hội', 'Du lịch, khách sạn, thể thao và dịch vụ cá nhân', 'Dịch vụ vận tải', 'Thú y')`,
-        );
-        await queryRunner.query(
-            `CREATE TABLE "major_groups" ("code" character varying(255) NOT NULL, "english_name" character varying(255) NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" "public"."major_groups_name_enum" NOT NULL, CONSTRAINT "UQ_aed9ebe4ce2616b293ff84997a3" UNIQUE ("code"), CONSTRAINT "PK_81b0cba483bec614241a6d20369" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
             `CREATE TYPE "public"."awards_category_enum" AS ENUM('Sinh Học', 'Hoá Học', 'Tiếng Trung', 'Tiếng Anh', 'Tiếng Pháp', 'Địa Lý', 'Lịch Sử', 'Tin Học', 'Tiếng Nhật', 'Ngữ Văn', 'Toán', 'Vật Lý', 'Tiếng Nga')`,
         );
         await queryRunner.query(
             `CREATE TYPE "public"."awards_level_enum" AS ENUM('Hạng Nhất', 'Hạng Nhì', 'Hạng Ba')`,
         );
         await queryRunner.query(
-            `CREATE TABLE "awards" ("awardDate" date, "awardId" character varying(100), "awardingOrganization" character varying(200), "category" "public"."awards_category_enum", "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "description" text, "examType" jsonb, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "level" "public"."awards_level_enum", "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" character varying(200), "studentId" uuid NOT NULL, CONSTRAINT "PK_bc3f6adc548ff46c76c03e06377" PRIMARY KEY ("id"))`,
+            `CREATE TYPE "public"."awards_name_enum" AS ENUM('Học sinh giỏi cấp Quốc Gia')`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "awards" ("awardDate" date, "awardId" character varying(100), "awardingOrganization" character varying(200), "category" "public"."awards_category_enum", "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "description" text, "examType" jsonb, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "level" "public"."awards_level_enum", "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying(255), "name" "public"."awards_name_enum", "studentId" uuid NOT NULL, CONSTRAINT "PK_bc3f6adc548ff46c76c03e06377" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE INDEX "idx_award_modified_at" ON "awards" ("modifiedAt") `,
@@ -281,6 +279,12 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE INDEX "idx_award_student_id" ON "awards" ("studentId") `,
+        );
+        await queryRunner.query(
+            `CREATE TYPE "public"."major_groups_name_enum" AS ENUM('Nông, lâm nghiệp và thủy sản', 'Kiến trúc và xây dựng', 'Nghệ thuật', 'Kinh doanh và quản lý', 'Máy tính và công nghệ thông tin', 'Khoa học giáo dục và đào tạo giáo viên', 'Kỹ thuật', 'Công nghệ kỹ thuật', 'Môi trường và bảo vệ môi trường', 'Sức khỏe', 'Nhân văn', 'Báo chí và thông tin', 'Pháp luật', 'Khoa học sự sống', 'Sản xuất và chế biến', 'Toán và thống kê', 'Khoa học tự nhiên', 'Khác', 'An ninh, Quốc phòng', 'Khoa học xã hội và hành vi', 'Dịch vụ xã hội', 'Du lịch, khách sạn, thể thao và dịch vụ cá nhân', 'Dịch vụ vận tải', 'Thú y')`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "major_groups" ("code" character varying(255) NOT NULL, "english_name" character varying(255) NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" "public"."major_groups_name_enum" NOT NULL, CONSTRAINT "UQ_aed9ebe4ce2616b293ff84997a3" UNIQUE ("code"), CONSTRAINT "PK_81b0cba483bec614241a6d20369" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE TYPE "public"."students_unitype_enum" AS ENUM('Tư thục', 'Công lập')`,

@@ -83,9 +83,22 @@ export class StudentInfoDTO {
      * Optional field that can contain multiple award entries.
      * Each award includes details like name, category, level, and award date.
      *
-     * @type {AwardDTO[]}
+     * @type {AwardRequest[]}
      * @optional
-     * @see AwardDTO for detailed structure and validation rules
+     * @see AwardRequest for detailed structure and validation rules
+     * @example
+     * [
+     *   {
+     *     "category": "Tiếng Anh",
+     *     "level": "Hạng Nhất",
+     *     "name": "Học sinh giỏi cấp Quốc Gia"
+     *     },
+     *   {
+     *     "category": "Tiếng Pháp",
+     *     "level": "Hạng Nhì",
+     *     "name": "Học sinh giỏi cấp Quốc Gia"
+     *   }
+     * ]
      */
     @Expose()
     @IsArray({ message: "Awards must be an array" })

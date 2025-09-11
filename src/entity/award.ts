@@ -13,7 +13,10 @@ import {
 
 import { StudentEntity } from "@/entity/student.js";
 import { ExamType } from "@/type/enum/exam.js";
-import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.subject.js";
+import {
+    NationalExcellentExamType,
+    NationalExcellentStudentExamSubject,
+} from "@/type/enum/national.excellent.exam.js";
 import { Rank } from "@/type/enum/rank.js";
 
 @Entity({ name: "awards" })
@@ -76,8 +79,8 @@ export class AwardEntity {
     })
     modifiedBy?: string;
 
-    @Column({ length: 200, nullable: true, type: "varchar" })
-    name?: string;
+    @Column({ enum: NationalExcellentExamType, nullable: true, type: "enum" })
+    name?: NationalExcellentExamType;
 
     @JoinColumn({ name: "studentId" })
     @ManyToOne("StudentEntity", "awards", {

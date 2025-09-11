@@ -47,7 +47,7 @@ export class EnrollmentData1757342612756 implements MigrationInterface {
 
         // To improve performance, we'll process and save records in batches
         // instead of loading the entire file into memory.
-        const batchSize = 1000;
+        const batchSize = 5000;
         let batch: EnrollmentEntity[] = [];
         let totalRecords = 0;
 

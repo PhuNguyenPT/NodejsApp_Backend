@@ -1,7 +1,10 @@
 import { Expose, Type } from "class-transformer";
 import { IsNotEmpty } from "class-validator";
 
-import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.subject.js";
+import {
+    NationalExcellentExamType,
+    NationalExcellentStudentExamSubject,
+} from "@/type/enum/national.excellent.exam.js";
 import { Rank } from "@/type/enum/rank.js";
 
 /**
@@ -48,5 +51,6 @@ export class AwardResponse {
 
     @Expose()
     @IsNotEmpty()
-    name!: string;
+    @Type(() => String)
+    name!: NationalExcellentExamType;
 }
