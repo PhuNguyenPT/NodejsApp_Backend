@@ -1,13 +1,10 @@
 import { Expose } from "class-transformer";
-import {
-    IsEnum,
-    IsNotEmpty,
-    IsString,
-    MaxLength,
-    MinLength,
-} from "class-validator";
+import { IsEnum, IsNotEmpty } from "class-validator";
 
-import { NationalExcellentStudentExamSubject } from "@/type/enum/national.excellent.student.subject.js";
+import {
+    NationalExcellentExamType,
+    NationalExcellentStudentExamSubject,
+} from "@/type/enum/national.excellent.exam.js";
 import { Rank } from "@/type/enum/rank.js";
 
 /**
@@ -58,9 +55,7 @@ export class AwardDTO {
     level!: Rank;
 
     @Expose()
+    @IsEnum(NationalExcellentExamType)
     @IsNotEmpty({ message: "Award name is required" })
-    @IsString({ message: "Award name must be a string" })
-    @MaxLength(200, { message: "Award name cannot exceed 200 characters" })
-    @MinLength(1, { message: "Award name must be at least 1 character long" })
-    name!: string;
+    name!: NationalExcellentExamType;
 }

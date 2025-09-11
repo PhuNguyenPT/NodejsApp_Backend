@@ -92,12 +92,12 @@ export class StudentRequest {
      *   {
      *     "category": "Tiếng Anh",
      *     "level": "Hạng Nhất",
-     *     "name": "Học sinh giỏi cấp quốc gia"
+     *     "name": "Học sinh giỏi cấp Quốc Gia"
      *     },
      *   {
      *     "category": "Tiếng Pháp",
      *     "level": "Hạng Nhì",
-     *     "name": "Học sinh giỏi cấp tỉnh"
+     *     "name": "Học sinh giỏi cấp Quốc Gia"
      *   }
      * ]
      */
