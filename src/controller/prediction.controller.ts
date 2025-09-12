@@ -15,12 +15,14 @@ import {
     Tags,
 } from "tsoa";
 
+import { PredictionResultResponse } from "@/dto/predict/prediciton.result.response.js";
 import {
     L1PredictResult,
     L2PredictResult,
     UserInputL2,
 } from "@/dto/predict/predict.js";
 import { PredictionResultEntity } from "@/entity/prediction.result.js";
+import { PredictionResultMapper } from "@/mapper/prediction.result.mapper.js";
 import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
 import validateDTO from "@/middleware/validation.middleware.js";
 import { PredictionModelService } from "@/service/prediction.model.service.js";
@@ -185,13 +187,16 @@ export class PredictionController extends Controller {
     public async getPredictionResultEntityForAuthenticatedUser(
         @Path() studentId: string,
         @Request() request: AuthenticatedRequest,
-    ): Promise<PredictionResultEntity> {
+    ): Promise<PredictionResultResponse> {
         const user: Express.User = request.user;
 
-        return await this.predictionResultService.getPredictionResultEntityByStudentIdAndUserId(
-            studentId,
-            user.id,
-        );
+        const predictionResultEntity: PredictionResultEntity =
+            await this.predictionResultService.getPredictionResultEntityByStudentIdAndUserId(
+                studentId,
+                user.id,
+            );
+
+        return PredictionResultMapper.toResponse(predictionResultEntity);
     }
 
     /**
@@ -214,9 +219,12 @@ export class PredictionController extends Controller {
     @SuccessResponse(HttpStatus.OK, "Fetching prediction result successfully")
     public async getPredictionResultEntityForGuest(
         @Path() studentId: string,
-    ): Promise<PredictionResultEntity> {
-        return await this.predictionResultService.getPredictionResultEntityByStudentIdAndUserId(
-            studentId,
-        );
+    ): Promise<PredictionResultResponse> {
+        const predictionResultEntity: PredictionResultEntity =
+            await this.predictionResultService.getPredictionResultEntityByStudentIdAndUserId(
+                studentId,
+            );
+
+        return PredictionResultMapper.toResponse(predictionResultEntity);
     }
 }
