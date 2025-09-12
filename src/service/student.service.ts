@@ -1,10 +1,15 @@
 import { inject, injectable } from "inversify";
+import { RedisClientType } from "redis";
 import { IsNull, Repository } from "typeorm";
 
 import { defaultPaginationConfig } from "@/config/pagination.config.js";
 import { StudentRequest } from "@/dto/student/student.request.js";
 import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
+import {
+    PREDICTION_CHANNEL,
+    StudentCreatedEvent,
+} from "@/event/prediction.model.event.listener.service.js";
 import { AwardService } from "@/service/award.service.js";
 import { CertificationService } from "@/service/certification.service.js";
 import { MajorService } from "@/service/major.service.js";
@@ -16,6 +21,7 @@ import { ValidationException } from "@/type/exception/validation.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { Page } from "@/type/pagination/page.js";
 import { Pageable } from "@/type/pagination/pageable.js";
+// import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/util/jwt.options.js";
 
 @injectable()
 export class StudentService {
@@ -32,6 +38,7 @@ export class StudentService {
         private readonly majorService: MajorService,
         @inject(TYPES.Logger)
         private readonly logger: ILogger,
+        @inject(TYPES.RedisPublisher) private redisPublisher: RedisClientType,
     ) {}
 
     /**
@@ -81,9 +88,25 @@ export class StudentService {
         }
 
         const savedStudent = await this.studentRepository.save(studentEntity);
+
         this.logger.info(
             `Create Anonymous Student Profile id: ${savedStudent.id} successfully`,
         );
+
+        const payload: StudentCreatedEvent = {
+            studentId: savedStudent.id,
+            userId: undefined,
+        };
+
+        await this.redisPublisher.publish(
+            PREDICTION_CHANNEL,
+            JSON.stringify(payload),
+        );
+
+        this.logger.info(
+            `Published single StudentCreatedEvent event to ${PREDICTION_CHANNEL} with studentId ${savedStudent.id}.`,
+        );
+
         return savedStudent;
     }
     /**
@@ -158,6 +181,20 @@ export class StudentService {
         this.logger.info(
             `Create Student Profile id: ${savedStudent.id} with User id: ${userId} successfully`,
         );
+
+        const payload: StudentCreatedEvent = {
+            studentId: savedStudent.id,
+            userId: userId,
+        };
+
+        await this.redisPublisher.publish(
+            PREDICTION_CHANNEL,
+            JSON.stringify(payload),
+        );
+
+        this.logger.info(
+            `Published single StudentCreatedEvent event to ${PREDICTION_CHANNEL} with studentId ${savedStudent.id} and userId ${userId}.`,
+        );
         return savedStudent;
     }
 
@@ -216,53 +253,31 @@ export class StudentService {
     }
 
     /**
-     * Retrieves a single student profile by its ID, ensuring it belongs to the specified user.
+     * Retrieves a single student profile by its ID, ensuring it belongs to the specified user or guest.
      * @param studentId - The ID of the student profile.
      * @param userId - The ID of the user who must own the profile.
      * @returns A promise that resolves to the found StudentEntity.
      * @throws {EntityNotFoundException} If no matching student profile is found.
      */
-    public async getStudentEntityByUserId(
-        studentId: string,
-        userId: string,
+    public async getStudentEntityByIdAnUserId(
+        id: string,
+        userId?: string,
     ): Promise<StudentEntity> {
         const studentEntity: null | StudentEntity =
             await this.studentRepository.findOne({
+                // cache: {
+                //     id: `student_cache_${id}`,
+                //     milliseconds: JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
+                // },
                 relations: ["awards", "certifications"],
                 where: {
-                    id: studentId,
-                    userId: userId,
+                    id,
+                    userId: userId ?? IsNull(),
                 },
             });
         if (!studentEntity) {
             throw new EntityNotFoundException(
-                `Student profile with id: ${studentId} not found`,
-            );
-        }
-        return studentEntity;
-    }
-
-    /**
-     * Retrieves a single student profile by its ID for a guest user (no ownership check).
-     * @param studentId - The ID of the student profile.
-     * @returns A promise that resolves to the found StudentEntity.
-     * @throws {EntityNotFoundException} If no student profile with the given ID is found.
-     */
-    public async getStudentEntityGuest(
-        studentId: string,
-    ): Promise<StudentEntity> {
-        const studentEntity: null | StudentEntity =
-            await this.studentRepository.findOne({
-                relations: ["awards", "certifications"],
-                where: {
-                    createdBy: Role.ANONYMOUS,
-                    id: studentId,
-                    userId: IsNull(),
-                },
-            });
-        if (!studentEntity) {
-            throw new EntityNotFoundException(
-                `Student profile with id: ${studentId} not found`,
+                `Student profile with id: ${id} not found`,
             );
         }
         return studentEntity;

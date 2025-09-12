@@ -20,11 +20,11 @@ const SERVICE_IDENTIFIER_METADATA = Symbol("serviceIdentifierMetadata");
  * This should be used on services that have @RedisEventListener methods
  *
  * Usage:
- * @EventListener(TYPES.MyService)
+ * @EventListenerService(TYPES.MyService)
  * @injectable()
  * export class MyService { ... }
  */
-export function EventListener(serviceIdentifier: symbol) {
+export function EventListenerService(serviceIdentifier: symbol) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return function <T extends new (...args: any[]) => any>(constructor: T): T {
         // Store the service identifier on the constructor

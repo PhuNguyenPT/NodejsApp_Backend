@@ -15,6 +15,7 @@ import { StudentEntity } from "@/entity/student.js";
 export enum PredictionResultStatus {
     COMPLETED = "completed",
     FAILED = "failed",
+    PARTIAL = "partial",
     PROCESSING = "processing",
 }
 

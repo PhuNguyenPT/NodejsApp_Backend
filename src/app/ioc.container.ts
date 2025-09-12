@@ -24,9 +24,11 @@ import { FileEntity } from "@/entity/file.js";
 import { MajorEntity } from "@/entity/major.entity.js";
 import { MajorGroupEntity } from "@/entity/major.group.entity.js";
 import { OcrResultEntity } from "@/entity/ocr.result.entity.js";
+import { PredictionResultEntity } from "@/entity/prediction.result.js";
 import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
 import { OcrEventListenerService } from "@/event/orc.event.listener.service.js";
+import { PredictionModelEventListenerService } from "@/event/prediction.model.event.listener.service.js";
 import { TokenCleanupJob } from "@/job/token.cleanup.job.js";
 import { JwtTokenRepository } from "@/repository/impl/jwt.repository.js";
 import { UserRepository } from "@/repository/impl/user.repository.js";
@@ -114,6 +116,13 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
+    .bind<Repository<PredictionResultEntity>>(TYPES.PredictionResultRepository)
+    .toDynamicValue(() =>
+        postgresDataSource.getRepository(PredictionResultEntity),
+    )
+    .inSingletonScope();
+
+iocContainer
     .bind<JwtEntityService>(TYPES.JwtEntityService)
     .to(JwtEntityService)
     .inSingletonScope();
@@ -176,6 +185,13 @@ iocContainer
 iocContainer
     .bind<PredictionModelService>(TYPES.PredictionModelService)
     .to(PredictionModelService)
+    .inSingletonScope();
+
+iocContainer
+    .bind<PredictionModelEventListenerService>(
+        TYPES.PredictionModelEventListenerService,
+    )
+    .to(PredictionModelEventListenerService)
     .inSingletonScope();
 
 iocContainer

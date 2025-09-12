@@ -3,7 +3,7 @@ import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
 import pLimit from "p-limit";
-import { IsNull, Repository } from "typeorm";
+import { Repository } from "typeorm";
 
 import {
     HsgSubject,
@@ -22,6 +22,7 @@ import { ConductDTO } from "@/dto/student/conduct.dto.js";
 import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { OcrResultEntity, OcrStatus } from "@/entity/ocr.result.entity.js";
 import { StudentEntity } from "@/entity/student.js";
+import { StudentService } from "@/service/student.service.js";
 import { TYPES } from "@/type/container/types.js";
 import {
     AcademicPerformance,
@@ -40,7 +41,6 @@ import {
     VietnameseSubject,
 } from "@/type/enum/subject.js";
 import { UniType } from "@/type/enum/uni.type.js";
-import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
 
@@ -82,7 +82,9 @@ export class PredictionModelService {
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.OcrResultRepository)
-        private readonly ocrResultRepository: Repository<OcrResultEntity>,
+        private readonly ocrResultEntityRepository: Repository<OcrResultEntity>,
+        @inject(TYPES.StudentService)
+        private readonly studentService: StudentService,
         @inject(TYPES.PredictHttpClient)
         private readonly httpClient: AxiosInstance,
         @inject(TYPES.PredictionModelServiceConfig)
@@ -95,7 +97,10 @@ export class PredictionModelService {
         studentId: string,
         userId?: string,
     ): Promise<L1PredictResult[]> {
-        const student = await this.fetchAndValidateStudent(studentId, userId);
+        const student = await this.studentService.getStudentEntityByIdAnUserId(
+            studentId,
+            userId,
+        );
         const studentInfoDTO: StudentInfoDTO = plainToInstance(
             StudentInfoDTO,
             student,
@@ -137,7 +142,10 @@ export class PredictionModelService {
         userId?: string,
     ): Promise<L2PredictResult[]> {
         // Data retrieval and validation
-        const student = await this.fetchAndValidateStudent(studentId, userId);
+        const student = await this.studentService.getStudentEntityByIdAnUserId(
+            studentId,
+            userId,
+        );
 
         const studentInfoDTO: StudentInfoDTO = plainToInstance(
             StudentInfoDTO,
@@ -1359,7 +1367,7 @@ export class PredictionModelService {
         userId: string,
         studentId: string,
     ): Promise<void> {
-        const ocrResultEntities = await this.ocrResultRepository.find({
+        const ocrResultEntities = await this.ocrResultEntityRepository.find({
             where: {
                 processedBy: userId,
                 status: OcrStatus.COMPLETED,
@@ -1372,24 +1380,6 @@ export class PredictionModelService {
                 `Cannot predict majors due to ocr array length ${ocrResultEntities.length.toString()} is not 6`,
             );
         }
-    }
-
-    private async fetchAndValidateStudent(
-        studentId: string,
-        userId?: string,
-    ): Promise<StudentEntity> {
-        const student = await this.studentRepository.findOne({
-            relations: ["awards", "certifications"],
-            where: { id: studentId, userId: userId ?? IsNull() },
-        });
-
-        if (!student) {
-            throw new EntityNotFoundException(
-                `Student profile with id ${studentId} not found`,
-            );
-        }
-
-        return student;
     }
 
     private findAndValidateConduct(

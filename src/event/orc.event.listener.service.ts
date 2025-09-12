@@ -3,7 +3,7 @@ import { Repository } from "typeorm";
 import { z } from "zod";
 
 import {
-    EventListener,
+    EventListenerService,
     RedisEventListener,
 } from "@/decorator/redis.event.listener.decorator.js";
 import {
@@ -48,7 +48,7 @@ const OcrEventSchema = z.union([
 export const OCR_CHANNEL = "ocr:file_created";
 
 // Spring-style: Register this service for automatic event listener discovery
-@EventListener(TYPES.OcrEventListenerService)
+@EventListenerService(TYPES.OcrEventListenerService)
 @injectable()
 export class OcrEventListenerService {
     constructor(

@@ -25,9 +25,12 @@ export const TYPES = {
     OcrResultService: Symbol.for("OcrResultService"),
     PassportConfig: Symbol.for("PassportConfig"),
     PredictHttpClient: Symbol.for("PredictHttpClient"),
-    PredictionModelEventListener: Symbol.for("PredictionModelEventListener"),
+    PredictionModelEventListenerService: Symbol.for(
+        "PredictionModelEventListenerService",
+    ),
     PredictionModelService: Symbol.for("PredictionModelService"),
     PredictionModelServiceConfig: Symbol.for("PredictionModelServiceConfig"),
+    PredictionResultRepository: Symbol.for("PredictionResultRepository"),
     PredictionServiceClient: Symbol.for("PredictionServiceClient"),
     RedisPublisher: Symbol.for("RedisPublisher"),
     RedisSubscriber: Symbol.for("RedisSubscriber"),
