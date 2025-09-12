@@ -35,6 +35,9 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "ocr_results" DROP CONSTRAINT "FK_0787a97b8492c2aebe1dc2cc644"`,
         );
         await queryRunner.query(
+            `ALTER TABLE "prediction_result" DROP CONSTRAINT "FK_a25592447880a45f745c099c384"`,
+        );
+        await queryRunner.query(
             `DROP INDEX "public"."IDX_80f55c50a4aee989a2ed83a681"`,
         );
         await queryRunner.query(
@@ -131,7 +134,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE TYPE "public"."prediction_result_status_enum" AS ENUM('completed', 'failed', 'processing')`,
         );
         await queryRunner.query(
-            `CREATE TABLE "prediction_result" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "l1PredictResults" jsonb, "l2PredictResults" jsonb, "status" "public"."prediction_result_status_enum" NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "userId" uuid, CONSTRAINT "PK_fe3737241aefda2c4490379a394" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "prediction_result" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "l1PredictResults" jsonb, "l2PredictResults" jsonb, "status" "public"."prediction_result_status_enum" NOT NULL, "studentId" uuid NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "userId" uuid, CONSTRAINT "REL_a25592447880a45f745c099c38" UNIQUE ("studentId"), CONSTRAINT "PK_fe3737241aefda2c4490379a394" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE TABLE "posts" ("body" character varying(255) NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "modifiedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "modifiedBy" character varying, "title" character varying(255) NOT NULL, CONSTRAINT "PK_2829ac61eff60fcec60d7274b9e" PRIMARY KEY ("id"))`,
@@ -318,6 +321,9 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE INDEX "IDX_80f55c50a4aee989a2ed83a681" ON "student_major_groups" ("major_group_id") `,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "prediction_result" ADD CONSTRAINT "FK_a25592447880a45f745c099c384" FOREIGN KEY ("studentId") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
             `ALTER TABLE "ocr_results" ADD CONSTRAINT "FK_0787a97b8492c2aebe1dc2cc644" FOREIGN KEY ("fileId") REFERENCES "files"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,

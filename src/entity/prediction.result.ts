@@ -2,6 +2,7 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    JoinColumn,
     OneToOne,
     PrimaryGeneratedColumn,
     Relation,
@@ -40,10 +41,14 @@ export class PredictionResultEntity {
     })
     status!: PredictionResultStatus;
 
+    @JoinColumn({ name: "studentId" })
     @OneToOne("StudentEntity", "predictionResult", {
         onDelete: "CASCADE",
     })
     student!: Relation<StudentEntity>;
+
+    @Column({ type: "uuid" })
+    studentId!: string;
 
     @UpdateDateColumn({ type: "timestamp with time zone" })
     updatedAt!: Date;
