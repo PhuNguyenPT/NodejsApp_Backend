@@ -47,6 +47,7 @@ import {
     PredictionModelService,
     PredictionModelServiceConfig,
 } from "@/service/prediction.model.service.js";
+import { PredictionResultService } from "@/service/prediction.result.service.js";
 import { StudentService } from "@/service/student.service.js";
 import { UserService } from "@/service/user.service.js";
 import { KeyStore } from "@/type/class/keystore.js";
@@ -103,6 +104,15 @@ iocContainer
 iocContainer
     .bind<Repository<MajorEntity>>(TYPES.MajorRepository)
     .toDynamicValue(() => postgresDataSource.getRepository(MajorEntity))
+    .inSingletonScope();
+
+iocContainer
+    .bind<Repository<PredictionResultEntity>>(
+        TYPES.PredictionResultEntityRepository,
+    )
+    .toDynamicValue(() =>
+        postgresDataSource.getRepository(PredictionResultEntity),
+    )
     .inSingletonScope();
 
 iocContainer
@@ -192,6 +202,11 @@ iocContainer
         TYPES.PredictionModelEventListenerService,
     )
     .to(PredictionModelEventListenerService)
+    .inSingletonScope();
+
+iocContainer
+    .bind<PredictionResultService>(TYPES.PredictionResultService)
+    .to(PredictionResultService)
     .inSingletonScope();
 
 iocContainer
