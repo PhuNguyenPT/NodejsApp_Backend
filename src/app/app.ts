@@ -217,7 +217,7 @@ class App {
     private async initializeEventListeners(): Promise<void> {
         try {
             // Spring-style: Just get the EventListenerManager and call initialize()
-            // It will automatically discover all services decorated with @EventListener
+            // It will automatically discover all services decorated with @EventListenerService
             const eventListenerManager = iocContainer.get<EventListenerManager>(
                 TYPES.EventListenerManager,
             );

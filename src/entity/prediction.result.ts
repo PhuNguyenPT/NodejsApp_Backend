@@ -2,6 +2,7 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    JoinColumn,
     OneToOne,
     PrimaryGeneratedColumn,
     Relation,
@@ -14,6 +15,7 @@ import { StudentEntity } from "@/entity/student.js";
 export enum PredictionResultStatus {
     COMPLETED = "completed",
     FAILED = "failed",
+    PARTIAL = "partial",
     PROCESSING = "processing",
 }
 
@@ -40,10 +42,14 @@ export class PredictionResultEntity {
     })
     status!: PredictionResultStatus;
 
+    @JoinColumn({ name: "studentId" })
     @OneToOne("StudentEntity", "predictionResult", {
         onDelete: "CASCADE",
     })
     student!: Relation<StudentEntity>;
+
+    @Column({ type: "uuid" })
+    studentId!: string;
 
     @UpdateDateColumn({ type: "timestamp with time zone" })
     updatedAt!: Date;
