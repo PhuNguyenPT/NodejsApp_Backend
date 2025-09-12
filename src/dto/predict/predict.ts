@@ -1,4 +1,4 @@
-import { Type } from "class-transformer";
+import { Expose, Type } from "class-transformer";
 import {
     IsArray,
     IsEnum,
@@ -68,6 +68,7 @@ export class L1PredictResult {
      * Priority type or special status category
      * @example "HSG Toán", "HSG Lý", "Không ưu tiên"
      */
+    @Expose()
     @IsNotEmpty()
     @IsString()
     loai_uu_tien!: string;
@@ -77,6 +78,7 @@ export class L1PredictResult {
      * Key: Admission code (Mã xét tuyển) - unique identifier for the university program
      * Value: Prediction confidence score (0-1) indicating how well the student matches this program
      */
+    @Expose()
     @IsNotEmpty()
     @IsObject()
     ma_xet_tuyen!: Record<string, number>;
@@ -111,6 +113,7 @@ export class L2PredictResult {
     /**
      * Admission code (Mã xét tuyển) - unique identifier for the university program
      */
+    @Expose()
     @IsNotEmpty()
     @IsString()
     ma_xet_tuyen!: string;
@@ -118,6 +121,7 @@ export class L2PredictResult {
     /**
      * Prediction confidence score (0-1) indicating how well the student matches this program
      */
+    @Expose()
     @IsNumber()
     score!: number;
 }

@@ -30,7 +30,11 @@ export const TYPES = {
     ),
     PredictionModelService: Symbol.for("PredictionModelService"),
     PredictionModelServiceConfig: Symbol.for("PredictionModelServiceConfig"),
+    PredictionResultEntityRepository: Symbol.for(
+        "PredictionResultEntityRepository",
+    ),
     PredictionResultRepository: Symbol.for("PredictionResultRepository"),
+    PredictionResultService: Symbol.for("PredictionResultService"),
     PredictionServiceClient: Symbol.for("PredictionServiceClient"),
     RedisPublisher: Symbol.for("RedisPublisher"),
     RedisSubscriber: Symbol.for("RedisSubscriber"),

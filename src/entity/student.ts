@@ -155,6 +155,7 @@ export class StudentEntity {
 
     @OneToOne("PredictionResultEntity", "student", {
         cascade: true,
+        eager: false,
         nullable: true,
     })
     predictionResult?: Relation<PredictionResultEntity>;

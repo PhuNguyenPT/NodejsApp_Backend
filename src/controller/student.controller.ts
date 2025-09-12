@@ -105,6 +105,7 @@ export class StudentController extends Controller {
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response(HttpStatus.NOT_FOUND, "Not found")
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getAllStudentProfilesByUserId(
@@ -137,6 +138,7 @@ export class StudentController extends Controller {
     @Middlewares(validateUuidParam("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
+    @Response(HttpStatus.NOT_FOUND, "Not found")
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getStudentGuest(
         @Path() studentId: string,
@@ -159,6 +161,7 @@ export class StudentController extends Controller {
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response(HttpStatus.NOT_FOUND, "Not found")
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getStudentProfileByUserId(
@@ -183,6 +186,9 @@ export class StudentController extends Controller {
     @Get("guest/{studentId}/with-files")
     @Middlewares(validateUuidParam("studentId"))
     @Produces("application/json")
+    @Response(HttpStatus.BAD_REQUEST, "Validation error")
+    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response(HttpStatus.NOT_FOUND, "Not found")
     @SuccessResponse(
         HttpStatus.OK,
         "Successfully retrieve student profile with files",
@@ -206,6 +212,9 @@ export class StudentController extends Controller {
     @Get("{studentId}/with-files")
     @Middlewares(validateUuidParam("studentId"))
     @Produces("application/json")
+    @Response(HttpStatus.BAD_REQUEST, "Validation error")
+    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response(HttpStatus.NOT_FOUND, "Not found")
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(
         HttpStatus.OK,
