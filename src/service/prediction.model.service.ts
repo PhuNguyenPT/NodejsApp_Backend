@@ -1975,7 +1975,7 @@ export class PredictionModelService {
     ): Promise<L1PredictResult[]> {
         try {
             this.logger.info("L1 Prediction: Predicting...", {
-                majorGroup: userInput.nhom_nganh,
+                userInput,
             });
 
             const response = await this.httpClient.post<L1PredictResult[]>(
