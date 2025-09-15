@@ -115,7 +115,7 @@ export class StudentEntity {
         },
         name: "student_enrollments",
     })
-    @ManyToMany(() => EnrollmentEntity, {
+    @ManyToMany("EnrollmentEntity", {
         cascade: false,
         eager: false,
     })
