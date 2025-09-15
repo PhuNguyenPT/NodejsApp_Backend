@@ -3,7 +3,6 @@ import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
 import pLimit from "p-limit";
-import { Repository } from "typeorm";
 
 import {
     HsgSubject,
@@ -20,7 +19,6 @@ import { AwardDTO } from "@/dto/student/award.dto.js";
 import { CertificationDTO } from "@/dto/student/certification.dto.js";
 import { ConductDTO } from "@/dto/student/conduct.dto.js";
 import { StudentInfoDTO } from "@/dto/student/student.dto.js";
-import { OcrResultEntity, OcrStatus } from "@/entity/ocr.result.entity.js";
 import { StudentEntity } from "@/entity/student.js";
 import { StudentService } from "@/service/student.service.js";
 import { TYPES } from "@/type/container/types.js";
@@ -79,10 +77,6 @@ export class PredictionModelService {
 
     constructor(
         @inject(TYPES.Logger) private readonly logger: ILogger,
-        @inject(TYPES.StudentRepository)
-        private readonly studentRepository: Repository<StudentEntity>,
-        @inject(TYPES.OcrResultRepository)
-        private readonly ocrResultEntityRepository: Repository<OcrResultEntity>,
         @inject(TYPES.StudentService)
         private readonly studentService: StudentService,
         @inject(TYPES.PredictHttpClient)
@@ -106,14 +100,8 @@ export class PredictionModelService {
             student,
         );
 
-        // Create base template for L1 user inputs
-        const baseTemplate = this.createBaseUserInputL1Template(studentInfoDTO);
-
-        // Generate L1 user inputs for all major combinations
-        const userInputs = this.generateUserInputL1Combinations(
-            baseTemplate,
-            studentInfoDTO.majors,
-        );
+        // Generate ALL user input combinations (awards × majors)
+        const userInputs = this.generateUserInputL1Combinations(studentInfoDTO);
 
         if (userInputs.length === 0) {
             throw new IllegalArgumentException(
@@ -963,10 +951,6 @@ export class PredictionModelService {
         return scenarios;
     }
 
-    // =================================================================
-    // PRIVATE HELPER METHODS: SCENARIO & INPUT GENERATION
-    // =================================================================
-
     /**
      * Combines L1 prediction results by keeping only the highest score for each admission code
      * and removing duplicates across all priority types.
@@ -1022,15 +1006,6 @@ export class PredictionModelService {
         );
     }
 
-    private compareRanks(rankA: Rank, rankB: Rank): number {
-        const rankOrder = {
-            [Rank.FIRST]: 1,
-            [Rank.SECOND]: 2,
-            [Rank.THIRD]: 3,
-        };
-        return rankOrder[rankA] - rankOrder[rankB];
-    }
-
     private createBaseL2UserInputTemplate(
         studentInfoDTO: StudentInfoDTO,
     ): Omit<
@@ -1070,6 +1045,10 @@ export class PredictionModelService {
             tinh_tp: studentInfoDTO.province,
         };
     }
+
+    // =================================================================
+    // PRIVATE HELPER METHODS: SCENARIO & INPUT GENERATION
+    // =================================================================
 
     private createBaseUserInputL1Template(
         studentInfoDTO: StudentInfoDTO,
@@ -1365,25 +1344,6 @@ export class PredictionModelService {
         return allResults;
     }
 
-    private async fetchAndValidateOcrResults(
-        userId: string,
-        studentId: string,
-    ): Promise<void> {
-        const ocrResultEntities = await this.ocrResultEntityRepository.find({
-            where: {
-                processedBy: userId,
-                status: OcrStatus.COMPLETED,
-                studentId,
-            },
-        });
-
-        if (ocrResultEntities.length !== 6) {
-            throw new IllegalArgumentException(
-                `Cannot predict majors due to ocr array length ${ocrResultEntities.length.toString()} is not 6`,
-            );
-        }
-    }
-
     private findAndValidateConduct(
         conducts: ConductDTO[],
         grade: number,
@@ -1457,25 +1417,120 @@ export class PredictionModelService {
         );
     }
 
+    // Updated method to generate all user input combinations
     private generateUserInputL1Combinations(
-        baseTemplate: Omit<UserInputL1, "nhom_nganh">,
-        majors: string[],
+        studentInfoDTO: StudentInfoDTO,
     ): UserInputL1[] {
-        return majors
-            .map((major) => {
-                const majorCode = getCodeByVietnameseName(major);
-                if (!majorCode) {
+        // Create base template without HSG or major fields
+        const baseTemplate = this.createBaseUserInputL1Template(studentInfoDTO);
+
+        // Generate award-specific input templates
+        const awardInputs = this.generateUserInputsForAwards(
+            baseTemplate,
+            studentInfoDTO.awards,
+        );
+
+        // Generate final combinations by pairing each award template with each major code
+        const allCombinations: UserInputL1[] = [];
+
+        for (const awardInput of awardInputs) {
+            for (const majorName of studentInfoDTO.majors) {
+                // 1. Look up the major code from its Vietnamese name
+                const majorCode = getCodeByVietnameseName(majorName); // Assumes this helper function exists
+
+                // 2. Check if a code was found
+                if (majorCode) {
+                    // 3. Create the final input object with the numeric major code
+                    allCombinations.push({
+                        ...awardInput,
+                        nhom_nganh: parseInt(majorCode, 10),
+                    });
+                } else {
+                    // Optional: Log a warning if a major cannot be mapped
                     this.logger.warn(
-                        `L2 Prediction: Cannot find code for major: ${major}`,
+                        `L1 Prediction: Cannot find code for major: "${majorName}". Skipping this combination.`,
                     );
-                    return null;
                 }
-                return {
-                    ...baseTemplate,
-                    nhom_nganh: parseInt(majorCode, 10),
-                } as UserInputL1;
-            })
-            .filter((input): input is UserInputL1 => input !== null);
+            }
+        }
+
+        return allCombinations;
+    }
+
+    // Generate separate user inputs for each award combination
+    private generateUserInputsForAwards(
+        baseTemplate: Omit<
+            UserInputL1,
+            "hsg_1" | "hsg_2" | "hsg_3" | "nhom_nganh"
+        >,
+        awards?: AwardDTO[],
+    ): Omit<UserInputL1, "nhom_nganh">[] {
+        const userInputs: Omit<UserInputL1, "nhom_nganh">[] = [];
+
+        if (!awards || awards.length === 0) {
+            // No awards - create one input with all HSG fields as 0
+            userInputs.push({
+                ...baseTemplate,
+                hsg_1: 0,
+                hsg_2: 0,
+                hsg_3: 0,
+            });
+            return userInputs;
+        }
+
+        // Group awards by rank
+        const awardsByRank = this.groupAwardsByRank(awards);
+
+        // Generate inputs for First rank awards (each gets its own input with hsg_1)
+        const firstRankAwards = awardsByRank[Rank.FIRST];
+        for (const award of firstRankAwards) {
+            userInputs.push({
+                ...baseTemplate,
+                hsg_1: this.mapNationalExcellentStudentSubjectToHsgSubject(
+                    award.category,
+                ),
+                hsg_2: 0,
+                hsg_3: 0,
+            });
+        }
+
+        // Generate inputs for Second rank awards (each gets its own input with hsg_2)
+        const secondRankAwards = awardsByRank[Rank.SECOND];
+        for (const award of secondRankAwards) {
+            userInputs.push({
+                ...baseTemplate,
+                hsg_1: 0,
+                hsg_2: this.mapNationalExcellentStudentSubjectToHsgSubject(
+                    award.category,
+                ),
+                hsg_3: 0,
+            });
+        }
+
+        // Generate inputs for Third rank awards (each gets its own input with hsg_3)
+        const thirdRankAwards = awardsByRank[Rank.THIRD];
+        for (const award of thirdRankAwards) {
+            userInputs.push({
+                ...baseTemplate,
+                hsg_1: 0,
+                hsg_2: 0,
+                hsg_3: this.mapNationalExcellentStudentSubjectToHsgSubject(
+                    award.category,
+                ),
+            });
+        }
+
+        // If no awards were processed, add a default input with all 0s
+        if (userInputs.length === 0) {
+            userInputs.push({
+                ...baseTemplate,
+                hsg_1: 0,
+                hsg_2: 0,
+                hsg_3: 0,
+            });
+        }
+
+        return userInputs;
     }
 
     private getAndValidateScoreByCCQT(
@@ -1675,6 +1730,20 @@ export class PredictionModelService {
         return optimalSize;
     }
 
+    private groupAwardsByRank(awards: AwardDTO[]): Record<Rank, AwardDTO[]> {
+        const initialGroup: Record<Rank, AwardDTO[]> = {
+            [Rank.FIRST]: [],
+            [Rank.SECOND]: [],
+            [Rank.THIRD]: [],
+        };
+
+        return awards.reduce((acc, award) => {
+            // This will throw an error if award.level is ever null or undefined.
+            acc[award.level].push(award);
+            return acc;
+        }, initialGroup);
+    }
+
     private isValidationError(data: unknown): data is HTTPValidationError {
         return (
             typeof data === "object" &&
@@ -1685,39 +1754,49 @@ export class PredictionModelService {
     }
 
     private mapAwardsToHsgSubjects(awards?: AwardDTO[]): {
-        hsg_1?: HsgSubject;
-        hsg_2?: HsgSubject;
-        hsg_3?: HsgSubject;
+        hsg_1: 0 | HsgSubject;
+        hsg_2: 0 | HsgSubject;
+        hsg_3: 0 | HsgSubject;
     } {
-        if (!awards || awards.length === 0) {
-            return { hsg_1: undefined, hsg_2: undefined, hsg_3: undefined };
-        }
+        // This method is now primarily for single award scenarios
+        // For multiple awards, use generateUserInputsForAwards instead
 
-        // Sort awards by rank priority (First > Second > Third)
-        const sortedAwards = awards.sort((a, b) =>
-            this.compareRanks(a.level, b.level),
-        );
+        if (!awards || awards.length === 0) {
+            return { hsg_1: 0, hsg_2: 0, hsg_3: 0 };
+        }
 
         const result: {
-            hsg_1?: HsgSubject;
-            hsg_2?: HsgSubject;
-            hsg_3?: HsgSubject;
-        } = {};
+            hsg_1: 0 | HsgSubject;
+            hsg_2: 0 | HsgSubject;
+            hsg_3: 0 | HsgSubject;
+        } = { hsg_1: 0, hsg_2: 0, hsg_3: 0 };
 
-        // Map up to 3 awards to HSG subjects
-        if (sortedAwards.length > 0) {
+        // Find first occurrence of each rank
+        const firstRankAward = awards.find(
+            (award) => award.level === Rank.FIRST,
+        );
+        const secondRankAward = awards.find(
+            (award) => award.level === Rank.SECOND,
+        );
+        const thirdRankAward = awards.find(
+            (award) => award.level === Rank.THIRD,
+        );
+
+        if (firstRankAward) {
             result.hsg_1 = this.mapNationalExcellentStudentSubjectToHsgSubject(
-                sortedAwards[0].category,
+                firstRankAward.category,
             );
         }
-        if (sortedAwards.length > 1) {
+
+        if (secondRankAward) {
             result.hsg_2 = this.mapNationalExcellentStudentSubjectToHsgSubject(
-                sortedAwards[1].category,
+                secondRankAward.category,
             );
         }
-        if (sortedAwards.length > 2) {
+
+        if (thirdRankAward) {
             result.hsg_3 = this.mapNationalExcellentStudentSubjectToHsgSubject(
-                sortedAwards[2].category,
+                thirdRankAward.category,
             );
         }
 

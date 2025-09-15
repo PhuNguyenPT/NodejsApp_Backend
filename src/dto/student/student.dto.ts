@@ -83,9 +83,9 @@ export class StudentInfoDTO {
      * Optional field that can contain multiple award entries.
      * Each award includes details like name, category, level, and award date.
      *
-     * @type {AwardRequest[]}
+     * @type {AwardDTO[]}
      * @optional
-     * @see AwardRequest for detailed structure and validation rules
+     * @see AwardDTO for detailed structure and validation rules
      * @example
      * [
      *   {
