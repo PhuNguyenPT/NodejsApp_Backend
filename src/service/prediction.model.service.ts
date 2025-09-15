@@ -1167,6 +1167,7 @@ export class PredictionModelService {
         this.logger.info("L1 Prediction: Calculated optimal chunk size", {
             optimalChunkSize,
             totalInputs: userInputs.length,
+            userInputs,
         });
 
         const groupedInputs = userInputs.reduce((acc, input) => {
@@ -1273,6 +1274,7 @@ export class PredictionModelService {
         this.logger.info("L2 Prediction: Calculated optimal chunk size", {
             optimalChunkSize,
             totalInputs: userInputs.length,
+            userInputs,
         });
 
         // Group inputs by subject group first
@@ -1975,7 +1977,7 @@ export class PredictionModelService {
     ): Promise<L1PredictResult[]> {
         try {
             this.logger.info("L1 Prediction: Predicting...", {
-                majorGroup: userInput.nhom_nganh,
+                userInput,
             });
 
             const response = await this.httpClient.post<L1PredictResult[]>(

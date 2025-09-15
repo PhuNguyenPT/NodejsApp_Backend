@@ -1,3 +1,3 @@
 #!/bin/bash
 # docker-build-prod.sh
-docker build -t phunpt01/nodejs-backend:latest .
+docker build -f Dockerfile -t phunpt01/nodejs-backend:latest .
