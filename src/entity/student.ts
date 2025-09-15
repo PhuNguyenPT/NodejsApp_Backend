@@ -17,6 +17,7 @@ import {
 import { ExamProfileDTO } from "@/dto/student/exam.profile.dto.js";
 import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
+import { EnrollmentEntity } from "@/entity/enrollment.entity.js";
 import { FileEntity } from "@/entity/file.js";
 import { FileType } from "@/entity/file.js";
 import { MajorGroupEntity } from "@/entity/major.group.entity.js";
@@ -103,6 +104,23 @@ export class StudentEntity {
     })
     createdBy?: string;
 
+    @JoinTable({
+        inverseJoinColumn: {
+            name: "enrollment_id",
+            referencedColumnName: "id",
+        },
+        joinColumn: {
+            name: "student_id",
+            referencedColumnName: "id",
+        },
+        name: "student_enrollments",
+    })
+    @ManyToMany(() => EnrollmentEntity, {
+        cascade: false,
+        eager: false,
+    })
+    enrollments?: Relation<EnrollmentEntity[]>;
+
     @OneToMany("FileEntity", "student", {
         cascade: true,
         eager: false,
@@ -124,7 +142,7 @@ export class StudentEntity {
             name: "student_id",
             referencedColumnName: "id",
         },
-        name: "student_major_groups", // junction table name
+        name: "student_major_groups",
     })
     @ManyToMany("MajorGroupEntity", "students")
     majorGroupsEntities?: Relation<MajorGroupEntity[]>;
@@ -235,6 +253,19 @@ export class StudentEntity {
         this.conducts.push({ conduct, grade });
     }
 
+    // Add enrollment to student
+    addEnrollment(enrollment: EnrollmentEntity): void {
+        this.enrollments ??= [];
+        if (!this.hasEnrollment(enrollment.id)) {
+            this.enrollments.push(enrollment);
+        }
+    }
+
+    // Clear all enrollments
+    clearEnrollments(): void {
+        this.enrollments = [];
+    }
+
     // Helper method to get academic performance by grade
     getAcademicPerformanceByGrade(
         grade: number,
@@ -312,6 +343,54 @@ export class StudentEntity {
     getConductByGrade(grade: number): ConductData | null {
         if (!this.conducts) return null;
         return this.conducts.find((c) => c.grade === grade) ?? null;
+    }
+
+    // Get enrollments count
+    getEnrollmentCount(): number {
+        return this.getEnrollments().length;
+    }
+
+    // Get enrollment IDs only (lightweight)
+    getEnrollmentIds(): string[] {
+        return this.getEnrollments().map((e) => e.id);
+    }
+
+    // Get all enrollments for this student
+    getEnrollments(): EnrollmentEntity[] {
+        return this.enrollments ?? [];
+    }
+
+    // Filter enrollments by major
+    getEnrollmentsByMajor(majorName: string): EnrollmentEntity[] {
+        return this.getEnrollments().filter((e) =>
+            e.majorName.toLowerCase().includes(majorName.toLowerCase()),
+        );
+    }
+
+    // Filter enrollments by province
+    getEnrollmentsByProvince(province: string): EnrollmentEntity[] {
+        return this.getEnrollments().filter((e) => e.province === province);
+    }
+
+    // Filter enrollments by university type
+    getEnrollmentsByUniType(uniType: string): EnrollmentEntity[] {
+        return this.getEnrollments().filter((e) => e.uniType === uniType);
+    }
+
+    // Filter enrollments by university
+    getEnrollmentsByUniversity(uniName: string): EnrollmentEntity[] {
+        return this.getEnrollments().filter((e) =>
+            e.uniName.toLowerCase().includes(uniName.toLowerCase()),
+        );
+    }
+
+    // Filter enrollments within budget
+    getEnrollmentsWithinBudget(): EnrollmentEntity[] {
+        if (!this.isBudgetRangeValid()) return [];
+        return this.getEnrollments().filter((e) => {
+            const tuitionFee = e.tuitionFee;
+            return this.isWithinBudget(tuitionFee);
+        });
     }
 
     getExamProfileDTO(): ExamProfileDTO | null {
@@ -480,6 +559,16 @@ export class StudentEntity {
         return !!(this.conducts && this.conducts.length > 0);
     }
 
+    // Check if student has specific enrollment
+    hasEnrollment(enrollmentId: string): boolean {
+        return this.getEnrollments().some((e) => e.id === enrollmentId);
+    }
+
+    // Check if student has any enrollments
+    hasEnrollments(): boolean {
+        return this.getEnrollmentCount() > 0;
+    }
+
     // Helper method to check if student has specific file type
     hasFileType(fileType: FileType): boolean {
         return this.getFilesByType(fileType).length > 0;
@@ -562,6 +651,14 @@ export class StudentEntity {
         return amount >= this.minBudget && amount <= this.maxBudget;
     }
 
+    // Remove enrollment from student
+    removeEnrollment(enrollmentId: string): void {
+        if (!this.enrollments) return;
+        this.enrollments = this.enrollments.filter(
+            (e) => e.id !== enrollmentId,
+        );
+    }
+
     // Helper method to set academic performance data
     setAcademicPerformance(
         academicPerformanceDataArray: AcademicPerformanceData[],
@@ -577,6 +674,11 @@ export class StudentEntity {
     // Helper method to set conduct data
     setConduct(conductData: ConductData[]): void {
         this.conducts = conductData;
+    }
+
+    // Set all enrollments at once
+    setEnrollments(enrollments: EnrollmentEntity[]): void {
+        this.enrollments = enrollments;
     }
 
     setExamProfileDTO(examProfile: ExamProfileDTO): void {

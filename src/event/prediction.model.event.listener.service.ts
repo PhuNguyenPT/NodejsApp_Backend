@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import z from "zod";
 
 import {
@@ -7,10 +7,12 @@ import {
     RedisEventListener,
 } from "@/decorator/redis.event.listener.decorator.js";
 import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
+import { EnrollmentEntity } from "@/entity/enrollment.entity.js";
 import {
     PredictionResultEntity,
     PredictionResultStatus,
 } from "@/entity/prediction.result.js";
+import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
 import { PredictionModelService } from "@/service/prediction.model.service.js";
 import { TYPES } from "@/type/container/types.js";
@@ -35,6 +37,10 @@ export class PredictionModelEventListenerService {
         private readonly predictionModelService: PredictionModelService,
         @inject(TYPES.PredictionResultRepository)
         private readonly predictionResultRepository: Repository<PredictionResultEntity>,
+        @inject(TYPES.EnrollmentRepository)
+        private readonly enrollmentRepository: Repository<EnrollmentEntity>,
+        @inject(TYPES.StudentRepository)
+        private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.UserRepository)
         private readonly userRepository: Repository<UserEntity>,
     ) {}
@@ -125,11 +131,17 @@ export class PredictionModelEventListenerService {
                     });
                 }
 
-                // Step 3: Update with results (even if some are empty due to failures)
+                // Step 3: Process enrollments from L2 predictions
+                await this.processEnrollmentsFromPredictions(
+                    studentId,
+                    l2PredictionResults,
+                );
+
+                // Step 4: Update with results (even if some are empty due to failures)
                 savedPredictionResult.l1PredictResults = l1PredictionResults;
                 savedPredictionResult.l2PredictResults = l2PredictionResults;
 
-                // Decide status based on results - UPDATED LOGIC
+                // Decide status based on results
                 const hasL1Results = l1PredictionResults.length > 0;
                 const hasL2Results = l2PredictionResults.length > 0;
 
@@ -172,6 +184,125 @@ export class PredictionModelEventListenerService {
             this.logger.error("Error handling 'student created' message.", {
                 error,
                 message,
+            });
+        }
+    }
+
+    /**
+     * Process enrollments from L2 prediction results and associate them with the student
+     */
+    private async processEnrollmentsFromPredictions(
+        studentId: string,
+        l2PredictionResults: L2PredictResult[],
+    ): Promise<void> {
+        try {
+            if (l2PredictionResults.length === 0) {
+                this.logger.info(
+                    "No L2 prediction results to process enrollments",
+                    {
+                        studentId,
+                    },
+                );
+                return;
+            }
+
+            const enrollmentCodes: string[] = l2PredictionResults.map(
+                (result) => result.ma_xet_tuyen,
+            );
+
+            this.logger.info("Processing enrollments from predictions", {
+                enrollmentCodes: enrollmentCodes.slice(0, 5),
+                enrollmentCodesCount: enrollmentCodes.length,
+                studentId,
+            });
+
+            const enrollments: EnrollmentEntity[] =
+                await this.enrollmentRepository.find({
+                    where: {
+                        enrollCode: In(enrollmentCodes),
+                    },
+                });
+
+            this.logger.info("Found matching enrollments", {
+                foundEnrollmentsCount: enrollments.length,
+                requestedCodesCount: enrollmentCodes.length,
+                studentId,
+            });
+
+            if (enrollments.length === 0) {
+                this.logger.warn(
+                    "No matching enrollments found for prediction codes",
+                    {
+                        enrollmentCodes,
+                        studentId,
+                    },
+                );
+                return;
+            }
+
+            const student: null | StudentEntity =
+                await this.studentRepository.findOne({
+                    relations: ["enrollments"],
+                    where: { id: studentId },
+                });
+
+            if (!student) {
+                this.logger.error(
+                    "Student not found when processing enrollments",
+                    {
+                        studentId,
+                    },
+                );
+                return;
+            }
+
+            let newEnrollmentsCount = 0;
+            enrollments.forEach((enrollment) => {
+                if (!student.hasEnrollment(enrollment.id)) {
+                    student.addEnrollment(enrollment);
+                    newEnrollmentsCount++;
+                }
+            });
+
+            if (newEnrollmentsCount > 0) {
+                await this.studentRepository.save(student);
+
+                this.logger.info(
+                    "Successfully associated enrollments with student",
+                    {
+                        newEnrollmentsAdded: newEnrollmentsCount,
+                        studentId,
+                        totalEnrollments: student.getEnrollmentCount(),
+                    },
+                );
+            } else {
+                this.logger.info(
+                    "No new enrollments to add (all already associated)",
+                    {
+                        studentId,
+                        totalEnrollments: student.getEnrollmentCount(),
+                    },
+                );
+            }
+
+            if (enrollments.length > 0) {
+                const enrollmentDetails = enrollments.map((e) => ({
+                    enrollCode: e.enrollCode,
+                    id: e.id,
+                    majorName: e.majorName,
+                    uniName: e.uniName,
+                }));
+
+                this.logger.debug("Processed enrollment details", {
+                    enrollments: enrollmentDetails,
+                    studentId,
+                });
+            }
+        } catch (error) {
+            this.logger.error("Error processing enrollments from predictions", {
+                error,
+                l2ResultsCount: l2PredictionResults.length,
+                studentId,
             });
         }
     }
