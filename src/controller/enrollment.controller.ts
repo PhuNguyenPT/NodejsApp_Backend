@@ -1,4 +1,4 @@
-import { plainToInstance } from "class-transformer";
+import { instanceToPlain, plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import {
     Controller,
@@ -68,6 +68,10 @@ export class EnrollmentController extends Controller {
                 pageRequest,
             );
 
-        return EnrollmentMapper.toEnrollmentPage(enrollmentPage);
+        const enrollmentResponsePage =
+            EnrollmentMapper.toEnrollmentPage(enrollmentPage);
+        return instanceToPlain(
+            enrollmentResponsePage,
+        ) as Page<EnrollmentResponse>;
     }
 }

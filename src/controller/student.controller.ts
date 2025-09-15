@@ -1,4 +1,4 @@
-import { plainToInstance } from "class-transformer";
+import { instanceToPlain, plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import {
     Body,
@@ -129,7 +129,7 @@ export class StudentController extends Controller {
             );
         const studentResponsePage: Page<StudentResponse> =
             StudentMapper.toStudentResponsePage(studentEntities);
-        return studentResponsePage;
+        return instanceToPlain(studentResponsePage) as Page<StudentResponse>;
     }
 
     /**

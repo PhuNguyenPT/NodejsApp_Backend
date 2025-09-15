@@ -1,5 +1,4 @@
 import { Transform, Type } from "class-transformer";
-// src/type/pagination/page-request.ts
 import { IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
 import { defaultPaginationConfig } from "@/config/pagination.config.js";
@@ -13,10 +12,13 @@ import { Order, Sort } from "./sort.js";
 export class PageableQuery {
     @IsInt()
     @IsOptional()
-    @Min(1, { message: "Page number must be 1 or greater" })
+    @Min(defaultPaginationConfig.defaultPage, {
+        message: `Page number must be ${defaultPaginationConfig.defaultPage.toString()} or greater`,
+    })
     @Transform(({ value }) => {
         const pageNumber = parseInt(String(value), 10);
-        return isNaN(pageNumber) || pageNumber < 1
+        return isNaN(pageNumber) ||
+            pageNumber < defaultPaginationConfig.defaultPage
             ? defaultPaginationConfig.defaultPage
             : pageNumber;
     })
@@ -47,7 +49,7 @@ export class PageableQuery {
  * Basic implementation of Pageable interface (Spring-like PageRequest)
  */
 export class PageRequest implements Pageable {
-    private readonly page: number;
+    private readonly page: number; // Internal 0-based page number
     private readonly size: number;
     private readonly sort: Sort;
 
@@ -56,7 +58,8 @@ export class PageRequest implements Pageable {
         size: number,
         sort: Sort = Sort.unsorted(),
     ) {
-        this.page = Math.max(0, page); // 0-indexed internally
+        // Convert API page number to 0-based internal representation
+        this.page = Math.max(0, page - defaultPaginationConfig.defaultPage);
         this.size = Math.max(1, size);
         this.sort = sort;
     }
@@ -76,17 +79,17 @@ export class PageRequest implements Pageable {
     }
 
     /**
-     * Creates a new PageRequest for the first page
+     * Creates a new PageRequest - accepts API page numbers (config-based)
      */
     static of(page: number, size: number, sort?: Sort): PageRequest {
-        return new PageRequest(page - 1, size, sort ?? Sort.unsorted()); // Convert to 0-indexed
+        return new PageRequest(page, size, sort ?? Sort.unsorted());
     }
 
     /**
      * Creates a new unsorted PageRequest
      */
     static ofSize(size: number): PageRequest {
-        return PageRequest.of(1, size);
+        return PageRequest.of(defaultPaginationConfig.defaultPage, size);
     }
 
     /**
@@ -94,7 +97,7 @@ export class PageRequest implements Pageable {
      */
     static unpaged(sort?: Sort): PageRequest {
         return new PageRequest(
-            0,
+            defaultPaginationConfig.defaultPage,
             Number.MAX_SAFE_INTEGER,
             sort ?? Sort.unsorted(),
         );
@@ -116,20 +119,27 @@ export class PageRequest implements Pageable {
     }
 
     first(): PageRequest {
-        return new PageRequest(0, this.size, this.sort);
+        return new PageRequest(
+            defaultPaginationConfig.defaultPage,
+            this.size,
+            this.sort,
+        );
     }
 
     /**
-     * Get API-friendly page number (1-indexed)
+     * Get API-friendly page number (config-based)
      */
     getApiPageNumber(): number {
-        return this.page + 1;
+        return this.page + defaultPaginationConfig.defaultPage;
     }
 
     getOffset(): number {
         return this.page * this.size;
     }
 
+    /**
+     * Get internal 0-based page number
+     */
     getPageNumber(): number {
         return this.page;
     }
@@ -149,8 +159,8 @@ export class PageRequest implements Pageable {
         const errors: Record<string, string> = {};
         const apiPageNumber = this.getApiPageNumber();
 
-        if (apiPageNumber < 1) {
-            errors.page = "Page number must be 1 or greater";
+        if (apiPageNumber < defaultPaginationConfig.defaultPage) {
+            errors.page = `Page number must be ${defaultPaginationConfig.defaultPage.toString()} or greater`;
         }
 
         if (this.size < defaultPaginationConfig.minPageSize && this.isPaged()) {
@@ -184,12 +194,16 @@ export class PageRequest implements Pageable {
     }
 
     next(): PageRequest {
-        return new PageRequest(this.page + 1, this.size, this.sort);
+        return new PageRequest(
+            this.getApiPageNumber() + 1,
+            this.size,
+            this.sort,
+        );
     }
 
     previousOrFirst(): PageRequest {
         return this.hasPrevious()
-            ? new PageRequest(this.page - 1, this.size, this.sort)
+            ? new PageRequest(this.getApiPageNumber() - 1, this.size, this.sort)
             : this.first();
     }
 
