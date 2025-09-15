@@ -177,7 +177,7 @@ export class UserInputL1 {
     @IsEnum(HsgSubject)
     @IsOptional()
     @IsString()
-    hsg_1?: HsgSubject | null;
+    hsg_1?: HsgSubject | number;
 
     /**
      * National Excellent Student Award - Second Prize Subject
@@ -186,7 +186,7 @@ export class UserInputL1 {
     @IsEnum(HsgSubject)
     @IsOptional()
     @IsString()
-    hsg_2?: HsgSubject | null;
+    hsg_2?: HsgSubject | number;
 
     /**
      * National Excellent Student Award - Third Prize Subject
@@ -195,7 +195,7 @@ export class UserInputL1 {
     @IsEnum(HsgSubject)
     @IsOptional()
     @IsString()
-    hsg_3?: HsgSubject | null;
+    hsg_3?: HsgSubject | number;
 
     /**
      * Major group code
