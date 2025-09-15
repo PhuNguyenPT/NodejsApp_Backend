@@ -30,7 +30,7 @@ import { HttpStatus } from "@/type/enum/http.status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
 import { Page } from "@/type/pagination/page.js";
-import { Pageable } from "@/type/pagination/pageable.js";
+import { PageableQuery, PageRequest } from "@/type/pagination/page.request.js";
 
 @injectable()
 @Route("students")
@@ -110,18 +110,22 @@ export class StudentController extends Controller {
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getAllStudentProfilesByUserId(
         @Request() request: AuthenticatedRequest,
-        @Queries() pageableQuery: Pageable,
+        @Queries() pageableQuery: PageableQuery,
     ): Promise<Page<StudentResponse>> {
-        const pageable = plainToInstance(Pageable, pageableQuery);
-        if (!pageable.isValid()) {
-            const errors = pageable.getValidationErrors();
+        const queryDto = plainToInstance(PageableQuery, pageableQuery);
+        const pageRequest = PageRequest.fromQuery(queryDto);
+
+        // Validate the PageRequest
+        if (pageRequest.hasValidationErrors()) {
+            const errors = pageRequest.getValidationErrors();
             throw new ValidationException(errors);
         }
+
         const user: Express.User = request.user;
         const studentEntities: Page<StudentEntity> =
             await this.studentService.getAllStudentEntitiesByUserId(
                 user.id,
-                pageable,
+                pageRequest,
             );
         const studentResponsePage: Page<StudentResponse> =
             StudentMapper.toStudentResponsePage(studentEntities);

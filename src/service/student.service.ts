@@ -2,7 +2,6 @@ import { inject, injectable } from "inversify";
 import { RedisClientType } from "redis";
 import { IsNull, Repository } from "typeorm";
 
-import { defaultPaginationConfig } from "@/config/pagination.config.js";
 import { StudentRequest } from "@/dto/student/student.request.js";
 import { StudentEntity } from "@/entity/student.js";
 import { UserEntity } from "@/entity/user.js";
@@ -20,7 +19,7 @@ import { EntityNotFoundException } from "@/type/exception/entity.not.found.excep
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
 import { Page } from "@/type/pagination/page.js";
-import { Pageable } from "@/type/pagination/pageable.js";
+import { Pageable } from "@/type/pagination/pageable.interface.js";
 // import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/util/jwt.options.js";
 
 @injectable()
@@ -214,21 +213,32 @@ export class StudentService {
             .leftJoinAndSelect("student.certifications", "certifications")
             .where("student.userId = :userId", { userId });
 
+        // Get total count first
         const totalElements = await queryBuilder.getCount();
-        const page = pageable.page ?? defaultPaginationConfig.defaultPage;
-        const size = pageable.getLimit();
+        const pageNumber = pageable.getPageNumber();
+        const pageSize = pageable.getPageSize();
 
+        // Handle empty result set
         if (totalElements === 0) {
-            return new Page<StudentEntity>([], page, size, 0);
+            return Page.empty<StudentEntity>(pageNumber, pageSize);
         }
 
-        const totalPages = Math.ceil(totalElements / size);
-        if (page > totalPages) {
-            return new Page<StudentEntity>([], page, size, totalElements);
+        // Calculate total pages and check if requested page exists
+        const totalPages = Math.ceil(totalElements / pageSize);
+        if (pageNumber >= totalPages) {
+            return new Page<StudentEntity>(
+                [],
+                pageNumber,
+                pageSize,
+                totalElements,
+            );
         }
 
-        const sortConfig = pageable.getParsedSort();
-        if (sortConfig) {
+        // Apply sorting using the toTypeOrmOrder method from Pageable
+        const sortOrder = pageable.getSort().toTypeOrmOrder();
+
+        if (Object.keys(sortOrder).length > 0) {
+            // Define field mapping for student entity
             const fieldMapping: Record<string, string> = {
                 createdAt: "student.createdAt",
                 location: "student.location",
@@ -237,19 +247,36 @@ export class StudentService {
                 minBudget: "student.minBudget",
                 modifiedAt: "student.modifiedAt",
             };
-            const sortField =
-                fieldMapping[sortConfig.field] || `student.${sortConfig.field}`;
-            queryBuilder.orderBy(sortField, sortConfig.direction);
+
+            // Apply each sort field
+            let isFirst = true;
+            for (const [field, direction] of Object.entries(sortOrder)) {
+                const mappedField = fieldMapping[field] || `student.${field}`;
+                if (isFirst) {
+                    queryBuilder.orderBy(mappedField, direction);
+                    isFirst = false;
+                } else {
+                    queryBuilder.addOrderBy(mappedField, direction);
+                }
+            }
         } else {
+            // Default sorting when no sort is specified
             queryBuilder.orderBy("student.createdAt", "DESC");
         }
 
+        // Apply pagination using correct offset
         const entities = await queryBuilder
             .skip(pageable.getOffset())
-            .take(size)
+            .take(pageSize)
             .getMany();
 
-        return new Page<StudentEntity>(entities, page, size, totalElements);
+        // Return Page instance using the static factory method
+        return Page.of<StudentEntity>(
+            entities,
+            pageNumber,
+            pageSize,
+            totalElements,
+        );
     }
 
     /**
