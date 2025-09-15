@@ -1,10 +1,7 @@
 import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
 
-import {
-    PredictionResultEntity,
-    PredictionResultStatus,
-} from "@/entity/prediction.result.js";
+import { PredictionResultEntity } from "@/entity/prediction.result.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
 import { ILogger } from "@/type/interface/logger.js";
@@ -25,7 +22,6 @@ export class PredictionResultService {
         const predictionResultEntity: null | PredictionResultEntity =
             await this.predictionResultEntityRepository.findOne({
                 where: {
-                    status: PredictionResultStatus.COMPLETED,
                     studentId: studentId,
                     userId: userId ?? IsNull(),
                 },
