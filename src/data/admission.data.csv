@@ -1,4 +1,4 @@
-enroll_code,uni_code,uni_name,major_code,major_name,study_program,enroll_type,enroll_type_name,subject_combination,tuition_fee,province,uni_type,uni_web_link
+admission_code,uni_code,uni_name,major_code,major_name,study_program,admission_type,admission_type_name,subject_combination,tuition_fee,province,uni_type,uni_web_link
 GTS748020101AĐGNL,GTS,TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP. HỒ CHÍ MINH,7480201,Công nghệ thông tin,Đại trà,ĐGNL,Sử dụng điểm thi Đánh giá Năng lực/Đánh giá Tư duy do các đơn vị tổ chức,VNUHCM,29400000,TP. Hồ Chí Minh,Công lập,https://ut.edu.vn/
 GTS758030101AĐGNL,GTS,TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP. HỒ CHÍ MINH,7580301,Kinh tế xây dựng,Đại trà,ĐGNL,Sử dụng điểm thi Đánh giá Năng lực/Đánh giá Tư duy do các đơn vị tổ chức,VNUHCM,29400000,TP. Hồ Chí Minh,Công lập,https://ut.edu.vn/
 GTS784010101AĐGNL,GTS,TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP. HỒ CHÍ MINH,7840101,Khai thác vận tải,Đại trà,ĐGNL,Sử dụng điểm thi Đánh giá Năng lực/Đánh giá Tư duy do các đơn vị tổ chức,VNUHCM,29400000,TP. Hồ Chí Minh,Công lập,https://ut.edu.vn/

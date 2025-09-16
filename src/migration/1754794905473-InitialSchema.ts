@@ -11,10 +11,10 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "student_major_groups" DROP CONSTRAINT "FK_b4b7e67064e4ac35b50bd19a59e"`,
         );
         await queryRunner.query(
-            `ALTER TABLE "student_enrollments" DROP CONSTRAINT "FK_f30c325194ec4771788c99bc97e"`,
+            `ALTER TABLE "student_admissions" DROP CONSTRAINT "FK_f30c325194ec4771788c99bc97e"`,
         );
         await queryRunner.query(
-            `ALTER TABLE "student_enrollments" DROP CONSTRAINT "FK_08caafd8a026a19ecf54db0e958"`,
+            `ALTER TABLE "student_admissions" DROP CONSTRAINT "FK_08caafd8a026a19ecf54db0e958"`,
         );
         await queryRunner.query(
             `ALTER TABLE "students" DROP CONSTRAINT "FK_e0208b4f964e609959aff431bf9"`,
@@ -56,7 +56,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(
             `DROP INDEX "public"."IDX_08caafd8a026a19ecf54db0e95"`,
         );
-        await queryRunner.query(`DROP TABLE "student_enrollments"`);
+        await queryRunner.query(`DROP TABLE "student_admissions"`);
         await queryRunner.query(`DROP INDEX "public"."idx_student_user_id"`);
         await queryRunner.query(`DROP INDEX "public"."idx_student_location"`);
         await queryRunner.query(`DROP INDEX "public"."idx_student_province"`);
@@ -127,7 +127,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(
             `DROP TYPE "public"."certifications_cefr_enum"`,
         );
-        await queryRunner.query(`DROP TABLE "enrollment"`);
+        await queryRunner.query(`DROP TABLE "admission"`);
         await queryRunner.query(`DROP TABLE "majors"`);
         await queryRunner.query(`DROP INDEX "public"."idx_ocr_student_id"`);
         await queryRunner.query(`DROP INDEX "public"."idx_ocr_file_id"`);
@@ -174,7 +174,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE TABLE "majors" ("code" character varying(255) NOT NULL, "group_id" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, CONSTRAINT "UQ_8b287db61b00b45e58c854f19da" UNIQUE ("code"), CONSTRAINT "PK_9d82cf80fe0593040e50ccb297e" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
-            `CREATE TABLE "enrollment" ("enroll_code" character varying NOT NULL, "enroll_type" character varying NOT NULL, "enroll_type_name" character varying NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "major_code" integer NOT NULL, "major_name" character varying NOT NULL, "province" character varying NOT NULL, "study_program" character varying NOT NULL, "subject_combination" character varying NOT NULL, "tuition_fee" bigint NOT NULL, "uni_code" character varying NOT NULL, "uni_name" character varying NOT NULL, "uni_type" character varying NOT NULL, "uni_web_link" character varying NOT NULL, CONSTRAINT "PK_7e200c699fa93865cdcdd025885" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "admission" ("admission_code" character varying NOT NULL, "admission_type" character varying NOT NULL, "admission_type_name" character varying NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "major_code" integer NOT NULL, "major_name" character varying NOT NULL, "province" character varying NOT NULL, "study_program" character varying NOT NULL, "subject_combination" character varying NOT NULL, "tuition_fee" bigint NOT NULL, "uni_code" character varying NOT NULL, "uni_name" character varying NOT NULL, "uni_type" character varying NOT NULL, "uni_web_link" character varying NOT NULL, CONSTRAINT "PK_7e200c699fa93865cdcdd025885" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE TYPE "public"."certifications_cefr_enum" AS ENUM('A1', 'A2', 'B1', 'B2', 'C1', 'C2')`,
@@ -327,13 +327,13 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "idx_student_user_id" ON "students" ("userId") `,
         );
         await queryRunner.query(
-            `CREATE TABLE "student_enrollments" ("student_id" uuid NOT NULL, "enrollment_id" uuid NOT NULL, CONSTRAINT "PK_e2faf54ce1791979a3159bc6ddf" PRIMARY KEY ("student_id", "enrollment_id"))`,
+            `CREATE TABLE "student_admissions" ("student_id" uuid NOT NULL, "admission_id" uuid NOT NULL, CONSTRAINT "PK_e2faf54ce1791979a3159bc6ddf" PRIMARY KEY ("student_id", "admission_id"))`,
         );
         await queryRunner.query(
-            `CREATE INDEX "IDX_08caafd8a026a19ecf54db0e95" ON "student_enrollments" ("student_id") `,
+            `CREATE INDEX "IDX_08caafd8a026a19ecf54db0e95" ON "student_admissions" ("student_id") `,
         );
         await queryRunner.query(
-            `CREATE INDEX "IDX_f30c325194ec4771788c99bc97" ON "student_enrollments" ("enrollment_id") `,
+            `CREATE INDEX "IDX_f30c325194ec4771788c99bc97" ON "student_admissions" ("admission_id") `,
         );
         await queryRunner.query(
             `CREATE TABLE "student_major_groups" ("student_id" uuid NOT NULL, "major_group_id" uuid NOT NULL, CONSTRAINT "PK_f0ed0c22931c345a0da34dc8866" PRIMARY KEY ("student_id", "major_group_id"))`,
@@ -372,10 +372,10 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "students" ADD CONSTRAINT "FK_e0208b4f964e609959aff431bf9" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
-            `ALTER TABLE "student_enrollments" ADD CONSTRAINT "FK_08caafd8a026a19ecf54db0e958" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE`,
+            `ALTER TABLE "student_admissions" ADD CONSTRAINT "FK_08caafd8a026a19ecf54db0e958" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE`,
         );
         await queryRunner.query(
-            `ALTER TABLE "student_enrollments" ADD CONSTRAINT "FK_f30c325194ec4771788c99bc97e" FOREIGN KEY ("enrollment_id") REFERENCES "enrollment"("id") ON DELETE CASCADE ON UPDATE CASCADE`,
+            `ALTER TABLE "student_admissions" ADD CONSTRAINT "FK_f30c325194ec4771788c99bc97e" FOREIGN KEY ("admission_id") REFERENCES "admission"("id") ON DELETE CASCADE ON UPDATE CASCADE`,
         );
         await queryRunner.query(
             `ALTER TABLE "student_major_groups" ADD CONSTRAINT "FK_b4b7e67064e4ac35b50bd19a59e" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE`,

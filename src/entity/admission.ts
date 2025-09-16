@@ -1,15 +1,15 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
-@Entity("enrollment")
-export class EnrollmentEntity {
-    @Column({ name: "enroll_code", nullable: false, type: "varchar" })
-    enrollCode!: string;
+@Entity("admission")
+export class AdmissionEntity {
+    @Column({ name: "admission_code", nullable: false, type: "varchar" })
+    admissionCode!: string;
 
-    @Column({ name: "enroll_type", nullable: false, type: "varchar" })
-    enrollType!: string;
+    @Column({ name: "admission_type", nullable: false, type: "varchar" })
+    admissionType!: string;
 
-    @Column({ name: "enroll_type_name", nullable: false, type: "varchar" })
-    enrollTypeName!: string;
+    @Column({ name: "admission_type_name", nullable: false, type: "varchar" })
+    admissionTypeName!: string;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
