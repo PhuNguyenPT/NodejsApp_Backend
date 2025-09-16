@@ -1,8 +1,8 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
-import { CertificationRequest } from "@/dto/student/certification.request.js";
-import { CEFR, CertificationEntity } from "@/entity/certification.js";
+import { CertificationRequest } from "@/dto/student/certification-request.js";
+import { CEFR, CertificationEntity } from "@/entity/certification.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import {
     CCNNType,

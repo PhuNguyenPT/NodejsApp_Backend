@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import logger from "@/util/logger.js";
-import { config } from "@/util/validate.env.js";
+import { config } from "@/util/validate-env.js";
 
 export interface IKeyStore {
     privateKey: string;

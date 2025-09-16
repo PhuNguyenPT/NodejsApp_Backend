@@ -5,11 +5,11 @@ import express from "express";
 import passport from "passport";
 
 import { Permission } from "@/type/enum/user.js";
-import { AccessDeniedException } from "@/type/exception/access.denied.exception.js";
+import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { AuthenticationException } from "@/type/exception/authentication.exception.js";
-import { ExpiredJwtException } from "@/type/exception/expired.jwt.exception.js";
+import { ExpiredJwtException } from "@/type/exception/expired-jwt.exception.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
-import { authenticateOptions } from "@/util/jwt.options.js";
+import { authenticateOptions } from "@/util/jwt-options.js";
 
 // Define supported security types
 const SECURITY_TYPES = {

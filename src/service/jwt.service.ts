@@ -5,17 +5,17 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { TokenType } from "@/entity/jwt.entity.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import { TYPES } from "@/type/container/types.js";
-import { CustomJwtPayload } from "@/type/interface/jwt.js";
-import { ILogger } from "@/type/interface/logger.js";
+import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
+import { ILogger } from "@/type/interface/logger.interface.js";
 import {
     JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
     JWT_REFRESH_TOKEN_EXPIRATION_SECONDS,
     refreshSignOptions,
     signOptions,
     verifyOptions,
-} from "@/util/jwt.options.js";
+} from "@/util/jwt-options.js";
 
-import { JwtEntityService } from "./jwt.entity.service.js";
+import { JwtEntityService } from "./jwt-entity.service.js";
 
 @injectable()
 export class JWTService {

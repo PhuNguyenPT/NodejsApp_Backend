@@ -5,13 +5,13 @@ import passport from "passport";
 import { Strategy as JwtStrategy } from "passport-jwt";
 
 import { TokenType } from "@/entity/jwt.entity.js";
-import { IUserRepository } from "@/repository/user.repository.interface.js";
-import { JwtEntityService } from "@/service/jwt.entity.service.js";
+import { IUserRepository } from "@/repository/user-repository-interface.js";
+import { JwtEntityService } from "@/service/jwt-entity.service.js";
 import { TYPES } from "@/type/container/types.js";
-import { CustomJwtPayload } from "@/type/interface/jwt.js";
-import { ILogger } from "@/type/interface/logger.js";
-import { strategyOptionsWithRequest } from "@/util/jwt.options.js";
-import { config } from "@/util/validate.env.js";
+import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
+import { ILogger } from "@/type/interface/logger.interface.js";
+import { strategyOptionsWithRequest } from "@/util/jwt-options.js";
+import { config } from "@/util/validate-env.js";
 
 @injectable()
 export class PassportConfig {

@@ -6,13 +6,13 @@ import { inject, injectable } from "inversify";
 import jwt from "jsonwebtoken";
 import { Repository } from "typeorm";
 
-import { LoginRequest, RegisterRequest } from "@/dto/auth/auth.request.js";
-import { AuthResponse } from "@/dto/auth/auth.response.js";
+import { LoginRequest, RegisterRequest } from "@/dto/auth/auth-request.js";
+import { AuthResponse } from "@/dto/auth/auth-response.js";
 import { User } from "@/dto/user/user.js";
 import { TokenType } from "@/entity/jwt.entity.js";
-import { UserEntity } from "@/entity/user.js";
-import { IJwtTokenRepository } from "@/repository/jwt.token.repository.interface.js";
-import { JwtEntityService } from "@/service/jwt.entity.service.js";
+import { UserEntity } from "@/entity/user.entity.js";
+import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import { JwtEntityService } from "@/service/jwt-entity.service.js";
 import { JWTService } from "@/service/jwt.service.js";
 import { TYPES } from "@/type/container/types.js";
 import {
@@ -20,16 +20,16 @@ import {
     Role,
     UserStatus,
 } from "@/type/enum/user.js";
-import { AccessDeniedException } from "@/type/exception/access.denied.exception.js";
+import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { AuthenticationException } from "@/type/exception/authentication.exception.js";
-import { BadCredentialsException } from "@/type/exception/bad.credentials.exception.js";
-import { EntityExistsException } from "@/type/exception/entity.exists.exception.js";
-import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
+import { BadCredentialsException } from "@/type/exception/bad-credentials.exception.js";
+import { EntityExistsException } from "@/type/exception/entity-exists.exception.js";
+import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { HttpException } from "@/type/exception/http.exception.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
-import { CustomJwtPayload } from "@/type/interface/jwt.js";
-import { ILogger } from "@/type/interface/logger.js";
-import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt.options.js";
+import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
+import { ILogger } from "@/type/interface/logger.interface.js";
+import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt-options.js";
 
 @injectable()
 export class AuthService {

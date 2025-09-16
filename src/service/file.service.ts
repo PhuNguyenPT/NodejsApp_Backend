@@ -2,18 +2,18 @@ import { inject, injectable } from "inversify";
 import { RedisClientType } from "redis";
 import { EntityManager, IsNull, Repository } from "typeorm";
 
-import { CreateFileDTO } from "@/dto/file/create.file.js";
-import { UpdateFileRequest } from "@/dto/file/update.file.js";
-import { FileEntity, FileStatus, FileType } from "@/entity/file.js";
-import { StudentEntity } from "@/entity/student.js";
+import { CreateFileDTO } from "@/dto/file/create-file.js";
+import { UpdateFileRequest } from "@/dto/file/update-file.js";
+import { FileEntity, FileStatus, FileType } from "@/entity/file.entity.js";
+import { StudentEntity } from "@/entity/student.entity.js";
 import {
     FilesCreatedEvent,
     OCR_CHANNEL,
     SingleFileCreatedEvent,
-} from "@/event/orc.event.listener.service.js";
+} from "@/event/orc-event-listener.service.js";
 import { TYPES } from "@/type/container/types.js";
-import { AccessDeniedException } from "@/type/exception/access.denied.exception.js";
-import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
+import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
+import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import logger from "@/util/logger.js";
 

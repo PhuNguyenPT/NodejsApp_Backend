@@ -18,13 +18,13 @@ import {
     Tags,
 } from "tsoa";
 
-import { CreateUserAdminDTO } from "@/dto/user/create.user.js";
-import { UpdateUserAdminDTO } from "@/dto/user/update.user.js";
+import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
+import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
 import { UserAdmin } from "@/dto/user/user.js";
-import { UserEntity } from "@/entity/user.js";
-import { UserMapper } from "@/mapper/user.mapper.js";
-import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
-import validateDTO from "@/middleware/validation.middleware.js";
+import { UserEntity } from "@/entity/user.entity.js";
+import { UserMapper } from "@/mapper/user-mapper.js";
+import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import validateDTO from "@/middleware/validation-middleware.js";
 import { UserService } from "@/service/user.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";

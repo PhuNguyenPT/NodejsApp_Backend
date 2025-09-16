@@ -2,9 +2,9 @@ import * as bcrypt from "bcrypt";
 // src/migration/1754022674557-CreateDefaultAdmin.ts
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-import { UserEntity } from "@/entity/user.js";
+import { UserEntity } from "@/entity/user.entity.js";
 import { getDefaultPermissionsByRole, Role } from "@/type/enum/user.js";
-import { config } from "@/util/validate.env.js";
+import { config } from "@/util/validate-env.js";
 
 export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
     name = "CreateDefaultAdmin1754794920377";

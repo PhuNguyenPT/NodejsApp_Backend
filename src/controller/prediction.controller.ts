@@ -15,22 +15,22 @@ import {
     Tags,
 } from "tsoa";
 
-import { PredictionResultResponse } from "@/dto/predict/prediciton.result.response.js";
+import { PredictionResultResponse } from "@/dto/predict/prediciton-result-response.js";
 import {
     L1PredictResult,
     L2PredictResult,
     UserInputL2,
 } from "@/dto/predict/predict.js";
-import { PredictionResultEntity } from "@/entity/prediction.result.js";
-import { PredictionResultMapper } from "@/mapper/prediction.result.mapper.js";
-import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
-import validateDTO from "@/middleware/validation.middleware.js";
-import { PredictionModelService } from "@/service/prediction.model.service.js";
-import { PredictionResultService } from "@/service/prediction.result.service.js";
+import { PredictionResultEntity } from "@/entity/prediction-result.entity.js";
+import { PredictionResultMapper } from "@/mapper/prediction-result-mapper.js";
+import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import validateDTO from "@/middleware/validation-middleware.js";
+import { PredictionModelService } from "@/service/prediction-model.service.js";
+import { PredictionResultService } from "@/service/prediction-result.service.js";
 import { TYPES } from "@/type/container/types.js";
-import { HttpStatus } from "@/type/enum/http.status.js";
+import { HttpStatus } from "@/type/enum/http-status.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
-import { ILogger } from "@/type/interface/logger.js";
+import { ILogger } from "@/type/interface/logger.interface.js";
 
 /**
  * Controller for handling university admission prediction requests.

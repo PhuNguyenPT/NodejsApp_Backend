@@ -2,22 +2,22 @@ import { inject, injectable } from "inversify";
 import { RedisClientType } from "redis";
 import { IsNull, Repository } from "typeorm";
 
-import { StudentRequest } from "@/dto/student/student.request.js";
-import { StudentEntity } from "@/entity/student.js";
-import { UserEntity } from "@/entity/user.js";
+import { StudentRequest } from "@/dto/student/student-request.js";
+import { StudentEntity } from "@/entity/student.entity.js";
+import { UserEntity } from "@/entity/user.entity.js";
 import {
     PREDICTION_CHANNEL,
     StudentCreatedEvent,
-} from "@/event/prediction.model.event.listener.service.js";
+} from "@/event/prediction-model-event-listener.service.js";
 import { AwardService } from "@/service/award.service.js";
 import { CertificationService } from "@/service/certification.service.js";
 import { MajorService } from "@/service/major.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { handleExamValidation } from "@/type/enum/exam.js";
 import { Role } from "@/type/enum/user.js";
-import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
+import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
-import { ILogger } from "@/type/interface/logger.js";
+import { ILogger } from "@/type/interface/logger.interface.js";
 import { Page } from "@/type/pagination/page.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
 // import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/util/jwt.options.js";
