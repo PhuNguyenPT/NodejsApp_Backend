@@ -7,7 +7,7 @@ import {
     RedisEventListener,
 } from "@/decorator/redis.event.listener.decorator.js";
 import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
-import { EnrollmentEntity } from "@/entity/enrollment.entity.js";
+import { AdmissionEntity } from "@/entity/admission.js";
 import {
     PredictionResultEntity,
     PredictionResultStatus,
@@ -37,8 +37,8 @@ export class PredictionModelEventListenerService {
         private readonly predictionModelService: PredictionModelService,
         @inject(TYPES.PredictionResultRepository)
         private readonly predictionResultRepository: Repository<PredictionResultEntity>,
-        @inject(TYPES.EnrollmentRepository)
-        private readonly enrollmentRepository: Repository<EnrollmentEntity>,
+        @inject(TYPES.AdmissionRepository)
+        private readonly admissionRepository: Repository<AdmissionEntity>,
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.UserRepository)
@@ -131,8 +131,8 @@ export class PredictionModelEventListenerService {
                     });
                 }
 
-                // Step 3: Process enrollments from L2 predictions
-                await this.processEnrollmentsFromPredictions(
+                // Step 3: Process admissions from L2 predictions
+                await this.processAdmissionsFromPredictions(
                     studentId,
                     l2PredictionResults,
                 );
@@ -189,16 +189,16 @@ export class PredictionModelEventListenerService {
     }
 
     /**
-     * Process enrollments from L2 prediction results and associate them with the student
+     * Process admissions from L2 prediction results and associate them with the student
      */
-    private async processEnrollmentsFromPredictions(
+    private async processAdmissionsFromPredictions(
         studentId: string,
         l2PredictionResults: L2PredictResult[],
     ): Promise<void> {
         try {
             if (l2PredictionResults.length === 0) {
                 this.logger.info(
-                    "No L2 prediction results to process enrollments",
+                    "No L2 prediction results to process admissions",
                     {
                         studentId,
                     },
@@ -206,34 +206,34 @@ export class PredictionModelEventListenerService {
                 return;
             }
 
-            const enrollmentCodes: string[] = l2PredictionResults.map(
+            const admissionCodes: string[] = l2PredictionResults.map(
                 (result) => result.ma_xet_tuyen,
             );
 
-            this.logger.info("Processing enrollments from predictions", {
-                enrollmentCodes: enrollmentCodes.slice(0, 5),
-                enrollmentCodesCount: enrollmentCodes.length,
+            this.logger.info("Processing admissions from predictions", {
+                admissionCodes: admissionCodes.slice(0, 5),
+                admissionCodesCount: admissionCodes.length,
                 studentId,
             });
 
-            const enrollments: EnrollmentEntity[] =
-                await this.enrollmentRepository.find({
+            const admissions: AdmissionEntity[] =
+                await this.admissionRepository.find({
                     where: {
-                        enrollCode: In(enrollmentCodes),
+                        admissionCode: In(admissionCodes),
                     },
                 });
 
-            this.logger.info("Found matching enrollments", {
-                foundEnrollmentsCount: enrollments.length,
-                requestedCodesCount: enrollmentCodes.length,
+            this.logger.info("Found matching admissions", {
+                foundAdmissionsCount: admissions.length,
+                requestedCodesCount: admissionCodes.length,
                 studentId,
             });
 
-            if (enrollments.length === 0) {
+            if (admissions.length === 0) {
                 this.logger.warn(
-                    "No matching enrollments found for prediction codes",
+                    "No matching admissions found for prediction codes",
                     {
-                        enrollmentCodes,
+                        admissionCodes,
                         studentId,
                     },
                 );
@@ -242,13 +242,13 @@ export class PredictionModelEventListenerService {
 
             const student: null | StudentEntity =
                 await this.studentRepository.findOne({
-                    relations: ["enrollments"],
+                    relations: ["admissions"],
                     where: { id: studentId },
                 });
 
             if (!student) {
                 this.logger.error(
-                    "Student not found when processing enrollments",
+                    "Student not found when processing admissions",
                     {
                         studentId,
                     },
@@ -256,50 +256,50 @@ export class PredictionModelEventListenerService {
                 return;
             }
 
-            let newEnrollmentsCount = 0;
-            enrollments.forEach((enrollment) => {
-                if (!student.hasEnrollment(enrollment.id)) {
-                    student.addEnrollment(enrollment);
-                    newEnrollmentsCount++;
+            let newAdmissionsCount = 0;
+            admissions.forEach((admission) => {
+                if (!student.hasAdmission(admission.id)) {
+                    student.addAdmission(admission);
+                    newAdmissionsCount++;
                 }
             });
 
-            if (newEnrollmentsCount > 0) {
+            if (newAdmissionsCount > 0) {
                 await this.studentRepository.save(student);
 
                 this.logger.info(
-                    "Successfully associated enrollments with student",
+                    "Successfully associated admissions with student",
                     {
-                        newEnrollmentsAdded: newEnrollmentsCount,
+                        newAdmissionsAdded: newAdmissionsCount,
                         studentId,
-                        totalEnrollments: student.getEnrollmentCount(),
+                        totalAdmissions: student.getAdmissionCount(),
                     },
                 );
             } else {
                 this.logger.info(
-                    "No new enrollments to add (all already associated)",
+                    "No new admissions to add (all already associated)",
                     {
                         studentId,
-                        totalEnrollments: student.getEnrollmentCount(),
+                        totalAdmissions: student.getAdmissionCount(),
                     },
                 );
             }
 
-            if (enrollments.length > 0) {
-                const enrollmentDetails = enrollments.map((e) => ({
-                    enrollCode: e.enrollCode,
+            if (admissions.length > 0) {
+                const admissionDetails = admissions.map((e) => ({
+                    admissionCode: e.admissionCode,
                     id: e.id,
                     majorName: e.majorName,
                     uniName: e.uniName,
                 }));
 
-                this.logger.debug("Processed enrollment details", {
-                    enrollments: enrollmentDetails,
+                this.logger.debug("Processed admission details", {
+                    admissions: admissionDetails,
                     studentId,
                 });
             }
         } catch (error) {
-            this.logger.error("Error processing enrollments from predictions", {
+            this.logger.error("Error processing admissions from predictions", {
                 error,
                 l2ResultsCount: l2PredictionResults.length,
                 studentId,

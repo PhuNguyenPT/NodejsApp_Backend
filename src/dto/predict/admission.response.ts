@@ -1,17 +1,17 @@
 import { Expose, Type } from "class-transformer";
 
-export class EnrollmentResponse {
+export class AdmissionResponse {
     @Expose()
     @Type(() => String)
-    enrollCode!: string;
+    admissionCode!: string;
 
     @Expose()
     @Type(() => String)
-    enrollType!: string;
+    admissionType!: string;
 
     @Expose()
     @Type(() => String)
-    enrollTypeName!: string;
+    admissionTypeName!: string;
 
     @Expose()
     @Type(() => String)

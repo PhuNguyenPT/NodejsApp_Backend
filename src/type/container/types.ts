@@ -1,14 +1,14 @@
 // src/type/container/type.ts
 export const TYPES = {
+    AdmissionController: Symbol.for("AdmissionController"),
+    AdmissionRepository: Symbol.for("AdmissionRepository"),
+    AdmissionService: Symbol.for("AdmissionService"),
     AuthService: Symbol.for("AuthService"),
     AwardRepository: Symbol.for("AwardRepository"),
     AwardService: Symbol.for("AwardService"),
     CertificationRepository: Symbol.for("CertificationRepository"),
     CertificationService: Symbol.for("CertificationService"),
     ClientConfig: Symbol.for("ClientConfig"),
-    EnrollmentController: Symbol.for("EnrollmentController"),
-    EnrollmentRepository: Symbol.for("EnrollmentRepository"),
-    EnrollmentService: Symbol.for("EnrollmentService"),
     EventListenerManager: Symbol.for("EventListenerManager"),
     FileRepository: Symbol.for("FileRepository"),
     FileService: Symbol.for("FileService"),

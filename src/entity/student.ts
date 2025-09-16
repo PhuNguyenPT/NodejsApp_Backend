@@ -15,9 +15,9 @@ import {
 } from "typeorm";
 
 import { ExamProfileDTO } from "@/dto/student/exam.profile.dto.js";
+import { AdmissionEntity } from "@/entity/admission.js";
 import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
-import { EnrollmentEntity } from "@/entity/enrollment.entity.js";
 import { FileEntity } from "@/entity/file.js";
 import { FileType } from "@/entity/file.js";
 import { MajorGroupEntity } from "@/entity/major.group.entity.js";
@@ -67,6 +67,23 @@ export class StudentEntity {
     @Column({ nullable: true, type: "jsonb" })
     academicPerformances?: AcademicPerformanceData[];
 
+    @JoinTable({
+        inverseJoinColumn: {
+            name: "admission_id",
+            referencedColumnName: "id",
+        },
+        joinColumn: {
+            name: "student_id",
+            referencedColumnName: "id",
+        },
+        name: "student_admissions",
+    })
+    @ManyToMany("AdmissionEntity", {
+        cascade: false,
+        eager: false,
+    })
+    admissions?: Relation<AdmissionEntity[]>;
+
     /**
      * Aptitude test information including exam type and score
      * Stored as JSON containing examType and score
@@ -79,12 +96,12 @@ export class StudentEntity {
         eager: false,
     })
     awards?: Relation<AwardEntity[]>;
-
     @OneToMany("CertificationEntity", "student", {
         cascade: true,
         eager: false,
     })
     certifications?: Relation<CertificationEntity[]>;
+
     /**
      * Conduct/behavior data for different grades
      * Array containing conduct ratings and corresponding grades
@@ -103,23 +120,6 @@ export class StudentEntity {
         update: false,
     })
     createdBy?: string;
-
-    @JoinTable({
-        inverseJoinColumn: {
-            name: "enrollment_id",
-            referencedColumnName: "id",
-        },
-        joinColumn: {
-            name: "student_id",
-            referencedColumnName: "id",
-        },
-        name: "student_enrollments",
-    })
-    @ManyToMany("EnrollmentEntity", {
-        cascade: false,
-        eager: false,
-    })
-    enrollments?: Relation<EnrollmentEntity[]>;
 
     @OneToMany("FileEntity", "student", {
         cascade: true,
@@ -242,6 +242,14 @@ export class StudentEntity {
         this.academicPerformances.push({ academicPerformance, grade });
     }
 
+    // Add admission to student
+    addAdmission(admission: AdmissionEntity): void {
+        this.admissions ??= [];
+        if (!this.hasAdmission(admission.id)) {
+            this.admissions.push(admission);
+        }
+    }
+
     // Helper method to add conduct for a specific grade
     addConduct(conduct: string, grade: number): void {
         this.conducts ??= [];
@@ -253,17 +261,9 @@ export class StudentEntity {
         this.conducts.push({ conduct, grade });
     }
 
-    // Add enrollment to student
-    addEnrollment(enrollment: EnrollmentEntity): void {
-        this.enrollments ??= [];
-        if (!this.hasEnrollment(enrollment.id)) {
-            this.enrollments.push(enrollment);
-        }
-    }
-
-    // Clear all enrollments
-    clearEnrollments(): void {
-        this.enrollments = [];
+    // Clear all admissions
+    clearAdmissions(): void {
+        this.admissions = [];
     }
 
     // Helper method to get academic performance by grade
@@ -290,6 +290,54 @@ export class StudentEntity {
     getActiveFiles(): FileEntity[] {
         if (!this.files) return [];
         return this.files.filter((file) => file.isActive());
+    }
+
+    // Get admissions count
+    getAdmissionCount(): number {
+        return this.getAdmissions().length;
+    }
+
+    // Get admission IDs only (lightweight)
+    getAdmissionIds(): string[] {
+        return this.getAdmissions().map((e) => e.id);
+    }
+
+    // Get all admissions for this student
+    getAdmissions(): AdmissionEntity[] {
+        return this.admissions ?? [];
+    }
+
+    // Filter admissions by major
+    getAdmissionsByMajor(majorName: string): AdmissionEntity[] {
+        return this.getAdmissions().filter((e) =>
+            e.majorName.toLowerCase().includes(majorName.toLowerCase()),
+        );
+    }
+
+    // Filter admissions by province
+    getAdmissionsByProvince(province: string): AdmissionEntity[] {
+        return this.getAdmissions().filter((e) => e.province === province);
+    }
+
+    // Filter admissions by university type
+    getAdmissionsByUniType(uniType: string): AdmissionEntity[] {
+        return this.getAdmissions().filter((e) => e.uniType === uniType);
+    }
+
+    // Filter admissions by university
+    getAdmissionsByUniversity(uniName: string): AdmissionEntity[] {
+        return this.getAdmissions().filter((e) =>
+            e.uniName.toLowerCase().includes(uniName.toLowerCase()),
+        );
+    }
+
+    // Filter admissions within budget
+    getAdmissionsWithinBudget(): AdmissionEntity[] {
+        if (!this.isBudgetRangeValid()) return [];
+        return this.getAdmissions().filter((e) => {
+            const tuitionFee = e.tuitionFee;
+            return this.isWithinBudget(tuitionFee);
+        });
     }
 
     // Helper method to get aptitude test score (backward compatibility)
@@ -343,54 +391,6 @@ export class StudentEntity {
     getConductByGrade(grade: number): ConductData | null {
         if (!this.conducts) return null;
         return this.conducts.find((c) => c.grade === grade) ?? null;
-    }
-
-    // Get enrollments count
-    getEnrollmentCount(): number {
-        return this.getEnrollments().length;
-    }
-
-    // Get enrollment IDs only (lightweight)
-    getEnrollmentIds(): string[] {
-        return this.getEnrollments().map((e) => e.id);
-    }
-
-    // Get all enrollments for this student
-    getEnrollments(): EnrollmentEntity[] {
-        return this.enrollments ?? [];
-    }
-
-    // Filter enrollments by major
-    getEnrollmentsByMajor(majorName: string): EnrollmentEntity[] {
-        return this.getEnrollments().filter((e) =>
-            e.majorName.toLowerCase().includes(majorName.toLowerCase()),
-        );
-    }
-
-    // Filter enrollments by province
-    getEnrollmentsByProvince(province: string): EnrollmentEntity[] {
-        return this.getEnrollments().filter((e) => e.province === province);
-    }
-
-    // Filter enrollments by university type
-    getEnrollmentsByUniType(uniType: string): EnrollmentEntity[] {
-        return this.getEnrollments().filter((e) => e.uniType === uniType);
-    }
-
-    // Filter enrollments by university
-    getEnrollmentsByUniversity(uniName: string): EnrollmentEntity[] {
-        return this.getEnrollments().filter((e) =>
-            e.uniName.toLowerCase().includes(uniName.toLowerCase()),
-        );
-    }
-
-    // Filter enrollments within budget
-    getEnrollmentsWithinBudget(): EnrollmentEntity[] {
-        if (!this.isBudgetRangeValid()) return [];
-        return this.getEnrollments().filter((e) => {
-            const tuitionFee = e.tuitionFee;
-            return this.isWithinBudget(tuitionFee);
-        });
     }
 
     getExamProfileDTO(): ExamProfileDTO | null {
@@ -546,6 +546,16 @@ export class StudentEntity {
         );
     }
 
+    // Check if student has specific admission
+    hasAdmission(admissionId: string): boolean {
+        return this.getAdmissions().some((e) => e.id === admissionId);
+    }
+
+    // Check if student has any admissions
+    hasAdmissions(): boolean {
+        return this.getAdmissionCount() > 0;
+    }
+
     hasAptitudeTestScore(): boolean {
         return !!this.aptitudeTestScore;
     }
@@ -557,16 +567,6 @@ export class StudentEntity {
     // Helper method to check if conduct data exists
     hasConductData(): boolean {
         return !!(this.conducts && this.conducts.length > 0);
-    }
-
-    // Check if student has specific enrollment
-    hasEnrollment(enrollmentId: string): boolean {
-        return this.getEnrollments().some((e) => e.id === enrollmentId);
-    }
-
-    // Check if student has any enrollments
-    hasEnrollments(): boolean {
-        return this.getEnrollmentCount() > 0;
     }
 
     // Helper method to check if student has specific file type
@@ -651,12 +651,10 @@ export class StudentEntity {
         return amount >= this.minBudget && amount <= this.maxBudget;
     }
 
-    // Remove enrollment from student
-    removeEnrollment(enrollmentId: string): void {
-        if (!this.enrollments) return;
-        this.enrollments = this.enrollments.filter(
-            (e) => e.id !== enrollmentId,
-        );
+    // Remove admission from student
+    removeAdmission(admissionId: string): void {
+        if (!this.admissions) return;
+        this.admissions = this.admissions.filter((e) => e.id !== admissionId);
     }
 
     // Helper method to set academic performance data
@@ -664,6 +662,11 @@ export class StudentEntity {
         academicPerformanceDataArray: AcademicPerformanceData[],
     ): void {
         this.academicPerformances = academicPerformanceDataArray;
+    }
+
+    // Set all admissions at once
+    setAdmissions(admissions: AdmissionEntity[]): void {
+        this.admissions = admissions;
     }
 
     // Helper method to set aptitude test with both type and score
@@ -674,11 +677,6 @@ export class StudentEntity {
     // Helper method to set conduct data
     setConduct(conductData: ConductData[]): void {
         this.conducts = conductData;
-    }
-
-    // Set all enrollments at once
-    setEnrollments(enrollments: EnrollmentEntity[]): void {
-        this.enrollments = enrollments;
     }
 
     setExamProfileDTO(examProfile: ExamProfileDTO): void {

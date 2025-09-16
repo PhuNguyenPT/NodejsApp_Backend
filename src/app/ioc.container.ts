@@ -12,16 +12,16 @@ import {
     predictionServiceClientConfig,
 } from "@/config/prediction.model.config.js";
 import { redisClient, redisSubscriber } from "@/config/redis.js";
+import { AdmissionController } from "@/controller/admission.controller.js";
 import { AuthController } from "@/controller/auth.controller.js";
-import { EnrollmentController } from "@/controller/enrollment.controller.js";
 import { FileController } from "@/controller/file.controller.js";
 import { OcrController } from "@/controller/ocr.controller.js";
 import { PredictionController } from "@/controller/prediction.controller.js";
 import { StudentController } from "@/controller/student.controller.js";
 import { UserController } from "@/controller/user.controller.js";
+import { AdmissionEntity } from "@/entity/admission.js";
 import { AwardEntity } from "@/entity/award.js";
 import { CertificationEntity } from "@/entity/certification.js";
-import { EnrollmentEntity } from "@/entity/enrollment.entity.js";
 import { FileEntity } from "@/entity/file.js";
 import { MajorEntity } from "@/entity/major.entity.js";
 import { MajorGroupEntity } from "@/entity/major.group.entity.js";
@@ -36,10 +36,10 @@ import { JwtTokenRepository } from "@/repository/impl/jwt.repository.js";
 import { UserRepository } from "@/repository/impl/user.repository.js";
 import { IJwtTokenRepository } from "@/repository/jwt.token.repository.interface.js";
 import { IUserRepository } from "@/repository/user.repository.interface.js";
+import { AdmissionService } from "@/service/admission.service.js";
 import { AuthService } from "@/service/auth.service.js";
 import { AwardService } from "@/service/award.service.js";
 import { CertificationService } from "@/service/certification.service.js";
-import { EnrollmentService } from "@/service/enrollment.service.js";
 import { FileService } from "@/service/file.service.js";
 import { JwtEntityService } from "@/service/jwt.entity.service.js";
 import { JWTService } from "@/service/jwt.service.js";
@@ -136,8 +136,8 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
-    .bind<Repository<EnrollmentEntity>>(TYPES.EnrollmentRepository)
-    .toDynamicValue(() => postgresDataSource.getRepository(EnrollmentEntity))
+    .bind<Repository<AdmissionEntity>>(TYPES.AdmissionRepository)
+    .toDynamicValue(() => postgresDataSource.getRepository(AdmissionEntity))
     .inSingletonScope();
 
 iocContainer
@@ -218,8 +218,8 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
-    .bind<EnrollmentService>(TYPES.EnrollmentService)
-    .to(EnrollmentService)
+    .bind<AdmissionService>(TYPES.AdmissionService)
+    .to(AdmissionService)
     .inSingletonScope();
 
 iocContainer
@@ -271,7 +271,7 @@ iocContainer
     .inRequestScope();
 
 iocContainer
-    .bind<EnrollmentController>(EnrollmentController)
+    .bind<AdmissionController>(AdmissionController)
     .toSelf()
     .inRequestScope();
 
