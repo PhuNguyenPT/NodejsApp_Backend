@@ -22,21 +22,21 @@ import {
     UploadedFiles,
 } from "tsoa";
 
-import { CreateFileDTO } from "@/dto/file/create.file.js";
-import { FilesMetadataSchema } from "@/dto/file/file.metadata.js";
-import { FileResponse } from "@/dto/file/file.response.js";
-import { UpdateFileRequest } from "@/dto/file/update.file.js";
-import { FileEntity, FileType } from "@/entity/file.js";
-import { FileMapper } from "@/mapper/file.mapper.js";
-import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
-import validateDTO from "@/middleware/validation.middleware.js";
+import { CreateFileDTO } from "@/dto/file/create-file.js";
+import { FilesMetadataSchema } from "@/dto/file/file-metadata.js";
+import { FileResponse } from "@/dto/file/file-response.js";
+import { UpdateFileRequest } from "@/dto/file/update-file.js";
+import { FileEntity, FileType } from "@/entity/file.entity.js";
+import { FileMapper } from "@/mapper/file-mapper.js";
+import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import validateDTO from "@/middleware/validation-middleware.js";
 import { FileService } from "@/service/file.service.js";
 import { TYPES } from "@/type/container/types.js";
-import { HttpStatus } from "@/type/enum/http.status.js";
+import { HttpStatus } from "@/type/enum/http-status.js";
 import { Role } from "@/type/enum/user.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
-import { ILogger } from "@/type/interface/logger.js";
+import { ILogger } from "@/type/interface/logger.interface.js";
 
 @injectable()
 @Route("files")

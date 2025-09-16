@@ -1,8 +1,8 @@
 // src/service/post.service.ts
 import { Repository } from "typeorm";
 
-import { postgresDataSource } from "@/config/data.source.js";
-import PostEntity from "@/entity/post.js";
+import { postgresDataSource } from "@/config/data-source.config.js";
+import PostEntity from "@/entity/post.entity.js";
 import logger from "@/util/logger.js";
 
 class PostService {

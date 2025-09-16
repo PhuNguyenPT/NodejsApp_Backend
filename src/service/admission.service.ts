@@ -1,10 +1,10 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
-import { AdmissionEntity } from "@/entity/admission.js";
-import { StudentEntity } from "@/entity/student.js";
+import { AdmissionEntity } from "@/entity/admission.entity.js";
+import { StudentEntity } from "@/entity/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
-import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
+import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { Page } from "@/type/pagination/page.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
 

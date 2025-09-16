@@ -4,7 +4,7 @@ import path from "path";
 import { MigrationInterface, QueryRunner } from "typeorm";
 import { fileURLToPath } from "url";
 
-import { AdmissionEntity } from "@/entity/admission.js";
+import { AdmissionEntity } from "@/entity/admission.entity.js";
 import logger from "@/util/logger.js";
 
 // Define the CSV row structure for type safety
@@ -36,7 +36,7 @@ export class AdmissionData1757342612756 implements MigrationInterface {
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = path.dirname(__filename);
 
-        const csvPath = path.join(__dirname, "../data/admission.data.csv");
+        const csvPath = path.join(__dirname, "../data/admission-data.csv");
 
         logger.info(`Attempting to read CSV file from: ${csvPath}`);
         if (!fs.existsSync(csvPath)) {

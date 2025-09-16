@@ -17,20 +17,20 @@ import {
     Tags,
 } from "tsoa";
 
+import { StudentProfileResponse } from "@/dto/student/student-profile-response.js";
+import { StudentRequest } from "@/dto/student/student-request.js";
 import { StudentResponse } from "@/dto/student/student.js";
-import { StudentProfileResponse } from "@/dto/student/student.profile.response.js";
-import { StudentRequest } from "@/dto/student/student.request.js";
-import { StudentEntity } from "@/entity/student.js";
-import { StudentMapper } from "@/mapper/student.mapper.js";
-import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
-import validateDTO from "@/middleware/validation.middleware.js";
+import { StudentEntity } from "@/entity/student.entity.js";
+import { StudentMapper } from "@/mapper/student-mapper.js";
+import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import validateDTO from "@/middleware/validation-middleware.js";
 import { StudentService } from "@/service/student.service.js";
 import { TYPES } from "@/type/container/types.js";
-import { HttpStatus } from "@/type/enum/http.status.js";
+import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
+import { PageableQuery, PageRequest } from "@/type/pagination/page-request.js";
 import { Page } from "@/type/pagination/page.js";
-import { PageableQuery, PageRequest } from "@/type/pagination/page.request.js";
 
 @injectable()
 @Route("students")

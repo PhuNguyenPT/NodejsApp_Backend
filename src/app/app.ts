@@ -6,26 +6,29 @@ import helmet from "helmet";
 import { Server } from "http";
 import passport from "passport";
 
-import { iocContainer } from "@/app/ioc.container.js";
-import { corsOptions } from "@/config/cors.js";
+import { iocContainer } from "@/app/ioc-container.js";
+import { corsOptions } from "@/config/cors.config.js";
 import {
     initializePostgreSQL,
     postgresDataSource,
-} from "@/config/data.source.js";
-import { helmetOptions } from "@/config/helmet.js";
-import { getMorganConfig, setupRequestTracking } from "@/config/morgan.js";
+} from "@/config/data-source.config.js";
+import { helmetOptions } from "@/config/helmet.config.js";
+import {
+    getMorganConfig,
+    setupRequestTracking,
+} from "@/config/morgan.config.js";
 import { PassportConfig } from "@/config/passport.config.js";
-import { initializeRedis, redisClient } from "@/config/redis.js";
-import swaggerDocs from "@/config/swagger.js";
+import { initializeRedis, redisClient } from "@/config/redis.config.js";
+import swaggerDocs from "@/config/swagger.config.js";
 import { RegisterRoutes } from "@/generated/routes.js";
-import { TokenCleanupJob } from "@/job/token.cleanup.job.js";
-import { EventListenerManager } from "@/manager/event.listener.manager.js";
-import ErrorMiddleware from "@/middleware/error.middleware.js";
-import { PredictionServiceClient } from "@/type/class/prediction.service.client.js";
+import { TokenCleanupJob } from "@/job/token-cleanup-job.js";
+import { EventListenerManager } from "@/manager/event-listener-manager.js";
+import ErrorMiddleware from "@/middleware/error-middleware.js";
+import { PredictionServiceClient } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
 import { keyStore } from "@/util/key.js";
 import logger from "@/util/logger.js";
-import { config } from "@/util/validate.env.js";
+import { config } from "@/util/validate-env.js";
 class App {
     public basePath!: string;
     public express!: Express;

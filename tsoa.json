@@ -48,7 +48,7 @@
     "routesDir": "src/generated",
     "middleware": "express",
     "authenticationModule": "src/config/authentication.ts",
-    "iocModule": "src/app/ioc.container.ts",
+    "iocModule": "src/app/ioc-container.ts",
     "esm": true
   }
 }

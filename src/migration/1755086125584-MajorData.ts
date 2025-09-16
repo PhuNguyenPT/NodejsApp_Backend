@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
+import { MajorGroupEntity } from "@/entity/major-group.entity.js";
 import { MajorEntity } from "@/entity/major.entity.js";
-import { MajorGroupEntity } from "@/entity/major.group.entity.js";
 import {
     getEnglishKeyByVietnameseName,
     MajorGroup,

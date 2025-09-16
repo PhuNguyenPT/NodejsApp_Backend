@@ -1,4 +1,3 @@
-// src/type/pagination/pageable.interface.ts
 import { Sort } from "./sort.js";
 
 /**

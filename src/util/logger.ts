@@ -2,8 +2,8 @@ import { injectable } from "inversify";
 // src/util/logger.ts
 import winston, { format, Logger, transports } from "winston";
 
-import { ILogger } from "@/type/interface/logger.js";
-import { config } from "@/util/validate.env.js";
+import { ILogger } from "@/type/interface/logger.interface.js";
+import { config } from "@/util/validate-env.js";
 
 // Custom log levels
 const logLevels = {

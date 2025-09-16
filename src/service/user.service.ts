@@ -3,16 +3,16 @@ import { plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import { EntityMetadataNotFoundError } from "typeorm";
 
-import { CreateUserAdminDTO } from "@/dto/user/create.user.js";
-import { UpdateUserAdminDTO } from "@/dto/user/update.user.js";
-import { UserEntity } from "@/entity/user.js";
-import { IUserRepository } from "@/repository/user.repository.interface.js";
+import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
+import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
+import { UserEntity } from "@/entity/user.entity.js";
+import { IUserRepository } from "@/repository/user-repository-interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { getDefaultPermissionsByRole } from "@/type/enum/user.js";
-import { EntityExistsException } from "@/type/exception/entity.exists.exception.js";
-import { EntityNotFoundException } from "@/type/exception/entity.not.found.exception.js";
-import { IllegalArgumentException } from "@/type/exception/illegal.argument.exception.js";
-import { ILogger } from "@/type/interface/logger.js";
+import { EntityExistsException } from "@/type/exception/entity-exists.exception.js";
+import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
+import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
+import { ILogger } from "@/type/interface/logger.interface.js";
 import { hashPassword } from "@/util/bcrypt.js";
 
 @injectable()

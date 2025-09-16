@@ -17,15 +17,15 @@ import {
     BatchScoreExtractionResult,
     OcrResultResponse,
 } from "@/dto/predict/ocr.js";
-import { OcrResultEntity } from "@/entity/ocr.result.entity.js";
-import { OcrResultMapper } from "@/mapper/ocr.mapper.js";
-import { validateUuidParam } from "@/middleware/uuid.validation.middleware.js";
+import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
+import { OcrResultMapper } from "@/mapper/ocr-mapper.js";
+import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
 import { MistralService } from "@/service/mistral.service.js";
-import { OcrResultService } from "@/service/ocr.result.service.js";
+import { OcrResultService } from "@/service/ocr-result.service.js";
 import { TYPES } from "@/type/container/types.js";
-import { HttpStatus } from "@/type/enum/http.status.js";
+import { HttpStatus } from "@/type/enum/http-status.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
-import { ILogger } from "@/type/interface/logger.js";
+import { ILogger } from "@/type/interface/logger.interface.js";
 
 @injectable()
 @Route("ocr")

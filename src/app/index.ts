@@ -1,7 +1,7 @@
 // src/app/index.ts
 import App from "@/app/app.js";
 import logger from "@/util/logger.js";
-import { createSafeConfig } from "@/util/validate.env.js";
+import { createSafeConfig } from "@/util/validate-env.js";
 
 async function bootstrap(): Promise<void> {
     try {
