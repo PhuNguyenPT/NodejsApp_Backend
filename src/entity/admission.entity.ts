@@ -1,6 +1,22 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity("admission")
+@Index("idx_admission_code", ["admissionCode"])
+@Index("idx_admission_type", ["admissionType"])
+@Index("idx_major_code", ["majorCode"])
+@Index("idx_major_name", ["majorName"])
+@Index("idx_province", ["province"])
+@Index("idx_study_program", ["studyProgram"])
+@Index("idx_uni_code", ["uniCode"])
+@Index("idx_uni_name", ["uniName"])
+@Index("idx_uni_type", ["uniType"])
+@Index("idx_tuition_fee", ["tuitionFee"])
+@Index("idx_uni_major", ["uniCode", "majorCode"])
+@Index("idx_province_uni_type", ["province", "uniType"])
+@Index("idx_admission_type_major", ["admissionType", "majorCode"])
+@Index("idx_study_program_admission_type", ["studyProgram", "admissionType"])
+@Index("idx_province_tuition_fee", ["province", "tuitionFee"])
+@Index("idx_uni_type_tuition_fee", ["uniType", "tuitionFee"])
 export class AdmissionEntity {
     @Column({ name: "admission_code", nullable: false, type: "varchar" })
     admissionCode!: string;
