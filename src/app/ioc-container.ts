@@ -2,7 +2,7 @@
 import { AxiosInstance } from "axios";
 import { Container } from "inversify";
 import { RedisClientType } from "redis";
-import { Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 
 import { postgresDataSource } from "@/config/data-source.config.js";
 import { PassportConfig } from "@/config/passport.config.js";
@@ -295,6 +295,11 @@ iocContainer
 iocContainer
     .bind<EventListenerManager>(TYPES.EventListenerManager)
     .to(EventListenerManager)
+    .inSingletonScope();
+
+iocContainer
+    .bind<DataSource>(TYPES.DataSource)
+    .toDynamicValue(() => postgresDataSource)
     .inSingletonScope();
 
 export { iocContainer };

@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { In, Repository } from "typeorm";
+import { DataSource, EntityManager, In } from "typeorm";
 import z from "zod";
 
 import {
@@ -28,21 +28,15 @@ const StudentCreatedEventSchema = z.object({
 });
 
 export type StudentCreatedEvent = z.infer<typeof StudentCreatedEventSchema>;
+
 @EventListenerService(TYPES.PredictionModelEventListenerService)
 @injectable()
 export class PredictionModelEventListenerService {
     constructor(
         @inject(TYPES.Logger) private readonly logger: ILogger,
+        @inject(TYPES.DataSource) private readonly dataSource: DataSource,
         @inject(TYPES.PredictionModelService)
         private readonly predictionModelService: PredictionModelService,
-        @inject(TYPES.PredictionResultRepository)
-        private readonly predictionResultRepository: Repository<PredictionResultEntity>,
-        @inject(TYPES.AdmissionRepository)
-        private readonly admissionRepository: Repository<AdmissionEntity>,
-        @inject(TYPES.StudentRepository)
-        private readonly studentRepository: Repository<StudentEntity>,
-        @inject(TYPES.UserRepository)
-        private readonly userRepository: Repository<UserEntity>,
     ) {}
 
     @RedisEventListener(PREDICTION_CHANNEL)
@@ -61,125 +55,16 @@ export class PredictionModelEventListenerService {
             const payload = parsed.data;
             const { studentId, userId } = payload;
 
-            let userEntity: null | UserEntity = null;
-
-            if (userId) {
-                userEntity = await this.userRepository.findOne({
-                    cache: {
-                        id: `user_cache_${userId}`,
-                        milliseconds:
-                            JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
-                    },
-                    where: { id: userId },
-                });
-            }
-
-            // Step 1: Create initial PredictionResultEntity with PROCESSING status
-            const predictionResultEntity: PredictionResultEntity =
-                this.predictionResultRepository.create({
-                    createdBy: userEntity?.email ?? Role.ANONYMOUS,
-                    l1PredictResults: [],
-                    l2PredictResults: [],
-                    status: PredictionResultStatus.PROCESSING,
-                    studentId,
-                    userId: userId,
-                });
-
-            const savedPredictionResult =
-                await this.predictionResultRepository.save(
-                    predictionResultEntity,
-                );
-
-            this.logger.info(
-                "Created prediction result with PROCESSING status",
-                {
-                    predictionResultId: savedPredictionResult.id,
-                    studentId,
-                    userId,
+            // Execute everything in a transaction for consistency
+            await this.dataSource.transaction(
+                async (manager: EntityManager) => {
+                    await this.processStudentPredictionInTransaction(
+                        manager,
+                        studentId,
+                        userId,
+                    );
                 },
             );
-
-            try {
-                // Step 2: Get prediction results concurrently with individual error handling
-                const [l2Result, l1Result] = await Promise.allSettled([
-                    this.predictionModelService.getL2PredictResults(
-                        studentId,
-                        userId,
-                    ),
-                    this.predictionModelService.getL1PredictResults(
-                        studentId,
-                        userId,
-                    ),
-                ]);
-
-                const l2PredictionResults: L2PredictResult[] =
-                    l2Result.status === "fulfilled" ? l2Result.value : [];
-                const l1PredictionResults: L1PredictResult[] =
-                    l1Result.status === "fulfilled" ? l1Result.value : [];
-
-                // Log any individual failures
-                if (l2Result.status === "rejected") {
-                    this.logger.error("L2 prediction failed", {
-                        error: l2Result.reason,
-                        studentId,
-                    });
-                }
-                if (l1Result.status === "rejected") {
-                    this.logger.error("L1 prediction failed", {
-                        error: l1Result.reason,
-                        studentId,
-                    });
-                }
-
-                // Step 3: Process admissions from L2 predictions
-                await this.processAdmissionsFromPredictions(
-                    studentId,
-                    l2PredictionResults,
-                );
-
-                // Step 4: Update with results (even if some are empty due to failures)
-                savedPredictionResult.l1PredictResults = l1PredictionResults;
-                savedPredictionResult.l2PredictResults = l2PredictionResults;
-
-                // Decide status based on results
-                const hasL1Results = l1PredictionResults.length > 0;
-                const hasL2Results = l2PredictionResults.length > 0;
-
-                if (hasL1Results && hasL2Results) {
-                    savedPredictionResult.status =
-                        PredictionResultStatus.COMPLETED;
-                } else if (hasL1Results || hasL2Results) {
-                    savedPredictionResult.status =
-                        PredictionResultStatus.PARTIAL;
-                } else {
-                    savedPredictionResult.status =
-                        PredictionResultStatus.FAILED;
-                }
-
-                await this.predictionResultRepository.save(
-                    savedPredictionResult,
-                );
-
-                this.logger.info("Updated prediction result", {
-                    l1ResultsCount: l1PredictionResults.length,
-                    l2ResultsCount: l2PredictionResults.length,
-                    predictionResultId: savedPredictionResult.id,
-                    status: savedPredictionResult.status,
-                    studentId,
-                });
-            } catch (error) {
-                // This should rarely happen with allSettled
-                savedPredictionResult.status = PredictionResultStatus.FAILED;
-                await this.predictionResultRepository.save(
-                    savedPredictionResult,
-                );
-
-                this.logger.error("Unexpected error in prediction handling", {
-                    error,
-                    predictionResultId: savedPredictionResult.id,
-                    studentId,
-                });
-            }
         } catch (error) {
             this.logger.error("Error handling 'student created' message.", {
                 error,
@@ -189,39 +74,71 @@ export class PredictionModelEventListenerService {
     }
 
     /**
-     * Process admissions from L2 prediction results and associate them with the student
+     * Process admissions from prediction results and associate them with the student
+     * Using EntityManager for transactional consistency
      */
     private async processAdmissionsFromPredictions(
+        manager: EntityManager,
         studentId: string,
+        l1PredictionResults: L1PredictResult[],
         l2PredictionResults: L2PredictResult[],
     ): Promise<void> {
         try {
-            if (l2PredictionResults.length === 0) {
+            // Track raw counts for logging
+            let l1RawCodesCount = 0;
+            const l2RawCodesCount = l2PredictionResults.length;
+
+            const admissionCodeMap = new Map<string, boolean>();
+
+            // Add L1 codes and count them
+            l1PredictionResults.forEach((result) => {
+                const codes = Object.keys(result);
+                l1RawCodesCount += codes.length;
+                codes.forEach((code) => {
+                    admissionCodeMap.set(code, true);
+                });
+            });
+
+            // Add L2 codes
+            l2PredictionResults.forEach((result) => {
+                admissionCodeMap.set(result.ma_xet_tuyen, true);
+            });
+
+            const admissionCodes: string[] = Array.from(
+                admissionCodeMap.keys(),
+            );
+
+            if (admissionCodes.length === 0) {
                 this.logger.info(
-                    "No L2 prediction results to process admissions",
+                    "No prediction results to process admissions",
                     {
+                        l1ResultsCount: l1PredictionResults.length,
+                        l2ResultsCount: l2PredictionResults.length,
                         studentId,
                     },
                 );
                 return;
             }
 
-            const admissionCodes: string[] = l2PredictionResults.map(
-                (result) => result.ma_xet_tuyen,
-            );
-
             this.logger.info("Processing admissions from predictions", {
                 admissionCodes: admissionCodes.slice(0, 5),
                 admissionCodesCount: admissionCodes.length,
+                duplicatesRemoved:
+                    l1RawCodesCount + l2RawCodesCount - admissionCodes.length,
+                l1RawCodesCount: l1RawCodesCount,
+                l2RawCodesCount: l2RawCodesCount,
                 studentId,
             });
 
-            const admissions: AdmissionEntity[] =
-                await this.admissionRepository.find({
+            // Find admissions using transactional entity manager
+            const admissions: AdmissionEntity[] = await manager.find(
+                AdmissionEntity,
+                {
                     where: {
                         admissionCode: In(admissionCodes),
                     },
-                });
+                },
+            );
 
             this.logger.info("Found matching admissions", {
                 foundAdmissionsCount: admissions.length,
@@ -233,18 +150,21 @@ export class PredictionModelEventListenerService {
                 this.logger.warn(
                     "No matching admissions found for prediction codes",
                     {
-                        admissionCodes,
+                        admissionCodes: admissionCodes,
                         studentId,
                     },
                 );
                 return;
             }
 
-            const student: null | StudentEntity =
-                await this.studentRepository.findOne({
+            // Find student using transactional entity manager
+            const student: null | StudentEntity = await manager.findOne(
+                StudentEntity,
+                {
                     relations: ["admissions"],
                     where: { id: studentId },
-                });
+                },
+            );
 
             if (!student) {
                 this.logger.error(
@@ -256,6 +176,7 @@ export class PredictionModelEventListenerService {
                 return;
             }
 
+            // Associate new admissions with the student
             let newAdmissionsCount = 0;
             admissions.forEach((admission) => {
                 if (!student.hasAdmission(admission.id)) {
@@ -264,8 +185,9 @@ export class PredictionModelEventListenerService {
                 }
             });
 
+            // Save changes using transactional entity manager
             if (newAdmissionsCount > 0) {
-                await this.studentRepository.save(student);
+                await manager.save(student);
 
                 this.logger.info(
                     "Successfully associated admissions with student",
@@ -285,6 +207,7 @@ export class PredictionModelEventListenerService {
                 );
             }
 
+            // Log admission details for debugging
             if (admissions.length > 0) {
                 const admissionDetails = admissions.map((e) => ({
                     admissionCode: e.admissionCode,
@@ -301,9 +224,135 @@ export class PredictionModelEventListenerService {
         } catch (error) {
             this.logger.error("Error processing admissions from predictions", {
                 error,
+                l1ResultsCount: l1PredictionResults.length,
                 l2ResultsCount: l2PredictionResults.length,
                 studentId,
             });
+
+            // Re-throw to ensure transaction rollback
+            throw error;
+        }
+    }
+
+    /**
+     * Process student prediction within a transaction
+     */
+    private async processStudentPredictionInTransaction(
+        manager: EntityManager,
+        studentId: string,
+        userId?: string,
+    ): Promise<void> {
+        let userEntity: null | UserEntity = null;
+
+        // Get user if needed (using caching for performance)
+        if (userId) {
+            userEntity = await manager.findOne(UserEntity, {
+                cache: {
+                    id: `user_cache_${userId}`,
+                    milliseconds: JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
+                },
+                where: { id: userId },
+            });
+        }
+
+        // Step 1: Create initial PredictionResultEntity with PROCESSING status
+        const predictionResultEntity = manager.create(PredictionResultEntity, {
+            createdBy: userEntity?.email ?? Role.ANONYMOUS,
+            l1PredictResults: [],
+            l2PredictResults: [],
+            status: PredictionResultStatus.PROCESSING,
+            studentId,
+            userId,
+        });
+
+        const savedPredictionResult = await manager.save(
+            predictionResultEntity,
+        );
+
+        this.logger.info("Created prediction result with PROCESSING status", {
+            predictionResultId: savedPredictionResult.id,
+            studentId,
+            userId,
+        });
+
+        try {
+            // Step 2: Get prediction results concurrently with individual error handling
+            const [l2Result, l1Result] = await Promise.allSettled([
+                this.predictionModelService.getL2PredictResults(
+                    studentId,
+                    userId,
+                ),
+                this.predictionModelService.getL1PredictResults(
+                    studentId,
+                    userId,
+                ),
+            ]);
+
+            const l2PredictionResults: L2PredictResult[] =
+                l2Result.status === "fulfilled" ? l2Result.value : [];
+            const l1PredictionResults: L1PredictResult[] =
+                l1Result.status === "fulfilled" ? l1Result.value : [];
+
+            // Log any individual failures
+            if (l2Result.status === "rejected") {
+                this.logger.error("L2 prediction failed", {
+                    error: l2Result.reason,
+                    studentId,
+                });
+            }
+            if (l1Result.status === "rejected") {
+                this.logger.error("L1 prediction failed", {
+                    error: l1Result.reason,
+                    studentId,
+                });
+            }
+
+            // Step 3: Update with results first (even if some are empty due to failures)
+            savedPredictionResult.l1PredictResults = l1PredictionResults;
+            savedPredictionResult.l2PredictResults = l2PredictionResults;
+
+            // Decide status based on results
+            const hasL1Results = l1PredictionResults.length > 0;
+            const hasL2Results = l2PredictionResults.length > 0;
+
+            if (hasL1Results && hasL2Results) {
+                savedPredictionResult.status = PredictionResultStatus.COMPLETED;
+            } else if (hasL1Results || hasL2Results) {
+                savedPredictionResult.status = PredictionResultStatus.PARTIAL;
+            } else {
+                savedPredictionResult.status = PredictionResultStatus.FAILED;
+            }
+
+            await manager.save(savedPredictionResult);
+
+            // Step 4: Process admissions from predictions after saving results
+            await this.processAdmissionsFromPredictions(
+                manager,
+                studentId,
+                l1PredictionResults,
+                l2PredictionResults,
+            );
+
+            this.logger.info("Updated prediction result", {
+                l1ResultsCount: l1PredictionResults.length,
+                l2ResultsCount: l2PredictionResults.length,
+                predictionResultId: savedPredictionResult.id,
+                status: savedPredictionResult.status,
+                studentId,
+            });
+        } catch (error) {
+            // Update status to failed before re-throwing (transaction will rollback)
+            savedPredictionResult.status = PredictionResultStatus.FAILED;
+            await manager.save(savedPredictionResult);
+
+            this.logger.error("Unexpected error in prediction handling", {
+                error,
+                predictionResultId: savedPredictionResult.id,
+                studentId,
+            });
+
+            // Re-throw to trigger transaction rollback
+            throw error;
         }
     }
 }
