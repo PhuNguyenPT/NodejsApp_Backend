@@ -14,9 +14,14 @@ import {
     Tags,
 } from "tsoa";
 
-import { AdmissionResponse } from "@/dto/predict/admission-response.js";
+import { AdmissionResponse } from "@/dto/admission/admission-response.js";
+import {
+    AdmissionSearchQuery,
+    buildSearchFilters,
+} from "@/dto/admission/admission-search-query.dto.js";
 import { AdmissionEntity } from "@/entity/admission.entity.js";
 import { AdmissionMapper } from "@/mapper/admission-mapper.js";
+import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
 import { AdmissionService } from "@/service/admission.service.js";
 import { TYPES } from "@/type/container/types.js";
@@ -38,7 +43,10 @@ export class AdmissionController extends Controller {
     }
 
     @Get("{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(
+        validateUuidParam("studentId"),
+        validateQuery(AdmissionSearchQuery),
+    )
     @Produces("application/json")
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(
@@ -48,10 +56,10 @@ export class AdmissionController extends Controller {
     public async getAdmissionResponsePage(
         @Path() studentId: string,
         @Request() request: AuthenticatedRequest,
-        @Queries() pageableQuery: PageableQuery,
+        @Queries() queryParams: AdmissionSearchQuery,
     ): Promise<Page<AdmissionResponse>> {
-        // Convert PageableQuery to PageRequest (concrete implementation)
-        const queryDto = plainToInstance(PageableQuery, pageableQuery);
+        // Convert PageableQuery to PageRequest
+        const queryDto = plainToInstance(PageableQuery, queryParams);
         const pageRequest = PageRequest.fromQuery(queryDto);
 
         // Validate the PageRequest
@@ -60,12 +68,66 @@ export class AdmissionController extends Controller {
             throw new ValidationException(errors);
         }
 
+        // Use the private method instead of inline code
+        const searchFilters = buildSearchFilters(queryParams);
+        const searchOptions =
+            Object.keys(searchFilters).length > 0
+                ? { filters: searchFilters }
+                : undefined;
+
         const user: Express.User = request.user;
+        const userId = user.id;
+
         const admissionPage: Page<AdmissionEntity> =
             await this.admissionService.getAdmissionsPageByStudentIdAndUserId(
                 studentId,
-                user.id,
                 pageRequest,
+                { searchOptions, userId },
+            );
+
+        const admissionResponsePage =
+            AdmissionMapper.toAdmissionPage(admissionPage);
+        return instanceToPlain(
+            admissionResponsePage,
+        ) as Page<AdmissionResponse>;
+    }
+
+    @Get("guest/{studentId}")
+    @Middlewares(
+        validateUuidParam("studentId"),
+        validateQuery(AdmissionSearchQuery),
+    )
+    @Produces("application/json")
+    @SuccessResponse(
+        HttpStatus.OK,
+        "Successfully retrieve student profile's admissions",
+    )
+    public async getAdmissionResponsePageForGuest(
+        @Path() studentId: string,
+        @Queries() queryParams: AdmissionSearchQuery,
+    ): Promise<Page<AdmissionResponse>> {
+        // Convert PageableQuery to PageRequest
+        const queryDto = plainToInstance(PageableQuery, queryParams);
+        const pageRequest = PageRequest.fromQuery(queryDto);
+
+        // Validate the PageRequest
+        if (pageRequest.hasValidationErrors()) {
+            const errors = pageRequest.getValidationErrors();
+            throw new ValidationException(errors);
+        }
+
+        // Use the private method instead of inline code
+        const searchFilters = buildSearchFilters(queryParams);
+        const searchOptions =
+            Object.keys(searchFilters).length > 0
+                ? { filters: searchFilters }
+                : undefined;
+
+        const admissionPage: Page<AdmissionEntity> =
+            await this.admissionService.getAdmissionsPageByStudentIdAndUserId(
+                studentId,
+                pageRequest,
+                { searchOptions },
             );
 
         const admissionResponsePage =

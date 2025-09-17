@@ -1,5 +1,63 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
 
+// Define field categories
+export const ADMISSION_TEXT_SEARCH_FIELDS = [
+    "admissionCode",
+    "admissionType",
+    "admissionTypeName",
+    "majorName",
+    "province",
+    "studyProgram",
+    "subjectCombination",
+    "uniCode",
+    "uniName",
+    "uniType",
+    "uniWebLink",
+] as const;
+
+export const ADMISSION_NUMERIC_SEARCH_FIELDS = [
+    "majorCode",
+    "tuitionFee",
+] as const;
+
+// Combine all allowed fields
+export const ALLOWED_ADMISSION_SEARCH_FIELDS = [
+    ...ADMISSION_TEXT_SEARCH_FIELDS,
+    ...ADMISSION_NUMERIC_SEARCH_FIELDS,
+] as const;
+
+export type AdmissionNumericSearchField =
+    (typeof ADMISSION_NUMERIC_SEARCH_FIELDS)[number];
+export type AdmissionSearchField =
+    (typeof ALLOWED_ADMISSION_SEARCH_FIELDS)[number];
+// Create union types
+export type AdmissionTextSearchField =
+    (typeof ADMISSION_TEXT_SEARCH_FIELDS)[number];
+
+export function isAdmissionNumericSearchField(
+    field: string,
+): field is AdmissionNumericSearchField {
+    return ADMISSION_NUMERIC_SEARCH_FIELDS.includes(
+        field as AdmissionNumericSearchField,
+    );
+}
+
+// Type guards
+export function isAdmissionSearchField(
+    field: string,
+): field is AdmissionSearchField {
+    return ALLOWED_ADMISSION_SEARCH_FIELDS.includes(
+        field as AdmissionSearchField,
+    );
+}
+
+export function isAdmissionTextSearchField(
+    field: string,
+): field is AdmissionTextSearchField {
+    return ADMISSION_TEXT_SEARCH_FIELDS.includes(
+        field as AdmissionTextSearchField,
+    );
+}
 @Entity("admission")
 @Index("idx_admission_code", ["admissionCode"])
 @Index("idx_admission_type", ["admissionType"])
