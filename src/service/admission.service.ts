@@ -1,12 +1,21 @@
 import { inject, injectable } from "inversify";
-import { Repository } from "typeorm";
+import { Brackets, Repository } from "typeorm";
 
-import { AdmissionEntity } from "@/entity/admission.entity.js";
+import {
+    AdmissionEntity,
+    AdmissionSearchField,
+    isAdmissionNumericSearchField,
+    isAdmissionSearchField,
+} from "@/entity/admission.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { Page } from "@/type/pagination/page.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
+
+export interface AdmissionSearchOptions {
+    filters?: Record<AdmissionSearchField, string>;
+}
 
 @injectable()
 export class AdmissionService {
@@ -19,6 +28,7 @@ export class AdmissionService {
         studentId: string,
         userId: string,
         pageable: Pageable,
+        searchOptions?: AdmissionSearchOptions,
     ): Promise<Page<AdmissionEntity>> {
         // Verify student exists and belongs to user
         const studentExists = await this.studentRepository.exists({
@@ -43,21 +53,55 @@ export class AdmissionService {
             .where("student.id = :studentId", { studentId })
             .andWhere("student.userId = :userId", { userId });
 
-        // Get total count
+        // Add search functionality
+        if (
+            searchOptions?.filters &&
+            Object.keys(searchOptions.filters).length > 0
+        ) {
+            queryBuilder.andWhere(
+                new Brackets((qb) => {
+                    Object.entries(searchOptions.filters ?? {}).forEach(
+                        ([field, value]) => {
+                            if (isAdmissionSearchField(field)) {
+                                if (isAdmissionNumericSearchField(field)) {
+                                    // Exact matching for numeric fields
+                                    qb.andWhere(
+                                        `admission.${field} = :${field}`,
+                                        {
+                                            [field]: parseInt(value, 10),
+                                        },
+                                    );
+                                } else {
+                                    // Pattern matching for text fields
+                                    const searchTerm = `%${value}%`;
+                                    qb.andWhere(
+                                        `admission.${field} ILIKE :${field}`,
+                                        {
+                                            [field]: searchTerm,
+                                        },
+                                    );
+                                }
+                            }
+                        },
+                    );
+                }),
+            );
+        }
+
+        // Get total count with search applied
         const totalElements = await queryBuilder.getCount();
         const pageNumber = pageable.getPageNumber();
         const pageSize = pageable.getPageSize();
 
         // Handle empty result set
         if (totalElements === 0) {
-            // Page.empty should use 0-indexed page number internally
             return Page.empty<AdmissionEntity>(pageNumber, pageSize);
         }
 
         // Calculate total pages and validate page number
         const totalPages = Math.ceil(totalElements / pageSize);
 
-        // Check if requested page exists (compare with 0-indexed page)
+        // Check if requested page exists
         if (pageNumber >= totalPages) {
             return new Page<AdmissionEntity>(
                 [],
@@ -87,7 +131,7 @@ export class AdmissionService {
                 .addOrderBy("admission.majorName", "ASC");
         }
 
-        // Apply pagination using correct offset
+        // Apply pagination
         const entities = await queryBuilder
             .skip(pageable.getOffset())
             .take(pageSize)

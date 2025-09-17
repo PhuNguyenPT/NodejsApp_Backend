@@ -90,11 +90,11 @@ export class PredictionModelEventListenerService {
 
             const admissionCodeMap = new Map<string, boolean>();
 
-            // Add L1 codes and count them
+            // Add L1 codes
             l1PredictionResults.forEach((result) => {
-                const codes = Object.keys(result);
-                l1RawCodesCount += codes.length;
-                codes.forEach((code) => {
+                const admissionCodes = Object.keys(result.ma_xet_tuyen);
+                l1RawCodesCount += admissionCodes.length;
+                admissionCodes.forEach((code) => {
                     admissionCodeMap.set(code, true);
                 });
             });

@@ -1,6 +1,6 @@
 import { plainToInstance } from "class-transformer";
 
-import { AdmissionResponse } from "@/dto/predict/admission-response.js";
+import { AdmissionResponse } from "@/dto/admission/admission-response.js";
 import { AdmissionEntity } from "@/entity/admission.entity.js";
 import { Page } from "@/type/pagination/page.js";
 
