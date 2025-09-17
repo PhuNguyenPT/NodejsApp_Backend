@@ -70,16 +70,64 @@ export class AdmissionController extends Controller {
 
         // Use the private method instead of inline code
         const searchFilters = buildSearchFilters(queryParams);
+        const searchOptions =
+            Object.keys(searchFilters).length > 0
+                ? { filters: searchFilters }
+                : undefined;
 
         const user: Express.User = request.user;
+        const userId = user.id;
+
         const admissionPage: Page<AdmissionEntity> =
             await this.admissionService.getAdmissionsPageByStudentIdAndUserId(
                 studentId,
-                user.id,
                 pageRequest,
-                Object.keys(searchFilters).length > 0
-                    ? { filters: searchFilters }
-                    : undefined,
+                { searchOptions, userId },
+            );
+
+        const admissionResponsePage =
+            AdmissionMapper.toAdmissionPage(admissionPage);
+        return instanceToPlain(
+            admissionResponsePage,
+        ) as Page<AdmissionResponse>;
+    }
+
+    @Get("guest/{studentId}")
+    @Middlewares(
+        validateUuidParam("studentId"),
+        validateQuery(AdmissionSearchQuery),
+    )
+    @Produces("application/json")
+    @SuccessResponse(
+        HttpStatus.OK,
+        "Successfully retrieve student profile's admissions",
+    )
+    public async getAdmissionResponsePageForGuest(
+        @Path() studentId: string,
+        @Queries() queryParams: AdmissionSearchQuery,
+    ): Promise<Page<AdmissionResponse>> {
+        // Convert PageableQuery to PageRequest
+        const queryDto = plainToInstance(PageableQuery, queryParams);
+        const pageRequest = PageRequest.fromQuery(queryDto);
+
+        // Validate the PageRequest
+        if (pageRequest.hasValidationErrors()) {
+            const errors = pageRequest.getValidationErrors();
+            throw new ValidationException(errors);
+        }
+
+        // Use the private method instead of inline code
+        const searchFilters = buildSearchFilters(queryParams);
+        const searchOptions =
+            Object.keys(searchFilters).length > 0
+                ? { filters: searchFilters }
+                : undefined;
+
+        const admissionPage: Page<AdmissionEntity> =
+            await this.admissionService.getAdmissionsPageByStudentIdAndUserId(
+                studentId,
+                pageRequest,
+                { searchOptions },
             );
 
         const admissionResponsePage =

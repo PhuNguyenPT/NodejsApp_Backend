@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { Brackets, Repository } from "typeorm";
+import { Brackets, IsNull, Repository } from "typeorm";
 
 import {
     AdmissionEntity,
@@ -12,6 +12,11 @@ import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { Page } from "@/type/pagination/page.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
+
+export interface AdmissionQueryOptions {
+    searchOptions?: AdmissionSearchOptions;
+    userId?: string;
+}
 
 export interface AdmissionSearchOptions {
     filters?: Record<AdmissionSearchField, string>;
@@ -26,13 +31,14 @@ export class AdmissionService {
 
     public async getAdmissionsPageByStudentIdAndUserId(
         studentId: string,
-        userId: string,
         pageable: Pageable,
-        searchOptions?: AdmissionSearchOptions,
+        options: AdmissionQueryOptions = {},
     ): Promise<Page<AdmissionEntity>> {
+        const { searchOptions, userId } = options;
+
         // Verify student exists and belongs to user
         const studentExists = await this.studentRepository.exists({
-            where: { id: studentId, userId: userId },
+            where: { id: studentId, userId: userId ?? IsNull() },
         });
 
         if (!studentExists) {
@@ -50,8 +56,14 @@ export class AdmissionService {
                 "se.admission_id = admission.id",
             )
             .innerJoin("students", "student", "student.id = se.student_id")
-            .where("student.id = :studentId", { studentId })
-            .andWhere("student.userId = :userId", { userId });
+            .where("student.id = :studentId", { studentId });
+
+        // Handle userId condition properly for both authenticated and guest users
+        if (userId) {
+            queryBuilder.andWhere("student.userId = :userId", { userId });
+        } else {
+            queryBuilder.andWhere("student.userId IS NULL");
+        }
 
         // Add search functionality
         if (
