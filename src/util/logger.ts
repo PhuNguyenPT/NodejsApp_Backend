@@ -32,7 +32,50 @@ const logLevel: string = config.LOG_LEVEL;
 const logDir: string = config.LOG_DIR;
 const enableFileLogging: boolean = config.ENABLE_FILE_LOGGING;
 
-// Custom format for development with metadata support
+// Utility function for processing log metadata with array truncation
+export function processLogMeta(
+    meta: Record<string, unknown>,
+    arrayTruncateOptions: { keys?: string[]; maxItems?: number } = {},
+): Record<string, unknown> {
+    const { keys, maxItems = 10 } = arrayTruncateOptions;
+
+    if (typeof meta !== "object") {
+        return meta;
+    }
+
+    const processed: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(meta)) {
+        if (Array.isArray(value)) {
+            // If specific keys are provided, only truncate those keys
+            if (keys && keys.length > 0) {
+                processed[key] = keys.includes(key)
+                    ? truncateArray(value, maxItems)
+                    : value;
+            } else {
+                // Truncate all arrays
+                processed[key] = truncateArray(value, maxItems);
+            }
+        } else {
+            processed[key] = value;
+        }
+    }
+
+    return processed;
+}
+
+// Utility function for truncating arrays in logs
+export function truncateArray<T>(array: T[], maxItems = 10): (string | T)[] {
+    if (!Array.isArray(array) || array.length <= maxItems) {
+        return array;
+    }
+
+    const visibleItems = array.slice(0, maxItems);
+    const remainingCount = array.length - maxItems;
+    return [...visibleItems, `...and ${remainingCount.toString()} more`];
+}
+
+// Custom format for development with metadata support and array truncation
 const developmentFormat = format.combine(
     format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
     format.colorize({ all: true }),
@@ -42,20 +85,35 @@ const developmentFormat = format.combine(
         // Base log message
         let logMessage = `${String(timestamp)} ${level}: ${String(message)}`;
 
+        // Process metadata with array truncation
+        const processedMeta = processLogMeta(meta, { maxItems: 12 });
+
         // Add metadata if it exists
-        if (Object.keys(meta).length > 0) {
-            logMessage += ` ${JSON.stringify(meta)}`;
+        if (Object.keys(processedMeta).length > 0) {
+            logMessage += ` ${JSON.stringify(processedMeta, null, 2)}`;
         }
 
         return logMessage;
     }),
 );
 
-// Custom format for production
+// Custom format for production with array truncation
 const productionFormat = format.combine(
     format.timestamp(),
     format.errors({ stack: true }),
-    format.json(),
+    format.printf((info) => {
+        const { level, message, timestamp, ...meta } = info;
+
+        // Process metadata with array truncation
+        const processedMeta = processLogMeta(meta, { maxItems: 12 });
+
+        return JSON.stringify({
+            level,
+            message,
+            timestamp,
+            ...processedMeta,
+        });
+    }),
 );
 
 // Create transports array
@@ -116,7 +174,7 @@ const logger = winston.createLogger({
     transports: loggerTransports,
 });
 
-// Create a wrapper class that implements ILogger interface
+// Enhanced wrapper class that implements ILogger interface with truncation support
 @injectable()
 export class WinstonLoggerService implements ILogger {
     private readonly logger: Logger;
@@ -129,6 +187,18 @@ export class WinstonLoggerService implements ILogger {
         this.logger.debug(message, meta);
     }
 
+    // New methods with explicit truncation control
+    debugWithTruncation(
+        message: string,
+        meta?: Record<string, unknown>,
+        truncateOptions?: { keys?: string[]; maxItems?: number },
+    ): void {
+        const processedMeta = meta
+            ? processLogMeta(meta, truncateOptions)
+            : meta;
+        this.logger.debug(message, processedMeta);
+    }
+
     error(message: string, meta?: Record<string, unknown>): void {
         this.logger.error(message, meta);
     }
@@ -139,6 +209,30 @@ export class WinstonLoggerService implements ILogger {
 
     info(message: string, meta?: Record<string, unknown>): void {
         this.logger.info(message, meta);
+    }
+
+    infoWithTruncation(
+        message: string,
+        meta?: Record<string, unknown>,
+        truncateOptions?: { keys?: string[]; maxItems?: number },
+    ): void {
+        const processedMeta = meta
+            ? processLogMeta(meta, truncateOptions)
+            : meta;
+        this.logger.info(message, processedMeta);
+    }
+
+    // Helper method for manual metadata processing
+    processMetadata(
+        meta: Record<string, unknown>,
+        options?: { keys?: string[]; maxItems?: number },
+    ): Record<string, unknown> {
+        return processLogMeta(meta, options);
+    }
+
+    // Utility method to truncate arrays manually
+    truncateArray<T>(array: T[], maxItems = 10): (string | T)[] {
+        return truncateArray(array, maxItems);
     }
 
     warn(message: string, meta?: Record<string, unknown>): void {
