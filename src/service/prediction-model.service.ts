@@ -124,7 +124,6 @@ export class PredictionModelService {
 
         return combinedResults;
     }
-
     async getL2PredictResults(
         studentId: string,
         userId?: string,
@@ -212,7 +211,6 @@ export class PredictionModelService {
         });
         return await this.predictMajorsL2(userInput);
     }
-
     private _createCcqtScenarios(
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
@@ -1046,10 +1044,6 @@ export class PredictionModelService {
         };
     }
 
-    // =================================================================
-    // PRIVATE HELPER METHODS: SCENARIO & INPUT GENERATION
-    // =================================================================
-
     private createBaseUserInputL1Template(
         studentInfoDTO: StudentInfoDTO,
     ): Omit<UserInputL1, "nhom_nganh"> {
@@ -1092,6 +1086,10 @@ export class PredictionModelService {
 
         return Array.from(resultMap.values());
     }
+
+    // =================================================================
+    // PRIVATE HELPER METHODS: SCENARIO & INPUT GENERATION
+    // =================================================================
 
     private delay(ms: number): Promise<void> {
         return new Promise((resolve) => setTimeout(resolve, ms));
@@ -1146,7 +1144,10 @@ export class PredictionModelService {
         this.logger.info("L1 Prediction: Calculated optimal chunk size", {
             optimalChunkSize,
             totalInputs: userInputs.length,
-            userInputs,
+        });
+
+        this.logger.debug("L1 Prediction: Input distribution", {
+            ...this.summarizeL1Inputs(userInputs),
         });
 
         const groupedInputs = userInputs.reduce((acc, input) => {
@@ -1253,7 +1254,10 @@ export class PredictionModelService {
         this.logger.info("L2 Prediction: Calculated optimal chunk size", {
             optimalChunkSize,
             totalInputs: userInputs.length,
-            userInputs,
+        });
+
+        this.logger.debug("L2 Prediction: Input summary details", {
+            ...this.summarizeL2Inputs(userInputs),
         });
 
         // Group inputs by subject group first
@@ -1385,36 +1389,75 @@ export class PredictionModelService {
         ccnnCertifications: CertificationDTO[],
         majors: string[],
     ): UserInputL2[] {
-        const validCcnnCerts = ccnnCertifications.filter(
-            (cert) =>
-                cert.cefr &&
-                cert.examType.type === "CCNN" &&
-                cert.examType.value !== CCNNType.OTHER,
-        );
+        // Create a map to group certifications by their handling type
+        const certificationMap = new Map<string, CertificationDTO[]>();
 
-        return examScenarios.flatMap((scenario) =>
-            validCcnnCerts.flatMap((cert) =>
-                majors
-                    .map((major) => {
-                        const majorCode = getCodeByVietnameseName(major);
-                        if (!majorCode) {
-                            this.logger.warn(
-                                `L2 Prediction: Cannot find code for major: ${major}`,
-                            );
-                            return null;
-                        }
-                        return {
-                            ...baseTemplate,
-                            diem_ccta: cert.cefr,
-                            diem_chuan: scenario.diem_chuan,
-                            nhom_nganh: parseInt(majorCode, 10),
-                            ten_ccta: "CEFR",
-                            to_hop_mon: scenario.to_hop_mon,
-                        } as UserInputL2;
-                    })
-                    .filter((input): input is UserInputL2 => input !== null),
-            ),
-        );
+        ccnnCertifications.forEach((cert) => {
+            if (
+                cert.examType.type !== "CCNN" ||
+                cert.examType.value === CCNNType.OTHER
+            ) {
+                return; // Skip non-CCNN and OTHER types
+            }
+
+            if (cert.examType.value === CCNNType.JLPT && cert.level) {
+                // Group JLPT certifications
+                if (!certificationMap.has("JLPT")) {
+                    certificationMap.set("JLPT", []);
+                }
+                certificationMap.get("JLPT")?.push(cert);
+            } else if (cert.cefr) {
+                // Group CEFR-compatible certifications
+                if (!certificationMap.has("CEFR")) {
+                    certificationMap.set("CEFR", []);
+                }
+                certificationMap.get("CEFR")?.push(cert);
+            }
+        });
+
+        // Configuration for different certification types
+        const certTypeConfig = new Map([
+            ["CEFR", { certName: "CEFR", scoreField: "cefr" as const }],
+            ["JLPT", { certName: "JLPT", scoreField: "level" as const }],
+        ]);
+
+        const combinations: UserInputL2[] = [];
+
+        // Generate combinations for each certification type
+        certificationMap.forEach((certs, certType) => {
+            const config = certTypeConfig.get(certType);
+            if (!config) return;
+
+            const typeCombinations = examScenarios.flatMap((scenario) =>
+                certs.flatMap((cert) =>
+                    majors
+                        .map((major) => {
+                            const majorCode = getCodeByVietnameseName(major);
+                            if (!majorCode) {
+                                this.logger.warn(
+                                    `L2 Prediction: Cannot find code for major: ${major}`,
+                                );
+                                return null;
+                            }
+                            return {
+                                ...baseTemplate,
+                                diem_ccta: cert[config.scoreField], // Dynamic field access
+                                diem_chuan: scenario.diem_chuan,
+                                nhom_nganh: parseInt(majorCode, 10),
+                                ten_ccta: config.certName,
+                                to_hop_mon: scenario.to_hop_mon,
+                            } as UserInputL2;
+                        })
+                        .filter(
+                            (input): input is UserInputL2 => input !== null,
+                        ),
+                ),
+            );
+
+            combinations.push(...typeCombinations);
+        });
+
+        return combinations;
     }
 
     // Updated method to generate all user input combinations
@@ -2206,6 +2249,107 @@ export class PredictionModelService {
                 `L2 Prediction: Service error: ${message} for ${userInput.to_hop_mon}`,
             );
         }
+    }
+
+    private summarizeL1Inputs(userInputs: UserInputL1[]): object {
+        return {
+            awardDistribution: {
+                hsg_1: userInputs.filter((input) => input.hsg_1 !== 0).length,
+                hsg_2: userInputs.filter((input) => input.hsg_2 !== 0).length,
+                hsg_3: userInputs.filter((input) => input.hsg_3 !== 0).length,
+                noAwards: userInputs.filter(
+                    (input) =>
+                        input.hsg_1 === 0 &&
+                        input.hsg_2 === 0 &&
+                        input.hsg_3 === 0,
+                ).length,
+            },
+            majorGroups: [
+                ...new Set(userInputs.map((input) => input.nhom_nganh)),
+            ],
+            totalInputs: userInputs.length,
+            uniqueProfiles: new Set(
+                userInputs.map((input) =>
+                    JSON.stringify({
+                        ahld: input.ahld,
+                        dan_toc_thieu_so: input.dan_toc_thieu_so,
+                        haimuoi_huyen_ngheo_tnb: input.haimuoi_huyen_ngheo_tnb,
+                    }),
+                ),
+            ).size,
+        };
+    }
+
+    private summarizeL2Inputs(userInputs: UserInputL2[]): {
+        byCertificationType: Record<string, number>;
+        bySubjectGroup: Record<string, number>;
+        majorGroups: number[];
+        scoreRange: null | {
+            max: number;
+            min: number;
+        };
+        totalInputs: number;
+    } {
+        if (userInputs.length === 0) {
+            return {
+                byCertificationType: {},
+                bySubjectGroup: {},
+                majorGroups: [],
+                scoreRange: null,
+                totalInputs: 0,
+            };
+        }
+
+        // Type-safe accumulator for certification types
+        const byCertificationType: Record<string, number> = {};
+        for (const input of userInputs) {
+            const key = input.ten_ccta;
+            if (key) {
+                // Guard against undefined/null keys
+                const currentCount = byCertificationType[key] as
+                    | number
+                    | undefined;
+                byCertificationType[key] = (currentCount ?? 0) + 1;
+            }
+        }
+
+        // Type-safe accumulator for subject groups
+        const bySubjectGroup: Record<string, number> = {};
+        for (const input of userInputs) {
+            const key = input.to_hop_mon;
+            if (key) {
+                // Guard against undefined/null keys
+                const currentCount = bySubjectGroup[key] as number | undefined;
+                bySubjectGroup[key] = (currentCount ?? 0) + 1;
+            }
+        }
+
+        // Calculate score range with proper number conversion
+        const scores = userInputs
+            .map((input) => {
+                return typeof input.diem_chuan === "number"
+                    ? input.diem_chuan
+                    : parseFloat(String(input.diem_chuan));
+            })
+            .filter((score) => !isNaN(score)); // Filter out any NaN values
+
+        const scoreRange =
+            scores.length > 0
+                ? {
+                      max: Math.max(...scores),
+                      min: Math.min(...scores),
+                  }
+                : null;
+
+        return {
+            byCertificationType,
+            bySubjectGroup,
+            majorGroups: [
+                ...new Set(userInputs.map((input) => input.nhom_nganh)),
+            ],
+            scoreRange,
+            totalInputs: userInputs.length,
+        };
     }
 
     private async validateL1PredictResponse(

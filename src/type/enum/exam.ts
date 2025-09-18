@@ -2,6 +2,7 @@ import { ValidationException } from "../exception/validation.exception.js";
 
 export enum CCNNType {
     IELTS = "IELTS",
+    JLPT = "JLPT",
     OTHER = "Khác",
     TOEFL_CBT = "TOEFL CBT",
     TOEFL_iBT = "TOEFL iBT",
@@ -97,6 +98,16 @@ export function validateExamTypeScore(
         const validGrades = ["A", "A*", "B", "C", "D", "E", "F", "N", "O", "U"];
         if (!validGrades.includes(level.toUpperCase())) {
             setErrorMessage(`Level must be one of: ${validGrades.join(", ")}.`);
+        }
+        return errors;
+    }
+
+    if (examType.type === "CCNN" && examType.value === CCNNType.JLPT) {
+        const validJLPTGrades = ["N1", "N2", "N3"];
+        if (!validJLPTGrades.includes(level.toUpperCase())) {
+            setErrorMessage(
+                `Level must be one of: ${validJLPTGrades.join(", ")}`,
+            );
         }
         return errors;
     }

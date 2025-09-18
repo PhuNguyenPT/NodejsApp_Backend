@@ -121,7 +121,7 @@ export class PredictionModelEventListenerService {
             }
 
             this.logger.info("Processing admissions from predictions", {
-                admissionCodes: admissionCodes.slice(0, 5),
+                admissionCodes: admissionCodes,
                 admissionCodesCount: admissionCodes.length,
                 duplicatesRemoved:
                     l1RawCodesCount + l2RawCodesCount - admissionCodes.length,
@@ -209,15 +209,11 @@ export class PredictionModelEventListenerService {
 
             // Log admission details for debugging
             if (admissions.length > 0) {
-                const admissionDetails = admissions.map((e) => ({
-                    admissionCode: e.admissionCode,
-                    id: e.id,
-                    majorName: e.majorName,
-                    uniName: e.uniName,
-                }));
+                const admissionCodes = admissions.map((e) => e.admissionCode);
 
                 this.logger.debug("Processed admission details", {
-                    admissions: admissionDetails,
+                    admissionCodes: admissionCodes, // Automatically truncated
+                    processedAdmissionsCount: admissions.length,
                     studentId,
                 });
             }
