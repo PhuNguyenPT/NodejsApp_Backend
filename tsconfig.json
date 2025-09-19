@@ -22,6 +22,7 @@
       "@/app/*": ["app/*"],
       "@/config/*": ["config/*"],
       "@/controller/*": ["controller/*"],
+      "@/data/*": ["data/*"],
       "@/decorator/*": ["decorator/*"],
       "@/dto/*": ["dto/*"],
       "@/entity/*": ["entity/*"],
@@ -32,9 +33,9 @@
       "@/manager/*": ["manager/*"],
       "@/mapper/*": ["mapper/*"],
       "@/middleware/*": ["middleware/*"],
+      "@/migration/*": ["migration/*"],
       "@/repository/*": ["repository/*"],
       "@/service/*": ["service/*"],
-      "@/token/*": ["token/*"],
       "@/type/*": ["type/*"],
       "@/util/*": ["util/*"],
       "@/validator/*": ["validator/*"]

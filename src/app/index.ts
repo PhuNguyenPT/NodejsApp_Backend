@@ -1,32 +1,24 @@
 // src/app/index.ts
-import App from "@/app/app.js";
-import logger from "@/util/logger.js";
-import { createSafeConfig } from "@/util/validate-env.js";
-
-async function bootstrap(): Promise<void> {
+import "reflect-metadata";
+async function bootstrap() {
     try {
-        // Log startup information
+        // Import logger dynamically after reflect-metadata is loaded
+        const { default: logger } = await import("@/util/logger.js");
+        const { createSafeConfig } = await import("@/util/validate-env.js");
         logger.info("Starting application", createSafeConfig());
-
-        // Create the app (synchronous - no database connection yet)
+        // Dynamic import of App to ensure all dependencies are ready
+        const { default: App } = await import("@/app/app.js");
         const app = new App();
-
-        // Initialize async components (database connection, etc.)
         await app.initialize();
-
-        // Log the complete server URL
         logger.info(`Server will be available at: ${app.getServerUrl()}`);
-
-        // Start the server AFTER initialization is complete
         app.listen();
     } catch (error) {
-        logger.error("Error starting server:", error);
+        console.error("Error starting server:", error); // Use console.error as fallback
         process.exit(1);
     }
 }
-
 // Start the application
 bootstrap().catch((error: unknown) => {
-    logger.error("Failed to bootstrap application:", error);
+    console.error("Failed to bootstrap application:", error); // Use console.error here too
     process.exit(1);
 });
