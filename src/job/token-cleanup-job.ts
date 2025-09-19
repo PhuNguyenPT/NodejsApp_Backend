@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 
-import { JwtEntityService } from "@/service/jwt-entity.service.js";
+import { JwtEntityService } from "@/service/impl/jwt-entity.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { ILogger } from "@/type/interface/logger.interface.js";
 

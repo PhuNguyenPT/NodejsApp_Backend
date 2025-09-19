@@ -15,11 +15,12 @@ import { TYPES } from "@/type/container/types.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
-import logger from "@/util/logger.js";
+import { ILogger } from "@/type/interface/logger.interface.js";
 
 @injectable()
 export class FileService {
     constructor(
+        @inject(TYPES.Logger) private readonly logger: ILogger,
         @inject(TYPES.FileRepository)
         private fileRepository: Repository<FileEntity>,
         @inject(TYPES.StudentRepository)
@@ -59,7 +60,7 @@ export class FileService {
             userId: userId,
         };
         await this.redisPublisher.publish(OCR_CHANNEL, JSON.stringify(payload));
-        logger.info(
+        this.logger.info(
             `Created 1 file. Published single event to ${OCR_CHANNEL}. File ID: ${savedFile.id}`,
         );
 
@@ -94,7 +95,7 @@ export class FileService {
             studentId: savedFile.studentId,
         };
         await this.redisPublisher.publish(OCR_CHANNEL, JSON.stringify(payload));
-        logger.info(
+        this.logger.info(
             `File created with ID: ${savedFile.id}. Published event to ${OCR_CHANNEL}.`,
         );
 
@@ -154,7 +155,7 @@ export class FileService {
                 OCR_CHANNEL,
                 JSON.stringify(payload),
             );
-            logger.info(
+            this.logger.info(
                 `Created ${savedFiles.length.toString()} files. Published batch event to ${OCR_CHANNEL}.`,
             );
         }
@@ -211,7 +212,7 @@ export class FileService {
                 OCR_CHANNEL,
                 JSON.stringify(payload),
             );
-            logger.info(
+            this.logger.info(
                 `Created ${savedFiles.length.toString()} files. Published batch event to ${OCR_CHANNEL}.`,
             );
         }
@@ -223,7 +224,7 @@ export class FileService {
 
         file.status = FileStatus.DELETED;
         await this.fileRepository.save(file);
-        logger.info(`File soft deleted with ID: ${fileId}`);
+        this.logger.info(`File soft deleted with ID: ${fileId}`);
     }
 
     public async getFileById(
@@ -310,7 +311,7 @@ export class FileService {
     public async permanentlyDeleteFile(fileId: string): Promise<void> {
         const file = await this.getFileById(fileId);
         await this.fileRepository.remove(file);
-        logger.info(`File permanently deleted with ID: ${fileId}`);
+        this.logger.info(`File permanently deleted with ID: ${fileId}`);
     }
 
     public async updateFile(
@@ -329,11 +330,13 @@ export class FileService {
             file.modifiedBy = userId;
             const updatedFile: FileEntity =
                 await this.fileRepository.save(file);
-            logger.info(`File updated successfully with ID: ${updatedFile.id}`);
+            this.logger.info(
+                `File updated successfully with ID: ${updatedFile.id}`,
+            );
             return updatedFile;
         }
 
-        logger.info(`No changes detected for file ID: ${file.id}`);
+        this.logger.info(`No changes detected for file ID: ${file.id}`);
         return file;
     }
 

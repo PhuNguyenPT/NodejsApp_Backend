@@ -22,7 +22,7 @@ import {
 } from "@/dto/auth/auth-request.js";
 import { AuthResponse } from "@/dto/auth/auth-response.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { AuthService } from "@/service/auth.service.js";
+import { AuthService } from "@/service/impl/auth.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";

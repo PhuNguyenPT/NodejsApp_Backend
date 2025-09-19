@@ -5,6 +5,7 @@ import express, { Express, Router } from "express";
 import helmet from "helmet";
 import { Server } from "http";
 import passport from "passport";
+import { Logger } from "winston";
 
 import { iocContainer } from "@/app/ioc-container.js";
 import { corsOptions } from "@/config/cors.config.js";
@@ -13,6 +14,7 @@ import {
     postgresDataSource,
 } from "@/config/data-source.config.js";
 import { helmetOptions } from "@/config/helmet.config.js";
+import { logger } from "@/config/logger.config.js";
 import {
     getMorganConfig,
     setupRequestTracking,
@@ -26,23 +28,23 @@ import { EventListenerManager } from "@/manager/event-listener-manager.js";
 import ErrorMiddleware from "@/middleware/error-middleware.js";
 import { PredictionServiceClient } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
+import { Config } from "@/type/interface/config.js";
 import { keyStore } from "@/util/key.js";
-import logger from "@/util/logger.js";
-import { config } from "@/util/validate-env.js";
 class App {
-    public basePath!: string;
-    public express!: Express;
-    public hostname!: string;
-    public port!: number;
+    public readonly basePath: string;
+    public readonly express: Express;
+    public readonly hostname: string;
+    public readonly port: number;
     private isShuttingDown = false;
+    private readonly logger: Logger;
     private server: null | Server = null;
 
-    constructor() {
+    constructor(readonly config: Config) {
         this.express = express();
         this.port = config.SERVER_PORT;
         this.hostname = config.SERVER_HOSTNAME;
         this.basePath = config.SERVER_PATH;
-
+        this.logger = logger;
         // Initialize synchronous components only
         this.initializeCors();
         this.initializeMiddleware();
@@ -66,7 +68,7 @@ class App {
 
     public listen(): void {
         this.server = this.express.listen(this.port, this.hostname, () => {
-            logger.info(
+            this.logger.info(
                 `App listening on ${this.hostname}:${this.port.toString()}${this.basePath}`,
             );
         });
@@ -74,29 +76,31 @@ class App {
 
     public async shutdown(): Promise<void> {
         if (this.isShuttingDown) {
-            logger.warn(
+            this.logger.warn(
                 "Shutdown already in progress, ignoring duplicate signal",
             );
             return;
         }
 
         this.isShuttingDown = true;
-        logger.info("🔄 Graceful shutdown initiated...");
+        this.logger.info("🔄 Graceful shutdown initiated...");
 
         try {
             // Close HTTP server first
             if (this.server) {
-                logger.info("📤 Closing HTTP server...");
+                this.logger.info("📤 Closing HTTP server...");
                 await new Promise<void>((resolve, reject) => {
                     this.server?.close((error?: Error) => {
                         if (error) {
-                            logger.error(
+                            this.logger.error(
                                 "❌ Error closing HTTP server:",
                                 error,
                             );
                             reject(error);
                         } else {
-                            logger.info("✅ HTTP server closed successfully");
+                            this.logger.info(
+                                "✅ HTTP server closed successfully",
+                            );
                             resolve();
                         }
                     });
@@ -109,9 +113,9 @@ class App {
                     TYPES.TokenCleanupJob,
                 );
                 tokenCleanupJob.stop();
-                logger.info("✅ Token cleanup job stopped");
+                this.logger.info("✅ Token cleanup job stopped");
             } catch (error: unknown) {
-                logger.warn("⚠️ Error stopping token cleanup job:", error);
+                this.logger.warn("⚠️ Error stopping token cleanup job:", error);
             }
 
             // Spring-style: Use EventListenerManager for cleanup individual services
@@ -121,23 +125,26 @@ class App {
                         TYPES.EventListenerManager,
                     );
                 await eventListenerManager.cleanup();
-                logger.info("✅ Event listeners cleaned up");
+                this.logger.info("✅ Event listeners cleaned up");
             } catch (error: unknown) {
-                logger.warn("⚠️ Error cleaning up event listeners:", error);
+                this.logger.warn(
+                    "⚠️ Error cleaning up event listeners:",
+                    error,
+                );
             }
 
             // Close database connections
             await this.closeDatabaseConnections();
 
-            logger.info("🎉 Graceful shutdown completed successfully");
+            this.logger.info("🎉 Graceful shutdown completed successfully");
         } catch (error: unknown) {
-            logger.error("❌ Error during graceful shutdown:", error);
+            this.logger.error("❌ Error during graceful shutdown:", error);
             throw error;
         }
     }
 
     private async closeDatabaseConnections(): Promise<void> {
-        logger.info("🔌 Closing database connections...");
+        this.logger.info("🔌 Closing database connections...");
 
         const closePromises: Promise<void>[] = [];
 
@@ -147,12 +154,12 @@ class App {
                 postgresDataSource
                     .destroy()
                     .then(() => {
-                        logger.info(
+                        this.logger.info(
                             "✅ PostgreSQL connection closed successfully",
                         );
                     })
                     .catch((error: unknown) => {
-                        logger.error(
+                        this.logger.error(
                             "❌ Error closing PostgreSQL connection:",
                             error,
                         );
@@ -167,10 +174,12 @@ class App {
                 redisClient
                     .quit()
                     .then(() => {
-                        logger.info("✅ Redis connection closed successfully");
+                        this.logger.info(
+                            "✅ Redis connection closed successfully",
+                        );
                     })
                     .catch((error: unknown) => {
-                        logger.error(
+                        this.logger.error(
                             "❌ Error closing Redis connection:",
                             error,
                         );
@@ -182,9 +191,9 @@ class App {
         // Wait for all database connections to close
         if (closePromises.length > 0) {
             await Promise.all(closePromises);
-            logger.info("✅ All database connections closed successfully");
+            this.logger.info("✅ All database connections closed successfully");
         } else {
-            logger.info("ℹ️ No active database connections to close");
+            this.logger.info("ℹ️ No active database connections to close");
         }
     }
 
@@ -193,7 +202,7 @@ class App {
     }
 
     private async initializeDatabaseConnections(): Promise<void> {
-        logger.info("Initializing database connections...");
+        this.logger.info("Initializing database connections...");
 
         try {
             // Initialize both PostgreSQL and Redis concurrently
@@ -203,9 +212,11 @@ class App {
             // Wait for both connections to complete
             await Promise.all([postgresPromise, redisPromise]);
 
-            logger.info("✅ All database connections established successfully");
+            this.logger.info(
+                "✅ All database connections established successfully",
+            );
         } catch (error) {
-            logger.error(
+            this.logger.error(
                 "❌ Failed to initialize database connections:",
                 error,
             );
@@ -227,16 +238,19 @@ class App {
 
             await eventListenerManager.initialize();
 
-            logger.info("✅ Event listeners initialized successfully");
+            this.logger.info("✅ Event listeners initialized successfully");
         } catch (error) {
-            logger.error("❌ Failed to initialize event listeners:", error);
+            this.logger.error(
+                "❌ Failed to initialize event listeners:",
+                error,
+            );
             throw error;
         }
     }
 
     private initializeKeyStore(): void {
         if (keyStore.privateKey && keyStore.publicKey) {
-            logger.info("Initializing key pairs successfully");
+            this.logger.info("Initializing key pairs successfully");
         }
     }
 
@@ -265,16 +279,16 @@ class App {
                 TYPES.PassportConfig,
             );
             passportConfig.initializeStrategies();
-            logger.info("Passport strategies initialized successfully");
+            this.logger.info("Passport strategies initialized successfully");
         } catch (error) {
-            logger.error("Error initializing Passport strategies:", error);
+            this.logger.error("Error initializing Passport strategies:", error);
             throw error;
         }
     }
 
     private async initializePredictModelServer(): Promise<void> {
         try {
-            logger.info("🔗 Predict Model Server: Initializing...");
+            this.logger.info("🔗 Predict Model Server: Initializing...");
 
             const predictModelServer: PredictionServiceClient =
                 iocContainer.get<PredictionServiceClient>(
@@ -288,23 +302,23 @@ class App {
 
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
-                    logger.info(
+                    this.logger.info(
                         `🏥 Predict Model Server: Health check attempt ${attempt.toString()}/${maxRetries.toString()}`,
                     );
                     connected = await predictModelServer.healthCheck();
 
                     if (connected) {
-                        logger.info(
+                        this.logger.info(
                             "✅ Predict Model Server: Is Healthy and Ready",
                         );
                         break;
                     } else {
-                        logger.warn(
+                        this.logger.warn(
                             `⚠️ Predict Model Server: Health check failed on attempt ${attempt.toString()}`,
                         );
 
                         if (attempt < maxRetries) {
-                            logger.info(
+                            this.logger.info(
                                 `⏳ Predict Model Server: Retrying in ${retryDelay.toString()}ms...`,
                             );
                             await new Promise((resolve) =>
@@ -313,7 +327,7 @@ class App {
                         }
                     }
                 } catch (error) {
-                    logger.error(
+                    this.logger.error(
                         `❌ Predict Model Server: Health check error on attempt ${attempt.toString()}:`,
                         error,
                     );
@@ -323,7 +337,7 @@ class App {
                     }
 
                     if (attempt < maxRetries) {
-                        logger.info(
+                        this.logger.info(
                             `⏳ Predict Model Server: Retrying in ${retryDelay.toString()}ms...`,
                         );
                         await new Promise((resolve) =>
@@ -336,12 +350,12 @@ class App {
             if (!connected) {
                 const errorMessage =
                     "Predict Model Server: Failed to establish connection after all retry attempts";
-                logger.error("❌ " + errorMessage);
+                this.logger.error("❌ " + errorMessage);
 
                 throw new Error(errorMessage);
             }
         } catch (error) {
-            logger.error(
+            this.logger.error(
                 "❌ Predict Model Server: Failed to initialize Predict Model Server:",
                 error,
             );
@@ -355,13 +369,16 @@ class App {
     }
 
     private initializeRoutesAndDocs(): void {
-        if (config.NODE_ENV !== "production") {
+        if (this.config.NODE_ENV !== "production") {
             try {
-                logger.info("Setting up Swagger documentation...");
+                this.logger.info("Setting up Swagger documentation...");
                 swaggerDocs(this.express, this.getServerUrl());
-                logger.info("Swagger documentation setup completed");
+                this.logger.info("Swagger documentation setup completed");
             } catch (error) {
-                logger.error("Error setting up Swagger documentation:", error);
+                this.logger.error(
+                    "Error setting up Swagger documentation:",
+                    error,
+                );
             }
         }
 
@@ -387,9 +404,9 @@ class App {
                 TYPES.TokenCleanupJob,
             );
             tokenCleanupJob.startPeriodicCleanup(60); // Run every hour
-            logger.info("Token cleanup job initialized");
+            this.logger.info("Token cleanup job initialized");
         } catch (error) {
-            logger.error("Failed to initialize token cleanup job:", error);
+            this.logger.error("Failed to initialize token cleanup job:", error);
         }
     }
 
@@ -400,7 +417,7 @@ class App {
         signals.forEach((signal) => {
             process.on(signal, () => {
                 void (async () => {
-                    logger.info(
+                    this.logger.info(
                         `📡 Received ${signal}, initiating graceful shutdown...`,
                     );
 
@@ -408,7 +425,7 @@ class App {
                         await this.shutdown();
                         process.exit(0);
                     } catch (error: unknown) {
-                        logger.error("❌ Error during shutdown:", error);
+                        this.logger.error("❌ Error during shutdown:", error);
                         process.exit(1);
                     }
                 })();
@@ -418,12 +435,12 @@ class App {
         // Handle uncaught exceptions
         process.on("uncaughtException", (error: Error) => {
             void (async () => {
-                logger.error("💥 Uncaught Exception:", error);
+                this.logger.error("💥 Uncaught Exception:", error);
 
                 try {
                     await this.shutdown();
                 } catch (shutdownError: unknown) {
-                    logger.error(
+                    this.logger.error(
                         "❌ Error during emergency shutdown:",
                         shutdownError,
                     );
@@ -438,7 +455,7 @@ class App {
             "unhandledRejection",
             (reason: unknown, promise: Promise<unknown>) => {
                 void (async () => {
-                    logger.error(
+                    this.logger.error(
                         "🚫 Unhandled Rejection at:",
                         promise,
                         "reason:",
@@ -448,7 +465,7 @@ class App {
                     try {
                         await this.shutdown();
                     } catch (shutdownError: unknown) {
-                        logger.error(
+                        this.logger.error(
                             "❌ Error during emergency shutdown:",
                             shutdownError,
                         );

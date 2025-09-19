@@ -4,14 +4,14 @@ import fs from "fs";
 import morgan from "morgan";
 import path from "path";
 
-import logger from "@/util/logger.js";
 import { config } from "@/util/validate-env.js";
+
+import { logger } from "./logger.config.js";
 
 // Extended request interface for custom properties
 interface ExtendedRequest extends Request {
     requestId?: string;
 }
-
 // Custom token to get real IP address
 morgan.token("real-ip", (req: Request) => {
     const forwardedFor = req.headers["x-forwarded-for"];

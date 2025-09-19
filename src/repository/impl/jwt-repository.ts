@@ -1,18 +1,19 @@
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 
 import { redisClient } from "@/config/redis.config.js";
 import { JwtEntity } from "@/entity/jwt.entity.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
-import logger from "@/util/logger.js";
+import { TYPES } from "@/type/container/types.js";
+import { ILogger } from "@/type/interface/logger.interface.js";
 
 @injectable()
 export class JwtTokenRepository implements IJwtTokenRepository {
     private readonly BLACKLIST_TTL_SECONDS = 60; // 1 minute
-
     private readonly familyIndexPrefix = "family_index:";
     private readonly keyPrefix = "jwt_entity:";
     private readonly tokenIndexPrefix = "token_index:";
 
+    constructor(@inject(TYPES.Logger) private readonly logger: ILogger) {}
     // Blacklist token by ID
     async blacklistToken(tokenId: string): Promise<boolean> {
         try {
@@ -45,12 +46,14 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
             await pipeline.exec();
 
-            logger.info(
+            this.logger.info(
                 `Token blacklisted and removed from family: ${tokenId}`,
             );
             return true;
-        } catch (error) {
-            logger.error(`Error blacklisting token ${tokenId}:`, error);
+        } catch (error: unknown) {
+            this.logger.error(`Error blacklisting token ${tokenId}:`, {
+                error,
+            });
             return false;
         }
     }
@@ -66,7 +69,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
             return await this.blacklistToken(jwtEntity.id);
         } catch (error) {
-            logger.error("Error blacklisting token by value:", error);
+            this.logger.error("Error blacklisting token by value:", { error });
             return false;
         }
     }
@@ -77,12 +80,12 @@ export class JwtTokenRepository implements IJwtTokenRepository {
             const deletedTokens = await this.deleteExpiredTokens();
             const cleanedFamilies = await this.cleanupExpiredFamilies();
 
-            logger.info("JWT cleanup completed", {
+            this.logger.info("JWT cleanup completed", {
                 cleanedFamilies,
                 deletedTokens,
             });
         } catch (error) {
-            logger.error("Error during JWT cleanup:", error);
+            this.logger.error("Error during JWT cleanup:", { error });
         }
     }
 
@@ -135,7 +138,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
                         await pipeline.exec();
 
                         cleanedFamilies++;
-                        logger.debug(
+                        this.logger.debug(
                             `Cleaned up expired family: ${familyKey} (${tokensToCleanup.length.toString()} tokens)`,
                         );
                     }
@@ -143,14 +146,14 @@ export class JwtTokenRepository implements IJwtTokenRepository {
             } while (cursor !== 0);
 
             if (cleanedFamilies > 0) {
-                logger.info(
+                this.logger.info(
                     `Cleaned up ${cleanedFamilies.toString()} expired token families`,
                 );
             }
 
             return cleanedFamilies;
         } catch (error) {
-            logger.error("Error cleaning up expired families:", error);
+            this.logger.error("Error cleaning up expired families:", { error });
             return 0;
         }
     }
@@ -179,12 +182,12 @@ export class JwtTokenRepository implements IJwtTokenRepository {
             const deleted = results[0]?.[1] === 1;
 
             if (deleted) {
-                logger.debug(`JWT token deleted: ${id}`);
+                this.logger.debug(`JWT token deleted: ${id}`);
             }
 
             return deleted;
         } catch (error) {
-            logger.error(`Error deleting token ${id}:`, error);
+            this.logger.error(`Error deleting token ${id}:`, { error });
             return false;
         }
     }
@@ -200,7 +203,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
             return await this.deleteById(jwtEntity.id);
         } catch (error) {
-            logger.error("Error deleting token by value:", error);
+            this.logger.error("Error deleting token by value:", { error });
             return false;
         }
     }
@@ -234,12 +237,12 @@ export class JwtTokenRepository implements IJwtTokenRepository {
                 }
             } while (cursor !== 0);
 
-            logger.info(
+            this.logger.info(
                 `Deleted ${deletedCount.toString()} expired JWT tokens`,
             );
             return deletedCount;
         } catch (error) {
-            logger.error("Error deleting expired tokens:", error);
+            this.logger.error("Error deleting expired tokens:", { error });
             throw new Error("Failed to delete expired tokens");
         }
     }
@@ -262,7 +265,9 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
             return JwtEntity.fromRedisObject(data);
         } catch (error) {
-            logger.error(`Error finding JWT token by ID ${id}:`, error);
+            this.logger.error(`Error finding JWT token by ID ${id}:`, {
+                error,
+            });
             throw new Error("Failed to find JWT token by ID");
         }
     }
@@ -279,7 +284,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
             return await this.findById(tokenId);
         } catch (error) {
-            logger.error("Error finding JWT token by value:", error);
+            this.logger.error("Error finding JWT token by value:", { error });
             throw new Error("Failed to find JWT token by value");
         }
     }
@@ -300,7 +305,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
             return tokens;
         } catch (error) {
-            logger.error("Error getting all tokens:", error);
+            this.logger.error("Error getting all tokens:", { error });
             throw new Error("Failed to get all tokens");
         }
     }
@@ -347,11 +352,13 @@ export class JwtTokenRepository implements IJwtTokenRepository {
             pipeline.del(familyIndexKey);
             await pipeline.exec();
 
-            logger.warn(
+            this.logger.warn(
                 `Invalidated token family: ${familyId} (${jwtEntities.length.toString()} tokens)`,
             );
         } catch (error) {
-            logger.error(`Error invalidating token family ${familyId}:`, error);
+            this.logger.error(`Error invalidating token family ${familyId}:`, {
+                error,
+            });
             throw error;
         }
     }
@@ -367,7 +374,9 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
             return jwtEntity.isBlacklisted;
         } catch (error) {
-            logger.error("Error checking if token is blacklisted:", error);
+            this.logger.error("Error checking if token is blacklisted:", {
+                error,
+            });
             return true; // Default to blacklisted on error for security
         }
     }
@@ -398,9 +407,9 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
             await pipeline.exec();
 
-            logger.debug(`JWT token saved with ID: ${jwtEntity.id}`);
+            this.logger.debug(`JWT token saved with ID: ${jwtEntity.id}`);
         } catch (error) {
-            logger.error("Error saving JWT token:", error);
+            this.logger.error("Error saving JWT token:", { error });
             throw new Error("Failed to save JWT token");
         }
     }

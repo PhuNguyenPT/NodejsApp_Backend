@@ -15,11 +15,13 @@ export const TYPES = {
     FileService: Symbol.for("FileService"),
     IJwtTokenRepository: Symbol.for("IJwtTokenRepository"),
     InversifyContainer: Symbol.for("InversifyContainer"),
+    IPredictionModelService: Symbol.for("IPredictionModelService"),
     IUserRepository: Symbol.for("IUserRepository"),
     JwtEntityService: Symbol.for("JwtEntityService"),
     JWTService: Symbol.for("JWTService"),
     KeyStore: Symbol.for("KeyStore"),
     Logger: Symbol.for("Logger"),
+    LoggerConfig: Symbol.for("LoggerConfig"),
     MajorGroupRepository: Symbol.for("MajorGroupRepository"),
     MajorRepository: Symbol.for("MajorRepository"),
     MajorService: Symbol.for("MajorService"),
@@ -32,7 +34,6 @@ export const TYPES = {
     PredictionModelEventListenerService: Symbol.for(
         "PredictionModelEventListenerService",
     ),
-    PredictionModelService: Symbol.for("PredictionModelService"),
     PredictionModelServiceConfig: Symbol.for("PredictionModelServiceConfig"),
     PredictionResultEntityRepository: Symbol.for(
         "PredictionResultEntityRepository",

@@ -10,6 +10,7 @@ import {
     ZodIssue,
 } from "zod";
 
+import { logger } from "@/config/logger.config.js";
 import { ExceptionHandler } from "@/decorator/exception-handler.decorator.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
@@ -26,7 +27,6 @@ import { ValidationException } from "@/type/exception/validation.exception.js";
 import { ErrorDetails } from "@/type/interface/error-details.interface.js";
 import { ErrorResponse } from "@/type/interface/error-response.interface.js";
 import { ValidationResponse } from "@/type/interface/validation-response.interface.js";
-import logger from "@/util/logger.js";
 
 export const internalServerErrorMessage = "Internal Server Error";
 

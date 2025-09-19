@@ -24,7 +24,7 @@ import { StudentEntity } from "@/entity/student.entity.js";
 import { StudentMapper } from "@/mapper/student-mapper.js";
 import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { StudentService } from "@/service/student.service.js";
+import { StudentService } from "@/service/impl/student.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";

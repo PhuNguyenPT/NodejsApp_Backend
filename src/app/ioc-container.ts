@@ -5,6 +5,7 @@ import { RedisClientType } from "redis";
 import { DataSource, Repository } from "typeorm";
 
 import { postgresDataSource } from "@/config/data-source.config.js";
+import { loggerConfig } from "@/config/logger.config.js";
 import { PassportConfig } from "@/config/passport.config.js";
 import {
     predictionModelServiceConfig,
@@ -36,23 +37,25 @@ import { JwtTokenRepository } from "@/repository/impl/jwt-repository.js";
 import { UserRepository } from "@/repository/impl/user-repository.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
 import { IUserRepository } from "@/repository/user-repository-interface.js";
-import { AdmissionService } from "@/service/admission.service.js";
-import { AuthService } from "@/service/auth.service.js";
-import { AwardService } from "@/service/award.service.js";
-import { CertificationService } from "@/service/certification.service.js";
-import { FileService } from "@/service/file.service.js";
-import { JwtEntityService } from "@/service/jwt-entity.service.js";
-import { JWTService } from "@/service/jwt.service.js";
-import { MajorService } from "@/service/major.service.js";
-import { MistralService } from "@/service/mistral.service.js";
-import { OcrResultService } from "@/service/ocr-result.service.js";
+import { AdmissionService } from "@/service/impl/admission.service.js";
+import { AuthService } from "@/service/impl/auth.service.js";
+import { AwardService } from "@/service/impl/award.service.js";
+import { CertificationService } from "@/service/impl/certification.service.js";
+import { FileService } from "@/service/impl/file.service.js";
+import { JwtEntityService } from "@/service/impl/jwt-entity.service.js";
+import { JWTService } from "@/service/impl/jwt.service.js";
+import { MajorService } from "@/service/impl/major.service.js";
+import { MistralService } from "@/service/impl/mistral.service.js";
+import { OcrResultService } from "@/service/impl/ocr-result.service.js";
 import {
     PredictionModelService,
     PredictionModelServiceConfig,
-} from "@/service/prediction-model.service.js";
-import { PredictionResultService } from "@/service/prediction-result.service.js";
-import { StudentService } from "@/service/student.service.js";
-import { UserService } from "@/service/user.service.js";
+} from "@/service/impl/prediction-model.service.js";
+import { PredictionResultService } from "@/service/impl/prediction-result.service.js";
+import { StudentService } from "@/service/impl/student.service.js";
+import { UserService } from "@/service/impl/user.service.js";
+import { WinstonLoggerService } from "@/service/impl/winston-logger.service.js";
+import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import {
     ClientConfig,
@@ -60,9 +63,13 @@ import {
 } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
 import { ILogger } from "@/type/interface/logger.interface.js";
-import { WinstonLoggerService } from "@/util/logger.js";
+import { LoggerConfig } from "@/util/logger.js";
 
 const iocContainer = new Container();
+
+iocContainer
+    .bind<LoggerConfig>(TYPES.LoggerConfig)
+    .toConstantValue(loggerConfig);
 
 iocContainer
     .bind<ILogger>(TYPES.Logger)
@@ -201,8 +208,13 @@ iocContainer
     .inSingletonScope();
 
 iocContainer
-    .bind<PredictionModelService>(TYPES.PredictionModelService)
+    .bind<IPredictionModelService>(TYPES.IPredictionModelService)
     .to(PredictionModelService)
+    .inSingletonScope();
+
+iocContainer
+    .bind<PredictionResultService>(TYPES.PredictionResultService)
+    .to(PredictionResultService)
     .inSingletonScope();
 
 iocContainer
@@ -210,11 +222,6 @@ iocContainer
         TYPES.PredictionModelEventListenerService,
     )
     .to(PredictionModelEventListenerService)
-    .inSingletonScope();
-
-iocContainer
-    .bind<PredictionResultService>(TYPES.PredictionResultService)
-    .to(PredictionResultService)
     .inSingletonScope();
 
 iocContainer

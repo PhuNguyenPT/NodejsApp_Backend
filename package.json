@@ -11,14 +11,15 @@
     "dev:staging": "npm run tsoa:build && tsx --watch --env-file .env.staging src/app/index.ts",
     "dev:prod": "npm run tsoa:build && tsx --watch --env-file .env.prod src/app/index.ts",
     "start": "node --env-file .env.prod dist/app/index.js",
-    "build": "npm run tsoa:build && tsc --build tsconfig.build.json && tsc-alias -p tsconfig.build.json && echo 'Build sizes:' && ls -lah dist/",
-    "build:verbose": "npm run tsoa:build && tsc --build --verbose tsconfig.build.json && tsc-alias -p tsconfig.build.json && du -sh dist/* | sort -hr",
-    "build:stats": "npm run tsoa:build && tsc --build --verbose --extendedDiagnostics tsconfig.build.json && tsc-alias -p tsconfig.build.json",
-    "build:watch": "npm run tsoa:build && tsc --build --watch tsconfig.build.json",
-    "build:dry": "npm run tsoa:build && tsc --build --dry tsconfig.build.json",
-    "build:force": "npm run tsoa:build && tsc --build --force tsconfig.build.json && tsc-alias -p tsconfig.build.json",
-    "clean": "rm -rf dist",
+    "build": "npm run tsoa:build && tsc --build tsconfig.build.json && tsc-alias -p tsconfig.build.json && npm run copy:data && echo 'Build sizes:' && ls -lah dist/",
     "build:clean": "npm run clean && npm run build",
+    "build:verbose": "npm run tsoa:build && tsc --build --verbose tsconfig.build.json && tsc-alias -p tsconfig.build.json && npm run copy:data && du -sh dist/* | sort -hr",
+    "build:stats": "npm run tsoa:build && tsc --build --verbose --extendedDiagnostics tsconfig.build.json && tsc-alias -p tsconfig.build.json && npm run copy:data",
+    "build:watch": "npm run tsoa:build && tsc --build --watch tsconfig.build.json && npm run copy:data",
+    "build:dry": "npm run tsoa:build && tsc --build --dry tsconfig.build.json && npm run copy:data",
+    "build:force": "npm run tsoa:build && tsc --build --force tsconfig.build.json && tsc-alias -p tsconfig.build.json && npm run copy:data",
+    "clean": "rm -rf dist",
+    "copy:data": "cp -r src/data dist/data",
     "test": "vitest",
     "test:run": "vitest --run",
     "test:ui": "vitest --ui",
@@ -56,29 +57,6 @@
     "*.{json,yml,yaml,md}": [
       "prettier --check"
     ]
-  },
-  "_moduleAliases": {
-    "@/app": "dist/app",
-    "@/config": "dist/config",
-    "@/controller": "dist/controller",
-    "@/decorator": "dist/decorator",
-    "@/dto": "dist/dto",
-    "@/entity": "dist/entity",
-    "@/event": "dist/event",
-    "@/generated": "dist/generated",
-    "@/handler": "dist/handler",
-    "@/job": "dist/job",
-    "@/manager/*": [
-      "dist/manager"
-    ],
-    "@/mapper": "dist/mapper",
-    "@/middleware": "dist/middleware",
-    "@/repository": "dist/repository",
-    "@/service": "dist/service",
-    "@/token": "dist/token",
-    "@/type": "dist/type",
-    "@/util": "dist/util",
-    "@/validator/*": "dist/validator"
   },
   "repository": {
     "type": "git",

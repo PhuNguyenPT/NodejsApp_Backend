@@ -23,7 +23,7 @@ import { AdmissionEntity } from "@/entity/admission.entity.js";
 import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
-import { AdmissionService } from "@/service/admission.service.js";
+import { AdmissionService } from "@/service/impl/admission.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";

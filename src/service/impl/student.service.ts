@@ -9,9 +9,9 @@ import {
     PREDICTION_CHANNEL,
     StudentCreatedEvent,
 } from "@/event/prediction-model-event-listener.service.js";
-import { AwardService } from "@/service/award.service.js";
-import { CertificationService } from "@/service/certification.service.js";
-import { MajorService } from "@/service/major.service.js";
+import { AwardService } from "@/service/impl/award.service.js";
+import { CertificationService } from "@/service/impl/certification.service.js";
+import { MajorService } from "@/service/impl/major.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { handleExamValidation } from "@/type/enum/exam.js";
 import { Role } from "@/type/enum/user.js";

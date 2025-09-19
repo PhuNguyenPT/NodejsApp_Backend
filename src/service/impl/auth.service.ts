@@ -12,8 +12,8 @@ import { User } from "@/dto/user/user.js";
 import { TokenType } from "@/entity/jwt.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
-import { JwtEntityService } from "@/service/jwt-entity.service.js";
-import { JWTService } from "@/service/jwt.service.js";
+import { JwtEntityService } from "@/service/impl/jwt-entity.service.js";
+import { JWTService } from "@/service/impl/jwt.service.js";
 import { TYPES } from "@/type/container/types.js";
 import {
     getDefaultPermissionsByRole,
