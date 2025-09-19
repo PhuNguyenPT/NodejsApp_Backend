@@ -1,4 +1,4 @@
-import { PredictionModelServiceConfig } from "@/service/prediction-model.service.js";
+import { PredictionModelServiceConfig } from "@/service/impl/prediction-model.service.js";
 import { ClientConfig } from "@/type/class/prediction-service.client.js";
 import { config } from "@/util/validate-env.js";
 

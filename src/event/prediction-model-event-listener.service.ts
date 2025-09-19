@@ -14,7 +14,9 @@ import {
 } from "@/entity/prediction-result.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
-import { PredictionModelService } from "@/service/prediction-model.service.js";
+import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
+// REMOVE THIS IMPORT - This is causing the circular dependency
+// import { PredictionModelService } from "@/service/prediction-model.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
 import { ILogger } from "@/type/interface/logger.interface.js";
@@ -35,8 +37,8 @@ export class PredictionModelEventListenerService {
     constructor(
         @inject(TYPES.Logger) private readonly logger: ILogger,
         @inject(TYPES.DataSource) private readonly dataSource: DataSource,
-        @inject(TYPES.PredictionModelService)
-        private readonly predictionModelService: PredictionModelService,
+        @inject(TYPES.IPredictionModelService)
+        private readonly predictionModelService: IPredictionModelService,
     ) {}
 
     @RedisEventListener(PREDICTION_CHANNEL)
@@ -273,6 +275,7 @@ export class PredictionModelEventListenerService {
 
         try {
             // Step 2: Get prediction results concurrently with individual error handling
+            // Use the lazy getter here instead of the injected service
             const [l2Result, l1Result] = await Promise.allSettled([
                 this.predictionModelService.getL2PredictResults(
                     studentId,

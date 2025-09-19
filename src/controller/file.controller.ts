@@ -30,7 +30,7 @@ import { FileEntity, FileType } from "@/entity/file.entity.js";
 import { FileMapper } from "@/mapper/file-mapper.js";
 import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { FileService } from "@/service/file.service.js";
+import { FileService } from "@/service/impl/file.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { Role } from "@/type/enum/user.js";

@@ -20,7 +20,7 @@ import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student-dto.js";
 import { StudentEntity } from "@/entity/student.entity.js";
-import { StudentService } from "@/service/student.service.js";
+import { StudentService } from "@/service/impl/student.service.js";
 import { TYPES } from "@/type/container/types.js";
 import {
     AcademicPerformance,
@@ -41,6 +41,8 @@ import {
 import { UniType } from "@/type/enum/uni-type.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 import { ILogger } from "@/type/interface/logger.interface.js";
+
+import { IPredictionModelService } from "../prediction-model-service.interface.js";
 
 export interface PredictionModelServiceConfig {
     SERVER_BATCH_CONCURRENCY: number;
@@ -72,7 +74,7 @@ interface SubjectGroupScore {
     totalScore: number;
 }
 @injectable()
-export class PredictionModelService {
+export class PredictionModelService implements IPredictionModelService {
     private readonly config: PredictionModelServiceConfig;
 
     constructor(
@@ -87,7 +89,7 @@ export class PredictionModelService {
         this.config = config;
     }
 
-    async getL1PredictResults(
+    public async getL1PredictResults(
         studentId: string,
         userId?: string,
     ): Promise<L1PredictResult[]> {
@@ -124,7 +126,8 @@ export class PredictionModelService {
 
         return combinedResults;
     }
-    async getL2PredictResults(
+
+    public async getL2PredictResults(
         studentId: string,
         userId?: string,
     ): Promise<L2PredictResult[]> {
@@ -200,7 +203,7 @@ export class PredictionModelService {
         return deduplicatedResults;
     }
 
-    async predictMajorsByStudentIdAndUserId(
+    public async predictMajorsByStudentIdAndUserId(
         userInput: UserInputL2,
         studentId: string,
         userId: string,
@@ -211,6 +214,7 @@ export class PredictionModelService {
         });
         return await this.predictMajorsL2(userInput);
     }
+
     private _createCcqtScenarios(
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
