@@ -1,6 +1,9 @@
 networks:
   app-network:
     driver: bridge
+  shared-network:
+    external: true
+    name: app-shared-network
 
 secrets:
   private_key:
@@ -18,17 +21,18 @@ services:
     ports:
       - "${SERVER_HOSTNAME}:${SERVER_PORT}:${SERVER_PORT}"
     networks:
-      - app-network
+      - app-network # Internal network for DB/Redis
+      - shared-network # External network for ML service
     depends_on:
       postgres-prod:
         condition: service_healthy
       redis-prod:
         condition: service_healthy
-    # Use Docker secrets instead of volume mounts
     secrets:
       - private_key
       - public_key
-    # Update environment variables to point to secret files
+    volumes:
+      - app_logs:/app/logs
     environment:
       - PRIVATE_KEY_PATH=/run/secrets/private_key
       - PUBLIC_KEY_PATH=/run/secrets/public_key
@@ -43,6 +47,8 @@ services:
     image: ${POSTGRES_IMAGE}
     container_name: postgres-prod
     restart: always
+    ports:
+      - "${POSTGRES_PORT}:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -52,7 +58,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - app-network
+      - app-network # Only on internal network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -64,6 +70,8 @@ services:
     image: ${REDIS_IMAGE}
     container_name: redis-prod
     restart: always
+    ports:
+      - "${REDIS_PORT}:6379"
     command: >
       sh -c "
       redis-server 
@@ -73,7 +81,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - app-network
+      - app-network # Only on internal network
     healthcheck:
       test:
         [
@@ -98,4 +106,6 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  app_logs:
     driver: local
