@@ -2,8 +2,9 @@
 import { DataSource } from "typeorm";
 
 import { redisConfig } from "@/config/redis.config.js";
-import logger from "@/util/logger.js";
 import { config } from "@/util/validate-env.js";
+
+import { logger } from "./logger.config.js";
 
 export const postgresDataSource = new DataSource({
     cache: {

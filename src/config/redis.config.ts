@@ -1,8 +1,9 @@
 // src/config/redis.ts
 import { createClient, type RedisClientType } from "redis";
 
-import logger from "@/util/logger.js";
 import { config } from "@/util/validate-env.js";
+
+import { logger } from "./logger.config.js";
 
 // Base Redis configuration
 export const redisConfig = {

@@ -4,8 +4,8 @@ import path from "path";
 import { MigrationInterface, QueryRunner } from "typeorm";
 import { fileURLToPath } from "url";
 
+import { logger } from "@/config/logger.config.js";
 import { AdmissionEntity } from "@/entity/admission.entity.js";
-import logger from "@/util/logger.js";
 
 // Define the CSV row structure for type safety
 interface AdmissionCsvRow {

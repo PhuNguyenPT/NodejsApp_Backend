@@ -5,6 +5,7 @@ import { RedisClientType } from "redis";
 import { DataSource, Repository } from "typeorm";
 
 import { postgresDataSource } from "@/config/data-source.config.js";
+import { loggerConfig } from "@/config/logger.config.js";
 import { PassportConfig } from "@/config/passport.config.js";
 import {
     predictionModelServiceConfig,
@@ -53,6 +54,7 @@ import {
 import { PredictionResultService } from "@/service/impl/prediction-result.service.js";
 import { StudentService } from "@/service/impl/student.service.js";
 import { UserService } from "@/service/impl/user.service.js";
+import { WinstonLoggerService } from "@/service/impl/winston-logger.service.js";
 import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import {
@@ -61,9 +63,13 @@ import {
 } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
 import { ILogger } from "@/type/interface/logger.interface.js";
-import { WinstonLoggerService } from "@/util/logger.js";
+import { LoggerConfig } from "@/util/logger.js";
 
 const iocContainer = new Container();
+
+iocContainer
+    .bind<LoggerConfig>(TYPES.LoggerConfig)
+    .toConstantValue(loggerConfig);
 
 iocContainer
     .bind<ILogger>(TYPES.Logger)

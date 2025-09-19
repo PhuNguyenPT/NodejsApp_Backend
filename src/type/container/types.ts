@@ -21,6 +21,7 @@ export const TYPES = {
     JWTService: Symbol.for("JWTService"),
     KeyStore: Symbol.for("KeyStore"),
     Logger: Symbol.for("Logger"),
+    LoggerConfig: Symbol.for("LoggerConfig"),
     MajorGroupRepository: Symbol.for("MajorGroupRepository"),
     MajorRepository: Symbol.for("MajorRepository"),
     MajorService: Symbol.for("MajorService"),
