@@ -12,6 +12,7 @@ import {
     Tags,
 } from "@tsoa/runtime";
 import { inject, injectable } from "inversify";
+import { Logger } from "winston";
 
 import {
     BatchScoreExtractionResult,
@@ -25,7 +26,6 @@ import { OcrResultService } from "@/service/impl/ocr-result.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 
 @injectable()
 @Route("ocr")
@@ -37,7 +37,7 @@ export class OcrController extends Controller {
         @inject(TYPES.OcrResultService)
         private readonly ocrResultService: OcrResultService,
         @inject(TYPES.Logger)
-        private readonly logger: ILogger,
+        private readonly logger: Logger,
     ) {
         super();
     }

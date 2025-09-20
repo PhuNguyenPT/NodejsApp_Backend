@@ -1,12 +1,12 @@
 // src/service/jwt.service.ts
 import { inject, injectable } from "inversify";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import { Logger } from "winston";
 
 import { TokenType } from "@/entity/jwt.entity.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import { TYPES } from "@/type/container/types.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 import {
     JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
     JWT_REFRESH_TOKEN_EXPIRATION_SECONDS,
@@ -23,7 +23,7 @@ export class JWTService {
         @inject(TYPES.KeyStore)
         private keyStore: KeyStore,
         @inject(TYPES.Logger)
-        private logger: ILogger,
+        private logger: Logger,
         @inject(TYPES.JwtEntityService)
         private jwtEntityService: JwtEntityService,
     ) {}
@@ -241,7 +241,7 @@ export class JWTService {
             id: typeof payload.id,
             name: typeof payload.name,
             status: typeof payload.status,
-            statusValue: payload.status,
+            statusValue: payload.status as unknown,
         });
 
         if (typeof payload.id !== "string" || !payload.id) {
@@ -261,7 +261,7 @@ export class JWTService {
         ) {
             this.logger.error("Invalid name field type", {
                 nameType: typeof payload.name,
-                nameValue: payload.name,
+                nameValue: payload.name as unknown,
             });
             return false;
         }
@@ -269,7 +269,7 @@ export class JWTService {
         if (!payload.status || typeof payload.status !== "string") {
             this.logger.error("Invalid or missing status field", {
                 statusType: typeof payload.status,
-                statusValue: payload.status,
+                statusValue: payload.status as unknown,
             });
             return false;
         }

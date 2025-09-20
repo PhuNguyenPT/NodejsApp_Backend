@@ -1,8 +1,8 @@
 import { inject, injectable } from "inversify";
+import { Logger } from "winston";
 
 import { JwtEntityService } from "@/service/impl/jwt-entity.service.js";
 import { TYPES } from "@/type/container/types.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 
 // src/job/token.cleanup.job.ts
 
@@ -14,7 +14,7 @@ export class TokenCleanupJob {
         @inject(TYPES.JwtEntityService)
         private jwtEntityService: JwtEntityService,
         @inject(TYPES.Logger)
-        private logger: ILogger,
+        private logger: Logger,
         private cleanupTimeout: NodeJS.Timeout | null = null,
     ) {}
 

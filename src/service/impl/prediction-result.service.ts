@@ -1,10 +1,10 @@
 import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
+import { Logger } from "winston";
 
 import { PredictionResultEntity } from "@/entity/prediction-result.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 
 @injectable()
 export class PredictionResultService {
@@ -12,7 +12,7 @@ export class PredictionResultService {
         @inject(TYPES.PredictionResultEntityRepository)
         private readonly predictionResultEntityRepository: Repository<PredictionResultEntity>,
         @inject(TYPES.Logger)
-        private readonly logger: ILogger,
+        private readonly logger: Logger,
     ) {}
 
     public async findByStudentIdAndUserId(

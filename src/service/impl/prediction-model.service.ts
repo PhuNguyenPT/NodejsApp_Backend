@@ -3,6 +3,7 @@ import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
 import pLimit from "p-limit";
+import { Logger } from "winston";
 
 import {
     HsgSubject,
@@ -40,7 +41,6 @@ import {
 } from "@/type/enum/subject.js";
 import { UniType } from "@/type/enum/uni-type.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 
 import { IPredictionModelService } from "../prediction-model-service.interface.js";
 
@@ -78,7 +78,7 @@ export class PredictionModelService implements IPredictionModelService {
     private readonly config: PredictionModelServiceConfig;
 
     constructor(
-        @inject(TYPES.Logger) private readonly logger: ILogger,
+        @inject(TYPES.Logger) private readonly logger: Logger,
         @inject(TYPES.StudentService)
         private readonly studentService: StudentService,
         @inject(TYPES.PredictHttpClient)
@@ -2387,7 +2387,7 @@ export class PredictionModelService implements IPredictionModelService {
                             constraints: err.constraints,
                             property: err.property,
                         })),
-                        item,
+                        item: item as unknown,
                     },
                 );
             }
@@ -2428,7 +2428,7 @@ export class PredictionModelService implements IPredictionModelService {
                             constraints: err.constraints,
                             property: err.property,
                         })),
-                        item,
+                        item: item as unknown,
                     },
                 );
             }

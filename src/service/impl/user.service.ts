@@ -2,6 +2,7 @@ import { plainToInstance } from "class-transformer";
 // src/service/user.service.ts
 import { inject, injectable } from "inversify";
 import { EntityMetadataNotFoundError } from "typeorm";
+import { Logger } from "winston";
 
 import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
@@ -12,7 +13,6 @@ import { getDefaultPermissionsByRole } from "@/type/enum/user.js";
 import { EntityExistsException } from "@/type/exception/entity-exists.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 import { hashPassword } from "@/util/bcrypt.js";
 
 @injectable()
@@ -21,7 +21,7 @@ export class UserService {
         @inject(TYPES.IUserRepository)
         private readonly userRepository: IUserRepository,
         @inject(TYPES.Logger)
-        private readonly logger: ILogger, // Now properly typed!
+        private readonly logger: Logger, // Now properly typed!
     ) {}
 
     public async create(

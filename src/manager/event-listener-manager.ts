@@ -1,12 +1,12 @@
 import { Container, inject, injectable } from "inversify";
 import { type RedisClientType } from "redis";
+import { Logger } from "winston";
 
 import {
     REDIS_EVENT_LISTENER_METADATA,
     RedisListenerMetadata,
 } from "@/decorator/redis-event-listener.decorator.js";
 import { TYPES } from "@/type/container/types.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 
 // Type for Redis message handler
 type RedisMessageHandler = (message: string) => Promise<void> | void;
@@ -48,7 +48,7 @@ export class EventListenerManager {
         private readonly container: Container,
         @inject(TYPES.RedisSubscriber)
         private readonly redisSubscriber: RedisClientType,
-        @inject(TYPES.Logger) private readonly logger: ILogger,
+        @inject(TYPES.Logger) private readonly logger: Logger,
     ) {}
 
     public async cleanup(): Promise<void> {

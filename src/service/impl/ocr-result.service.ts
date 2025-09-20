@@ -1,6 +1,7 @@
 import { differenceInMilliseconds } from "date-fns";
 import { inject, injectable } from "inversify";
 import { In, Repository } from "typeorm";
+import { Logger } from "winston";
 
 import {
     BatchScoreExtractionResult,
@@ -15,7 +16,6 @@ import {
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 
 @injectable()
 export class OcrResultService {
@@ -23,7 +23,7 @@ export class OcrResultService {
         @inject(TYPES.OcrResultRepository)
         private readonly ocrResultRepository: Repository<OcrResultEntity>,
         @inject(TYPES.Logger)
-        private readonly logger: ILogger,
+        private readonly logger: Logger,
     ) {}
 
     public async createInitialOcrResults(

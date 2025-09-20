@@ -1,5 +1,6 @@
 import { inject, injectable } from "inversify";
 import { DataSource, EntityManager, In } from "typeorm";
+import { Logger } from "winston";
 import z from "zod";
 
 import {
@@ -19,7 +20,6 @@ import { IPredictionModelService } from "@/service/prediction-model-service.inte
 // import { PredictionModelService } from "@/service/prediction-model.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/util/jwt-options.js";
 
 export const PREDICTION_CHANNEL = "prediction:student_created";
@@ -35,7 +35,7 @@ export type StudentCreatedEvent = z.infer<typeof StudentCreatedEventSchema>;
 @injectable()
 export class PredictionModelEventListenerService {
     constructor(
-        @inject(TYPES.Logger) private readonly logger: ILogger,
+        @inject(TYPES.Logger) private readonly logger: Logger,
         @inject(TYPES.DataSource) private readonly dataSource: DataSource,
         @inject(TYPES.IPredictionModelService)
         private readonly predictionModelService: IPredictionModelService,
@@ -295,13 +295,13 @@ export class PredictionModelEventListenerService {
             // Log any individual failures
             if (l2Result.status === "rejected") {
                 this.logger.error("L2 prediction failed", {
-                    error: l2Result.reason,
+                    error: l2Result.reason as unknown,
                     studentId,
                 });
             }
             if (l1Result.status === "rejected") {
                 this.logger.error("L1 prediction failed", {
-                    error: l1Result.reason,
+                    error: l1Result.reason as unknown,
                     studentId,
                 });
             }

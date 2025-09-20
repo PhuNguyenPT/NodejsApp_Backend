@@ -1,5 +1,5 @@
 // src/util/logger.ts
-import winston, { format, Logger, transports } from "winston";
+import winston, { format, transports } from "winston";
 
 // Configuration interface for logger options
 export interface LoggerConfig {
@@ -30,49 +30,43 @@ const logColors = {
 // Tell winston about colors
 winston.addColors(logColors);
 
-// Factory function to create winston logger with custom config
-export function createWinstonLogger(loggerConfig: LoggerConfig): Logger {
+// Simple function to create logger options
+export function createLoggerOptions(
+    loggerConfig: LoggerConfig,
+): winston.LoggerOptions {
     const { enableFileLogging, isProduction, logDir, logLevel } = loggerConfig;
 
-    // Custom format for development with metadata support and array truncation
+    // Development format - more readable
     const developmentFormat = format.combine(
+        format.errors({ stack: true }),
         format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
         format.colorize({ all: true }),
-        format.printf((info) => {
-            const { level, message, timestamp, ...meta } = info;
+        format.printf(({ level, message, stack, timestamp, ...meta }) => {
+            // Type-safe string conversion
+            const timestampStr = String(timestamp);
+            const messageStr = String(message);
 
-            // Base log message
-            let logMessage = `${String(timestamp)} ${level}: ${String(message)}`;
+            let logMessage = `${timestampStr} ${level}: ${messageStr}`;
 
-            // Process metadata with array truncation
-            const processedMeta = processLogMeta(meta, { maxItems: 12 });
+            if (stack && typeof stack === "string") {
+                logMessage += `\n${stack}`;
+            }
 
-            // Add metadata if it exists
-            if (Object.keys(processedMeta).length > 0) {
-                logMessage += ` ${JSON.stringify(processedMeta, null, 2)}`;
+            // Add metadata if present
+            const metaKeys = Object.keys(meta);
+            if (metaKeys.length > 0) {
+                logMessage += `\n${JSON.stringify(meta, null, 2)}`;
             }
 
             return logMessage;
         }),
     );
 
-    // Custom format for production with array truncation
+    // Production format - structured JSON
     const productionFormat = format.combine(
-        format.timestamp(),
         format.errors({ stack: true }),
-        format.printf((info) => {
-            const { level, message, timestamp, ...meta } = info;
-
-            // Process metadata with array truncation
-            const processedMeta = processLogMeta(meta, { maxItems: 12 });
-
-            return JSON.stringify({
-                level,
-                message,
-                timestamp,
-                ...processedMeta,
-            });
-        }),
+        format.timestamp(),
+        format.json(),
     );
 
     // Create transports array
@@ -101,8 +95,7 @@ export function createWinstonLogger(loggerConfig: LoggerConfig): Logger {
         );
     }
 
-    // Create winston logger instance
-    return winston.createLogger({
+    return {
         exceptionHandlers:
             enableFileLogging || isProduction
                 ? [
@@ -112,11 +105,11 @@ export function createWinstonLogger(loggerConfig: LoggerConfig): Logger {
                           maxsize: 5242880,
                       }),
                   ]
-                : [],
+                : undefined,
+        exitOnError: false,
         format: format.combine(
-            format.timestamp(),
             format.errors({ stack: true }),
-            format.json(),
+            format.timestamp(),
         ),
         level: logLevel,
         levels: logLevels,
@@ -129,50 +122,15 @@ export function createWinstonLogger(loggerConfig: LoggerConfig): Logger {
                           maxsize: 5242880,
                       }),
                   ]
-                : [],
+                : undefined,
         transports: loggerTransports,
-    });
+    };
 }
 
-// Utility function for processing log metadata with array truncation
-export function processLogMeta(
-    meta: Record<string, unknown>,
-    arrayTruncateOptions: { keys?: string[]; maxItems?: number } = {},
-): Record<string, unknown> {
-    const { keys, maxItems = 10 } = arrayTruncateOptions;
-
-    if (typeof meta !== "object") {
-        return meta;
-    }
-
-    const processed: Record<string, unknown> = {};
-
-    for (const [key, value] of Object.entries(meta)) {
-        if (Array.isArray(value)) {
-            // If specific keys are provided, only truncate those keys
-            if (keys && keys.length > 0) {
-                processed[key] = keys.includes(key)
-                    ? truncateArray(value, maxItems)
-                    : value;
-            } else {
-                // Truncate all arrays
-                processed[key] = truncateArray(value, maxItems);
-            }
-        } else {
-            processed[key] = value;
-        }
-    }
-
-    return processed;
-}
-
-// Utility function for truncating arrays in logs
-export function truncateArray<T>(array: T[], maxItems = 10): (string | T)[] {
-    if (!Array.isArray(array) || array.length <= maxItems) {
-        return array;
-    }
-
-    const visibleItems = array.slice(0, maxItems);
-    const remainingCount = array.length - maxItems;
-    return [...visibleItems, `...and ${remainingCount.toString()} more`];
+// Simple factory function using winston.createLogger
+export function createWinstonLogger(
+    loggerConfig: LoggerConfig,
+): winston.Logger {
+    const options = createLoggerOptions(loggerConfig);
+    return winston.createLogger(options);
 }

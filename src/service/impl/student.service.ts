@@ -1,6 +1,7 @@
 import { inject, injectable } from "inversify";
 import { RedisClientType } from "redis";
 import { IsNull, Repository } from "typeorm";
+import { Logger } from "winston";
 
 import { StudentRequest } from "@/dto/student/student-request.js";
 import { StudentEntity } from "@/entity/student.entity.js";
@@ -17,7 +18,6 @@ import { handleExamValidation } from "@/type/enum/exam.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 import { Page } from "@/type/pagination/page.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
 // import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/util/jwt.options.js";
@@ -36,7 +36,7 @@ export class StudentService {
         @inject(TYPES.MajorService)
         private readonly majorService: MajorService,
         @inject(TYPES.Logger)
-        private readonly logger: ILogger,
+        private readonly logger: Logger,
         @inject(TYPES.RedisPublisher) private redisPublisher: RedisClientType,
     ) {}
 

@@ -1,6 +1,7 @@
 import { responseFormatFromZodObject } from "@mistralai/mistralai/extra/structChat.js";
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
+import { Logger } from "winston";
 
 import { mistralClient } from "@/config/mistralai.config.js";
 import {
@@ -14,7 +15,6 @@ import { StudentEntity } from "@/entity/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import { normalizeSubjectName } from "@/type/enum/subject.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 
 @injectable()
 export class MistralService {
@@ -24,7 +24,7 @@ export class MistralService {
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.Logger)
-        private readonly logger: ILogger,
+        private readonly logger: Logger,
     ) {}
 
     /**

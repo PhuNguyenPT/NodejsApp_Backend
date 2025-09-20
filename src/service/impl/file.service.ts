@@ -1,6 +1,7 @@
 import { inject, injectable } from "inversify";
 import { RedisClientType } from "redis";
 import { EntityManager, IsNull, Repository } from "typeorm";
+import { Logger } from "winston";
 
 import { CreateFileDTO } from "@/dto/file/create-file.js";
 import { UpdateFileRequest } from "@/dto/file/update-file.js";
@@ -15,12 +16,11 @@ import { TYPES } from "@/type/container/types.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 
 @injectable()
 export class FileService {
     constructor(
-        @inject(TYPES.Logger) private readonly logger: ILogger,
+        @inject(TYPES.Logger) private readonly logger: Logger,
         @inject(TYPES.FileRepository)
         private fileRepository: Repository<FileEntity>,
         @inject(TYPES.StudentRepository)

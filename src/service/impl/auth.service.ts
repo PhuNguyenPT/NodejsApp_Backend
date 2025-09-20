@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 import { inject, injectable } from "inversify";
 import jwt from "jsonwebtoken";
 import { Repository } from "typeorm";
+import { Logger } from "winston";
 
 import { LoginRequest, RegisterRequest } from "@/dto/auth/auth-request.js";
 import { AuthResponse } from "@/dto/auth/auth-response.js";
@@ -28,7 +29,6 @@ import { EntityNotFoundException } from "@/type/exception/entity-not-found.excep
 import { HttpException } from "@/type/exception/http.exception.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt-options.js";
 
 @injectable()
@@ -41,7 +41,7 @@ export class AuthService {
         private readonly jwtEntityService: JwtEntityService,
         @inject(TYPES.IJwtTokenRepository)
         private readonly jwtTokenRepository: IJwtTokenRepository,
-        @inject(TYPES.Logger) private readonly logger: ILogger,
+        @inject(TYPES.Logger) private readonly logger: Logger,
     ) {}
 
     async login(loginData: LoginRequest): Promise<AuthResponse> {

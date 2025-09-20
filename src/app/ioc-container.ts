@@ -3,9 +3,10 @@ import { AxiosInstance } from "axios";
 import { Container } from "inversify";
 import { RedisClientType } from "redis";
 import { DataSource, Repository } from "typeorm";
+import { Logger } from "winston";
 
 import { postgresDataSource } from "@/config/data-source.config.js";
-import { loggerConfig } from "@/config/logger.config.js";
+import { logger } from "@/config/logger.config.js";
 import { PassportConfig } from "@/config/passport.config.js";
 import {
     predictionModelServiceConfig,
@@ -54,7 +55,6 @@ import {
 import { PredictionResultService } from "@/service/impl/prediction-result.service.js";
 import { StudentService } from "@/service/impl/student.service.js";
 import { UserService } from "@/service/impl/user.service.js";
-import { WinstonLoggerService } from "@/service/impl/winston-logger.service.js";
 import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import {
@@ -62,19 +62,31 @@ import {
     PredictionServiceClient,
 } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
-import { LoggerConfig } from "@/util/logger.js";
 
 const iocContainer = new Container();
 
 iocContainer
-    .bind<LoggerConfig>(TYPES.LoggerConfig)
-    .toConstantValue(loggerConfig);
+    .bind<Container>(TYPES.InversifyContainer)
+    .toConstantValue(iocContainer);
 
 iocContainer
-    .bind<ILogger>(TYPES.Logger)
-    .to(WinstonLoggerService)
+    .bind<EventListenerManager>(TYPES.EventListenerManager)
+    .to(EventListenerManager)
     .inSingletonScope();
+
+iocContainer.bind<Logger>(TYPES.Logger).toConstantValue(logger);
+
+iocContainer
+    .bind<DataSource>(TYPES.DataSource)
+    .toConstantValue(postgresDataSource);
+
+iocContainer
+    .bind<RedisClientType>(TYPES.RedisPublisher)
+    .toConstantValue(redisClient);
+
+iocContainer
+    .bind<RedisClientType>(TYPES.RedisSubscriber)
+    .toConstantValue(redisSubscriber);
 
 iocContainer
     .bind<IUserRepository>(TYPES.IUserRepository)
@@ -83,48 +95,37 @@ iocContainer
 
 iocContainer
     .bind<Repository<StudentEntity>>(TYPES.StudentRepository)
-    .toDynamicValue(() => postgresDataSource.getRepository(StudentEntity))
-    .inSingletonScope();
+    .toConstantValue(postgresDataSource.getRepository(StudentEntity));
 
 iocContainer
     .bind<Repository<AwardEntity>>(TYPES.AwardRepository)
-    .toDynamicValue(() => postgresDataSource.getRepository(AwardEntity))
-    .inSingletonScope();
+    .toConstantValue(postgresDataSource.getRepository(AwardEntity));
 
 iocContainer
     .bind<Repository<CertificationEntity>>(TYPES.CertificationRepository)
-    .toDynamicValue(() => postgresDataSource.getRepository(CertificationEntity))
-    .inSingletonScope();
+    .toConstantValue(postgresDataSource.getRepository(CertificationEntity));
 
 iocContainer
     .bind<Repository<UserEntity>>(TYPES.UserRepository)
-    .toDynamicValue(() => postgresDataSource.getRepository(UserEntity))
-    .inSingletonScope();
+    .toConstantValue(postgresDataSource.getRepository(UserEntity));
 
 iocContainer
     .bind<Repository<FileEntity>>(TYPES.FileRepository)
-    .toDynamicValue(() => postgresDataSource.getRepository(FileEntity))
-    .inSingletonScope();
+    .toConstantValue(postgresDataSource.getRepository(FileEntity));
 
 iocContainer
     .bind<Repository<MajorGroupEntity>>(TYPES.MajorGroupRepository)
-    .toDynamicValue(() => postgresDataSource.getRepository(MajorGroupEntity))
-    .inSingletonScope();
+    .toConstantValue(postgresDataSource.getRepository(MajorGroupEntity));
 
 iocContainer
     .bind<Repository<MajorEntity>>(TYPES.MajorRepository)
-    .toDynamicValue(() => postgresDataSource.getRepository(MajorEntity))
-    .inSingletonScope();
+    .toConstantValue(postgresDataSource.getRepository(MajorEntity));
 
 iocContainer
-    .bind<Repository<PredictionResultEntity>>(
-        TYPES.PredictionResultEntityRepository,
-    )
-    .toDynamicValue(() =>
-        postgresDataSource.getRepository(PredictionResultEntity),
-    )
-    .inSingletonScope();
-
+    .bind<
+        Repository<PredictionResultEntity>
+    >(TYPES.PredictionResultEntityRepository)
+    .toConstantValue(postgresDataSource.getRepository(PredictionResultEntity));
 iocContainer
     .bind<IJwtTokenRepository>(TYPES.IJwtTokenRepository)
     .to(JwtTokenRepository)
@@ -132,20 +133,15 @@ iocContainer
 
 iocContainer
     .bind<Repository<OcrResultEntity>>(TYPES.OcrResultRepository)
-    .toDynamicValue(() => postgresDataSource.getRepository(OcrResultEntity))
-    .inSingletonScope();
+    .toConstantValue(postgresDataSource.getRepository(OcrResultEntity));
 
 iocContainer
     .bind<Repository<PredictionResultEntity>>(TYPES.PredictionResultRepository)
-    .toDynamicValue(() =>
-        postgresDataSource.getRepository(PredictionResultEntity),
-    )
-    .inSingletonScope();
+    .toConstantValue(postgresDataSource.getRepository(PredictionResultEntity));
 
 iocContainer
     .bind<Repository<AdmissionEntity>>(TYPES.AdmissionRepository)
-    .toDynamicValue(() => postgresDataSource.getRepository(AdmissionEntity))
-    .inSingletonScope();
+    .toConstantValue(postgresDataSource.getRepository(AdmissionEntity));
 
 iocContainer
     .bind<JwtEntityService>(TYPES.JwtEntityService)
@@ -285,28 +281,6 @@ iocContainer
 iocContainer
     .bind<TokenCleanupJob>(TYPES.TokenCleanupJob)
     .to(TokenCleanupJob)
-    .inSingletonScope();
-
-iocContainer
-    .bind<RedisClientType>(TYPES.RedisPublisher)
-    .toConstantValue(redisClient);
-
-iocContainer
-    .bind<RedisClientType>(TYPES.RedisSubscriber)
-    .toConstantValue(redisSubscriber);
-
-iocContainer
-    .bind<Container>(TYPES.InversifyContainer)
-    .toConstantValue(iocContainer);
-
-iocContainer
-    .bind<EventListenerManager>(TYPES.EventListenerManager)
-    .to(EventListenerManager)
-    .inSingletonScope();
-
-iocContainer
-    .bind<DataSource>(TYPES.DataSource)
-    .toDynamicValue(() => postgresDataSource)
     .inSingletonScope();
 
 export { iocContainer };
