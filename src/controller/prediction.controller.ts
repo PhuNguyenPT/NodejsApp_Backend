@@ -14,6 +14,7 @@ import {
     SuccessResponse,
     Tags,
 } from "tsoa";
+import { Logger } from "winston";
 
 import { PredictionResultResponse } from "@/dto/predict/prediciton-result-response.js";
 import {
@@ -30,7 +31,6 @@ import { IPredictionModelService } from "@/service/prediction-model-service.inte
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 
 /**
  * Controller for handling university admission prediction requests.
@@ -56,7 +56,7 @@ export class PredictionController extends Controller {
         @inject(TYPES.IPredictionModelService)
         private readonly predictionModelService: IPredictionModelService,
         @inject(TYPES.Logger)
-        private readonly logger: ILogger,
+        private readonly logger: Logger,
         @inject(TYPES.PredictionResultService)
         private readonly predictionResultService: PredictionResultService,
     ) {

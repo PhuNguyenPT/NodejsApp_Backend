@@ -1,5 +1,6 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
+import { Logger } from "winston";
 import { z } from "zod";
 
 import {
@@ -19,7 +20,6 @@ import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 
 const SingleFileCreatedEventSchema = z.object({
     fileId: z.string().uuid("Invalid file ID format"),
@@ -60,7 +60,7 @@ export class OcrEventListenerService {
         private readonly fileRepository: Repository<FileEntity>,
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
-        @inject(TYPES.Logger) private readonly logger: ILogger,
+        @inject(TYPES.Logger) private readonly logger: Logger,
     ) {}
 
     // Spring-style: Automatically handles OCR file created events

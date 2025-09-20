@@ -1,9 +1,9 @@
 import { inject, injectable } from "inversify";
+import { Logger } from "winston";
 
 import { JwtEntity, TokenType } from "@/entity/jwt.entity.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
 import { TYPES } from "@/type/container/types.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt-options.js";
 
 @injectable()
@@ -12,7 +12,7 @@ export class JwtEntityService {
         @inject(TYPES.IJwtTokenRepository)
         private readonly jwtTokenRepository: IJwtTokenRepository,
         @inject(TYPES.Logger)
-        private readonly logger: ILogger,
+        private readonly logger: Logger,
     ) {}
 
     // Blacklist a token

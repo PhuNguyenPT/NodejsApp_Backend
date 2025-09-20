@@ -1,10 +1,10 @@
 import { inject, injectable } from "inversify";
+import { Logger } from "winston";
 
 import { redisClient } from "@/config/redis.config.js";
 import { JwtEntity } from "@/entity/jwt.entity.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
 import { TYPES } from "@/type/container/types.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 
 @injectable()
 export class JwtTokenRepository implements IJwtTokenRepository {
@@ -13,7 +13,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     private readonly keyPrefix = "jwt_entity:";
     private readonly tokenIndexPrefix = "token_index:";
 
-    constructor(@inject(TYPES.Logger) private readonly logger: ILogger) {}
+    constructor(@inject(TYPES.Logger) private readonly logger: Logger) {}
     // Blacklist token by ID
     async blacklistToken(tokenId: string): Promise<boolean> {
         try {

@@ -14,6 +14,7 @@ import {
     SuccessResponse,
     Tags,
 } from "tsoa";
+import { Logger } from "winston";
 
 import {
     LoginRequest,
@@ -26,7 +27,6 @@ import { AuthService } from "@/service/impl/auth.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 
 @injectable()
 @Route("auth")
@@ -34,7 +34,7 @@ import { ILogger } from "@/type/interface/logger.interface.js";
 export class AuthController extends Controller {
     constructor(
         @inject(TYPES.AuthService) private authService: AuthService,
-        @inject(TYPES.Logger) private logger: ILogger,
+        @inject(TYPES.Logger) private logger: Logger,
     ) {
         super();
     }

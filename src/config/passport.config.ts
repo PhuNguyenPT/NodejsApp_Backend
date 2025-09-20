@@ -3,13 +3,13 @@ import { Request } from "express";
 import { inject, injectable } from "inversify";
 import passport from "passport";
 import { Strategy as JwtStrategy } from "passport-jwt";
+import { Logger } from "winston";
 
 import { TokenType } from "@/entity/jwt.entity.js";
 import { IUserRepository } from "@/repository/user-repository-interface.js";
 import { JwtEntityService } from "@/service/impl/jwt-entity.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
-import { ILogger } from "@/type/interface/logger.interface.js";
 import { strategyOptionsWithRequest } from "@/util/jwt-options.js";
 import { config } from "@/util/validate-env.js";
 
@@ -21,7 +21,7 @@ export class PassportConfig {
         @inject(TYPES.IUserRepository)
         private userRepository: IUserRepository,
         @inject(TYPES.Logger)
-        private logger: ILogger,
+        private logger: Logger,
         @inject(TYPES.JwtEntityService)
         private jwtEntityService: JwtEntityService,
     ) {}
