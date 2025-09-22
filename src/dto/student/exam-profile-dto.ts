@@ -241,9 +241,7 @@ export class ExamSubject {
      * @example "Toán"
      */
     @Expose()
-    @IsEnum(VietnameseSubject, {
-        message: "Name must be a valid VietnameseSubject enum value",
-    })
+    @IsEnum(VietnameseSubject)
     @IsNotEmpty()
     public name: VietnameseSubject;
 
@@ -279,9 +277,7 @@ export class VsatExamSubject {
      * @example "Toán"
      */
     @Expose()
-    @IsEnum(VietnameseSubject, {
-        message: "Name must be a valid VietnameseSubject enum value",
-    })
+    @IsEnum(VietnameseSubject)
     @IsNotEmpty()
     public name: VietnameseSubject;
 

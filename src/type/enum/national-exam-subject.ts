@@ -1,0 +1,249 @@
+import { VietnameseSubject } from "./subject.js";
+
+// Constant representing any foreign language (ngoại ngữ)
+export const NGOAI_NGU = "NGOAI_NGU" as const;
+
+// List of all foreign language subjects
+export const FOREIGN_LANGUAGES = [
+    VietnameseSubject.TIENG_ANH,
+    VietnameseSubject.TIENG_DUC,
+    VietnameseSubject.TIENG_NGA,
+    VietnameseSubject.TIENG_NHAT,
+    VietnameseSubject.TIENG_PHAP,
+    VietnameseSubject.TIENG_TRUNG,
+] as const;
+
+// Type for foreign language subjects
+export type ForeignLanguageSubject = (typeof FOREIGN_LANGUAGES)[number];
+
+// Define the 36 valid combinations using NGOAI_NGU constant for "ngoại ngữ"
+export const VALID_EXAM_COMBINATIONS: (
+    | typeof NGOAI_NGU
+    | VietnameseSubject
+)[][] = [
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.HOA_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.VAT_LY,
+        NGOAI_NGU,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.SINH_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.DIA_LY,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.LICH_SU,
+        NGOAI_NGU,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.HOA_HOC,
+        NGOAI_NGU,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        NGOAI_NGU,
+        VietnameseSubject.SINH_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        NGOAI_NGU,
+        VietnameseSubject.DIA_LY,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        NGOAI_NGU,
+        VietnameseSubject.GDKTPL,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        NGOAI_NGU,
+        VietnameseSubject.TIN_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        NGOAI_NGU,
+        VietnameseSubject.CONG_NGHE,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.DIA_LY,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.CONG_NGHE,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.TIN_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.GDKTPL,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.GDKTPL,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.TIN_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.CONG_NGHE,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.DIA_LY,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.DIA_LY,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.HOA_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.GDKTPL,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.SINH_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.TIN_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.CONG_NGHE,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.GDKTPL,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.GDKTPL,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.TIN_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.TIN_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.CONG_NGHE,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.CONG_NGHE,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.GDKTPL,
+        VietnameseSubject.TIN_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.SINH_HOC,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.GDKTPL,
+        VietnameseSubject.CONG_NGHE,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.VAT_LY,
+    ],
+    [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.CONG_NGHE,
+        VietnameseSubject.TIN_HOC,
+    ],
+];
+
+// Helper function to get a human-readable list of all valid combinations
+export function getValidCombinationsDisplay(): string[] {
+    return VALID_EXAM_COMBINATIONS.map((combo) =>
+        combo
+            .map((subject) => (subject === NGOAI_NGU ? "ngoại ngữ" : subject))
+            .join(" + "),
+    );
+}
