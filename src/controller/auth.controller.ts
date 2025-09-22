@@ -28,10 +28,27 @@ import { TYPES } from "@/type/container/types.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
 
+/**
+ * Controller responsible for handling authentication-related HTTP requests.
+ * Provides endpoints for user authentication, registration, token management, and session handling.
+ *
+ * This controller implements JWT-based authentication with refresh token rotation
+ * and comprehensive security measures including token blacklisting and family invalidation.
+ *
+ * @class AuthController
+ * @extends {Controller}
+ */
 @injectable()
 @Route("auth")
 @Tags("Authentication")
 export class AuthController extends Controller {
+    /**
+     * Creates an instance of AuthController.
+     *
+     * @param {AuthService} authService - Service for handling authentication business logic
+     * @param {Logger} logger - Winston logger for request/response logging
+     * @memberof AuthController
+     */
     constructor(
         @inject(TYPES.AuthService) private authService: AuthService,
         @inject(TYPES.Logger) private logger: Logger,
@@ -39,6 +56,28 @@ export class AuthController extends Controller {
         super();
     }
 
+    /**
+     * Authenticates a user with email and password credentials.
+     * Upon successful authentication, returns access and refresh tokens along with user information.
+     *
+     * @summary Authenticates a user with email and password credentials
+     * @param {LoginRequest} loginData - User credentials containing email and password
+     * @returns {Promise<AuthResponse>} Authentication response with tokens and user data
+     *
+     * @throws {ValidationException} When request body validation fails
+     * @throws {BadCredentialsException} When email or password is incorrect
+     * @throws {HttpException} When account is inactive or internal error occurs
+     *
+     * @example
+     * POST /auth/login
+     * Content-Type: application/json
+     * {
+     *   "email": "jane.doe@example.com",
+     *   "password": "SecurePass123!"
+     * }
+     *
+     * @memberof AuthController
+     */
     @Middlewares(validateDTO(LoginRequest))
     @Post("login")
     @Produces("application/json")
@@ -52,12 +91,47 @@ export class AuthController extends Controller {
         return authResponse;
     }
 
+    /**
+     * Logs out an authenticated user by blacklisting their access and/or refresh tokens.
+     * This endpoint invalidates the current session and prevents further use of the provided tokens.
+     *
+     * The client should send the refresh token in the request body for complete logout.
+     * The access token is automatically extracted from the Authorization header.
+     *
+     * @summary Logs out an authenticated user by blacklisting their access and/or refresh tokens.
+     * @param {AuthenticatedRequest} request - Express request object with authenticated user context
+     * @param {Object} [body] - Optional request body containing refreshToken
+     * @param {string} [body.refreshToken] - Refresh token to be blacklisted (recommended for security)
+     * @returns {Promise<{message: string; success: boolean}>} Logout confirmation response
+     *
+     * @throws {JwtException} When no access token is provided in Authorization header
+     *
+     * @example
+     * POST /auth/logout
+     * Authorization: Bearer <access_token>
+     * Content-Type: application/json
+     * {
+     *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+     * }
+     *
+     * @requestBody
+     * {
+     *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+     * }
+     *
+     * @memberof AuthController
+     */
     @Post("logout")
     @Produces("application/json")
+    @Response("400", "No access token provided")
     @Security("bearerAuth")
     @SuccessResponse("200", "Logout successful")
     public async logout(
         @Request() request: AuthenticatedRequest,
+        /**
+         * Optional request body for logout
+         * @example {"refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}
+         */
         @Body() body?: { refreshToken?: string },
     ): Promise<{
         message: string;
@@ -87,6 +161,33 @@ export class AuthController extends Controller {
         return result;
     }
 
+    /**
+     * Refreshes an expired or expiring access token using a valid refresh token.
+     * This endpoint implements secure token rotation - the old refresh token is invalidated
+     * and new access and refresh tokens are issued with the same token family ID.
+     *
+     * Token reuse detection: If a blacklisted or expired refresh token is used,
+     * the entire token family is invalidated as a security measure.
+     *
+     * @summary  Refreshes an expired or expiring access token using a valid refresh token
+     * @param {RefreshTokenRequest} refreshData - Request containing the refresh token
+     * @returns {Promise<AuthResponse>} New authentication response with fresh tokens
+     *
+     * @throws {ValidationException} When request body validation fails
+     * @throws {JwtException} When refresh token is missing, invalid, expired, or reused
+     * @throws {AuthenticationException} When the user no longer exists
+     * @throws {AccessDeniedException} When the user account is inactive
+     * @throws {HttpException} When JWT verification fails or internal error occurs
+     *
+     * @example
+     * POST /auth/refresh
+     * Content-Type: application/json
+     * {
+     *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+     * }
+     *
+     * @memberof AuthController
+     */
     @Middlewares(validateDTO(RefreshTokenRequest))
     @Post("refresh")
     @Produces("application/json")
@@ -110,6 +211,32 @@ export class AuthController extends Controller {
         return authResponse;
     }
 
+    /**
+     * Registers a new user account with email and password.
+     * Upon successful registration, the user is automatically logged in and receives
+     * access and refresh tokens along with their user profile information.
+     *
+     * New users are created with default USER role and HAPPY status.
+     * Passwords are securely hashed using bcrypt with 12 salt rounds.
+     *
+     * @summary  Registers a new user account with email and password
+     * @param {RegisterRequest} registerData - Registration data containing email and password
+     * @returns {Promise<AuthResponse>} Authentication response with tokens and new user data
+     *
+     * @throws {ValidationException} When request body validation fails
+     * @throws {EntityExistsException} When a user with the email already exists
+     * @throws {HttpException} When internal error occurs during registration
+     *
+     * @example
+     * POST /auth/register
+     * Content-Type: application/json
+     * {
+     *   "email": "jane.doe@example.com",
+     *   "password": "SecurePass123!"
+     * }
+     *
+     * @memberof AuthController
+     */
     @Middlewares(validateDTO(RegisterRequest))
     @Post("register")
     @Produces("application/json")
