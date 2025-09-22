@@ -31,10 +31,23 @@ import { AuthenticatedRequest } from "@/type/express/express.js";
 import { PageableQuery, PageRequest } from "@/type/pagination/page-request.js";
 import { Page } from "@/type/pagination/page.js";
 
+/**
+ * Controller responsible for handling admission-related HTTP requests.
+ * Provides endpoints for retrieving paginated admission data for both authenticated users and guests.
+ *
+ * @class AdmissionController
+ * @extends {Controller}
+ */
 @injectable()
 @Route("admission")
 @Tags("Admissions")
 export class AdmissionController extends Controller {
+    /**
+     * Creates an instance of AdmissionController.
+     *
+     * @param {AdmissionService} admissionService - Service for handling admission business logic
+     * @memberof AdmissionController
+     */
     constructor(
         @inject(TYPES.AdmissionService)
         private readonly admissionService: AdmissionService,
@@ -42,6 +55,24 @@ export class AdmissionController extends Controller {
         super();
     }
 
+    /**
+     * Retrieves a paginated list of admissions for a specific student profile.
+     * This endpoint requires authentication and validates that the user has access to the requested student profile.
+     *
+     * @summary Get student profile's admission(s) for authenticated user
+     * @param {string} studentId - UUID of the student profile to retrieve admissions for
+     * @param {AuthenticatedRequest} request - Express request object containing authenticated user information
+     * @param {AdmissionSearchQuery} queryParams - Query parameters for pagination, sorting, and filtering
+     * @returns {Promise<Page<AdmissionResponse>>} Paginated list of admission responses
+     *
+     * @throws {ValidationException} When the page request parameters are invalid
+     * @throws {EntityNotFoundException} When the student profile is not found or doesn't belong to the authenticated user
+     *
+     * @example
+     * GET /admission/550e8400-e29b-41d4-a716-446655440000?page=0&size=20
+     *
+     * @memberof AdmissionController
+     */
     @Get("{studentId}")
     @Middlewares(
         validateUuidParam("studentId"),
@@ -92,6 +123,24 @@ export class AdmissionController extends Controller {
         ) as Page<AdmissionResponse>;
     }
 
+    /**
+     * Retrieves a paginated list of admissions for a public student profile.
+     * This endpoint is accessible without authentication and only returns data for public student profiles
+     * (profiles where userId is null).
+     *
+     * @summary Get student profile's admission(s) for guest user
+     * @param {string} studentId - UUID of the public student profile to retrieve admissions for
+     * @param {AdmissionSearchQuery} queryParams - Query parameters for pagination, sorting, and filtering
+     * @returns {Promise<Page<AdmissionResponse>>} Paginated list of admission responses
+     *
+     * @throws {ValidationException} When the page request parameters are invalid
+     * @throws {EntityNotFoundException} When the public student profile is not found
+     *
+     * @example
+     * GET /admission/guest/550e8400-e29b-41d4-a716-446655440000?page=0&size=20
+     *
+     * @memberof AdmissionController
+     */
     @Get("guest/{studentId}")
     @Middlewares(
         validateUuidParam("studentId"),
