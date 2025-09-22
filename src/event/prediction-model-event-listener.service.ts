@@ -123,7 +123,7 @@ export class PredictionModelEventListenerService {
             }
 
             this.logger.info("Processing admissions from predictions", {
-                admissionCodes: admissionCodes,
+                admissionCodes: admissionCodes.slice(0, 10),
                 admissionCodesCount: admissionCodes.length,
                 duplicatesRemoved:
                     l1RawCodesCount + l2RawCodesCount - admissionCodes.length,
@@ -152,7 +152,7 @@ export class PredictionModelEventListenerService {
                 this.logger.warn(
                     "No matching admissions found for prediction codes",
                     {
-                        admissionCodes: admissionCodes,
+                        admissionCodes: admissionCodes.slice(0, 10),
                         studentId,
                     },
                 );
@@ -214,7 +214,7 @@ export class PredictionModelEventListenerService {
                 const admissionCodes = admissions.map((e) => e.admissionCode);
 
                 this.logger.debug("Processed admission details", {
-                    admissionCodes: admissionCodes, // Automatically truncated
+                    admissionCodes: admissionCodes.slice(0, 5),
                     processedAdmissionsCount: admissions.length,
                     studentId,
                 });
