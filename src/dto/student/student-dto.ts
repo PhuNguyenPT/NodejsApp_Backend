@@ -27,6 +27,7 @@ import { VietnameseSubject } from "@/type/enum/subject.js";
 import { UniType } from "@/type/enum/uni-type.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese-provinces.js";
 import { IsArrayUnique } from "@/validator/is-array-unique.validator.js";
+import { IsValidNationalExamSubjects } from "@/validator/is-national-exam-subject.validator.js";
 import { IsUniqueSubject } from "@/validator/is-unique-name.validator.js";
 
 export class StudentInfoDTO {
@@ -260,16 +261,8 @@ export class StudentInfoDTO {
      * Array of exactly 4 exam subjects
      * @example [{ "name": "Toán", "score": 8.0 }, { "name": "Ngữ Văn", "score": 7.0 }, { "name": "Tiếng Anh", "score": 9.5 }, { "name": "Vật Lý", "score": 8.75 }]
      */
-    @ArrayMaxSize(4, {
-        message: "Exam Subjects must contain exactly 4 subjects",
-    })
-    @ArrayMinSize(4, {
-        message: "Exam Subjects must contain exactly 4 subjects",
-    })
     @Expose()
-    @IsArray()
-    @IsNotEmpty({ message: "National exams are required" })
-    @IsUniqueSubject({ message: "National exams must have unique names" })
+    @IsValidNationalExamSubjects()
     @Type(() => ExamSubject)
     @ValidateNested({ each: true })
     nationalExams!: ExamSubject[];

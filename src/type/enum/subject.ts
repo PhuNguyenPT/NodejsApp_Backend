@@ -4,6 +4,7 @@
  */
 export enum VietnameseSubject {
     BIEU_DIEN_NGHE_THUAT = "Biểu diễn nghệ thuật",
+    CONG_NGHE = "Công Nghệ",
     DIA_LY = "Địa Lý",
     DOC_HIEU = "Đọc hiểu",
     DOC_KE_DIEN_CAM = "Đọc kể diễn cảm",
@@ -36,6 +37,7 @@ export enum VietnameseSubject {
     TIENG_NHAT = "Tiếng Nhật",
     TIENG_PHAP = "Tiếng Pháp",
     TIENG_TRUNG = "Tiếng Trung",
+    TIN_HOC = "Tin Học",
     TOAN = "Toán",
     TRANG_TRI = "Trang trí",
     TU_DUY_GIAI_QUYET_NGU_VAN_DE = "Tư duy Khoa học Giải quyết vấn đề",
@@ -593,6 +595,37 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.GDKTPL,
         VietnameseSubject.NANG_KHIEU_TDTT,
     ],
+    TAC: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.TIENG_ANH,
+        VietnameseSubject.CONG_NGHE,
+    ],
+    TAT: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.TIENG_ANH,
+        VietnameseSubject.TIN_HOC,
+    ],
+    THC: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.CONG_NGHE,
+    ],
+    TLC: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.CONG_NGHE,
+    ],
+
+    TLT: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.TIN_HOC,
+    ],
+    TVT: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.TIN_HOC,
+    ],
     // Khối V
     V02: [
         VietnameseSubject.VE_MY_THUAT,
@@ -614,7 +647,6 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.DIA_LY,
         VietnameseSubject.VE_MY_THUAT,
     ],
-
     V10: [
         VietnameseSubject.TOAN,
         VietnameseSubject.TIENG_PHAP,
@@ -628,21 +660,6 @@ export const SUBJECT_GROUPS = {
 } as const;
 
 // The rest of the helper functions remain the same as they operate on the data structures above.
-
-/**
- * Core subjects required for graduation
- */
-export const CORE_SUBJECTS = [
-    VietnameseSubject.TOAN,
-    VietnameseSubject.NGU_VAN,
-    VietnameseSubject.TIENG_ANH,
-    VietnameseSubject.VAT_LY,
-    VietnameseSubject.HOA_HOC,
-    VietnameseSubject.SINH_HOC,
-    VietnameseSubject.LICH_SU,
-    VietnameseSubject.DIA_LY,
-    VietnameseSubject.GDCD,
-] as const;
 
 /**
  * Type representing all possible subject group keys
@@ -753,13 +770,6 @@ export function getSubjectVariations(subject: VietnameseSubject): string[] {
     }
 
     return variations;
-}
-
-/**
- * Check if a subject is a core subject
- */
-export function isCoreSubject(subject: VietnameseSubject): boolean {
-    return (CORE_SUBJECTS as readonly VietnameseSubject[]).includes(subject);
 }
 
 /**
