@@ -595,6 +595,37 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.GDKTPL,
         VietnameseSubject.NANG_KHIEU_TDTT,
     ],
+    TAC: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.TIENG_ANH,
+        VietnameseSubject.CONG_NGHE,
+    ],
+    TAT: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.TIENG_ANH,
+        VietnameseSubject.TIN_HOC,
+    ],
+    THC: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.CONG_NGHE,
+    ],
+    TLC: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.CONG_NGHE,
+    ],
+
+    TLT: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.VAT_LY,
+        VietnameseSubject.TIN_HOC,
+    ],
+    TVT: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.TIN_HOC,
+    ],
     // Khối V
     V02: [
         VietnameseSubject.VE_MY_THUAT,
@@ -616,7 +647,6 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.DIA_LY,
         VietnameseSubject.VE_MY_THUAT,
     ],
-
     V10: [
         VietnameseSubject.TOAN,
         VietnameseSubject.TIENG_PHAP,
@@ -630,28 +660,6 @@ export const SUBJECT_GROUPS = {
 } as const;
 
 // The rest of the helper functions remain the same as they operate on the data structures above.
-
-/**
- * National exam subjects required for graduation
- */
-export const CORE_SUBJECTS = [
-    VietnameseSubject.TOAN,
-    VietnameseSubject.NGU_VAN,
-    VietnameseSubject.TIENG_ANH,
-    VietnameseSubject.TIENG_DUC,
-    VietnameseSubject.TIENG_NGA,
-    VietnameseSubject.TIENG_NHAT,
-    VietnameseSubject.TIENG_PHAP,
-    VietnameseSubject.TIENG_TRUNG,
-    VietnameseSubject.VAT_LY,
-    VietnameseSubject.HOA_HOC,
-    VietnameseSubject.SINH_HOC,
-    VietnameseSubject.LICH_SU,
-    VietnameseSubject.DIA_LY,
-    VietnameseSubject.GDKTPL,
-    VietnameseSubject.TIN_HOC,
-    VietnameseSubject.CONG_NGHE,
-] as const;
 
 /**
  * Type representing all possible subject group keys
@@ -762,13 +770,6 @@ export function getSubjectVariations(subject: VietnameseSubject): string[] {
     }
 
     return variations;
-}
-
-/**
- * Check if a subject is a core subject
- */
-export function isCoreSubject(subject: VietnameseSubject): boolean {
-    return (CORE_SUBJECTS as readonly VietnameseSubject[]).includes(subject);
 }
 
 /**

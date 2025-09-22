@@ -6,14 +6,12 @@ import {
 
 import {
     FOREIGN_LANGUAGES,
+    isNationalExamSubjects,
+    NationalExamSubjects,
     NGOAI_NGU,
     VALID_EXAM_COMBINATIONS,
 } from "@/type/enum/national-exam-subject.js";
-import {
-    CORE_SUBJECTS,
-    isCoreSubject,
-    VietnameseSubject,
-} from "@/type/enum/subject.js";
+import { VietnameseSubject } from "@/type/enum/subject.js";
 
 // Detailed validator with specific error messages
 export function IsValidNationalExamSubjects(
@@ -63,11 +61,11 @@ export function IsValidNationalExamSubjects(
                     const invalidSubjects = subjectNames.filter(
                         (name) =>
                             typeof name !== "string" ||
-                            !isCoreSubject(name as VietnameseSubject),
+                            !isNationalExamSubjects(name as VietnameseSubject),
                     );
 
                     if (invalidSubjects.length > 0) {
-                        const allowedValues = CORE_SUBJECTS.join(", ");
+                        const allowedValues = NationalExamSubjects.join(", ");
                         return `${args.property} contains invalid subjects: ${invalidSubjects.join(", ")}. Allowed values: ${allowedValues}`;
                     }
 
@@ -105,7 +103,7 @@ export function IsValidNationalExamSubjects(
                     const allValidSubjects = subjectNames.every(
                         (name) =>
                             typeof name === "string" &&
-                            isCoreSubject(name as VietnameseSubject),
+                            isNationalExamSubjects(name as VietnameseSubject),
                     );
 
                     const uniqueSubjects = new Set(subjectNames);

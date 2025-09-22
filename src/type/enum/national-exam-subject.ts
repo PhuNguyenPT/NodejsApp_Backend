@@ -16,6 +16,37 @@ export const FOREIGN_LANGUAGES = [
 // Type for foreign language subjects
 export type ForeignLanguageSubject = (typeof FOREIGN_LANGUAGES)[number];
 
+/**
+ * National exam subjects required for graduation
+ */
+export const NationalExamSubjects = [
+    VietnameseSubject.TOAN,
+    VietnameseSubject.NGU_VAN,
+    VietnameseSubject.TIENG_ANH,
+    VietnameseSubject.TIENG_DUC,
+    VietnameseSubject.TIENG_NGA,
+    VietnameseSubject.TIENG_NHAT,
+    VietnameseSubject.TIENG_PHAP,
+    VietnameseSubject.TIENG_TRUNG,
+    VietnameseSubject.VAT_LY,
+    VietnameseSubject.HOA_HOC,
+    VietnameseSubject.SINH_HOC,
+    VietnameseSubject.LICH_SU,
+    VietnameseSubject.DIA_LY,
+    VietnameseSubject.GDKTPL,
+    VietnameseSubject.TIN_HOC,
+    VietnameseSubject.CONG_NGHE,
+] as const;
+
+/**
+ * Check if a subject is a core subject
+ */
+export function isNationalExamSubjects(subject: VietnameseSubject): boolean {
+    return (NationalExamSubjects as readonly VietnameseSubject[]).includes(
+        subject,
+    );
+}
+
 // Define the 36 valid combinations using NGOAI_NGU constant for "ngoại ngữ"
 export const VALID_EXAM_COMBINATIONS: (
     | typeof NGOAI_NGU
