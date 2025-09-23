@@ -25,6 +25,7 @@ import { PredictionResultEntity } from "@/entity/prediction-result.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import { ExamType } from "@/type/enum/exam.js";
 import { MajorGroup } from "@/type/enum/major.js";
+import { NationalExamSubject } from "@/type/enum/national-exam-subject.js";
 import { NationalExcellentStudentExamSubject } from "@/type/enum/national-excellent-exam.js";
 import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
@@ -53,6 +54,11 @@ export interface ConductData {
 // Updated to use VietnameseSubject enum for subject name
 export interface ExamSubjectData {
     name: VietnameseSubject;
+    score: number;
+}
+
+export interface NationalExamData {
+    name: NationalExamSubject;
     score: number;
 }
 
@@ -178,7 +184,7 @@ export class StudentEntity {
     modifiedBy?: string;
 
     @Column({ nullable: true, type: "jsonb" })
-    nationalExams?: ExamSubjectData[];
+    nationalExams?: NationalExamData[];
 
     @OneToOne("PredictionResultEntity", "student", {
         cascade: true,

@@ -14,6 +14,10 @@ import {
 
 import { AptitudeTestDTO } from "@/dto/student/aptitude-test-dto.js";
 import { ExamType } from "@/type/enum/exam.js";
+import {
+    NationalExamSubject,
+    NationalExamSubjects,
+} from "@/type/enum/national-exam-subject.js";
 import { VietnameseSubject } from "@/type/enum/subject.js"; // Import VietnameseSubject enum
 import {
     TalentExamSubject,
@@ -64,9 +68,9 @@ export class ExamProfileDTO {
     @ArrayMinSize(4)
     @Expose()
     @IsArray()
-    @Type(() => ExamSubject)
+    @Type(() => NationalExam)
     @ValidateNested({ each: true })
-    public nationalExams: ExamSubject[];
+    public nationalExams: NationalExam[];
 
     /**
      * VSAT scores - array of exactly 3 scores (0-150 each)
@@ -110,7 +114,7 @@ export class ExamProfileDTO {
      * @example [new VsatExamSubject(VietnameseSubject.TOAN, 120), new VsatExamSubject(VietnameseSubject.VAN, 130), new VsatExamSubject(VietnameseSubject.TIENG_ANH, 125)]
      */
     constructor(
-        subjects: ExamSubject[],
+        subjects: NationalExam[],
         aptitudeTestData?: AptitudeTestDTO,
         vsatScores?: VsatExamSubject[],
     ) {
@@ -137,12 +141,12 @@ export class ExamProfileDTO {
      * @returns ExamProfileDTO instance
      */
     static fromStudentEntity(
-        subjects: { name: VietnameseSubject; score: number }[],
+        subjects: { name: NationalExamSubject; score: number }[],
         aptitudeTestData?: { examType: ExamType; score: number },
         vsatScores?: VsatExamSubject[],
     ): ExamProfileDTO {
         const examSubjects = subjects.map(
-            (s) => new ExamSubject(s.name, s.score),
+            (s) => new NationalExam(s.name, s.score),
         );
 
         let aptitudeDTO: AptitudeTestDTO | undefined;
@@ -217,7 +221,7 @@ export class ExamProfileDTO {
      */
     toStudentEntityData(): {
         aptitudeTestScore?: { examType: ExamType; score: number };
-        nationalExams: { name: VietnameseSubject; score: number }[]; // Updated to VietnameseSubject
+        nationalExams: { name: NationalExamSubject; score: number }[]; // Updated to VietnameseSubject
         vsatScores?: VsatExamSubject[];
     } {
         return {
@@ -273,6 +277,45 @@ export class ExamSubject {
 }
 
 /**
+ * Represents a single national exam subject and its score
+ * Only accepts subjects that are valid for national exams
+ */
+export class NationalExam {
+    /**
+     * National exam subject name - restricted to national exam subjects only
+     * @example "Toán"
+     */
+    @Expose()
+    @IsEnum(NationalExamSubjects, {
+        message:
+            "name must be one of the following national exam subjects: " +
+            NationalExamSubjects.join(", "),
+    })
+    @IsNotEmpty()
+    public name: NationalExamSubject;
+
+    /**
+     * Subject score (0.0 - 10.0)
+     * @example 8.0
+     */
+    @Expose()
+    @IsNumber({ maxDecimalPlaces: 2 })
+    @Max(10)
+    @Min(0)
+    public score: number;
+
+    /**
+     * Creates a new NationalExam instance
+     * @param name - The national exam subject name
+     * @param score - The subject score (0.0 - 10.0)
+     */
+    constructor(name: NationalExamSubject, score: number) {
+        this.name = name;
+        this.score = score;
+    }
+}
+
+/**
  * Represents a single talent exam subject and its score
  * Only accepts talent-specific subjects
  */
@@ -305,8 +348,8 @@ export class TalentExam {
      * @param name - The talent subject name
      * @param score - The subject score (0.0 - 10.0)
      */
-    constructor(name: VietnameseSubject, score: number) {
-        this.name = name as TalentExamSubject;
+    constructor(name: TalentExamSubject, score: number) {
+        this.name = name;
         this.score = score;
     }
 }

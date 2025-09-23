@@ -18,7 +18,7 @@ import { AwardRequest } from "@/dto/student/award-request.js";
 import { CertificationRequest } from "@/dto/student/certification-request.js";
 import { ConductRequest } from "@/dto/student/conduct-request.js";
 import {
-    ExamSubject,
+    NationalExam,
     TalentExam,
     VsatExamSubject,
 } from "@/dto/student/exam-profile-dto.js";
@@ -277,14 +277,14 @@ export class StudentRequest {
     minBudget!: number;
 
     /**
-     * Array of exactly 4 exam subjects
+     * Array of exactly 4 national exam subjects
      * @example [{ "name": "Toán", "score": 8.0 }, { "name": "Ngữ Văn", "score": 7.0 }, { "name": "Tiếng Anh", "score": 9.5 }, { "name": "Vật Lý", "score": 8.75 }]
      */
     @Expose()
     @IsValidNationalExamSubjects()
-    @Type(() => ExamSubject)
+    @Type(() => NationalExam) // Changed from ExamSubject to NationalExam
     @ValidateNested({ each: true })
-    nationalExams!: ExamSubject[];
+    nationalExams!: NationalExam[];
 
     /**
      * Province or city where the student's university/college is located
