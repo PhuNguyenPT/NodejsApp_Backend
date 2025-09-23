@@ -102,6 +102,9 @@ export class StudentInfoDTO {
      *   }
      * ]
      */
+    @ArrayMaxSize(3, {
+        message: "Awards must contain at most 3 awards",
+    })
     @Expose()
     @IsArray({ message: "Awards must be an array" })
     @IsOptional()
@@ -118,6 +121,9 @@ export class StudentInfoDTO {
      * @optional
      * @see CertificationDTO for detailed structure and validation rules
      */
+    @ArrayMaxSize(3, {
+        message: "Certifications must contain at most 3 certifications",
+    })
     @Expose()
     @IsArray({ message: "Certifications must be an array" })
     @IsOptional()

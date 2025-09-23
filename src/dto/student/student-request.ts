@@ -103,6 +103,9 @@ export class StudentRequest {
      *   }
      * ]
      */
+    @ArrayMaxSize(3, {
+        message: "Awards must contain at most 3 awards",
+    })
     @Expose()
     @IsArray({ message: "Awards must be an array" })
     @IsOptional()
@@ -136,6 +139,9 @@ export class StudentRequest {
      *   }
      * ]
      */
+    @ArrayMaxSize(3, {
+        message: "Certifications must contain at most 3 certifications",
+    })
     @Expose()
     @IsArray({ message: "Certifications must be an array" })
     @IsOptional()
