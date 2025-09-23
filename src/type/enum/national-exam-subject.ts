@@ -39,7 +39,7 @@ export const NationalExamSubjects = [
 ] as const;
 
 /**
- * Check if a subject is a core subject
+ * Check if a subject is a national subject
  */
 export function isNationalExamSubjects(subject: VietnameseSubject): boolean {
     return (NationalExamSubjects as readonly VietnameseSubject[]).includes(

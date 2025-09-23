@@ -15,6 +15,10 @@ import {
 import { AptitudeTestDTO } from "@/dto/student/aptitude-test-dto.js";
 import { ExamType } from "@/type/enum/exam.js";
 import { VietnameseSubject } from "@/type/enum/subject.js"; // Import VietnameseSubject enum
+import {
+    TalentExamSubject,
+    TalentExamSubjects,
+} from "@/type/enum/talent-exam.js";
 
 /**
  * Represents a complete exam profile containing subject scores and optional test scores
@@ -264,6 +268,45 @@ export class ExamSubject {
      */
     constructor(name: VietnameseSubject, score: number) {
         this.name = name;
+        this.score = score;
+    }
+}
+
+/**
+ * Represents a single talent exam subject and its score
+ * Only accepts talent-specific subjects
+ */
+export class TalentExam {
+    /**
+     * Talent subject name - restricted to talent subjects only
+     * @example "Đọc kể diễn cảm"
+     */
+    @Expose()
+    @IsEnum(TalentExamSubjects, {
+        message:
+            "name must be one of the following talent subjects: " +
+            TalentExamSubjects.join(", "),
+    })
+    @IsNotEmpty()
+    public name: TalentExamSubject;
+
+    /**
+     * Subject score (0.0 - 10.0)
+     * @example 8.0
+     */
+    @Expose()
+    @IsNumber({ maxDecimalPlaces: 2 })
+    @Max(10)
+    @Min(0)
+    public score: number;
+
+    /**
+     * Creates a new TalentExam instance
+     * @param name - The talent subject name
+     * @param score - The subject score (0.0 - 10.0)
+     */
+    constructor(name: VietnameseSubject, score: number) {
+        this.name = name as TalentExamSubject;
         this.score = score;
     }
 }

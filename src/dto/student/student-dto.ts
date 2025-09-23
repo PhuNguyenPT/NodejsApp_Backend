@@ -19,6 +19,7 @@ import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import {
     ExamSubject,
+    TalentExam,
     VsatExamSubject,
 } from "@/dto/student/exam-profile-dto.js";
 import { MajorGroup } from "@/type/enum/major.js";
@@ -300,15 +301,16 @@ export class StudentInfoDTO {
     /**
      * Talent score representing the student's aptitude or potential
      * Optional field that can be used to indicate the student's talent level
+     * Only accepts subjects that are valid talent exam subjects
      * @example [{ "name": "Đọc kể diễn cảm", "score": 8.0 }, { "name": "Hát", "score": 7.0 }]
      */
     @Expose()
     @IsArray()
     @IsOptional()
     @IsUniqueSubject({ message: "Talent scores must have unique names" })
-    @Type(() => ExamSubject)
+    @Type(() => TalentExam)
     @ValidateNested({ each: true })
-    talentScores?: ExamSubject[];
+    talentScores?: TalentExam[];
 
     /**
      * @example "Công lập"

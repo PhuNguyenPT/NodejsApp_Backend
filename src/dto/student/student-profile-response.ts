@@ -9,6 +9,7 @@ import { CertificationResponse } from "@/dto/student/certification-response.js";
 import { ConductResponse } from "@/dto/student/conduct-response.js";
 import {
     ExamSubject,
+    TalentExam,
     VsatExamSubject,
 } from "@/dto/student/exam-profile-dto.js";
 import { MajorGroup } from "@/type/enum/major.js";
@@ -204,8 +205,8 @@ export class StudentProfileResponse {
      * @example [{ "name": "Đọc kể diễn cảm", "score": 8.0 }, { "name": "Hát", "score": 7.0 }]
      */
     @Expose()
-    @Type(() => ExamSubject)
-    talentScores?: ExamSubject[];
+    @Type(() => TalentExam)
+    talentScores?: TalentExam[];
 
     /**
      * @example "Công lập"
