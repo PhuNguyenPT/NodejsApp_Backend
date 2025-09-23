@@ -19,7 +19,7 @@ export type ForeignLanguageSubject = (typeof FOREIGN_LANGUAGES)[number];
 /**
  * National exam subjects required for graduation
  */
-export const NationalExamSubjects = [
+export const NationalExamSubjectsArray = [
     VietnameseSubject.TOAN,
     VietnameseSubject.NGU_VAN,
     VietnameseSubject.TIENG_ANH,
@@ -38,11 +38,16 @@ export const NationalExamSubjects = [
     VietnameseSubject.CONG_NGHE,
 ] as const;
 
+// Export the array for use in validation messages and loops
+export const NationalExamSubjects = NationalExamSubjectsArray;
+
+export type NationalExamSubject = (typeof NationalExamSubjectsArray)[number];
+
 /**
- * Check if a subject is a core subject
+ * Check if a subject is a national subject
  */
 export function isNationalExamSubjects(subject: VietnameseSubject): boolean {
-    return (NationalExamSubjects as readonly VietnameseSubject[]).includes(
+    return (NationalExamSubjectsArray as readonly VietnameseSubject[]).includes(
         subject,
     );
 }

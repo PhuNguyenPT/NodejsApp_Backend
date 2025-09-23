@@ -8,7 +8,8 @@ import { AwardResponse } from "@/dto/student/award-response.js";
 import { CertificationResponse } from "@/dto/student/certification-response.js";
 import { ConductResponse } from "@/dto/student/conduct-response.js";
 import {
-    ExamSubject,
+    NationalExam,
+    TalentExam,
     VsatExamSubject,
 } from "@/dto/student/exam-profile-dto.js";
 import { MajorGroup } from "@/type/enum/major.js";
@@ -166,13 +167,13 @@ export class StudentProfileResponse {
     /**
      * List of exactly 4 exam subjects with their scores
      *
-     * @type {ExamSubject[]}
-     * @see ExamSubject for detailed structure and validation rules
+     * @type {NationalExam[]}
+     * @see NationalExam for detailed structure and validation rules
      * @example [{ "name": "Toán", "score": 8.0 }, { "name": "Ngữ Văn", "score": 7.0 }, { "name": "Tiếng Anh", "score": 9.5 }, { "name": "Vật Lý", "score": 8.75 }]
      */
     @Expose()
-    @Type(() => ExamSubject)
-    nationalExams!: ExamSubject[];
+    @Type(() => NationalExam)
+    nationalExams!: NationalExam[];
 
     /**
      * Province or city where the student's university/college is located
@@ -204,8 +205,8 @@ export class StudentProfileResponse {
      * @example [{ "name": "Đọc kể diễn cảm", "score": 8.0 }, { "name": "Hát", "score": 7.0 }]
      */
     @Expose()
-    @Type(() => ExamSubject)
-    talentScores?: ExamSubject[];
+    @Type(() => TalentExam)
+    talentScores?: TalentExam[];
 
     /**
      * @example "Công lập"

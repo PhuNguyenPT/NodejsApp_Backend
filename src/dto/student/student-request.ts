@@ -18,7 +18,8 @@ import { AwardRequest } from "@/dto/student/award-request.js";
 import { CertificationRequest } from "@/dto/student/certification-request.js";
 import { ConductRequest } from "@/dto/student/conduct-request.js";
 import {
-    ExamSubject,
+    NationalExam,
+    TalentExam,
     VsatExamSubject,
 } from "@/dto/student/exam-profile-dto.js";
 import { MajorGroup } from "@/type/enum/major.js";
@@ -276,14 +277,14 @@ export class StudentRequest {
     minBudget!: number;
 
     /**
-     * Array of exactly 4 exam subjects
+     * Array of exactly 4 national exam subjects
      * @example [{ "name": "Toán", "score": 8.0 }, { "name": "Ngữ Văn", "score": 7.0 }, { "name": "Tiếng Anh", "score": 9.5 }, { "name": "Vật Lý", "score": 8.75 }]
      */
     @Expose()
     @IsValidNationalExamSubjects()
-    @Type(() => ExamSubject)
+    @Type(() => NationalExam) // Changed from ExamSubject to NationalExam
     @ValidateNested({ each: true })
-    nationalExams!: ExamSubject[];
+    nationalExams!: NationalExam[];
 
     /**
      * Province or city where the student's university/college is located
@@ -318,15 +319,16 @@ export class StudentRequest {
     /**
      * Talent score representing the student's aptitude or potential
      * Optional field that can be used to indicate the student's talent level
+     * Only accepts subjects that are valid talent exam subjects
      * @example [{ "name": "Đọc kể diễn cảm", "score": 8.0 }, { "name": "Hát", "score": 7.0 }]
      */
     @Expose()
     @IsArray()
     @IsOptional()
     @IsUniqueSubject({ message: "Talent scores must have unique names" })
-    @Type(() => ExamSubject)
+    @Type(() => TalentExam)
     @ValidateNested({ each: true })
-    talentScores?: ExamSubject[];
+    talentScores?: TalentExam[];
 
     /**
      * @example "Công lập"

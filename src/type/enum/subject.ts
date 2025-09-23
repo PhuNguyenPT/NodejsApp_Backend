@@ -8,7 +8,6 @@ export enum VietnameseSubject {
     DIA_LY = "Địa Lý",
     DOC_HIEU = "Đọc hiểu",
     DOC_KE_DIEN_CAM = "Đọc kể diễn cảm",
-    GDCD = "Giáo Dục Công Dân",
     GDKTPL = "Giáo dục Kinh tế và Pháp luật",
     HAT = "Hát",
     HAT_BIEU_DIEN_NHAC_CU = "Hát hoặc biểu diễn nhạc cụ",

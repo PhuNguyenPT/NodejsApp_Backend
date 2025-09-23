@@ -281,8 +281,10 @@ export class PredictionModelService implements IPredictionModelService {
                 this.calculateSubjectGroupScores(studentInfoDTO);
 
             // Filter to only groups that can be formed with national exam subjects only
-            const nationalSubjects = new Set(
-                studentInfoDTO.nationalExams.map((e) => e.name),
+            const nationalSubjects = new Set<VietnameseSubject>(
+                studentInfoDTO.nationalExams.map(
+                    (e) => e.name as VietnameseSubject,
+                ),
             );
             const nationalOnlyGroups = subjectGroupScores.filter((group) =>
                 group.subjects.every((subject) =>
@@ -325,10 +327,10 @@ export class PredictionModelService implements IPredictionModelService {
         const subjectGroupScores =
             this.calculateSubjectGroupScores(studentInfoDTO);
 
-        // Filter to only groups that include talent score subjects
-        const talentSubjects = new Set(
-            studentInfoDTO.talentScores.map((t) => t.name),
+        const talentSubjects = new Set<VietnameseSubject>(
+            studentInfoDTO.talentScores.map((t) => t.name as VietnameseSubject),
         );
+
         const talentScenarios = subjectGroupScores
             .filter((group) =>
                 group.subjects.some((subject) => talentSubjects.has(subject)),

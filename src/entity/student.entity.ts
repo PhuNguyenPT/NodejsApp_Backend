@@ -25,9 +25,14 @@ import { PredictionResultEntity } from "@/entity/prediction-result.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import { ExamType } from "@/type/enum/exam.js";
 import { MajorGroup } from "@/type/enum/major.js";
+import { NationalExamSubject } from "@/type/enum/national-exam-subject.js";
 import { NationalExcellentStudentExamSubject } from "@/type/enum/national-excellent-exam.js";
 import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
+import {
+    TalentExamSubject,
+    TalentExamSubjects,
+} from "@/type/enum/talent-exam.js";
 import { UniType } from "@/type/enum/uni-type.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese-provinces.js";
 
@@ -49,6 +54,16 @@ export interface ConductData {
 // Updated to use VietnameseSubject enum for subject name
 export interface ExamSubjectData {
     name: VietnameseSubject;
+    score: number;
+}
+
+export interface NationalExamData {
+    name: NationalExamSubject;
+    score: number;
+}
+
+export interface TalentExamData {
+    name: TalentExamSubject;
     score: number;
 }
 
@@ -169,7 +184,7 @@ export class StudentEntity {
     modifiedBy?: string;
 
     @Column({ nullable: true, type: "jsonb" })
-    nationalExams?: ExamSubjectData[];
+    nationalExams?: NationalExamData[];
 
     @OneToOne("PredictionResultEntity", "student", {
         cascade: true,
@@ -195,7 +210,7 @@ export class StudentEntity {
      * Talent score (0-10 scale with up to 2 decimal places)
      */
     @Column({ nullable: true, type: "jsonb" })
-    talentScores?: ExamSubjectData[];
+    talentScores?: TalentExamData[];
 
     @Column({ enum: UniType, nullable: true, type: "enum" })
     uniType?: UniType;
@@ -259,6 +274,19 @@ export class StudentEntity {
 
         // Add new entry
         this.conducts.push({ conduct, grade });
+    }
+
+    /**
+     * Helper method to add a single talent score
+     */
+    addTalentScore(subjectName: TalentExamSubject, score: number): void {
+        this.talentScores ??= [];
+        // Remove existing entry for the same subject if it exists
+        this.talentScores = this.talentScores.filter(
+            (t) => t.name !== subjectName,
+        );
+        // Add new entry
+        this.talentScores.push({ name: subjectName, score });
     }
 
     // Clear all admissions
@@ -494,6 +522,15 @@ export class StudentEntity {
         return subject?.score ?? null;
     }
 
+    /**
+     * Helper method to get talent score by subject name
+     */
+    getTalentScore(subjectName: TalentExamSubject): null | number {
+        if (!this.talentScores) return null;
+        const talent = this.talentScores.find((t) => t.name === subjectName);
+        return talent?.score ?? null;
+    }
+
     // Helper method to get total file size
     getTotalFileSize(): number {
         if (!this.files) return 0;
@@ -508,6 +545,14 @@ export class StudentEntity {
             (sum, subject) => sum + subject.score,
             0,
         );
+    }
+
+    /**
+     * Helper method to get total talent score
+     */
+    getTotalTalentScore(): number {
+        if (!this.talentScores) return 0;
+        return this.talentScores.reduce((sum, talent) => sum + talent.score, 0);
     }
 
     // Helper method to get total VSAT score
@@ -572,6 +617,13 @@ export class StudentEntity {
     // Helper method to check if student has specific file type
     hasFileType(fileType: FileType): boolean {
         return this.getFilesByType(fileType).length > 0;
+    }
+
+    /**
+     * Helper method to check if talent scores exist
+     */
+    hasTalentScores(): boolean {
+        return !!(this.talentScores && this.talentScores.length > 0);
     }
 
     // Helper method to check if user is associated
@@ -684,6 +736,24 @@ export class StudentEntity {
         this.nationalExams = data.nationalExams;
         this.aptitudeTestScore = data.aptitudeTestScore;
         this.vsatScores = data.vsatScores;
+    }
+
+    /**
+     * Helper method to set talent scores
+     */
+    setTalentScores(talentScores: TalentExamData[]): void {
+        // Validate that all subjects are talent subjects
+        const invalidSubjects = talentScores.filter(
+            (talent) => !TalentExamSubjects.includes(talent.name),
+        );
+
+        if (invalidSubjects.length > 0) {
+            throw new Error(
+                `Invalid talent subjects: ${invalidSubjects.map((s) => s.name).join(", ")}`,
+            );
+        }
+
+        this.talentScores = talentScores;
     }
 
     // Helper method to set VSAT scores with ExamSubjectData format
