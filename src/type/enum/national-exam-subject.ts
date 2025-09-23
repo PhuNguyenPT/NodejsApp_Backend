@@ -19,7 +19,7 @@ export type ForeignLanguageSubject = (typeof FOREIGN_LANGUAGES)[number];
 /**
  * National exam subjects required for graduation
  */
-export const NationalExamSubjectsArray = [
+const NationalExamSubjectsArray: VietnameseSubject[] = [
     VietnameseSubject.TOAN,
     VietnameseSubject.NGU_VAN,
     VietnameseSubject.TIENG_ANH,
@@ -47,9 +47,7 @@ export type NationalExamSubject = (typeof NationalExamSubjectsArray)[number];
  * Check if a subject is a national subject
  */
 export function isNationalExamSubjects(subject: VietnameseSubject): boolean {
-    return (NationalExamSubjectsArray as readonly VietnameseSubject[]).includes(
-        subject,
-    );
+    return NationalExamSubjectsArray.includes(subject);
 }
 
 // Define the 36 valid combinations using NGOAI_NGU constant for "ngoại ngữ"
