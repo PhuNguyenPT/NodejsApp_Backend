@@ -1,20 +1,20 @@
 import { Expose } from "class-transformer";
 import { z } from "zod";
 
-import { VietnameseSubject } from "@/type/enum/subject.js";
+import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 
-export interface ISubjectScore {
-    name: VietnameseSubject;
+interface ISubjectScore {
+    name: TranscriptSubject;
     score: number;
 }
 
-export interface ITranscript {
+interface ITranscript {
     subjects: ISubjectScore[];
 }
 
 export const SubjectScoreSchema = z.object({
     name: z
-        .nativeEnum(VietnameseSubject)
+        .nativeEnum(TranscriptSubject)
         .describe("Vietnamese subject name from enum"),
     score: z
         .number()

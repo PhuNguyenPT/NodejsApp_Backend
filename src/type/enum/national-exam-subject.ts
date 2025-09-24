@@ -43,6 +43,10 @@ export const NationalExamSubjects = NationalExamSubjectsArray;
 
 export type NationalExamSubject = (typeof NationalExamSubjectsArray)[number];
 
+export const NationalExamSubjectEnum = Object.fromEntries(
+    NationalExamSubjectsArray.map((subject) => [subject, subject]),
+);
+
 /**
  * Check if a subject is a national subject
  */
