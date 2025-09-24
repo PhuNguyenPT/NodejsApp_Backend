@@ -3,9 +3,11 @@ import { inject, injectable } from "inversify";
 import { In, Repository } from "typeorm";
 import { Logger } from "winston";
 
+import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.js";
 import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
+    SubjectScore,
 } from "@/dto/predict/ocr.js";
 import { FileEntity } from "@/entity/file.entity.js";
 import {
@@ -14,6 +16,7 @@ import {
     OcrStatus,
 } from "@/entity/ocr-result.entity.js";
 import { TYPES } from "@/type/container/types.js";
+import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 
@@ -93,12 +96,6 @@ export class OcrResultService {
             throw error;
         }
     }
-    public async findByFileId(fileId: string): Promise<null | OcrResultEntity> {
-        return await this.ocrResultRepository.findOne({
-            where: { fileId },
-        });
-    }
-
     public async findByStudentId(
         studentId: string,
         userId?: string,
@@ -114,6 +111,29 @@ export class OcrResultService {
             );
         }
         return ocrResultEntities;
+    }
+
+    public async findByStudentIdAndFileId(
+        studentId: string,
+        fileId: string,
+        processedBy?: string,
+    ): Promise<OcrResultEntity> {
+        const ocrResultEntity: null | OcrResultEntity =
+            await this.ocrResultRepository.findOne({
+                where: {
+                    fileId,
+                    processedBy: processedBy ?? Role.ANONYMOUS,
+                    studentId,
+                },
+            });
+
+        if (!ocrResultEntity) {
+            throw new EntityNotFoundException(
+                `No OCR result found for student ${studentId} and file ${fileId}`,
+            );
+        }
+
+        return ocrResultEntity;
     }
 
     public async findExistingResults(
@@ -151,6 +171,73 @@ export class OcrResultService {
             };
         });
         await this.ocrResultRepository.save(results);
+    }
+
+    public async patchByStudentIdAndFileId(
+        studentId: string,
+        fileId: string,
+        ocrUpdateRequest: OcrUpdateRequest,
+        userId?: string,
+    ): Promise<OcrResultEntity> {
+        const ocrResultEntity: OcrResultEntity =
+            await this.findByStudentIdAndFileId(studentId, fileId, userId);
+
+        if (
+            ocrUpdateRequest.subjectScores &&
+            ocrUpdateRequest.subjectScores.length > 0
+        ) {
+            const newSubjectScores: SubjectScore[] =
+                ocrUpdateRequest.subjectScores;
+
+            // --- START: New Merging Logic ---
+
+            // 1. Use a Map for efficient merging (key: subject name, value: score).
+            const mergedScoresMap = new Map<TranscriptSubject, number>();
+
+            // 2. Populate the map with existing scores first to preserve them.
+            if (ocrResultEntity.scores) {
+                for (const existingScore of ocrResultEntity.scores) {
+                    mergedScoresMap.set(
+                        existingScore.name,
+                        existingScore.score,
+                    );
+                }
+            }
+
+            // 3. Add or update scores from the patch request.
+            // The .set() method handles both adding new and updating existing keys.
+            for (const newScore of newSubjectScores) {
+                mergedScoresMap.set(newScore.name, newScore.score);
+            }
+
+            // 4. Convert the map back into an array of SubjectScore objects.
+            const finalScores: SubjectScore[] = Array.from(
+                mergedScoresMap,
+                ([name, score]) => ({ name, score }),
+            );
+
+            ocrResultEntity.scores = finalScores;
+
+            // --- END: New Merging Logic ---
+
+            ocrResultEntity.status = OcrStatus.COMPLETED;
+            ocrResultEntity.errorMessage = undefined;
+
+            const updatedEntity =
+                await this.ocrResultRepository.save(ocrResultEntity);
+
+            this.logger.info(
+                `Successfully patched OCR result for student ${studentId}, file ${fileId}. Final score count: ${finalScores.length.toString()}`,
+            );
+
+            return updatedEntity;
+        }
+
+        this.logger.info(
+            `No subject scores provided for student ${studentId}, file ${fileId}, returning existing OCR result without changes.`,
+        );
+
+        return ocrResultEntity;
     }
 
     // Update records with final results

@@ -1,4 +1,5 @@
 import { responseFormatFromZodObject } from "@mistralai/mistralai/extra/structChat.js";
+import { OCRResponse } from "@mistralai/mistralai/models/components/ocrresponse.js";
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 import { Logger } from "winston";
@@ -8,12 +9,13 @@ import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
     ScoreExtractionResult,
+    SubjectScore,
     TranscriptSchema,
 } from "@/dto/predict/ocr.js";
 import { FileEntity } from "@/entity/file.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
-import { normalizeSubjectName } from "@/type/enum/subject.js";
+import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 
 @injectable()
@@ -64,16 +66,10 @@ export class MistralService {
                 };
             }
 
-            const expectedSubjects =
-                student.nationalExams?.map((exam) => exam.name) ?? [];
             const model = "mistral-ocr-latest";
 
             const result: ScoreExtractionResult =
-                await this.extractScoresFromImage(
-                    file,
-                    expectedSubjects,
-                    model,
-                );
+                await this.extractScoresFromImage(file, model);
 
             return {
                 documentAnnotation: result.documentAnnotation,
@@ -134,16 +130,10 @@ export class MistralService {
                 };
             }
 
-            const expectedSubjects =
-                student.nationalExams?.map((exam) => exam.name) ?? [];
             const model = "mistral-ocr-latest";
 
             const result: ScoreExtractionResult =
-                await this.extractScoresFromImage(
-                    file,
-                    expectedSubjects,
-                    model,
-                );
+                await this.extractScoresFromImage(file, model);
 
             return {
                 documentAnnotation: result.documentAnnotation,
@@ -204,8 +194,6 @@ export class MistralService {
                 };
             }
 
-            const expectedSubjects =
-                student.nationalExams?.map((exam) => exam.name) ?? [];
             const model = "mistral-ocr-latest";
 
             const extractionPromises = filesToProcess.map(
@@ -221,11 +209,7 @@ export class MistralService {
                     }
 
                     const result: ScoreExtractionResult =
-                        await this.extractScoresFromImage(
-                            fileEntity,
-                            expectedSubjects,
-                            model,
-                        );
+                        await this.extractScoresFromImage(fileEntity, model);
 
                     return {
                         documentAnnotation: result.documentAnnotation,
@@ -289,8 +273,6 @@ export class MistralService {
                 };
             }
 
-            const expectedSubjects =
-                student.nationalExams?.map((exam) => exam.name) ?? [];
             const model = "mistral-ocr-latest";
 
             const extractionPromises = filesToProcess.map(
@@ -306,11 +288,7 @@ export class MistralService {
                     }
 
                     const result: ScoreExtractionResult =
-                        await this.extractScoresFromImage(
-                            fileEntity,
-                            expectedSubjects,
-                            model,
-                        );
+                        await this.extractScoresFromImage(fileEntity, model);
 
                     return {
                         documentAnnotation: result.documentAnnotation,
@@ -386,8 +364,6 @@ export class MistralService {
                 };
             }
 
-            const expectedSubjects =
-                student.nationalExams?.map((exam) => exam.name) ?? [];
             const model = "mistral-ocr-latest";
 
             const extractionPromises = student.files.map(
@@ -403,11 +379,7 @@ export class MistralService {
                     }
 
                     const result: ScoreExtractionResult =
-                        await this.extractScoresFromImage(
-                            fileEntity,
-                            expectedSubjects,
-                            model,
-                        );
+                        await this.extractScoresFromImage(fileEntity, model);
 
                     return {
                         documentAnnotation: result.documentAnnotation,
@@ -451,14 +423,13 @@ export class MistralService {
      */
     private async extractScoresFromImage(
         fileEntity: FileEntity,
-        expectedSubjects: string[],
         modelName: string,
     ): Promise<ScoreExtractionResult> {
         try {
             const base64Image = fileEntity.fileContent.toString("base64");
             const imageDataUrl = `data:${fileEntity.mimeType};base64,${base64Image}`;
 
-            const response = await mistralClient.ocr.process({
+            const response: OCRResponse = await mistralClient.ocr.process({
                 document: {
                     imageUrl: imageDataUrl,
                     type: "image_url",
@@ -474,14 +445,26 @@ export class MistralService {
                     JSON.parse(response.documentAnnotation),
                 );
 
-                const filteredScores = validated.subjects.filter((subject) =>
-                    expectedSubjects.some((expected) => {
-                        const normalizedScore = normalizeSubjectName(
-                            subject.name,
-                        );
-                        const normalizedExpected =
-                            normalizeSubjectName(expected);
-                        return normalizedScore === normalizedExpected;
+                // Use a Map to store the highest score for each subject.
+                const highestScores = new Map<TranscriptSubject, number>();
+
+                for (const subject of validated.subjects) {
+                    const existingScore = highestScores.get(subject.name);
+                    // If the subject isn't in the map or the new score is higher, update it.
+                    if (
+                        existingScore === undefined ||
+                        subject.score > existingScore
+                    ) {
+                        highestScores.set(subject.name, subject.score);
+                    }
+                }
+
+                // Convert the map back to an array of objects.
+                const filteredScores: SubjectScore[] = Array.from(
+                    highestScores,
+                    ([name, score]) => ({
+                        name: name,
+                        score,
                     }),
                 );
 

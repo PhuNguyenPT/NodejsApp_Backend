@@ -1,7 +1,9 @@
 import {
+    Body,
     Controller,
     Get,
     Middlewares,
+    Patch,
     Path,
     Post,
     Produces,
@@ -14,6 +16,7 @@ import {
 import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
+import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.js";
 import {
     BatchScoreExtractionResult,
     OcrResultResponse,
@@ -21,6 +24,7 @@ import {
 import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
 import { OcrResultMapper } from "@/mapper/ocr-mapper.js";
 import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import validateDTO from "@/middleware/validation-middleware.js";
 import { MistralService } from "@/service/impl/mistral.service.js";
 import { OcrResultService } from "@/service/impl/ocr-result.service.js";
 import { TYPES } from "@/type/container/types.js";
@@ -107,5 +111,66 @@ export class OcrController extends Controller {
         const resultResponses: OcrResultResponse[] =
             OcrResultMapper.toResponseList(results);
         return resultResponses;
+    }
+
+    @Middlewares(
+        validateUuidParam("studentId"),
+        validateUuidParam("fileId"),
+        validateDTO(OcrUpdateRequest),
+    )
+    @Patch("guest/{studentId}/{fileId}")
+    @Produces("application/json")
+    @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
+    public async patchExtractedScores(
+        @Path("studentId") studentId: string,
+        @Path("fileId") fileId: string,
+        @Body() ocrUpdateRequest: OcrUpdateRequest,
+    ): Promise<OcrResultResponse> {
+        this.logger.info(
+            `Retrieving OCR result for student with id ${studentId}`,
+        );
+        const result: OcrResultEntity =
+            await this.ocrResultService.patchByStudentIdAndFileId(
+                studentId,
+                fileId,
+                ocrUpdateRequest,
+            );
+        const resultResponse: OcrResultResponse =
+            OcrResultMapper.toResponse(result);
+        return resultResponse;
+    }
+
+    @Middlewares(
+        validateUuidParam("studentId"),
+        validateUuidParam("fileId"),
+        validateDTO(OcrUpdateRequest),
+    )
+    @Patch("{studentId}/{fileId}")
+    @Produces("application/json")
+    @Security("bearerAuth", ["profile:update:own"])
+    @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
+    public async patchExtractedScoresGuest(
+        @Path("studentId") studentId: string,
+        @Path("fileId") fileId: string,
+        @Body() ocrUpdateRequest: OcrUpdateRequest,
+        @Request() authenticatedRequest: AuthenticatedRequest,
+    ): Promise<OcrResultResponse> {
+        const user = authenticatedRequest.user;
+        const userId: string = user.id;
+
+        this.logger.info(
+            `Retrieving OCR result for student with id ${studentId}`,
+        );
+
+        const result: OcrResultEntity =
+            await this.ocrResultService.patchByStudentIdAndFileId(
+                studentId,
+                fileId,
+                ocrUpdateRequest,
+                userId,
+            );
+        const resultResponse: OcrResultResponse =
+            OcrResultMapper.toResponse(result);
+        return resultResponse;
     }
 }
