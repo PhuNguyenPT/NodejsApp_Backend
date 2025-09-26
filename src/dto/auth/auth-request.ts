@@ -2,6 +2,7 @@ import { Expose } from "class-transformer";
 import {
     IsEmail,
     IsNotEmpty,
+    IsOptional,
     IsString,
     Length,
     Matches,
@@ -33,6 +34,20 @@ export class LoginRequest {
     )
     password!: string;
 }
+/**
+ * DTO for user logout request.
+ * The refresh token is optional but will be validated if provided.
+ * @example
+ * {
+ *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ * }
+ */
+export class LogoutRequest {
+    @Expose()
+    @IsOptional()
+    @IsString({ message: "Refresh token must be a string" })
+    refreshToken?: string; // The property should also be optional
+}
 
 /**
  * DTO for refresh token request.
@@ -43,13 +58,6 @@ export class LoginRequest {
  * }
  */
 
-/**
- * DTO for password reset request.
- * @example
- * {
- *   "refreshToken": ""
- * }
- */
 export class RefreshTokenRequest {
     @Expose()
     @IsNotEmpty({ message: "Refresh token cannot be empty" })

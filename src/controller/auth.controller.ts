@@ -18,6 +18,7 @@ import { Logger } from "winston";
 
 import {
     LoginRequest,
+    LogoutRequest,
     RefreshTokenRequest,
     RegisterRequest,
 } from "@/dto/auth/auth-request.js";
@@ -103,7 +104,11 @@ export class AuthController extends Controller {
      * @param {RefreshTokenRequest} refreshData - Request containing the refresh token
      * @returns {Promise<{message: string; success: boolean}>} Logout confirmation response
      *
-     * @throws {JwtException} When no access token is provided in Authorization header
+     * @throws {ValidationException} When request body validation fails
+     * @throws {JwtException} When refresh token is missing, invalid, expired, or reused
+     * @throws {AuthenticationException} When the user no longer exists
+     * @throws {AccessDeniedException} When the user account is inactive
+     * @throws {HttpException} When JWT verification fails or internal error occurs
      *
      * @example
      * POST /auth/logout
@@ -115,6 +120,7 @@ export class AuthController extends Controller {
      *
      * @memberof AuthController
      */
+    @Middlewares(validateDTO(LogoutRequest))
     @Post("logout")
     @Produces("application/json")
     @Response("400", "No access token provided")
@@ -122,7 +128,7 @@ export class AuthController extends Controller {
     @SuccessResponse("200", "Logout successful")
     public async logout(
         @Request() request: AuthenticatedRequest,
-        @Body() refreshData: RefreshTokenRequest,
+        @Body() refreshData?: LogoutRequest,
     ): Promise<{
         message: string;
         success: boolean;
@@ -144,7 +150,7 @@ export class AuthController extends Controller {
         // Call auth service to handle token blacklisting
         const result = await this.authService.logout(
             accessToken,
-            refreshData.refreshToken,
+            refreshData?.refreshToken,
         );
 
         this.setStatus(200);
