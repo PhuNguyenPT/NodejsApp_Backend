@@ -100,8 +100,7 @@ export class AuthController extends Controller {
      *
      * @summary Logs out an authenticated user by blacklisting their access and/or refresh tokens.
      * @param {AuthenticatedRequest} request - Express request object with authenticated user context
-     * @param {Object} [body] - Optional request body containing refreshToken
-     * @param {string} [body.refreshToken] - Refresh token to be blacklisted (recommended for security)
+     * @param {RefreshTokenRequest} refreshData - Request containing the refresh token
      * @returns {Promise<{message: string; success: boolean}>} Logout confirmation response
      *
      * @throws {JwtException} When no access token is provided in Authorization header
@@ -110,11 +109,6 @@ export class AuthController extends Controller {
      * POST /auth/logout
      * Authorization: Bearer <access_token>
      * Content-Type: application/json
-     * {
-     *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-     * }
-     *
-     * @requestBody
      * {
      *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
      * }
@@ -128,11 +122,7 @@ export class AuthController extends Controller {
     @SuccessResponse("200", "Logout successful")
     public async logout(
         @Request() request: AuthenticatedRequest,
-        /**
-         * Optional request body for logout
-         * @example {"refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}
-         */
-        @Body() body?: { refreshToken?: string },
+        @Body() refreshData: RefreshTokenRequest,
     ): Promise<{
         message: string;
         success: boolean;
@@ -154,7 +144,7 @@ export class AuthController extends Controller {
         // Call auth service to handle token blacklisting
         const result = await this.authService.logout(
             accessToken,
-            body?.refreshToken,
+            refreshData.refreshToken,
         );
 
         this.setStatus(200);
