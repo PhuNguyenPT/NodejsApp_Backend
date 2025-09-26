@@ -18,7 +18,8 @@ import { handleExamValidation } from "@/type/enum/exam.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
-import { Page } from "@/type/pagination/page.js";
+import { PageImpl } from "@/type/pagination/page-impl.js";
+import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
 // import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/util/jwt.options.js";
 
@@ -50,64 +51,9 @@ export class StudentService {
     public async createStudentEntity(
         studentRequest: StudentRequest,
     ): Promise<StudentEntity> {
-        this.handleAptitudeTestScoreValidation(studentRequest);
-
-        if (studentRequest.minBudget > studentRequest.maxBudget) {
-            throw new ValidationException({
-                "budget.minBudget":
-                    "Min budget cannot be greater than max budget",
-            });
-        }
-
-        const studentEntity: StudentEntity =
-            this.studentRepository.create(studentRequest);
-        studentEntity.createdBy = Role.ANONYMOUS;
-
-        if (studentRequest.majors.length > 0) {
-            studentEntity.majorGroupsEntities =
-                await this.majorService.findMajorGroupEntitiesBy(
-                    studentRequest.majors,
-                );
-        }
-
-        if (studentRequest.awards && studentRequest.awards.length > 0) {
-            studentEntity.awards = this.awardService.create(
-                studentRequest.awards,
-            );
-        }
-
-        if (
-            studentRequest.certifications &&
-            studentRequest.certifications.length > 0
-        ) {
-            studentEntity.certifications =
-                this.certificationService.createCertificationEntities(
-                    studentRequest.certifications,
-                );
-        }
-
-        const savedStudent = await this.studentRepository.save(studentEntity);
-
-        this.logger.info(
-            `Create Anonymous Student Profile id: ${savedStudent.id} successfully`,
-        );
-
-        const payload: StudentCreatedEvent = {
-            studentId: savedStudent.id,
-            userId: undefined,
-        };
-
-        await this.redisPublisher.publish(
-            PREDICTION_CHANNEL,
-            JSON.stringify(payload),
-        );
-
-        this.logger.info(
-            `Published single StudentCreatedEvent event to ${PREDICTION_CHANNEL} with studentId ${savedStudent.id}.`,
-        );
-
-        return savedStudent;
+        return this._buildAndSaveStudent(studentRequest, null);
     }
+
     /**
      * Creates a student profile linked to an authenticated user.
      * Uses TypeORM cascades to save the student and their related awards/certifications in a single operation.
@@ -121,17 +67,8 @@ export class StudentService {
         studentRequest: StudentRequest,
         userId: string,
     ): Promise<StudentEntity> {
-        this.handleAptitudeTestScoreValidation(studentRequest);
-
-        if (studentRequest.minBudget > studentRequest.maxBudget) {
-            throw new ValidationException({
-                minBudget: "Min budget cannot be greater than max budget",
-            });
-        }
         if (!userId) {
-            throw new ValidationException({
-                userId: "User ID is required to create a student profile",
-            });
+            throw new ValidationException({ userId: "User ID is required" });
         }
         const userEntity = await this.userRepository.findOne({
             where: { id: userId },
@@ -141,60 +78,8 @@ export class StudentService {
                 `User with ID ${userId} not found`,
             );
         }
-
-        const studentEntity: StudentEntity =
-            this.studentRepository.create(studentRequest);
-        studentEntity.userId = userId;
-        studentEntity.createdBy = userEntity.email;
-
-        if (studentRequest.majors.length > 0) {
-            studentEntity.majorGroupsEntities =
-                await this.majorService.findMajorGroupEntitiesBy(
-                    studentRequest.majors,
-                );
-        }
-
-        if (studentRequest.awards && studentRequest.awards.length > 0) {
-            studentEntity.awards = this.awardService.create(
-                studentRequest.awards,
-            );
-            studentEntity.awards.forEach(
-                (awardEntity) => (awardEntity.createdBy = userEntity.email),
-            );
-        }
-
-        if (
-            studentRequest.certifications &&
-            studentRequest.certifications.length > 0
-        ) {
-            studentEntity.certifications =
-                this.certificationService.createCertificationEntities(
-                    studentRequest.certifications,
-                );
-            studentEntity.certifications.forEach(
-                (cert) => (cert.createdBy = userEntity.email),
-            );
-        }
-
-        const savedStudent = await this.studentRepository.save(studentEntity);
-        this.logger.info(
-            `Create Student Profile id: ${savedStudent.id} with User id: ${userId} successfully`,
-        );
-
-        const payload: StudentCreatedEvent = {
-            studentId: savedStudent.id,
-            userId: userId,
-        };
-
-        await this.redisPublisher.publish(
-            PREDICTION_CHANNEL,
-            JSON.stringify(payload),
-        );
-
-        this.logger.info(
-            `Published single StudentCreatedEvent event to ${PREDICTION_CHANNEL} with studentId ${savedStudent.id} and userId ${userId}.`,
-        );
-        return savedStudent;
+        // Fetch the user and pass it to the private builder
+        return this._buildAndSaveStudent(studentRequest, userEntity);
     }
 
     /**
@@ -213,70 +98,29 @@ export class StudentService {
             .leftJoinAndSelect("student.certifications", "certifications")
             .where("student.userId = :userId", { userId });
 
-        // Get total count first
-        const totalElements = await queryBuilder.getCount();
-        const pageNumber = pageable.getPageNumber();
-        const pageSize = pageable.getPageSize();
-
-        // Handle empty result set
-        if (totalElements === 0) {
-            return Page.empty<StudentEntity>(pageNumber, pageSize);
-        }
-
-        // Calculate total pages and check if requested page exists
-        const totalPages = Math.ceil(totalElements / pageSize);
-        if (pageNumber >= totalPages) {
-            return new Page<StudentEntity>(
-                [],
-                pageNumber,
-                pageSize,
-                totalElements,
-            );
-        }
-
-        // Apply sorting using the toTypeOrmOrder method from Pageable
+        // Apply sorting in a cleaner way
         const sortOrder = pageable.getSort().toTypeOrmOrder();
+        const prefixedSortOrder: Record<string, "ASC" | "DESC"> = {};
+        for (const [field, direction] of Object.entries(sortOrder)) {
+            // Prefix field with alias to avoid ambiguity
+            prefixedSortOrder[`student.${field}`] = direction;
+        }
 
-        if (Object.keys(sortOrder).length > 0) {
-            // Define field mapping for student entity
-            const fieldMapping: Record<string, string> = {
-                createdAt: "student.createdAt",
-                location: "student.location",
-                major: "student.major",
-                maxBudget: "student.maxBudget",
-                minBudget: "student.minBudget",
-                modifiedAt: "student.modifiedAt",
-            };
-
-            // Apply each sort field
-            let isFirst = true;
-            for (const [field, direction] of Object.entries(sortOrder)) {
-                const mappedField = fieldMapping[field] || `student.${field}`;
-                if (isFirst) {
-                    queryBuilder.orderBy(mappedField, direction);
-                    isFirst = false;
-                } else {
-                    queryBuilder.addOrderBy(mappedField, direction);
-                }
-            }
+        // Apply sorting or default to createdAt DESC
+        if (Object.keys(prefixedSortOrder).length > 0) {
+            queryBuilder.orderBy(prefixedSortOrder);
         } else {
-            // Default sorting when no sort is specified
             queryBuilder.orderBy("student.createdAt", "DESC");
         }
 
-        // Apply pagination using correct offset
-        const entities = await queryBuilder
+        // Use getManyAndCount for efficiency
+        const [entities, totalElements] = await queryBuilder
             .skip(pageable.getOffset())
-            .take(pageSize)
-            .getMany();
+            .take(pageable.getPageSize())
+            .getManyAndCount();
 
-        // Return Page instance using the static factory method
-        return Page.of<StudentEntity>(
-            entities,
-            pageNumber,
-            pageSize,
-            totalElements,
-        );
+        // Let PageImpl handle the pagination logic
+        return PageImpl.of(entities, totalElements, pageable);
     }
 
     /**
@@ -377,7 +221,88 @@ export class StudentService {
         }
         return student;
     }
+    /**
+     * Private helper to build, populate, and save a student entity.
+     * Handles both anonymous and authenticated user cases.
+     * @param studentRequest The student data.
+     * @param userEntity The authenticated user, or null for an anonymous profile.
+     */
+    private async _buildAndSaveStudent(
+        studentRequest: StudentRequest,
+        userEntity: null | UserEntity,
+    ): Promise<StudentEntity> {
+        this.handleAptitudeTestScoreValidation(studentRequest);
 
+        if (studentRequest.minBudget > studentRequest.maxBudget) {
+            throw new ValidationException({
+                "budget.minBudget":
+                    "Min budget cannot be greater than max budget",
+            });
+        }
+
+        const studentEntity: StudentEntity =
+            this.studentRepository.create(studentRequest);
+
+        studentEntity.createdBy = userEntity
+            ? userEntity.email
+            : Role.ANONYMOUS;
+        studentEntity.userId = userEntity ? userEntity.id : undefined;
+
+        if (studentRequest.majors.length > 0) {
+            studentEntity.majorGroupsEntities =
+                await this.majorService.findMajorGroupEntitiesBy(
+                    studentRequest.majors,
+                );
+        }
+
+        if (studentRequest.awards && studentRequest.awards.length > 0) {
+            studentEntity.awards = this.awardService.create(
+                studentRequest.awards,
+            );
+            if (userEntity) {
+                studentEntity.awards.forEach(
+                    (a) => (a.createdBy = userEntity.email),
+                );
+            }
+        }
+
+        if (
+            studentRequest.certifications &&
+            studentRequest.certifications.length > 0
+        ) {
+            studentEntity.certifications =
+                this.certificationService.createCertificationEntities(
+                    studentRequest.certifications,
+                );
+            if (userEntity) {
+                studentEntity.certifications.forEach(
+                    (c) => (c.createdBy = userEntity.email),
+                );
+            }
+        }
+
+        const savedStudent = await this.studentRepository.save(studentEntity);
+        this.logger.info(`Saved student profile id: ${savedStudent.id}`);
+
+        await this._publishStudentCreatedEvent(savedStudent.id, userEntity?.id);
+
+        return savedStudent;
+    }
+
+    private async _publishStudentCreatedEvent(
+        studentId: string,
+        userId?: string,
+    ): Promise<void> {
+        const payload: StudentCreatedEvent = { studentId, userId };
+        await this.redisPublisher.publish(
+            PREDICTION_CHANNEL,
+            JSON.stringify(payload),
+        );
+        this.logger.info(
+            `Published StudentCreatedEvent for studentId ${studentId}` +
+                (userId ? ` and userId ${userId}` : ""),
+        );
+    }
     /**
      * Handles the validation of the aptitude test score for a student request.
      * Delegates to the shared `handleExamValidation` function for core logic.

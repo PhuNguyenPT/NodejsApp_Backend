@@ -29,7 +29,7 @@ import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
 import { PageableQuery, PageRequest } from "@/type/pagination/page-request.js";
-import { Page } from "@/type/pagination/page.js";
+import { Page } from "@/type/pagination/page.interface.js";
 
 /**
  * Controller responsible for handling admission-related HTTP requests.
@@ -118,9 +118,9 @@ export class AdmissionController extends Controller {
 
         const admissionResponsePage =
             AdmissionMapper.toAdmissionPage(admissionPage);
-        return instanceToPlain(
-            admissionResponsePage,
-        ) as Page<AdmissionResponse>;
+        return instanceToPlain(admissionResponsePage, {
+            excludeExtraneousValues: true,
+        }) as Page<AdmissionResponse>;
     }
 
     /**
@@ -181,8 +181,8 @@ export class AdmissionController extends Controller {
 
         const admissionResponsePage =
             AdmissionMapper.toAdmissionPage(admissionPage);
-        return instanceToPlain(
-            admissionResponsePage,
-        ) as Page<AdmissionResponse>;
+        return instanceToPlain(admissionResponsePage, {
+            excludeExtraneousValues: true,
+        }) as Page<AdmissionResponse>;
     }
 }

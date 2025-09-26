@@ -2,7 +2,9 @@ import { plainToInstance } from "class-transformer";
 
 import { AdmissionResponse } from "@/dto/admission/admission-response.js";
 import { AdmissionEntity } from "@/entity/admission.entity.js";
-import { Page } from "@/type/pagination/page.js";
+import { PageImpl } from "@/type/pagination/page-impl.js";
+import { PageRequest } from "@/type/pagination/page-request.js";
+import { Page } from "@/type/pagination/page.interface.js";
 
 export const AdmissionMapper = {
     toAdmissionPage(
@@ -11,15 +13,20 @@ export const AdmissionMapper = {
         const admissionResponses: AdmissionResponse[] =
             this.toAdmissionResponseList(admissionEntityPage.content);
 
-        return new Page<AdmissionResponse>(
-            admissionResponses,
-            admissionEntityPage.page,
+        const pageable = PageRequest.of(
+            admissionEntityPage.getPageNumber(),
             admissionEntityPage.size,
+            admissionEntityPage.sort,
+        );
+
+        return PageImpl.of<AdmissionResponse>(
+            admissionResponses,
             admissionEntityPage.totalElements,
+            pageable,
         );
     },
 
-    toAdmissionResponse(admissionEntity: AdmissionEntity): AdmissionEntity {
+    toAdmissionResponse(admissionEntity: AdmissionEntity): AdmissionResponse {
         return plainToInstance(AdmissionResponse, admissionEntity, {
             excludeExtraneousValues: true,
         });

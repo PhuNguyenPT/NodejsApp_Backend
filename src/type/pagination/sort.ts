@@ -1,10 +1,14 @@
+import { Expose, Type } from "class-transformer";
+
 export type SortDirection = "ASC" | "DESC";
 
 /**
  * Represents a single sort criterion (property and direction).
  */
 export class Order {
+    @Expose()
     public readonly direction: SortDirection;
+    @Expose()
     public readonly field: string;
 
     constructor(field: string, direction: SortDirection = "ASC") {
@@ -31,6 +35,8 @@ export class Order {
  * Manages a collection of Order objects for defining sort criteria.
  */
 export class Sort {
+    @Expose()
+    @Type(() => Order)
     public readonly orders: Order[];
 
     private constructor(orders: Order[]) {

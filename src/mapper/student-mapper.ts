@@ -4,7 +4,9 @@ import { StudentProfileResponse } from "@/dto/student/student-profile-response.j
 import { StudentResponse } from "@/dto/student/student.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import { FileMapper } from "@/mapper/file-mapper.js";
-import { Page } from "@/type/pagination/page.js";
+import { PageImpl } from "@/type/pagination/page-impl.js";
+import { PageRequest } from "@/type/pagination/page-request.js";
+import { Page } from "@/type/pagination/page.interface.js";
 
 export const StudentMapper = {
     toStudentProfileResponse(
@@ -58,12 +60,15 @@ export const StudentMapper = {
         const studentResponses = this.toStudentResponseList(
             studentEntityPage.content,
         );
-
-        return new Page<StudentResponse>(
-            studentResponses,
-            studentEntityPage.page,
+        const pageable = PageRequest.of(
+            studentEntityPage.getPageNumber(),
             studentEntityPage.size,
+            studentEntityPage.sort,
+        );
+        return PageImpl.of<StudentResponse>(
+            studentResponses,
             studentEntityPage.totalElements,
+            pageable,
         );
     },
 };
