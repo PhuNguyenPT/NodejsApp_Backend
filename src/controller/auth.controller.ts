@@ -128,7 +128,7 @@ export class AuthController extends Controller {
     @SuccessResponse("200", "Logout successful")
     public async logout(
         @Request() request: AuthenticatedRequest,
-        @Body() refreshData?: LogoutRequest,
+        @Body() logoutRequest?: LogoutRequest,
     ): Promise<{
         message: string;
         success: boolean;
@@ -150,7 +150,7 @@ export class AuthController extends Controller {
         // Call auth service to handle token blacklisting
         const result = await this.authService.logout(
             accessToken,
-            refreshData?.refreshToken,
+            logoutRequest?.refreshToken,
         );
 
         this.setStatus(200);
