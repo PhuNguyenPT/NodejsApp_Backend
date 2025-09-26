@@ -18,6 +18,7 @@ import { Logger } from "winston";
 
 import {
     LoginRequest,
+    LogoutRequest,
     RefreshTokenRequest,
     RegisterRequest,
 } from "@/dto/auth/auth-request.js";
@@ -100,11 +101,14 @@ export class AuthController extends Controller {
      *
      * @summary Logs out an authenticated user by blacklisting their access and/or refresh tokens.
      * @param {AuthenticatedRequest} request - Express request object with authenticated user context
-     * @param {Object} [body] - Optional request body containing refreshToken
-     * @param {string} [body.refreshToken] - Refresh token to be blacklisted (recommended for security)
+     * @param {RefreshTokenRequest} logoutRequest - Request containing the refresh token
      * @returns {Promise<{message: string; success: boolean}>} Logout confirmation response
      *
-     * @throws {JwtException} When no access token is provided in Authorization header
+     * @throws {ValidationException} When request body validation fails
+     * @throws {JwtException} When refresh token is missing, invalid, expired, or reused
+     * @throws {AuthenticationException} When the user no longer exists
+     * @throws {AccessDeniedException} When the user account is inactive
+     * @throws {HttpException} When JWT verification fails or internal error occurs
      *
      * @example
      * POST /auth/logout
@@ -114,13 +118,9 @@ export class AuthController extends Controller {
      *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
      * }
      *
-     * @requestBody
-     * {
-     *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-     * }
-     *
      * @memberof AuthController
      */
+    @Middlewares(validateDTO(LogoutRequest))
     @Post("logout")
     @Produces("application/json")
     @Response("400", "No access token provided")
@@ -128,11 +128,7 @@ export class AuthController extends Controller {
     @SuccessResponse("200", "Logout successful")
     public async logout(
         @Request() request: AuthenticatedRequest,
-        /**
-         * Optional request body for logout
-         * @example {"refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}
-         */
-        @Body() body?: { refreshToken?: string },
+        @Body() logoutRequest?: LogoutRequest,
     ): Promise<{
         message: string;
         success: boolean;
@@ -154,7 +150,7 @@ export class AuthController extends Controller {
         // Call auth service to handle token blacklisting
         const result = await this.authService.logout(
             accessToken,
-            body?.refreshToken,
+            logoutRequest?.refreshToken,
         );
 
         this.setStatus(200);
