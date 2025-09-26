@@ -22,7 +22,7 @@ import {
 import { AdmissionEntity } from "@/entity/admission.entity.js";
 import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
-import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import { AdmissionService } from "@/service/impl/admission.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
@@ -76,7 +76,7 @@ export class AdmissionController extends Controller {
      */
     @Get("{studentId}")
     @Middlewares(
-        validateUuidParam("studentId"),
+        validateUuidParams("studentId"),
         validateQuery(AdmissionSearchQuery),
     )
     @Produces("application/json")
@@ -142,7 +142,7 @@ export class AdmissionController extends Controller {
      */
     @Get("guest/{studentId}")
     @Middlewares(
-        validateUuidParam("studentId"),
+        validateUuidParams("studentId"),
         validateQuery(AdmissionSearchQuery),
     )
     @Produces("application/json")

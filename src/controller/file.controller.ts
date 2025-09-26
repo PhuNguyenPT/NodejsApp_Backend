@@ -29,7 +29,7 @@ import { FileResponse } from "@/dto/file/file-response.js";
 import { UpdateFileRequest } from "@/dto/file/update-file.js";
 import { FileEntity, FileType } from "@/entity/file.entity.js";
 import { FileMapper } from "@/mapper/file-mapper.js";
-import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
 import { FileService } from "@/service/impl/file.service.js";
 import { TYPES } from "@/type/container/types.js";
@@ -61,7 +61,7 @@ export class FileController extends Controller {
      * @security Requires valid bearer token with 'file:delete' scope
      */
     @Delete("{fileId}")
-    @Middlewares(validateUuidParam("fileId"))
+    @Middlewares(validateUuidParams("fileId"))
     @Response(HttpStatus.BAD_REQUEST, "Invalid file ID format")
     @Response(HttpStatus.NOT_FOUND, "File not found")
     @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
@@ -92,7 +92,7 @@ export class FileController extends Controller {
      * @security Requires valid bearer token with 'file:read' scope
      */
     @Get("{fileId}/download")
-    @Middlewares(validateUuidParam("fileId"))
+    @Middlewares(validateUuidParams("fileId"))
     @Produces("application/octet-stream")
     @Response(HttpStatus.BAD_REQUEST, "Invalid file ID or corrupted file")
     @Response(HttpStatus.NOT_FOUND, "File not found")
@@ -169,7 +169,7 @@ export class FileController extends Controller {
      * @security No authentication required - public access
      */
     @Get("guest/{fileId}/download")
-    @Middlewares(validateUuidParam("fileId"))
+    @Middlewares(validateUuidParams("fileId"))
     @Produces("application/octet-stream")
     @Response(HttpStatus.BAD_REQUEST, "Invalid file ID or corrupted file")
     @Response(HttpStatus.NOT_FOUND, "File not found")
@@ -234,7 +234,7 @@ export class FileController extends Controller {
      * @security Requires valid bearer token with 'file:read' scope
      */
     @Get("{fileId}")
-    @Middlewares(validateUuidParam("fileId"))
+    @Middlewares(validateUuidParams("fileId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Invalid file ID format")
     @Response(HttpStatus.NOT_FOUND, "File not found")
@@ -267,7 +267,7 @@ export class FileController extends Controller {
      * @security No authentication required - public access
      */
     @Get("guest/{fileId}")
-    @Middlewares(validateUuidParam("fileId"))
+    @Middlewares(validateUuidParams("fileId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Invalid file ID format")
     @Response(HttpStatus.NOT_FOUND, "File not found")
@@ -294,7 +294,7 @@ export class FileController extends Controller {
      * @security Requires valid bearer token with 'file:read' scope
      */
     @Get("student/{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Invalid student ID format")
     @Response(HttpStatus.NOT_FOUND, "Student not found")
@@ -326,7 +326,7 @@ export class FileController extends Controller {
      * @returns Array of file metadata for the specified student
      */
     @Get("student/guest/{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Invalid student ID format")
     @Response(HttpStatus.NOT_FOUND, "Student not found")
@@ -359,7 +359,7 @@ export class FileController extends Controller {
      * @security Requires valid bearer token with 'file:read' scope
      */
     @Get("{fileId}/preview")
-    @Middlewares(validateUuidParam("fileId"))
+    @Middlewares(validateUuidParams("fileId"))
     @Produces("image/*")
     @Response(HttpStatus.BAD_REQUEST, "Invalid file ID or file is not an image")
     @Response(HttpStatus.NOT_FOUND, "File not found")
@@ -426,7 +426,7 @@ export class FileController extends Controller {
      * @security No authentication required - public access
      */
     @Get("guest/{fileId}/preview")
-    @Middlewares(validateUuidParam("fileId"))
+    @Middlewares(validateUuidParams("fileId"))
     @Produces("image/*")
     @Response(HttpStatus.BAD_REQUEST, "Invalid file ID or file is not an image")
     @Response(HttpStatus.NOT_FOUND, "File not found")
@@ -487,7 +487,7 @@ export class FileController extends Controller {
      * Users can only update files they own or have permission to modify.
      * @security Requires valid bearer token with 'file:update' scope
      */
-    @Middlewares(validateUuidParam("fileId"), validateDTO(UpdateFileRequest))
+    @Middlewares(validateUuidParams("fileId"), validateDTO(UpdateFileRequest))
     @Produces("application/json")
     @Put("{fileId}")
     @Response(HttpStatus.BAD_REQUEST, "Validation error or invalid file ID")
@@ -550,7 +550,7 @@ export class FileController extends Controller {
      * The uploaded file will be associated with the specified student and attributed to the authenticated user.
      * @security Requires valid bearer token with 'file:create' scope
      */
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Post("upload/single/{studentId}")
     @Produces("application/json")
     @Response(
@@ -660,7 +660,7 @@ export class FileController extends Controller {
      * This is typically used for public file submission forms or portals.
      * @security No authentication required - public access
      */
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Post("upload/single/guest/{studentId}")
     @Produces("application/json")
     @Response(
@@ -759,7 +759,7 @@ export class FileController extends Controller {
      * All uploaded files will be associated with the specified student and attributed to the authenticated user.
      * @security Requires valid bearer token with 'file:create' scope
      */
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Post("upload/multiple/{studentId}")
     @Produces("application/json")
     @Response(
@@ -870,7 +870,7 @@ export class FileController extends Controller {
      * This is typically used for public file submission forms or portals where multiple documents need to be uploaded.
      * @security No authentication required - public access
      */
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Post("upload/multiple/guest/{studentId}")
     @Produces("application/json")
     @Response(

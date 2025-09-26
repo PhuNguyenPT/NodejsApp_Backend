@@ -23,7 +23,7 @@ import {
 } from "@/dto/predict/ocr.js";
 import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
 import { OcrResultMapper } from "@/mapper/ocr-mapper.js";
-import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
 import { MistralService } from "@/service/impl/mistral.service.js";
 import { OcrResultService } from "@/service/impl/ocr-result.service.js";
@@ -50,7 +50,7 @@ export class OcrController extends Controller {
      * Extracts subject scores from transcript images for a given student.
      * The files must belong to the authenticated user.
      */
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Post("{studentId}/transcripts/ocr")
     @Produces("application/json")
     @Security("bearerAuth", ["file:read"])
@@ -77,7 +77,7 @@ export class OcrController extends Controller {
     }
 
     @Get("{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
@@ -97,7 +97,7 @@ export class OcrController extends Controller {
     }
 
     @Get("guest/{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
     public async getExtractedScoresGuest(
@@ -113,7 +113,7 @@ export class OcrController extends Controller {
         return resultResponses;
     }
 
-    @Middlewares(validateUuidParam("id"), validateDTO(OcrUpdateRequest))
+    @Middlewares(validateUuidParams("id"), validateDTO(OcrUpdateRequest))
     @Patch("guest/{id}")
     @Produces("application/json")
     @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
@@ -132,7 +132,7 @@ export class OcrController extends Controller {
         return resultResponse;
     }
 
-    @Middlewares(validateUuidParam("id"), validateDTO(OcrUpdateRequest))
+    @Middlewares(validateUuidParams("id"), validateDTO(OcrUpdateRequest))
     @Patch("{id}")
     @Produces("application/json")
     @Security("bearerAuth", ["profile:update:own"])

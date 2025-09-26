@@ -23,7 +23,7 @@ import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
 import { UserAdmin } from "@/dto/user/user.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import { UserMapper } from "@/mapper/user-mapper.js";
-import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
 import { UserService } from "@/service/impl/user.service.js";
 import { TYPES } from "@/type/container/types.js";
@@ -49,7 +49,7 @@ export class UserController extends Controller {
      * @returns Boolean indicating whether the user exists.
      */
     @Get("{userId}/exists")
-    @Middlewares(validateUuidParam("userId"))
+    @Middlewares(validateUuidParams("userId"))
     @Produces("application/json")
     @Security("bearerAuth", ["user:read"])
     @SuccessResponse("200", "Successfully checked user existence")
@@ -85,7 +85,7 @@ export class UserController extends Controller {
      * @param userId The unique identifier of the user to delete.
      */
     @Delete("{userId}")
-    @Middlewares(validateUuidParam("userId"))
+    @Middlewares(validateUuidParams("userId"))
     @Security("bearerAuth", ["user:delete"])
     @SuccessResponse("204", "Successfully deleted user")
     public async deleteUser(@Path() userId: string): Promise<void> {
@@ -114,7 +114,7 @@ export class UserController extends Controller {
      * @param name Optional. A query to filter by the user's name.
      */
     @Get("{userId}/search")
-    @Middlewares(validateUuidParam("userId"))
+    @Middlewares(validateUuidParams("userId"))
     @Produces("application/json")
     @Security("bearerAuth", ["user:read"])
     @SuccessResponse("200", "Successfully retrieved user")
@@ -135,7 +135,7 @@ export class UserController extends Controller {
      * @param userId The unique identifier of the user (UUID).
      */
     @Get("{userId}")
-    @Middlewares(validateUuidParam("userId"))
+    @Middlewares(validateUuidParams("userId"))
     @Produces("application/json")
     @Security("bearerAuth", ["user:read"])
     @SuccessResponse("200", "Successfully retrieved user")
@@ -151,7 +151,7 @@ export class UserController extends Controller {
      * @param userId The unique identifier of the user to update.
      * @param requestBody Partial user data containing the fields to update.
      */
-    @Middlewares(validateUuidParam("userId"), validateDTO(UpdateUserAdminDTO))
+    @Middlewares(validateUuidParams("userId"), validateDTO(UpdateUserAdminDTO))
     @Patch("{userId}")
     @Produces("application/json")
     @Security("bearerAuth", ["user:update"])

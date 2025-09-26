@@ -22,7 +22,7 @@ import { StudentRequest } from "@/dto/student/student-request.js";
 import { StudentResponse } from "@/dto/student/student.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import { StudentMapper } from "@/mapper/student-mapper.js";
-import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
 import { StudentService } from "@/service/impl/student.service.js";
 import { TYPES } from "@/type/container/types.js";
@@ -140,7 +140,7 @@ export class StudentController extends Controller {
      * @returns The full student profile including awards and certifications.
      */
     @Get("guest/{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.NOT_FOUND, "Not found")
@@ -162,7 +162,7 @@ export class StudentController extends Controller {
      * @returns The full student profile including awards and certifications.
      */
     @Get("{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
@@ -189,7 +189,7 @@ export class StudentController extends Controller {
      * @returns The full student profile including associated files.
      */
     @Get("guest/{studentId}/with-files")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
@@ -215,7 +215,7 @@ export class StudentController extends Controller {
      * @returns The full student profile including associated files.
      */
     @Get("{studentId}/with-files")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
