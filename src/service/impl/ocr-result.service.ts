@@ -96,6 +96,27 @@ export class OcrResultService {
             throw error;
         }
     }
+    public async findById(
+        id: string,
+        processedBy?: string,
+    ): Promise<OcrResultEntity> {
+        const ocrResultEntity: null | OcrResultEntity =
+            await this.ocrResultRepository.findOne({
+                where: {
+                    id,
+                    processedBy: processedBy ?? Role.ANONYMOUS,
+                },
+            });
+
+        if (!ocrResultEntity) {
+            throw new EntityNotFoundException(
+                `No OCR result found for id ${id}`,
+            );
+        }
+
+        return ocrResultEntity;
+    }
+
     public async findByStudentId(
         studentId: string,
         userId?: string,
@@ -111,29 +132,6 @@ export class OcrResultService {
             );
         }
         return ocrResultEntities;
-    }
-
-    public async findByStudentIdAndFileId(
-        studentId: string,
-        fileId: string,
-        processedBy?: string,
-    ): Promise<OcrResultEntity> {
-        const ocrResultEntity: null | OcrResultEntity =
-            await this.ocrResultRepository.findOne({
-                where: {
-                    fileId,
-                    processedBy: processedBy ?? Role.ANONYMOUS,
-                    studentId,
-                },
-            });
-
-        if (!ocrResultEntity) {
-            throw new EntityNotFoundException(
-                `No OCR result found for student ${studentId} and file ${fileId}`,
-            );
-        }
-
-        return ocrResultEntity;
     }
 
     public async findExistingResults(
@@ -174,13 +172,14 @@ export class OcrResultService {
     }
 
     public async patchByStudentIdAndFileId(
-        studentId: string,
-        fileId: string,
+        id: string,
         ocrUpdateRequest: OcrUpdateRequest,
         userId?: string,
     ): Promise<OcrResultEntity> {
-        const ocrResultEntity: OcrResultEntity =
-            await this.findByStudentIdAndFileId(studentId, fileId, userId);
+        const ocrResultEntity: OcrResultEntity = await this.findById(
+            id,
+            userId,
+        );
 
         if (
             ocrUpdateRequest.subjectScores &&
@@ -227,14 +226,14 @@ export class OcrResultService {
                 await this.ocrResultRepository.save(ocrResultEntity);
 
             this.logger.info(
-                `Successfully patched OCR result for student ${studentId}, file ${fileId}. Final score count: ${finalScores.length.toString()}`,
+                `Successfully patched OCR result id ${id}. Final score count: ${finalScores.length.toString()}`,
             );
 
             return updatedEntity;
         }
 
         this.logger.info(
-            `No subject scores provided for student ${studentId}, file ${fileId}, returning existing OCR result without changes.`,
+            `No subject scores provided for id ${id}, returning existing OCR result without changes.`,
         );
 
         return ocrResultEntity;
