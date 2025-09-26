@@ -30,7 +30,7 @@ import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
 import { PageableQuery, PageRequest } from "@/type/pagination/page-request.js";
-import { Page } from "@/type/pagination/page.js";
+import { Page } from "@/type/pagination/page.interface.js";
 
 @injectable()
 @Route("students")
@@ -129,7 +129,9 @@ export class StudentController extends Controller {
             );
         const studentResponsePage: Page<StudentResponse> =
             StudentMapper.toStudentResponsePage(studentEntities);
-        return instanceToPlain(studentResponsePage) as Page<StudentResponse>;
+        return instanceToPlain(studentResponsePage, {
+            excludeExtraneousValues: true,
+        }) as Page<StudentResponse>;
     }
 
     /**

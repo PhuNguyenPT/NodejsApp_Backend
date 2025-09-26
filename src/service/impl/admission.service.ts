@@ -10,7 +10,8 @@ import {
 import { StudentEntity } from "@/entity/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
-import { Page } from "@/type/pagination/page.js";
+import { PageImpl } from "@/type/pagination/page-impl.js";
+import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
 
 export interface AdmissionQueryOptions {
@@ -36,7 +37,6 @@ export class AdmissionService {
     ): Promise<Page<AdmissionEntity>> {
         const { searchOptions, userId } = options;
 
-        // Verify student exists and belongs to user
         const studentExists = await this.studentRepository.exists({
             where: { id: studentId, userId: userId ?? IsNull() },
         });
@@ -47,7 +47,6 @@ export class AdmissionService {
             );
         }
 
-        // Query admissions directly through the junction table
         const queryBuilder = this.studentRepository.manager
             .createQueryBuilder(AdmissionEntity, "admission")
             .innerJoin(
@@ -58,14 +57,12 @@ export class AdmissionService {
             .innerJoin("students", "student", "student.id = se.student_id")
             .where("student.id = :studentId", { studentId });
 
-        // Handle userId condition properly for both authenticated and guest users
         if (userId) {
             queryBuilder.andWhere("student.userId = :userId", { userId });
         } else {
             queryBuilder.andWhere("student.userId IS NULL");
         }
 
-        // Add search functionality
         if (
             searchOptions?.filters &&
             Object.keys(searchOptions.filters).length > 0
@@ -75,21 +72,19 @@ export class AdmissionService {
                     Object.entries(searchOptions.filters ?? {}).forEach(
                         ([field, value]) => {
                             if (isAdmissionSearchField(field)) {
+                                const paramName = `param_${field}`; // Use unique param names
                                 if (isAdmissionNumericSearchField(field)) {
-                                    // Exact matching for numeric fields
                                     qb.andWhere(
-                                        `admission.${field} = :${field}`,
+                                        `admission.${field} = :${paramName}`,
                                         {
-                                            [field]: parseInt(value, 10),
+                                            [paramName]: parseInt(value, 10),
                                         },
                                     );
                                 } else {
-                                    // Pattern matching for text fields
-                                    const searchTerm = `%${value}%`;
                                     qb.andWhere(
-                                        `admission.${field} ILIKE :${field}`,
+                                        `admission.${field} ILIKE :${paramName}`,
                                         {
-                                            [field]: searchTerm,
+                                            [paramName]: `%${value}%`,
                                         },
                                     );
                                 }
@@ -100,60 +95,25 @@ export class AdmissionService {
             );
         }
 
-        // Get total count with search applied
-        const totalElements = await queryBuilder.getCount();
-        const pageNumber = pageable.getPageNumber();
-        const pageSize = pageable.getPageSize();
-
-        // Handle empty result set
-        if (totalElements === 0) {
-            return Page.empty<AdmissionEntity>(pageNumber, pageSize);
-        }
-
-        // Calculate total pages and validate page number
-        const totalPages = Math.ceil(totalElements / pageSize);
-
-        // Check if requested page exists
-        if (pageNumber >= totalPages) {
-            return new Page<AdmissionEntity>(
-                [],
-                pageNumber,
-                pageSize,
-                totalElements,
-            );
-        }
-
-        // Apply sorting
         const sortOrder = pageable.getSort().toTypeOrmOrder();
-        if (Object.keys(sortOrder).length > 0) {
-            let isFirst = true;
-            for (const [field, direction] of Object.entries(sortOrder)) {
-                const mappedField = `admission.${field}`;
-                if (isFirst) {
-                    queryBuilder.orderBy(mappedField, direction);
-                    isFirst = false;
-                } else {
-                    queryBuilder.addOrderBy(mappedField, direction);
-                }
-            }
+        const prefixedSortOrder: Record<string, "ASC" | "DESC"> = {};
+        for (const [field, direction] of Object.entries(sortOrder)) {
+            prefixedSortOrder[`admission.${field}`] = direction;
+        }
+
+        if (Object.keys(prefixedSortOrder).length > 0) {
+            queryBuilder.orderBy(prefixedSortOrder);
         } else {
-            // Default sorting
             queryBuilder
                 .orderBy("admission.uniName", "ASC")
                 .addOrderBy("admission.majorName", "ASC");
         }
 
-        // Apply pagination
-        const entities = await queryBuilder
+        const [entities, totalElements] = await queryBuilder
             .skip(pageable.getOffset())
-            .take(pageSize)
-            .getMany();
+            .take(pageable.getPageSize())
+            .getManyAndCount();
 
-        return Page.of<AdmissionEntity>(
-            entities,
-            pageNumber,
-            pageSize,
-            totalElements,
-        );
+        return PageImpl.of(entities, totalElements, pageable);
     }
 }
