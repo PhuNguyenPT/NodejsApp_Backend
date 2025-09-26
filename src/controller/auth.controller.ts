@@ -101,7 +101,7 @@ export class AuthController extends Controller {
      *
      * @summary Logs out an authenticated user by blacklisting their access and/or refresh tokens.
      * @param {AuthenticatedRequest} request - Express request object with authenticated user context
-     * @param {RefreshTokenRequest} refreshData - Request containing the refresh token
+     * @param {RefreshTokenRequest} logoutRequest - Request containing the refresh token
      * @returns {Promise<{message: string; success: boolean}>} Logout confirmation response
      *
      * @throws {ValidationException} When request body validation fails
