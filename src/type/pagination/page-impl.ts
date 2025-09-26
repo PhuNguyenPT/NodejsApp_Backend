@@ -1,9 +1,4 @@
-import { Expose, Type } from "class-transformer";
-
-import {
-    defaultPaginationConfig,
-    PaginationConfig,
-} from "@/config/pagination.config.js";
+import { Exclude, Expose, Type } from "class-transformer";
 
 import { PageRequest } from "./page-request.js";
 import { Page } from "./page.interface.js";
@@ -26,6 +21,7 @@ export class PageImpl<T> implements Page<T> {
 
     @Expose()
     readonly last: boolean;
+
     @Expose()
     readonly number: number;
 
@@ -50,18 +46,12 @@ export class PageImpl<T> implements Page<T> {
         return this.numberOfElements === 0;
     }
 
-    private readonly config: PaginationConfig;
+    @Exclude() // Exclude from serialization
     private readonly pageable: Pageable;
 
-    constructor(
-        content: T[],
-        totalElements: number,
-        pageable: Pageable,
-        config: PaginationConfig = defaultPaginationConfig,
-    ) {
+    constructor(content: T[], totalElements: number, pageable: Pageable) {
         this.content = content;
         this.pageable = pageable;
-        this.config = config;
         this.number = pageable.getPageNumber();
         this.size = pageable.getPageSize();
         this.totalElements = totalElements;
@@ -93,9 +83,8 @@ export class PageImpl<T> implements Page<T> {
         content: T[],
         totalElements: number,
         pageable: Pageable,
-        config: PaginationConfig = defaultPaginationConfig,
     ): Page<T> {
-        return new PageImpl<T>(content, totalElements, pageable, config);
+        return new PageImpl<T>(content, totalElements, pageable);
     }
 
     getPageNumber(): number {

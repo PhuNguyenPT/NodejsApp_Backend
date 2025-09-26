@@ -1,4 +1,4 @@
-import { instanceToPlain, plainToInstance } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import {
     Body,
@@ -22,7 +22,7 @@ import { StudentRequest } from "@/dto/student/student-request.js";
 import { StudentResponse } from "@/dto/student/student.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import { StudentMapper } from "@/mapper/student-mapper.js";
-import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
 import { StudentService } from "@/service/impl/student.service.js";
 import { TYPES } from "@/type/container/types.js";
@@ -30,6 +30,7 @@ import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
 import { PageableQuery, PageRequest } from "@/type/pagination/page-request.js";
+import { PageResponse } from "@/type/pagination/page-response.js";
 import { Page } from "@/type/pagination/page.interface.js";
 
 @injectable()
@@ -111,7 +112,7 @@ export class StudentController extends Controller {
     public async getAllStudentProfilesByUserId(
         @Request() request: AuthenticatedRequest,
         @Queries() pageableQuery: PageableQuery,
-    ): Promise<Page<StudentResponse>> {
+    ): Promise<PageResponse<StudentResponse>> {
         const queryDto = plainToInstance(PageableQuery, pageableQuery);
         const pageRequest = PageRequest.fromQuery(queryDto);
 
@@ -127,11 +128,9 @@ export class StudentController extends Controller {
                 user.id,
                 pageRequest,
             );
-        const studentResponsePage: Page<StudentResponse> =
+        const studentResponsePage: PageResponse<StudentResponse> =
             StudentMapper.toStudentResponsePage(studentEntities);
-        return instanceToPlain(studentResponsePage, {
-            excludeExtraneousValues: true,
-        }) as Page<StudentResponse>;
+        return studentResponsePage;
     }
 
     /**
@@ -141,7 +140,7 @@ export class StudentController extends Controller {
      * @returns The full student profile including awards and certifications.
      */
     @Get("guest/{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.NOT_FOUND, "Not found")
@@ -163,7 +162,7 @@ export class StudentController extends Controller {
      * @returns The full student profile including awards and certifications.
      */
     @Get("{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
@@ -190,7 +189,7 @@ export class StudentController extends Controller {
      * @returns The full student profile including associated files.
      */
     @Get("guest/{studentId}/with-files")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
@@ -216,7 +215,7 @@ export class StudentController extends Controller {
      * @returns The full student profile including associated files.
      */
     @Get("{studentId}/with-files")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")

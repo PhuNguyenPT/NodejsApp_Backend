@@ -24,7 +24,7 @@ import {
 } from "@/dto/predict/predict.js";
 import { PredictionResultEntity } from "@/entity/prediction-result.entity.js";
 import { PredictionResultMapper } from "@/mapper/prediction-result-mapper.js";
-import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
 import { PredictionResultService } from "@/service/impl/prediction-result.service.js";
 import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
@@ -74,7 +74,7 @@ export class PredictionController extends Controller {
      * @returns {Promise<L1PredictResult[]>} Array of L1 prediction results
      */
     @Get("model/v1/{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
@@ -106,7 +106,7 @@ export class PredictionController extends Controller {
      * @returns {Promise<L2PredictResult[]>} Array of L2 prediction results with detailed scenarios
      */
     @Get("model/v2/{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
@@ -138,7 +138,7 @@ export class PredictionController extends Controller {
      * @param {AuthenticatedRequest} request - Authenticated request containing user information
      * @returns {Promise<L2PredictResult[]>} Array of L2 prediction results based on custom inputs
      */
-    @Middlewares(validateUuidParam("studentId"), validateDTO(UserInputL2))
+    @Middlewares(validateUuidParams("studentId"), validateDTO(UserInputL2))
     @Post("model/v2/{studentId}")
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
@@ -177,7 +177,7 @@ export class PredictionController extends Controller {
      * @returns {Promise<PredictionResultEntity>} The prediction result entity with metadata
      */
     @Get("result/{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
@@ -211,7 +211,7 @@ export class PredictionController extends Controller {
      * @returns {Promise<PredictionResultEntity>} The prediction result entity accessible to guests
      */
     @Get("result/guest/{studentId}")
-    @Middlewares(validateUuidParam("studentId"))
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Response(HttpStatus.BAD_REQUEST, "Validation error")
     @Response(HttpStatus.UNAUTHORIZED, "Authentication required")

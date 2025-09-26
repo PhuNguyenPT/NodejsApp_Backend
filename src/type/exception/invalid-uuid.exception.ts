@@ -7,11 +7,7 @@ import { HttpException } from "@/type/exception/http.exception.js";
  * Extends HttpException for consistent error handling
  */
 export class InvalidUuidException extends HttpException {
-    constructor() {
-        super(
-            HttpStatus.BAD_REQUEST,
-            "Invalid UUID format",
-            "InvalidUuidException",
-        );
+    constructor(message = "Invalid UUID format") {
+        super(HttpStatus.BAD_REQUEST, message, "InvalidUuidException");
     }
 }

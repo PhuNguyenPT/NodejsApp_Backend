@@ -1,4 +1,4 @@
-import { instanceToPlain, plainToInstance } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import {
     Controller,
@@ -22,13 +22,14 @@ import {
 import { AdmissionEntity } from "@/entity/admission.entity.js";
 import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
-import { validateUuidParam } from "@/middleware/uuid-validation-middleware.js";
+import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import { AdmissionService } from "@/service/impl/admission.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
 import { PageableQuery, PageRequest } from "@/type/pagination/page-request.js";
+import { PageResponse } from "@/type/pagination/page-response.js";
 import { Page } from "@/type/pagination/page.interface.js";
 
 /**
@@ -75,7 +76,7 @@ export class AdmissionController extends Controller {
      */
     @Get("{studentId}")
     @Middlewares(
-        validateUuidParam("studentId"),
+        validateUuidParams("studentId"),
         validateQuery(AdmissionSearchQuery),
     )
     @Produces("application/json")
@@ -88,7 +89,7 @@ export class AdmissionController extends Controller {
         @Path() studentId: string,
         @Request() request: AuthenticatedRequest,
         @Queries() queryParams: AdmissionSearchQuery,
-    ): Promise<Page<AdmissionResponse>> {
+    ): Promise<PageResponse<AdmissionResponse>> {
         // Convert PageableQuery to PageRequest
         const queryDto = plainToInstance(PageableQuery, queryParams);
         const pageRequest = PageRequest.fromQuery(queryDto);
@@ -116,11 +117,9 @@ export class AdmissionController extends Controller {
                 { searchOptions, userId },
             );
 
-        const admissionResponsePage =
+        const admissionResponsePage: PageResponse<AdmissionResponse> =
             AdmissionMapper.toAdmissionPage(admissionPage);
-        return instanceToPlain(admissionResponsePage, {
-            excludeExtraneousValues: true,
-        }) as Page<AdmissionResponse>;
+        return admissionResponsePage;
     }
 
     /**
@@ -143,7 +142,7 @@ export class AdmissionController extends Controller {
      */
     @Get("guest/{studentId}")
     @Middlewares(
-        validateUuidParam("studentId"),
+        validateUuidParams("studentId"),
         validateQuery(AdmissionSearchQuery),
     )
     @Produces("application/json")
@@ -154,7 +153,7 @@ export class AdmissionController extends Controller {
     public async getAdmissionResponsePageForGuest(
         @Path() studentId: string,
         @Queries() queryParams: AdmissionSearchQuery,
-    ): Promise<Page<AdmissionResponse>> {
+    ): Promise<PageResponse<AdmissionResponse>> {
         // Convert PageableQuery to PageRequest
         const queryDto = plainToInstance(PageableQuery, queryParams);
         const pageRequest = PageRequest.fromQuery(queryDto);
@@ -179,10 +178,8 @@ export class AdmissionController extends Controller {
                 { searchOptions },
             );
 
-        const admissionResponsePage =
+        const admissionResponsePage: PageResponse<AdmissionResponse> =
             AdmissionMapper.toAdmissionPage(admissionPage);
-        return instanceToPlain(admissionResponsePage, {
-            excludeExtraneousValues: true,
-        }) as Page<AdmissionResponse>;
+        return admissionResponsePage;
     }
 }
