@@ -1,4 +1,4 @@
-import { instanceToPlain, plainToInstance } from "class-transformer";
+import { plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import {
     Body,
@@ -30,6 +30,7 @@ import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
 import { PageableQuery, PageRequest } from "@/type/pagination/page-request.js";
+import { PageResponse } from "@/type/pagination/page-response.js";
 import { Page } from "@/type/pagination/page.interface.js";
 
 @injectable()
@@ -111,7 +112,7 @@ export class StudentController extends Controller {
     public async getAllStudentProfilesByUserId(
         @Request() request: AuthenticatedRequest,
         @Queries() pageableQuery: PageableQuery,
-    ): Promise<Page<StudentResponse>> {
+    ): Promise<PageResponse<StudentResponse>> {
         const queryDto = plainToInstance(PageableQuery, pageableQuery);
         const pageRequest = PageRequest.fromQuery(queryDto);
 
@@ -127,11 +128,9 @@ export class StudentController extends Controller {
                 user.id,
                 pageRequest,
             );
-        const studentResponsePage: Page<StudentResponse> =
+        const studentResponsePage: PageResponse<StudentResponse> =
             StudentMapper.toStudentResponsePage(studentEntities);
-        return instanceToPlain(studentResponsePage, {
-            excludeExtraneousValues: true,
-        }) as Page<StudentResponse>;
+        return studentResponsePage;
     }
 
     /**
