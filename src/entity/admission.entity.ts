@@ -1,4 +1,13 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
+import {
+    Column,
+    Entity,
+    Index,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    Relation,
+} from "typeorm";
+
+import { StudentAdmissionEntity } from "./student-admission.entity.js";
 
 // Define field categories
 export const ADMISSION_TEXT_SEARCH_FIELDS = [
@@ -58,7 +67,7 @@ export function isAdmissionTextSearchField(
         field as AdmissionTextSearchField,
     );
 }
-@Entity("admission")
+@Entity("admissions")
 @Index("idx_admission_code", ["admissionCode"])
 @Index("idx_admission_type", ["admissionType"])
 @Index("idx_major_code", ["majorCode"])
@@ -96,6 +105,9 @@ export class AdmissionEntity {
 
     @Column({ name: "province", nullable: false, type: "varchar" })
     province!: string;
+
+    @OneToMany("StudentAdmissionEntity", "admission")
+    studentAdmissions!: Relation<StudentAdmissionEntity[]>;
 
     @Column({ name: "study_program", nullable: false, type: "varchar" })
     studyProgram!: string;

@@ -14,12 +14,16 @@ import {
     Tags,
 } from "tsoa";
 
+import { AdmissionFieldResponse } from "@/dto/admission/admission-field-response.js";
 import { AdmissionResponse } from "@/dto/admission/admission-response.js";
 import {
     AdmissionSearchQuery,
     buildSearchFilters,
 } from "@/dto/admission/admission-search-query.dto.js";
-import { AdmissionEntity } from "@/entity/admission.entity.js";
+import {
+    AdmissionEntity,
+    AdmissionSearchField,
+} from "@/entity/admission.entity.js";
 import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
@@ -54,6 +58,32 @@ export class AdmissionController extends Controller {
         private readonly admissionService: AdmissionService,
     ) {
         super();
+    }
+
+    @Get("filter/{studentId}")
+    @Middlewares(
+        validateUuidParams("studentId"),
+        validateQuery(AdmissionSearchQuery),
+    )
+    @Produces("application/json")
+    @Security("bearerAuth", ["profile:read:own"])
+    @SuccessResponse(
+        HttpStatus.OK,
+        "Successfully retrieve student profile's admissions filter",
+    )
+    public async getAdmissionFieldsFilter(
+        @Path() studentId: string,
+        @Request() request: AuthenticatedRequest,
+    ): Promise<AdmissionFieldResponse> {
+        const user: Express.User = request.user;
+        const userId = user.id;
+
+        const fields: Record<AdmissionSearchField, (number | string)[]> =
+            await this.admissionService.getAllDistinctAdmissionFieldValues(
+                studentId,
+                userId,
+            );
+        return AdmissionMapper.toAdmissionFieldResponse(fields);
     }
 
     /**

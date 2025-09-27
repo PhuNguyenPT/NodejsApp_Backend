@@ -13,7 +13,7 @@ import {
     PredictionResultEntity,
     PredictionResultStatus,
 } from "@/entity/prediction-result.entity.js";
-import { StudentEntity } from "@/entity/student.entity.js";
+import { StudentAdmissionEntity } from "@/entity/student-admission.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
 // REMOVE THIS IMPORT - This is causing the circular dependency
@@ -86,22 +86,15 @@ export class PredictionModelEventListenerService {
         l2PredictionResults: L2PredictResult[],
     ): Promise<void> {
         try {
-            // Track raw counts for logging
-            let l1RawCodesCount = 0;
-            const l2RawCodesCount = l2PredictionResults.length;
-
             const admissionCodeMap = new Map<string, boolean>();
 
-            // Add L1 codes
             l1PredictionResults.forEach((result) => {
                 const admissionCodes = Object.keys(result.ma_xet_tuyen);
-                l1RawCodesCount += admissionCodes.length;
-                admissionCodes.forEach((code) => {
-                    admissionCodeMap.set(code, true);
-                });
+                admissionCodes.forEach((code) =>
+                    admissionCodeMap.set(code, true),
+                );
             });
 
-            // Add L2 codes
             l2PredictionResults.forEach((result) => {
                 admissionCodeMap.set(result.ma_xet_tuyen, true);
             });
@@ -122,103 +115,67 @@ export class PredictionModelEventListenerService {
                 return;
             }
 
-            this.logger.info("Processing admissions from predictions", {
-                admissionCodes: admissionCodes.slice(0, 10),
-                admissionCodesCount: admissionCodes.length,
-                duplicatesRemoved:
-                    l1RawCodesCount + l2RawCodesCount - admissionCodes.length,
-                l1RawCodesCount: l1RawCodesCount,
-                l2RawCodesCount: l2RawCodesCount,
-                studentId,
-            });
-
-            // Find admissions using transactional entity manager
-            const admissions: AdmissionEntity[] = await manager.find(
+            // Step 1: Find all candidate admissions from the prediction codes
+            const candidateAdmissions: AdmissionEntity[] = await manager.find(
                 AdmissionEntity,
-                {
-                    where: {
-                        admissionCode: In(admissionCodes),
-                    },
-                },
+                { where: { admissionCode: In(admissionCodes) } },
             );
 
-            this.logger.info("Found matching admissions", {
-                foundAdmissionsCount: admissions.length,
-                requestedCodesCount: admissionCodes.length,
-                studentId,
-            });
-
-            if (admissions.length === 0) {
+            if (candidateAdmissions.length === 0) {
                 this.logger.warn(
-                    "No matching admissions found for prediction codes",
-                    {
-                        admissionCodes: admissionCodes.slice(0, 10),
-                        studentId,
-                    },
+                    "No matching admissions found for any prediction codes",
+                    { studentId },
                 );
                 return;
             }
 
-            // Find student using transactional entity manager
-            const student: null | StudentEntity = await manager.findOne(
-                StudentEntity,
-                {
-                    relations: ["admissions"],
-                    where: { id: studentId },
-                },
+            // Step 2: Find all existing admission links for this student
+            const existingStudentAdmissions = await manager.findBy(
+                StudentAdmissionEntity,
+                { studentId },
+            );
+            const existingAdmissionIds = new Set(
+                existingStudentAdmissions.map((sa) => sa.admissionId),
             );
 
-            if (!student) {
-                this.logger.error(
-                    "Student not found when processing admissions",
+            // Step 3: Filter out admissions that are already associated with the student
+            const newAdmissionsToAdd = candidateAdmissions.filter(
+                (admission) => !existingAdmissionIds.has(admission.id),
+            );
+
+            if (newAdmissionsToAdd.length === 0) {
+                this.logger.info(
+                    "No new admissions to add (all predicted admissions already associated)",
                     {
                         studentId,
+                        totalAdmissions: existingAdmissionIds.size,
                     },
                 );
                 return;
             }
 
-            // Associate new admissions with the student
-            let newAdmissionsCount = 0;
-            admissions.forEach((admission) => {
-                if (!student.hasAdmission(admission.id)) {
-                    student.addAdmission(admission);
-                    newAdmissionsCount++;
-                }
-            });
+            // Step 4: Create new StudentAdmissionEntity instances for the new links
+            const newStudentAdmissionLinks = newAdmissionsToAdd.map(
+                (admission) =>
+                    manager.create(StudentAdmissionEntity, {
+                        admissionId: admission.id,
+                        studentId: studentId,
+                    }),
+            );
 
-            // Save changes using transactional entity manager
-            if (newAdmissionsCount > 0) {
-                await manager.save(student);
+            // Step 5: Save the new links to the database in a single bulk operation
+            await manager.save(newStudentAdmissionLinks);
 
-                this.logger.info(
-                    "Successfully associated admissions with student",
-                    {
-                        newAdmissionsAdded: newAdmissionsCount,
-                        studentId,
-                        totalAdmissions: student.getAdmissionCount(),
-                    },
-                );
-            } else {
-                this.logger.info(
-                    "No new admissions to add (all already associated)",
-                    {
-                        studentId,
-                        totalAdmissions: student.getAdmissionCount(),
-                    },
-                );
-            }
-
-            // Log admission details for debugging
-            if (admissions.length > 0) {
-                const admissionCodes = admissions.map((e) => e.admissionCode);
-
-                this.logger.debug("Processed admission details", {
-                    admissionCodes: admissionCodes.slice(0, 5),
-                    processedAdmissionsCount: admissions.length,
+            this.logger.info(
+                "Successfully created new student admission links",
+                {
+                    newAdmissionsAdded: newStudentAdmissionLinks.length,
                     studentId,
-                });
-            }
+                    totalAdmissions:
+                        existingAdmissionIds.size +
+                        newStudentAdmissionLinks.length,
+                },
+            );
         } catch (error) {
             this.logger.error("Error processing admissions from predictions", {
                 error,

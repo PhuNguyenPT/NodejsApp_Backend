@@ -19,7 +19,7 @@ export enum PredictionResultStatus {
     PROCESSING = "processing",
 }
 
-@Entity("prediction_result")
+@Entity("prediction_results")
 export class PredictionResultEntity {
     @CreateDateColumn({ type: "timestamp with time zone" })
     createdAt!: Date;
