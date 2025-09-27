@@ -20,10 +20,7 @@ import {
     AdmissionSearchQuery,
     buildSearchFilters,
 } from "@/dto/admission/admission-search-query.dto.js";
-import {
-    AdmissionEntity,
-    AdmissionSearchField,
-} from "@/entity/admission.entity.js";
+import { AdmissionEntity, AdmissionField } from "@/entity/admission.entity.js";
 import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
@@ -100,7 +97,7 @@ export class AdmissionController extends Controller {
         const user: Express.User = request.user;
         const userId = user.id;
 
-        const fields: Record<AdmissionSearchField, (number | string)[]> =
+        const fields: Record<AdmissionField, (number | string)[]> =
             await this.admissionService.getAllDistinctAdmissionFieldValues(
                 studentId,
                 userId,
@@ -142,7 +139,7 @@ export class AdmissionController extends Controller {
     public async getAdmissionFieldsFilterGuest(
         @Path() studentId: string,
     ): Promise<AdmissionFieldResponse> {
-        const fields: Record<AdmissionSearchField, (number | string)[]> =
+        const fields: Record<AdmissionField, (number | string)[]> =
             await this.admissionService.getAllDistinctAdmissionFieldValues(
                 studentId,
             );

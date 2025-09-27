@@ -10,7 +10,7 @@ import {
 import { StudentAdmissionEntity } from "./student-admission.entity.js";
 
 // Define field categories
-export const ADMISSION_TEXT_SEARCH_FIELDS = [
+export const ADMISSION_TEXT_FIELDS = [
     "admissionCode",
     "admissionType",
     "admissionTypeName",
@@ -24,46 +24,32 @@ export const ADMISSION_TEXT_SEARCH_FIELDS = [
     "uniWebLink",
 ] as const;
 
-export const ADMISSION_NUMERIC_SEARCH_FIELDS = [
-    "majorCode",
-    "tuitionFee",
-] as const;
+export const ADMISSION_NUMERIC_FIELDS = ["majorCode", "tuitionFee"] as const;
 
 // Combine all allowed fields
-export const ALLOWED_ADMISSION_SEARCH_FIELDS = [
-    ...ADMISSION_TEXT_SEARCH_FIELDS,
-    ...ADMISSION_NUMERIC_SEARCH_FIELDS,
+export const ALLOWED_ADMISSION_FIELDS = [
+    ...ADMISSION_TEXT_FIELDS,
+    ...ADMISSION_NUMERIC_FIELDS,
 ] as const;
 
-export type AdmissionNumericSearchField =
-    (typeof ADMISSION_NUMERIC_SEARCH_FIELDS)[number];
-export type AdmissionSearchField =
-    (typeof ALLOWED_ADMISSION_SEARCH_FIELDS)[number];
-export type AdmissionTextSearchField =
-    (typeof ADMISSION_TEXT_SEARCH_FIELDS)[number];
+export type AdmissionField = (typeof ALLOWED_ADMISSION_FIELDS)[number];
+export type AdmissionNumericField = (typeof ADMISSION_NUMERIC_FIELDS)[number];
+export type AdmissionTextField = (typeof ADMISSION_TEXT_FIELDS)[number];
 
-export function isAdmissionNumericSearchField(
-    field: string,
-): field is AdmissionNumericSearchField {
-    return ADMISSION_NUMERIC_SEARCH_FIELDS.includes(
-        field as AdmissionNumericSearchField,
-    );
+export function isAdmissionField(field: string): field is AdmissionField {
+    return ALLOWED_ADMISSION_FIELDS.includes(field as AdmissionField);
 }
 
-export function isAdmissionSearchField(
+export function isAdmissionNumericField(
     field: string,
-): field is AdmissionSearchField {
-    return ALLOWED_ADMISSION_SEARCH_FIELDS.includes(
-        field as AdmissionSearchField,
-    );
+): field is AdmissionNumericField {
+    return ADMISSION_NUMERIC_FIELDS.includes(field as AdmissionNumericField);
 }
 
-export function isAdmissionTextSearchField(
+export function isAdmissionTextField(
     field: string,
-): field is AdmissionTextSearchField {
-    return ADMISSION_TEXT_SEARCH_FIELDS.includes(
-        field as AdmissionTextSearchField,
-    );
+): field is AdmissionTextField {
+    return ADMISSION_TEXT_FIELDS.includes(field as AdmissionTextField);
 }
 @Entity("admissions")
 @Index("idx_admission_code", ["admissionCode"])

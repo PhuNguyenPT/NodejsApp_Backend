@@ -5,10 +5,10 @@ import { Logger } from "winston";
 
 import {
     AdmissionEntity,
-    AdmissionSearchField,
-    ALLOWED_ADMISSION_SEARCH_FIELDS,
-    isAdmissionNumericSearchField,
-    isAdmissionSearchField,
+    AdmissionField,
+    ALLOWED_ADMISSION_FIELDS,
+    isAdmissionField,
+    isAdmissionNumericField,
 } from "@/entity/admission.entity.js";
 import { StudentAdmissionEntity } from "@/entity/student-admission.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
@@ -24,7 +24,7 @@ export interface AdmissionQueryOptions {
 }
 
 export interface AdmissionSearchOptions {
-    filters?: Record<AdmissionSearchField, string[]>;
+    filters?: Record<AdmissionField, string[]>;
 }
 
 @injectable()
@@ -69,14 +69,14 @@ export class AdmissionService {
     public async getAllDistinctAdmissionFieldValues(
         studentId: string,
         userId?: string,
-    ): Promise<Record<AdmissionSearchField, (number | string)[]>> {
+    ): Promise<Record<AdmissionField, (number | string)[]>> {
         const cacheKey = `admission_fields:${studentId}:${userId ?? "guest"}`;
 
         try {
             const cachedResult = await this.redisClient.get(cacheKey);
             if (cachedResult) {
                 return JSON.parse(cachedResult) as Record<
-                    AdmissionSearchField,
+                    AdmissionField,
                     (number | string)[]
                 >;
             }
@@ -94,17 +94,15 @@ export class AdmissionService {
         const admissionEntities = studentAdmissions.map((sa) => sa.admission);
 
         // Extract distinct values for all fields
-        const result: Partial<
-            Record<AdmissionSearchField, (number | string)[]>
-        > = {};
+        const result: Partial<Record<AdmissionField, (number | string)[]>> = {};
 
-        ALLOWED_ADMISSION_SEARCH_FIELDS.forEach((field) => {
+        ALLOWED_ADMISSION_FIELDS.forEach((field) => {
             const distinctValues = Array.from(
                 new Set(admissionEntities.map((admission) => admission[field])),
             );
 
             // Sort appropriately based on type
-            if (isAdmissionNumericSearchField(field)) {
+            if (isAdmissionNumericField(field)) {
                 result[field] = (distinctValues as number[]).sort(
                     (a, b) => a - b,
                 );
@@ -114,7 +112,7 @@ export class AdmissionService {
         });
 
         const finalResult = result as Record<
-            AdmissionSearchField,
+            AdmissionField,
             (number | string)[]
         >;
 
@@ -146,13 +144,10 @@ export class AdmissionService {
             new Brackets((qb) => {
                 Object.entries(searchOptions.filters ?? {}).forEach(
                     ([field, values]) => {
-                        if (
-                            isAdmissionSearchField(field) &&
-                            values.length > 0
-                        ) {
+                        if (isAdmissionField(field) && values.length > 0) {
                             const paramName = `param_${field}`;
 
-                            if (isAdmissionNumericSearchField(field)) {
+                            if (isAdmissionNumericField(field)) {
                                 // For numeric fields, use IN clause for exact matches
                                 const numericValues = values.map((value) =>
                                     parseInt(value, 10),
@@ -202,7 +197,7 @@ export class AdmissionService {
 
         for (const [field, direction] of Object.entries(sortOrder)) {
             // Only add the sort condition if the field is a valid and allowed search field.
-            if (isAdmissionSearchField(field)) {
+            if (isAdmissionField(field)) {
                 prefixedSortOrder[`admission.${field}`] = direction;
             }
         }

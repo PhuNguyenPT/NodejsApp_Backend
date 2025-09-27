@@ -1,6 +1,6 @@
 import { Expose } from "class-transformer";
 
-import { AdmissionSearchField } from "@/entity/admission.entity.js";
+import { AdmissionField } from "@/entity/admission.entity.js";
 
 /**
  * Response DTO containing distinct field values for admission filtering.
@@ -34,9 +34,9 @@ export class AdmissionFieldResponse {
      * Each key corresponds to a filterable admission field, and each value is an array
      * of unique values found in the database for that field.
      *
-     * @type {Record<AdmissionSearchField, (number | string)[]>}
+     * @type {Record<AdmissionField, (number | string)[]>}
      * @memberof AdmissionFieldResponse
      */
     @Expose()
-    fields!: Record<AdmissionSearchField, (number | string)[]>;
+    fields!: Record<AdmissionField, (number | string)[]>;
 }
