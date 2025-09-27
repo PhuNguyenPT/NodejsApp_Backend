@@ -1,4 +1,5 @@
-import { IsNumberString, IsOptional, IsString } from "class-validator";
+import { Transform, Type } from "class-transformer";
+import { IsArray, IsNumberString, IsOptional, IsString } from "class-validator";
 
 import {
     AdmissionSearchField,
@@ -7,243 +8,242 @@ import {
 import { PageableQuery } from "@/type/pagination/page-request.js";
 
 /**
+ * Helper function to transform comma-separated strings to arrays
+ */
+const transformToArray = ({
+    value,
+}: {
+    value: unknown;
+}): string[] | undefined => {
+    if (!value) return undefined;
+    if (Array.isArray(value)) return value as string[];
+    if (typeof value === "string") {
+        return value
+            .split(",")
+            .map((v) => v.trim())
+            .filter((v) => v.length > 0);
+    }
+    if (typeof value === "number") {
+        return [value.toString()];
+    }
+    // For other types, return undefined to avoid unexpected stringification
+    return undefined;
+};
+
+/**
  * DTO for searching admissions with pagination support.
  * Extends PageableQuery to include pagination, sorting, and admission-specific search filters.
- * All search fields are optional and support partial matching for text fields and exact matching for numeric fields.
+ * All search fields are optional and support multiple values for enhanced filtering.
  */
 export class AdmissionSearchQuery extends PageableQuery {
     /**
-     * Admission code for filtering results.
-     * Used to search for specific admission programs by their unique identifier.
-     * Supports partial matching with case-insensitive search.
+     * Admission codes for filtering results.
+     * Supports multiple admission codes for broader search capabilities.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @example "FUV-7460112-TUYỂN THẲNG"
-     * @example "GTS748020101AĐGNL"
      */
+    @IsArray()
     @IsOptional()
-    @IsString()
-    admissionCode?: string;
+    @IsString({ each: true })
+    @Transform(transformToArray)
+    @Type(() => String)
+    admissionCode?: string[];
 
     /**
-     * Type of admission method for filtering results.
-     * Used to filter admissions by their admission methodology (e.g., direct admission, exam-based, etc.).
-     * Supports partial matching with case-insensitive search.
+     * Types of admission methods for filtering results.
+     * Supports multiple admission types for comprehensive filtering.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @example "UTXT"
-     * @example "ĐGNL"
-     * @example "THPTQG"
      */
+    @IsArray()
     @IsOptional()
-    @IsString()
-    admissionType?: string;
+    @IsString({ each: true })
+    @Transform(transformToArray)
+    @Type(() => String)
+    admissionType?: string[];
 
     /**
-     * Full name/description of the admission type for filtering results.
-     * Used to search by the detailed description of admission methods.
-     * Supports partial matching with case-insensitive search.
+     * Full names/descriptions of admission types for filtering results.
+     * Supports multiple admission type descriptions.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @example "Sử dụng phương thức tuyển thẳng"
-     * @example "Sử dụng điểm thi Đánh giá Năng lực"
      */
+    @IsArray()
     @IsOptional()
-    @IsString()
-    admissionTypeName?: string;
+    @IsString({ each: true })
+    @Transform(transformToArray)
+    @Type(() => String)
+    admissionTypeName?: string[];
 
     /**
-     * Major code for filtering results by academic program.
-     * Must be a valid numeric string representing the major classification code.
-     * Uses exact matching for precise program identification.
+     * Major codes for filtering results by academic programs.
+     * Supports multiple major codes for broader program search.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @validation Must contain only numeric characters
-     * @example "7480201"
-     * @example "7460112"
-     * @example "7520212"
      */
-    @IsNumberString()
+    @IsArray()
+    @IsNumberString({}, { each: true })
     @IsOptional()
-    majorCode?: string;
+    @Transform(transformToArray)
+    @Type(() => String)
+    majorCode?: string[];
 
     /**
-     * Major name for filtering results by academic program name.
-     * Used to search for specific fields of study or academic disciplines.
-     * Supports partial matching with case-insensitive search.
+     * Major names for filtering results by academic program names.
+     * Supports multiple major names for comprehensive program search.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @example "Công nghệ thông tin"
-     * @example "Kỹ thuật y sinh"
-     * @example "Toán ứng dụng"
      */
+    @IsArray()
     @IsOptional()
-    @IsString()
-    majorName?: string;
+    @IsString({ each: true })
+    @Transform(transformToArray)
+    @Type(() => String)
+    majorName?: string[];
 
     /**
-     * Province or city location for filtering results by geographic area.
-     * Used to find admissions in specific Vietnamese provinces or cities.
-     * Supports partial matching with case-insensitive search.
+     * Provinces or cities for filtering results by geographic areas.
+     * Supports multiple locations for broader geographic search.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @example "TP. Hồ Chí Minh"
-     * @example "Cần Thơ"
      */
+    @IsArray()
     @IsOptional()
-    @IsString()
-    province?: string;
+    @IsString({ each: true })
+    @Transform(transformToArray)
+    @Type(() => String)
+    province?: string[];
 
     /**
-     * Study program type for filtering results.
-     * Used to filter by different types of academic programs or tracks.
-     * Supports partial matching with case-insensitive search.
+     * Study program types for filtering results.
+     * Supports multiple program types for comprehensive filtering.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @example "Đại trà"
-     * @example "Chất lượng cao"
      */
+    @IsArray()
     @IsOptional()
-    @IsString()
-    studyProgram?: string;
+    @IsString({ each: true })
+    @Transform(transformToArray)
+    @Type(() => String)
+    studyProgram?: string[];
 
     /**
-     * Subject combination for filtering results by exam subject requirements.
-     * Used to search for admissions based on required subject combinations for entrance.
-     * Supports partial matching with case-insensitive search.
+     * Subject combinations for filtering results.
+     * Supports multiple subject combinations for broader search.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @example "VNUHCM"
-     * @example "UTXT"
-     * @example "A00"
      */
+    @IsArray()
     @IsOptional()
-    @IsString()
-    subjectCombination?: string;
+    @IsString({ each: true })
+    @Transform(transformToArray)
+    @Type(() => String)
+    subjectCombination?: string[];
 
     /**
-     * Tuition fee for filtering results by cost.
-     * Must be a valid numeric string representing the tuition fee in Vietnamese Dong.
-     * Uses exact matching for precise fee filtering.
+     * Tuition fees for filtering results by cost ranges.
+     * Supports multiple tuition fee values for flexible cost filtering.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @validation Must contain only numeric characters
-     * @example "50000000"
-     * @example "467600000"
-     * @example "35000000"
      */
-    @IsNumberString()
+    @IsArray()
+    @IsNumberString({}, { each: true })
     @IsOptional()
-    tuitionFee?: string;
+    @Transform(transformToArray)
+    @Type(() => String)
+    tuitionFee?: string[];
 
     /**
-     * University code for filtering results by institution.
-     * Used to search for admissions from specific universities or colleges.
-     * Supports partial matching with case-insensitive search.
+     * University codes for filtering results by institutions.
+     * Supports multiple university codes for broader institutional search.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @example "FUV"
-     * @example "NTT"
-     * @example "DVL"
      */
+    @IsArray()
     @IsOptional()
-    @IsString()
-    uniCode?: string;
+    @IsString({ each: true })
+    @Transform(transformToArray)
+    @Type(() => String)
+    uniCode?: string[];
 
     /**
-     * University name for filtering results by institution name.
-     * Used to search for admissions from universities by their full name.
-     * Supports partial matching with case-insensitive search.
+     * University names for filtering results by institution names.
+     * Supports multiple university names for comprehensive search.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @example "TRƯỜNG ĐẠI HỌC FULBRIGHT VIỆT NAM"
-     * @example "TRƯỜNG ĐẠI HỌC NGUYỄN TẤT THÀNH"
      */
+    @IsArray()
     @IsOptional()
-    @IsString()
-    uniName?: string;
+    @IsString({ each: true })
+    @Transform(transformToArray)
+    @Type(() => String)
+    uniName?: string[];
 
     /**
-     * University type for filtering results by institution ownership.
-     * Used to filter between public and private universities.
-     * Supports partial matching with case-insensitive search.
+     * University types for filtering results by institution ownership.
+     * Supports both public and private university filtering simultaneously.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @example "Tư thục"
-     * @example "Công lập"
      */
+    @IsArray()
     @IsOptional()
-    @IsString()
-    uniType?: string;
+    @IsString({ each: true })
+    @Transform(transformToArray)
+    @Type(() => String)
+    uniType?: string[];
 
     /**
-     * University website URL for filtering results.
-     * Used to search by university website links.
-     * Supports partial matching with case-insensitive search.
+     * University website URLs for filtering results.
+     * Supports multiple university websites for comprehensive search.
      *
-     * @type {string}
+     * @type {string[]}
      * @optional
-     * @example "https://fulbright.edu.vn/"
-     * @example "https://ntt.edu.vn/"
      */
+    @IsArray()
     @IsOptional()
-    @IsString()
-    uniWebLink?: string;
+    @IsString({ each: true })
+    @Transform(transformToArray)
+    @Type(() => String)
+    uniWebLink?: string[];
 }
 
 /**
  * Builds a search filters record from admission search query parameters.
- * Processes the query parameters to create a clean filter object with only non-empty values.
- * Automatically trims whitespace and filters out invalid entries.
+ * Processes arrays of values for each field to create comprehensive filter objects.
  *
  * @param queryParams - The admission search query parameters from the HTTP request
- * @returns A record containing only valid, non-empty search filters
- *
- * @example
- * ```typescript
- * const queryParams = {
- *   uniCode: "FUV",
- *   majorName: "Công nghệ thông tin",
- *   tuitionFee: "50000000",
- *   page: 1,
- *   size: 20
- * };
- *
- * const filters = buildSearchFilters(queryParams);
- * // Result: {
- * //   uniCode: "FUV",
- * //   majorName: "Công nghệ thông tin",
- * //   tuitionFee: "50000000"
- * // }
- * ```
- *
- * @validation
- * - Filters out null, undefined, and empty string values
- * - Trims whitespace from all string values
- * - Only includes fields that are in the ALLOWED_ADMISSION_SEARCH_FIELDS whitelist
- * - Numeric fields (majorCode, tuitionFee) should be validated by class-validator decorators
+ * @returns A record containing arrays of valid, non-empty search filters
  */
 export function buildSearchFilters(
     queryParams: AdmissionSearchQuery,
-): Record<AdmissionSearchField, string> {
-    const searchFilters = {} as Record<AdmissionSearchField, string>;
+): Record<AdmissionSearchField, string[]> {
+    const searchFilters = {} as Record<AdmissionSearchField, string[]>;
 
     ALLOWED_ADMISSION_SEARCH_FIELDS.forEach((field) => {
-        const value = queryParams[field];
-        if (value && typeof value === "string" && value.trim()) {
-            searchFilters[field] = value.trim();
+        const values = queryParams[field];
+        if (values && Array.isArray(values) && values.length > 0) {
+            const filteredValues = values
+                .filter(
+                    (value): value is string =>
+                        typeof value === "string" && value.trim().length > 0,
+                )
+                .map((value) => value.trim());
+
+            if (filteredValues.length > 0) {
+                searchFilters[field] = filteredValues;
+            }
         }
     });
 
