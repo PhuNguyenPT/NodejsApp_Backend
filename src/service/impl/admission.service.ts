@@ -1,12 +1,16 @@
 import { inject, injectable } from "inversify";
-import { Brackets, IsNull, Repository } from "typeorm";
+import { RedisClientType } from "redis";
+import { Brackets, DataSource, IsNull } from "typeorm";
+import { Logger } from "winston";
 
 import {
     AdmissionEntity,
     AdmissionSearchField,
+    ALLOWED_ADMISSION_SEARCH_FIELDS,
     isAdmissionNumericSearchField,
     isAdmissionSearchField,
 } from "@/entity/admission.entity.js";
+import { StudentAdmissionEntity } from "@/entity/student-admission.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
@@ -26,8 +30,12 @@ export interface AdmissionSearchOptions {
 @injectable()
 export class AdmissionService {
     constructor(
-        @inject(TYPES.StudentRepository)
-        private readonly studentRepository: Repository<StudentEntity>,
+        @inject(TYPES.DataSource)
+        private readonly dataSource: DataSource,
+        @inject(TYPES.RedisPublisher)
+        private readonly redisClient: RedisClientType,
+        @inject(TYPES.Logger)
+        private readonly logger: Logger,
     ) {}
 
     public async getAdmissionsPageByStudentIdAndUserId(
@@ -37,7 +45,11 @@ export class AdmissionService {
     ): Promise<Page<AdmissionEntity>> {
         const { searchOptions, userId } = options;
 
-        const studentExists = await this.studentRepository.exists({
+        // Get student repository from data source
+        const studentRepository = this.dataSource.getRepository(StudentEntity);
+
+        // Check if student exists (lightweight query)
+        const studentExists = await studentRepository.exists({
             where: { id: studentId, userId: userId ?? IsNull() },
         });
 
@@ -47,14 +59,11 @@ export class AdmissionService {
             );
         }
 
-        const queryBuilder = this.studentRepository.manager
-            .createQueryBuilder(AdmissionEntity, "admission")
-            .innerJoin(
-                "student_admissions",
-                "se",
-                "se.admission_id = admission.id",
-            )
-            .innerJoin("students", "student", "student.id = se.student_id")
+        // Use StudentAdmissionEntity as the main entity and join to get admission data
+        const queryBuilder = this.dataSource.manager
+            .createQueryBuilder(StudentAdmissionEntity, "sa")
+            .innerJoinAndSelect("sa.admission", "admission")
+            .innerJoin("sa.student", "student")
             .where("student.id = :studentId", { studentId });
 
         if (userId) {
@@ -109,11 +118,99 @@ export class AdmissionService {
                 .addOrderBy("admission.majorName", "ASC");
         }
 
-        const [entities, totalElements] = await queryBuilder
+        const [studentAdmissions, totalElements] = await queryBuilder
             .skip(pageable.getOffset())
             .take(pageable.getPageSize())
             .getManyAndCount();
 
+        // Extract admission entities from the student admission entities
+        const entities = studentAdmissions.map((sa) => sa.admission);
+
         return PageImpl.of(entities, totalElements, pageable);
+    }
+
+    public async getAllDistinctAdmissionFieldValues(
+        studentId: string,
+        userId?: string,
+    ): Promise<Record<AdmissionSearchField, (number | string)[]>> {
+        const cacheKey = `admission_fields:${studentId}:${userId ?? "guest"}`;
+
+        try {
+            const cachedResult = await this.redisClient.get(cacheKey);
+            if (cachedResult) {
+                return JSON.parse(cachedResult) as Record<
+                    AdmissionSearchField,
+                    (number | string)[]
+                >;
+            }
+        } catch (error) {
+            this.logger.error("Redis cache get error:", error);
+        }
+
+        // Get student repository from data source
+        const studentRepository = this.dataSource.getRepository(StudentEntity);
+
+        // Check if student exists (lightweight query)
+        const studentExists = await studentRepository.exists({
+            where: { id: studentId, userId: userId ?? IsNull() },
+        });
+
+        if (!studentExists) {
+            throw new EntityNotFoundException(
+                `Student profiles id ${studentId} not found for admissions`,
+            );
+        }
+
+        // Updated query to use StudentAdmissionEntity with full admission data
+        const studentAdmissions = await this.dataSource.manager
+            .createQueryBuilder(StudentAdmissionEntity, "sa")
+            .innerJoinAndSelect("sa.admission", "admission")
+            .innerJoin("sa.student", "student")
+            .where("student.id = :studentId", { studentId })
+            .andWhere(
+                userId ? "student.userId = :userId" : "student.userId IS NULL",
+                userId ? { userId } : {},
+            )
+            .getMany();
+
+        // Extract admission entities and then get distinct values
+        const admissionEntities = studentAdmissions.map((sa) => sa.admission);
+
+        // Extract distinct values for all fields
+        const result: Partial<
+            Record<AdmissionSearchField, (number | string)[]>
+        > = {};
+
+        ALLOWED_ADMISSION_SEARCH_FIELDS.forEach((field) => {
+            const distinctValues = Array.from(
+                new Set(admissionEntities.map((admission) => admission[field])),
+            );
+
+            // Sort appropriately based on type
+            if (isAdmissionNumericSearchField(field)) {
+                result[field] = (distinctValues as number[]).sort(
+                    (a, b) => a - b,
+                );
+            } else {
+                result[field] = (distinctValues as string[]).sort();
+            }
+        });
+
+        const finalResult = result as Record<
+            AdmissionSearchField,
+            (number | string)[]
+        >;
+
+        try {
+            await this.redisClient.setEx(
+                cacheKey,
+                1800,
+                JSON.stringify(finalResult),
+            );
+        } catch (error: unknown) {
+            this.logger.error("Redis cache set error:", error);
+        }
+
+        return finalResult;
     }
 }

@@ -36,6 +36,8 @@ import {
 import { UniType } from "@/type/enum/uni-type.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese-provinces.js";
 
+import { StudentAdmissionEntity } from "./student-admission.entity.js";
+
 export interface AcademicPerformanceData {
     academicPerformance: string;
     grade: number;
@@ -82,23 +84,6 @@ export class StudentEntity {
     @Column({ nullable: true, type: "jsonb" })
     academicPerformances?: AcademicPerformanceData[];
 
-    @JoinTable({
-        inverseJoinColumn: {
-            name: "admission_id",
-            referencedColumnName: "id",
-        },
-        joinColumn: {
-            name: "student_id",
-            referencedColumnName: "id",
-        },
-        name: "student_admissions",
-    })
-    @ManyToMany("AdmissionEntity", {
-        cascade: false,
-        eager: false,
-    })
-    admissions?: Relation<AdmissionEntity[]>;
-
     /**
      * Aptitude test information including exam type and score
      * Stored as JSON containing examType and score
@@ -111,12 +96,12 @@ export class StudentEntity {
         eager: false,
     })
     awards?: Relation<AwardEntity[]>;
+
     @OneToMany("CertificationEntity", "student", {
         cascade: true,
         eager: false,
     })
     certifications?: Relation<CertificationEntity[]>;
-
     /**
      * Conduct/behavior data for different grades
      * Array containing conduct ratings and corresponding grades
@@ -206,6 +191,12 @@ export class StudentEntity {
     })
     specialStudentCases?: SpecialStudentCase[];
 
+    @OneToMany("StudentAdmissionEntity", "student", {
+        cascade: true,
+        eager: false,
+    })
+    studentAdmissions?: Relation<StudentAdmissionEntity[]>;
+
     /**
      * Talent score (0-10 scale with up to 2 decimal places)
      */
@@ -259,9 +250,22 @@ export class StudentEntity {
 
     // Add admission to student
     addAdmission(admission: AdmissionEntity): void {
-        this.admissions ??= [];
-        if (!this.hasAdmission(admission.id)) {
-            this.admissions.push(admission);
+        this.studentAdmissions ??= [];
+
+        // Check if admission already exists
+        const exists = this.studentAdmissions.some(
+            (sa) =>
+                sa.admissionId === admission.id ||
+                sa.admission.id === admission.id,
+        );
+
+        if (!exists) {
+            // Create new junction entity
+            const studentAdmission = new StudentAdmissionEntity();
+            studentAdmission.admissionId = admission.id;
+            studentAdmission.admission = admission;
+
+            this.studentAdmissions.push(studentAdmission);
         }
     }
 
@@ -291,7 +295,7 @@ export class StudentEntity {
 
     // Clear all admissions
     clearAdmissions(): void {
-        this.admissions = [];
+        this.studentAdmissions = [];
     }
 
     // Helper method to get academic performance by grade
@@ -318,54 +322,6 @@ export class StudentEntity {
     getActiveFiles(): FileEntity[] {
         if (!this.files) return [];
         return this.files.filter((file) => file.isActive());
-    }
-
-    // Get admissions count
-    getAdmissionCount(): number {
-        return this.getAdmissions().length;
-    }
-
-    // Get admission IDs only (lightweight)
-    getAdmissionIds(): string[] {
-        return this.getAdmissions().map((e) => e.id);
-    }
-
-    // Get all admissions for this student
-    getAdmissions(): AdmissionEntity[] {
-        return this.admissions ?? [];
-    }
-
-    // Filter admissions by major
-    getAdmissionsByMajor(majorName: string): AdmissionEntity[] {
-        return this.getAdmissions().filter((e) =>
-            e.majorName.toLowerCase().includes(majorName.toLowerCase()),
-        );
-    }
-
-    // Filter admissions by province
-    getAdmissionsByProvince(province: string): AdmissionEntity[] {
-        return this.getAdmissions().filter((e) => e.province === province);
-    }
-
-    // Filter admissions by university type
-    getAdmissionsByUniType(uniType: string): AdmissionEntity[] {
-        return this.getAdmissions().filter((e) => e.uniType === uniType);
-    }
-
-    // Filter admissions by university
-    getAdmissionsByUniversity(uniName: string): AdmissionEntity[] {
-        return this.getAdmissions().filter((e) =>
-            e.uniName.toLowerCase().includes(uniName.toLowerCase()),
-        );
-    }
-
-    // Filter admissions within budget
-    getAdmissionsWithinBudget(): AdmissionEntity[] {
-        if (!this.isBudgetRangeValid()) return [];
-        return this.getAdmissions().filter((e) => {
-            const tuitionFee = e.tuitionFee;
-            return this.isWithinBudget(tuitionFee);
-        });
     }
 
     // Helper method to get aptitude test score (backward compatibility)
@@ -591,16 +547,6 @@ export class StudentEntity {
         );
     }
 
-    // Check if student has specific admission
-    hasAdmission(admissionId: string): boolean {
-        return this.getAdmissions().some((e) => e.id === admissionId);
-    }
-
-    // Check if student has any admissions
-    hasAdmissions(): boolean {
-        return this.getAdmissionCount() > 0;
-    }
-
     hasAptitudeTestScore(): boolean {
         return !!this.aptitudeTestScore;
     }
@@ -705,8 +651,12 @@ export class StudentEntity {
 
     // Remove admission from student
     removeAdmission(admissionId: string): void {
-        if (!this.admissions) return;
-        this.admissions = this.admissions.filter((e) => e.id !== admissionId);
+        if (!this.studentAdmissions) return;
+        this.studentAdmissions = this.studentAdmissions.filter(
+            (sa) =>
+                sa.admissionId !== admissionId &&
+                sa.admission.id !== admissionId,
+        );
     }
 
     // Helper method to set academic performance data
@@ -718,7 +668,12 @@ export class StudentEntity {
 
     // Set all admissions at once
     setAdmissions(admissions: AdmissionEntity[]): void {
-        this.admissions = admissions;
+        this.studentAdmissions = admissions.map((admission) => {
+            const studentAdmission = new StudentAdmissionEntity();
+            studentAdmission.admissionId = admission.id;
+            studentAdmission.admission = admission;
+            return studentAdmission;
+        });
     }
 
     // Helper method to set aptitude test with both type and score
