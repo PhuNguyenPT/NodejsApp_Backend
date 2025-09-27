@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { RedisClientType } from "redis";
-import { Brackets, DataSource, IsNull } from "typeorm";
+import { Brackets, DataSource, IsNull, SelectQueryBuilder } from "typeorm";
 import { Logger } from "winston";
 
 import {
@@ -45,32 +45,12 @@ export class AdmissionService {
     ): Promise<Page<AdmissionEntity>> {
         const { searchOptions, userId } = options;
 
-        // Get student repository from data source
-        const studentRepository = this.dataSource.getRepository(StudentEntity);
+        await this.validateStudentExists(studentId, userId);
 
-        // Check if student exists (lightweight query)
-        const studentExists = await studentRepository.exists({
-            where: { id: studentId, userId: userId ?? IsNull() },
-        });
-
-        if (!studentExists) {
-            throw new EntityNotFoundException(
-                `Student profiles id ${studentId} not found for admissions`,
-            );
-        }
-
-        // Use StudentAdmissionEntity as the main entity and join to get admission data
-        const queryBuilder = this.dataSource.manager
-            .createQueryBuilder(StudentAdmissionEntity, "sa")
-            .innerJoinAndSelect("sa.admission", "admission")
-            .innerJoin("sa.student", "student")
-            .where("student.id = :studentId", { studentId });
-
-        if (userId) {
-            queryBuilder.andWhere("student.userId = :userId", { userId });
-        } else {
-            queryBuilder.andWhere("student.userId IS NULL");
-        }
+        const queryBuilder = this.buildBaseStudentAdmissionQuery(
+            studentId,
+            userId,
+        );
 
         if (
             searchOptions?.filters &&
@@ -104,19 +84,7 @@ export class AdmissionService {
             );
         }
 
-        const sortOrder = pageable.getSort().toTypeOrmOrder();
-        const prefixedSortOrder: Record<string, "ASC" | "DESC"> = {};
-        for (const [field, direction] of Object.entries(sortOrder)) {
-            prefixedSortOrder[`admission.${field}`] = direction;
-        }
-
-        if (Object.keys(prefixedSortOrder).length > 0) {
-            queryBuilder.orderBy(prefixedSortOrder);
-        } else {
-            queryBuilder
-                .orderBy("admission.uniName", "ASC")
-                .addOrderBy("admission.majorName", "ASC");
-        }
+        this.applySorting(queryBuilder, pageable);
 
         const [studentAdmissions, totalElements] = await queryBuilder
             .skip(pageable.getOffset())
@@ -147,31 +115,11 @@ export class AdmissionService {
             this.logger.error("Redis cache get error:", error);
         }
 
-        // Get student repository from data source
-        const studentRepository = this.dataSource.getRepository(StudentEntity);
+        await this.validateStudentExists(studentId, userId);
 
-        // Check if student exists (lightweight query)
-        const studentExists = await studentRepository.exists({
-            where: { id: studentId, userId: userId ?? IsNull() },
-        });
+        const query = this.buildBaseStudentAdmissionQuery(studentId, userId);
 
-        if (!studentExists) {
-            throw new EntityNotFoundException(
-                `Student profiles id ${studentId} not found for admissions`,
-            );
-        }
-
-        // Updated query to use StudentAdmissionEntity with full admission data
-        const studentAdmissions = await this.dataSource.manager
-            .createQueryBuilder(StudentAdmissionEntity, "sa")
-            .innerJoinAndSelect("sa.admission", "admission")
-            .innerJoin("sa.student", "student")
-            .where("student.id = :studentId", { studentId })
-            .andWhere(
-                userId ? "student.userId = :userId" : "student.userId IS NULL",
-                userId ? { userId } : {},
-            )
-            .getMany();
+        const studentAdmissions = await query.getMany();
 
         // Extract admission entities and then get distinct values
         const admissionEntities = studentAdmissions.map((sa) => sa.admission);
@@ -212,5 +160,61 @@ export class AdmissionService {
         }
 
         return finalResult;
+    }
+
+    private applySorting(
+        queryBuilder: SelectQueryBuilder<StudentAdmissionEntity>,
+        pageable: Pageable,
+    ): void {
+        const sortOrder = pageable.getSort().toTypeOrmOrder();
+        const prefixedSortOrder: Record<string, "ASC" | "DESC"> = {};
+
+        for (const [field, direction] of Object.entries(sortOrder)) {
+            prefixedSortOrder[`admission.${field}`] = direction;
+        }
+
+        if (Object.keys(prefixedSortOrder).length > 0) {
+            queryBuilder.orderBy(prefixedSortOrder);
+        } else {
+            queryBuilder
+                .orderBy("admission.uniName", "ASC")
+                .addOrderBy("admission.majorName", "ASC");
+        }
+    }
+
+    private buildBaseStudentAdmissionQuery(
+        studentId: string,
+        userId?: string,
+    ): SelectQueryBuilder<StudentAdmissionEntity> {
+        let query = this.dataSource.manager
+            .createQueryBuilder(StudentAdmissionEntity, "sa")
+            .innerJoinAndSelect("sa.admission", "admission")
+            .innerJoin("sa.student", "student")
+            .where("student.id = :studentId", { studentId });
+
+        if (userId) {
+            query = query.andWhere("student.userId = :userId", { userId });
+        } else {
+            query = query.andWhere("student.userId IS NULL");
+        }
+
+        return query;
+    }
+
+    private async validateStudentExists(
+        studentId: string,
+        userId?: string,
+    ): Promise<void> {
+        const studentRepository = this.dataSource.getRepository(StudentEntity);
+
+        const studentExists = await studentRepository.exists({
+            where: { id: studentId, userId: userId ?? IsNull() },
+        });
+
+        if (!studentExists) {
+            throw new EntityNotFoundException(
+                `Student profiles id ${studentId} not found for admissions`,
+            );
+        }
     }
 }
