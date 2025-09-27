@@ -24,7 +24,7 @@ export interface AdmissionQueryOptions {
 }
 
 export interface AdmissionSearchOptions {
-    filters?: Record<AdmissionSearchField, string>;
+    filters?: Record<AdmissionSearchField, string[]>;
 }
 
 @injectable()
@@ -52,37 +52,8 @@ export class AdmissionService {
             userId,
         );
 
-        if (
-            searchOptions?.filters &&
-            Object.keys(searchOptions.filters).length > 0
-        ) {
-            queryBuilder.andWhere(
-                new Brackets((qb) => {
-                    Object.entries(searchOptions.filters ?? {}).forEach(
-                        ([field, value]) => {
-                            if (isAdmissionSearchField(field)) {
-                                const paramName = `param_${field}`; // Use unique param names
-                                if (isAdmissionNumericSearchField(field)) {
-                                    qb.andWhere(
-                                        `admission.${field} = :${paramName}`,
-                                        {
-                                            [paramName]: parseInt(value, 10),
-                                        },
-                                    );
-                                } else {
-                                    qb.andWhere(
-                                        `admission.${field} ILIKE :${paramName}`,
-                                        {
-                                            [paramName]: `%${value}%`,
-                                        },
-                                    );
-                                }
-                            }
-                        },
-                    );
-                }),
-            );
-        }
+        // Apply search filters using the extracted method
+        this.applySearchFilters(queryBuilder, searchOptions);
 
         this.applySorting(queryBuilder, pageable);
 
@@ -91,9 +62,7 @@ export class AdmissionService {
             .take(pageable.getPageSize())
             .getManyAndCount();
 
-        // Extract admission entities from the student admission entities
         const entities = studentAdmissions.map((sa) => sa.admission);
-
         return PageImpl.of(entities, totalElements, pageable);
     }
 
@@ -160,6 +129,68 @@ export class AdmissionService {
         }
 
         return finalResult;
+    }
+
+    private applySearchFilters(
+        queryBuilder: SelectQueryBuilder<StudentAdmissionEntity>,
+        searchOptions?: AdmissionSearchOptions,
+    ): void {
+        if (
+            !searchOptions?.filters ||
+            Object.keys(searchOptions.filters).length === 0
+        ) {
+            return;
+        }
+
+        queryBuilder.andWhere(
+            new Brackets((qb) => {
+                Object.entries(searchOptions.filters ?? {}).forEach(
+                    ([field, values]) => {
+                        if (
+                            isAdmissionSearchField(field) &&
+                            values.length > 0
+                        ) {
+                            const paramName = `param_${field}`;
+
+                            if (isAdmissionNumericSearchField(field)) {
+                                // For numeric fields, use IN clause for exact matches
+                                const numericValues = values.map((value) =>
+                                    parseInt(value, 10),
+                                );
+                                qb.andWhere(
+                                    `admission.${field} IN (:...${paramName})`,
+                                    { [paramName]: numericValues },
+                                );
+                            } else {
+                                // For text fields, use multiple ILIKE conditions with OR
+                                qb.andWhere(
+                                    new Brackets((subQb) => {
+                                        values.forEach((value, index) => {
+                                            const indexedParamName = `${paramName}_${index.toString()}`;
+                                            if (index === 0) {
+                                                subQb.where(
+                                                    `admission.${field} ILIKE :${indexedParamName}`,
+                                                    {
+                                                        [indexedParamName]: `%${value}%`,
+                                                    },
+                                                );
+                                            } else {
+                                                subQb.orWhere(
+                                                    `admission.${field} ILIKE :${indexedParamName}`,
+                                                    {
+                                                        [indexedParamName]: `%${value}%`,
+                                                    },
+                                                );
+                                            }
+                                        });
+                                    }),
+                                );
+                            }
+                        }
+                    },
+                );
+            }),
+        );
     }
 
     private applySorting(
