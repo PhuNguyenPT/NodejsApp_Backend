@@ -60,11 +60,33 @@ export class AdmissionController extends Controller {
         super();
     }
 
+    /**
+     * Retrieves distinct field values for admission filtering for a specific authenticated user's student profile.
+     * This endpoint provides all unique values for each filterable admission field, which can be used
+     * to populate filter dropdowns or selection lists in the frontend.
+     *
+     * @summary Get admission field filter options for authenticated user
+     * @param {string} studentId - UUID of the student profile to retrieve filter options for
+     * @param {AuthenticatedRequest} request - Express request object containing authenticated user information
+     * @returns {Promise<AdmissionFieldResponse>} Object containing arrays of distinct values for each filterable admission field
+     *
+     * @throws {EntityNotFoundException} When the student profile is not found or doesn't belong to the authenticated user
+     *
+     * @example
+     * GET /admission/filter/550e8400-e29b-41d4-a716-446655440000
+     * Response: {
+     *   "fields": {
+     *     "uniName": ["University A", "University B"],
+     *     "majorName": ["Computer Science", "Software Engineering"],
+     *     "province": ["Ho Chi Minh City", "Hanoi"],
+     *     ...
+     *   }
+     * }
+     *
+     * @memberof AdmissionController
+     */
     @Get("filter/{studentId}")
-    @Middlewares(
-        validateUuidParams("studentId"),
-        validateQuery(AdmissionSearchQuery),
-    )
+    @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(
@@ -82,6 +104,47 @@ export class AdmissionController extends Controller {
             await this.admissionService.getAllDistinctAdmissionFieldValues(
                 studentId,
                 userId,
+            );
+        return AdmissionMapper.toAdmissionFieldResponse(fields);
+    }
+
+    /**
+     * Retrieves distinct field values for admission filtering for a public student profile.
+     * This endpoint is accessible without authentication and provides filter options for public student profiles
+     * (profiles where userId is null). Used to populate filter dropdowns for guest users.
+     *
+     * @summary Get admission field filter options for guest user
+     * @param {string} studentId - UUID of the public student profile to retrieve filter options for
+     * @returns {Promise<AdmissionFieldResponse>} Object containing arrays of distinct values for each filterable admission field
+     *
+     * @throws {EntityNotFoundException} When the public student profile is not found
+     *
+     * @example
+     * GET /admission/filter/guest/550e8400-e29b-41d4-a716-446655440000
+     * Response: {
+     *   "fields": {
+     *     "uniName": ["University A", "University B"],
+     *     "majorName": ["Computer Science", "Software Engineering"],
+     *     "admissionType": ["THPTQG", "ĐGNL"],
+     *     ...
+     *   }
+     * }
+     *
+     * @memberof AdmissionController
+     */
+    @Get("filter/guest/{studentId}")
+    @Middlewares(validateUuidParams("studentId"))
+    @Produces("application/json")
+    @SuccessResponse(
+        HttpStatus.OK,
+        "Successfully retrieve student profile's admissions filter",
+    )
+    public async getAdmissionFieldsFilterGuest(
+        @Path() studentId: string,
+    ): Promise<AdmissionFieldResponse> {
+        const fields: Record<AdmissionSearchField, (number | string)[]> =
+            await this.admissionService.getAllDistinctAdmissionFieldValues(
+                studentId,
             );
         return AdmissionMapper.toAdmissionFieldResponse(fields);
     }
