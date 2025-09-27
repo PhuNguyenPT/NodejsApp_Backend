@@ -39,7 +39,6 @@ export type AdmissionNumericSearchField =
     (typeof ADMISSION_NUMERIC_SEARCH_FIELDS)[number];
 export type AdmissionSearchField =
     (typeof ALLOWED_ADMISSION_SEARCH_FIELDS)[number];
-// Create union types
 export type AdmissionTextSearchField =
     (typeof ADMISSION_TEXT_SEARCH_FIELDS)[number];
 
@@ -51,7 +50,6 @@ export function isAdmissionNumericSearchField(
     );
 }
 
-// Type guards
 export function isAdmissionSearchField(
     field: string,
 ): field is AdmissionSearchField {

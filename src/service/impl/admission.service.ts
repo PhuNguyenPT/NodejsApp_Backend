@@ -201,12 +201,16 @@ export class AdmissionService {
         const prefixedSortOrder: Record<string, "ASC" | "DESC"> = {};
 
         for (const [field, direction] of Object.entries(sortOrder)) {
-            prefixedSortOrder[`admission.${field}`] = direction;
+            // Only add the sort condition if the field is a valid and allowed search field.
+            if (isAdmissionSearchField(field)) {
+                prefixedSortOrder[`admission.${field}`] = direction;
+            }
         }
 
         if (Object.keys(prefixedSortOrder).length > 0) {
             queryBuilder.orderBy(prefixedSortOrder);
         } else {
+            // Fallback to default sorting if no valid sort fields are provided
             queryBuilder
                 .orderBy("admission.uniName", "ASC")
                 .addOrderBy("admission.majorName", "ASC");
