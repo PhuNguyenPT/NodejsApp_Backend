@@ -2,8 +2,8 @@ import { Transform, Type } from "class-transformer";
 import { IsArray, IsNumberString, IsOptional, IsString } from "class-validator";
 
 import {
-    AdmissionSearchField,
-    ALLOWED_ADMISSION_SEARCH_FIELDS,
+    AdmissionField,
+    ALLOWED_ADMISSION_FIELDS,
 } from "@/entity/admission.entity.js";
 import { PageableQuery } from "@/type/pagination/page-request.js";
 
@@ -228,10 +228,10 @@ export class AdmissionSearchQuery extends PageableQuery {
  */
 export function buildSearchFilters(
     queryParams: AdmissionSearchQuery,
-): Record<AdmissionSearchField, string[]> {
-    const searchFilters = {} as Record<AdmissionSearchField, string[]>;
+): Record<AdmissionField, string[]> {
+    const searchFilters = {} as Record<AdmissionField, string[]>;
 
-    ALLOWED_ADMISSION_SEARCH_FIELDS.forEach((field) => {
+    ALLOWED_ADMISSION_FIELDS.forEach((field) => {
         const values = queryParams[field];
         if (values && Array.isArray(values) && values.length > 0) {
             const filteredValues = values

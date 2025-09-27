@@ -2,16 +2,13 @@ import { plainToInstance } from "class-transformer";
 
 import { AdmissionFieldResponse } from "@/dto/admission/admission-field-response.js";
 import { AdmissionResponse } from "@/dto/admission/admission-response.js";
-import {
-    AdmissionEntity,
-    AdmissionSearchField,
-} from "@/entity/admission.entity.js";
+import { AdmissionEntity, AdmissionField } from "@/entity/admission.entity.js";
 import { PageResponse } from "@/type/pagination/page-response.js";
 import { Page } from "@/type/pagination/page.interface.js";
 
 export const AdmissionMapper = {
     toAdmissionFieldResponse(
-        fields: Record<AdmissionSearchField, (number | string)[]>,
+        fields: Record<AdmissionField, (number | string)[]>,
     ): AdmissionFieldResponse {
         return plainToInstance(
             AdmissionFieldResponse,

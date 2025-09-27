@@ -1,6 +1,6 @@
 import { Expose } from "class-transformer";
 
-import { AdmissionSearchField } from "@/entity/admission.entity.js";
+import { AdmissionField } from "@/entity/admission.entity.js";
 
 /**
  * Response DTO containing distinct field values for admission filtering.
@@ -14,7 +14,7 @@ import { AdmissionSearchField } from "@/entity/admission.entity.js";
  *     "admissionType": ["THPTQG", "UTXT"],
  *     "admissionTypeName": ["Sử dụng điểm kỳ thi Tốt nghiệp Trung học phổ thông quốc gia", "Sử dụng phương thức tuyển thẳng"],
  *     "majorName": ["Công nghệ thông tin", "Hệ thống thông tin"],
- *     "province": ["TP. Hồ Chí Minh", "Hà Nội"],
+ *     "province": ["TP. Hồ Chí Minh"],
  *     "studyProgram": ["Công nghệ Đổi mới và Sáng tạo", "Đại trà"],
  *     "subjectCombination": ["A00", "A01"],
  *     "uniCode": ["DCG", "DHV"],
@@ -34,9 +34,9 @@ export class AdmissionFieldResponse {
      * Each key corresponds to a filterable admission field, and each value is an array
      * of unique values found in the database for that field.
      *
-     * @type {Record<AdmissionSearchField, (number | string)[]>}
+     * @type {Record<AdmissionField, (number | string)[]>}
      * @memberof AdmissionFieldResponse
      */
     @Expose()
-    fields!: Record<AdmissionSearchField, (number | string)[]>;
+    fields!: Record<AdmissionField, (number | string)[]>;
 }
