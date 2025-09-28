@@ -16,8 +16,10 @@ import { StudentEntity } from "@/entity/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { PageImpl } from "@/type/pagination/page-impl.js";
+import { PageRequest } from "@/type/pagination/page-request.js";
 import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
+import { Order, Sort } from "@/type/pagination/sort.js";
 
 export interface AdmissionQueryOptions {
     searchQuery?: AdmissionSearchQuery;
@@ -65,15 +67,16 @@ export class AdmissionService {
             this.applySearchFilters(queryBuilder, searchOptions);
         }
 
-        this.applySorting(queryBuilder, pageable);
+        // Apply sorting and get the effective pageable (with default sort if needed)
+        const effectivePageable = this.applySorting(queryBuilder, pageable);
 
         const [studentAdmissions, totalElements] = await queryBuilder
-            .skip(pageable.getOffset())
-            .take(pageable.getPageSize())
+            .skip(effectivePageable.getOffset())
+            .take(effectivePageable.getPageSize())
             .getManyAndCount();
 
         const entities = studentAdmissions.map((sa) => sa.admission);
-        return PageImpl.of(entities, totalElements, pageable);
+        return PageImpl.of(entities, totalElements, effectivePageable);
     }
 
     public async getAllDistinctAdmissionFieldValues(
@@ -223,25 +226,42 @@ export class AdmissionService {
     private applySorting(
         queryBuilder: SelectQueryBuilder<StudentAdmissionEntity>,
         pageable: Pageable,
-    ): void {
+    ): Pageable {
         const sortOrder = pageable.getSort().toTypeOrmOrder();
         const prefixedSortOrder: Record<string, "ASC" | "DESC"> = {};
 
+        // Filter and prefix only valid admission fields
         for (const [field, direction] of Object.entries(sortOrder)) {
-            // Only add the sort condition if the field is a valid and allowed search field.
             if (isAdmissionField(field)) {
                 prefixedSortOrder[`admission.${field}`] = direction;
             }
         }
 
-        if (Object.keys(prefixedSortOrder).length > 0) {
-            queryBuilder.orderBy(prefixedSortOrder);
-        } else {
-            // Fallback to default sorting if no valid sort fields are provided
+        let effectivePageable = pageable;
+
+        // If no valid sort fields were found, create a new pageable with default sort
+        if (Object.keys(prefixedSortOrder).length === 0) {
+            const defaultSort = Sort.by(
+                new Order("uniName", "ASC"),
+                new Order("majorName", "ASC"),
+            );
+
+            // Create a new PageRequest with the default sort
+            effectivePageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                defaultSort,
+            );
+
+            // Apply the default sort to the query
             queryBuilder
                 .orderBy("admission.uniName", "ASC")
                 .addOrderBy("admission.majorName", "ASC");
+        } else {
+            queryBuilder.orderBy(prefixedSortOrder);
         }
+
+        return effectivePageable;
     }
 
     private buildBaseStudentAdmissionQuery(
