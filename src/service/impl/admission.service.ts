@@ -3,6 +3,7 @@ import { RedisClientType } from "redis";
 import { Brackets, DataSource, IsNull, SelectQueryBuilder } from "typeorm";
 import { Logger } from "winston";
 
+import { AdmissionSearchQuery } from "@/dto/admission/admission-search-query.dto.js";
 import {
     AdmissionEntity,
     AdmissionField,
@@ -15,16 +16,24 @@ import { StudentEntity } from "@/entity/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { PageImpl } from "@/type/pagination/page-impl.js";
+import { PageRequest } from "@/type/pagination/page-request.js";
 import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
+import { Order, Sort } from "@/type/pagination/sort.js";
 
 export interface AdmissionQueryOptions {
-    searchOptions?: AdmissionSearchOptions;
+    searchQuery?: AdmissionSearchQuery;
     userId?: string;
 }
 
 export interface AdmissionSearchOptions {
     filters?: Record<AdmissionField, string[]>;
+    tuitionFeeRange?: TuitionFeeRange;
+}
+
+export interface TuitionFeeRange {
+    max?: number;
+    min?: number;
 }
 
 @injectable()
@@ -41,9 +50,9 @@ export class AdmissionService {
     public async getAdmissionsPageByStudentIdAndUserId(
         studentId: string,
         pageable: Pageable,
-        options: AdmissionQueryOptions = {},
+        options: AdmissionQueryOptions,
     ): Promise<Page<AdmissionEntity>> {
-        const { searchOptions, userId } = options;
+        const { searchQuery, userId } = options;
 
         await this.validateStudentExists(studentId, userId);
 
@@ -52,18 +61,22 @@ export class AdmissionService {
             userId,
         );
 
-        // Apply search filters using the extracted method
-        this.applySearchFilters(queryBuilder, searchOptions);
+        // Build and apply search filters from the search query
+        if (searchQuery) {
+            const searchOptions = this.buildSearchOptions(searchQuery);
+            this.applySearchFilters(queryBuilder, searchOptions);
+        }
 
-        this.applySorting(queryBuilder, pageable);
+        // Apply sorting and get the effective pageable (with default sort if needed)
+        const effectivePageable = this.applySorting(queryBuilder, pageable);
 
         const [studentAdmissions, totalElements] = await queryBuilder
-            .skip(pageable.getOffset())
-            .take(pageable.getPageSize())
+            .skip(effectivePageable.getOffset())
+            .take(effectivePageable.getPageSize())
             .getManyAndCount();
 
         const entities = studentAdmissions.map((sa) => sa.admission);
-        return PageImpl.of(entities, totalElements, pageable);
+        return PageImpl.of(entities, totalElements, effectivePageable);
     }
 
     public async getAllDistinctAdmissionFieldValues(
@@ -133,17 +146,17 @@ export class AdmissionService {
         queryBuilder: SelectQueryBuilder<StudentAdmissionEntity>,
         searchOptions?: AdmissionSearchOptions,
     ): void {
-        if (
-            !searchOptions?.filters ||
-            Object.keys(searchOptions.filters).length === 0
-        ) {
+        if (!searchOptions) {
             return;
         }
 
-        queryBuilder.andWhere(
-            new Brackets((qb) => {
-                Object.entries(searchOptions.filters ?? {}).forEach(
-                    ([field, values]) => {
+        const { filters, tuitionFeeRange } = searchOptions;
+
+        // Apply regular field filters
+        if (filters && Object.keys(filters).length > 0) {
+            queryBuilder.andWhere(
+                new Brackets((qb) => {
+                    Object.entries(filters).forEach(([field, values]) => {
                         if (isAdmissionField(field) && values.length > 0) {
                             const paramName = `param_${field}`;
 
@@ -182,34 +195,73 @@ export class AdmissionService {
                                 );
                             }
                         }
-                    },
-                );
-            }),
-        );
+                    });
+                }),
+            );
+        }
+
+        // Apply tuition fee range filter
+        if (
+            tuitionFeeRange &&
+            (tuitionFeeRange.min !== undefined ||
+                tuitionFeeRange.max !== undefined)
+        ) {
+            queryBuilder.andWhere(
+                new Brackets((qb) => {
+                    if (tuitionFeeRange.min !== undefined) {
+                        qb.andWhere("admission.tuitionFee >= :minTuition", {
+                            minTuition: tuitionFeeRange.min,
+                        });
+                    }
+                    if (tuitionFeeRange.max !== undefined) {
+                        qb.andWhere("admission.tuitionFee <= :maxTuition", {
+                            maxTuition: tuitionFeeRange.max,
+                        });
+                    }
+                }),
+            );
+        }
     }
 
     private applySorting(
         queryBuilder: SelectQueryBuilder<StudentAdmissionEntity>,
         pageable: Pageable,
-    ): void {
+    ): Pageable {
         const sortOrder = pageable.getSort().toTypeOrmOrder();
         const prefixedSortOrder: Record<string, "ASC" | "DESC"> = {};
 
+        // Filter and prefix only valid admission fields
         for (const [field, direction] of Object.entries(sortOrder)) {
-            // Only add the sort condition if the field is a valid and allowed search field.
             if (isAdmissionField(field)) {
                 prefixedSortOrder[`admission.${field}`] = direction;
             }
         }
 
-        if (Object.keys(prefixedSortOrder).length > 0) {
-            queryBuilder.orderBy(prefixedSortOrder);
-        } else {
-            // Fallback to default sorting if no valid sort fields are provided
+        let effectivePageable = pageable;
+
+        // If no valid sort fields were found, create a new pageable with default sort
+        if (Object.keys(prefixedSortOrder).length === 0) {
+            const defaultSort = Sort.by(
+                new Order("uniName", "ASC"),
+                new Order("majorName", "ASC"),
+            );
+
+            // Create a new PageRequest with the default sort
+            effectivePageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                defaultSort,
+            );
+
+            // Apply the default sort to the query
             queryBuilder
                 .orderBy("admission.uniName", "ASC")
                 .addOrderBy("admission.majorName", "ASC");
+        } else {
+            queryBuilder.orderBy(prefixedSortOrder);
         }
+
+        return effectivePageable;
     }
 
     private buildBaseStudentAdmissionQuery(
@@ -229,6 +281,62 @@ export class AdmissionService {
         }
 
         return query;
+    }
+
+    /**
+     * Builds a search options object from admission search query parameters.
+     * Processes arrays of values for each field to create comprehensive filter objects.
+     * Special handling for tuition fee range filtering.
+     *
+     * @param queryParams - The admission search query parameters from the HTTP request
+     * @returns AdmissionSearchOptions containing filters and tuition fee range, or undefined if no filters
+     */
+    private buildSearchOptions(
+        queryParams: AdmissionSearchQuery,
+    ): AdmissionSearchOptions | undefined {
+        const searchFilters = {} as Record<AdmissionField, string[]>;
+
+        // Process regular fields (excluding tuition fee)
+        ALLOWED_ADMISSION_FIELDS.filter(
+            (field) => field !== "tuitionFee",
+        ).forEach((field) => {
+            const values = queryParams[field];
+            if (values && Array.isArray(values) && values.length > 0) {
+                const filteredValues = values
+                    .filter(
+                        (value): value is string =>
+                            typeof value === "string" &&
+                            value.trim().length > 0,
+                    )
+                    .map((value) => value.trim());
+
+                if (filteredValues.length > 0) {
+                    searchFilters[field] = filteredValues;
+                }
+            }
+        });
+
+        // Handle tuition fee range
+        let tuitionFeeRange: TuitionFeeRange | undefined;
+        if (
+            queryParams.tuitionFeeMin !== undefined ||
+            queryParams.tuitionFeeMax !== undefined
+        ) {
+            tuitionFeeRange = {};
+            if (queryParams.tuitionFeeMin !== undefined) {
+                tuitionFeeRange.min = queryParams.tuitionFeeMin;
+            }
+            if (queryParams.tuitionFeeMax !== undefined) {
+                tuitionFeeRange.max = queryParams.tuitionFeeMax;
+            }
+        }
+
+        // Return undefined if no search criteria provided
+        if (Object.keys(searchFilters).length === 0 && !tuitionFeeRange) {
+            return undefined;
+        }
+
+        return { filters: searchFilters, tuitionFeeRange };
     }
 
     private async validateStudentExists(
