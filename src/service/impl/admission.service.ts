@@ -3,6 +3,7 @@ import { RedisClientType } from "redis";
 import { Brackets, DataSource, IsNull, SelectQueryBuilder } from "typeorm";
 import { Logger } from "winston";
 
+import { AdmissionSearchQuery } from "@/dto/admission/admission-search-query.dto.js";
 import {
     AdmissionEntity,
     AdmissionField,
@@ -19,7 +20,7 @@ import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
 
 export interface AdmissionQueryOptions {
-    searchOptions?: AdmissionSearchOptions;
+    searchQuery?: AdmissionSearchQuery;
     userId?: string;
 }
 
@@ -32,6 +33,7 @@ export interface TuitionFeeRange {
     max?: number;
     min?: number;
 }
+
 @injectable()
 export class AdmissionService {
     constructor(
@@ -46,9 +48,9 @@ export class AdmissionService {
     public async getAdmissionsPageByStudentIdAndUserId(
         studentId: string,
         pageable: Pageable,
-        options: AdmissionQueryOptions = {},
+        options: AdmissionQueryOptions,
     ): Promise<Page<AdmissionEntity>> {
-        const { searchOptions, userId } = options;
+        const { searchQuery, userId } = options;
 
         await this.validateStudentExists(studentId, userId);
 
@@ -57,8 +59,11 @@ export class AdmissionService {
             userId,
         );
 
-        // Apply search filters using the extracted method
-        this.applySearchFilters(queryBuilder, searchOptions);
+        // Build and apply search filters from the search query
+        if (searchQuery) {
+            const searchOptions = this.buildSearchOptions(searchQuery);
+            this.applySearchFilters(queryBuilder, searchOptions);
+        }
 
         this.applySorting(queryBuilder, pageable);
 
@@ -256,6 +261,62 @@ export class AdmissionService {
         }
 
         return query;
+    }
+
+    /**
+     * Builds a search options object from admission search query parameters.
+     * Processes arrays of values for each field to create comprehensive filter objects.
+     * Special handling for tuition fee range filtering.
+     *
+     * @param queryParams - The admission search query parameters from the HTTP request
+     * @returns AdmissionSearchOptions containing filters and tuition fee range, or undefined if no filters
+     */
+    private buildSearchOptions(
+        queryParams: AdmissionSearchQuery,
+    ): AdmissionSearchOptions | undefined {
+        const searchFilters = {} as Record<AdmissionField, string[]>;
+
+        // Process regular fields (excluding tuition fee)
+        ALLOWED_ADMISSION_FIELDS.filter(
+            (field) => field !== "tuitionFee",
+        ).forEach((field) => {
+            const values = queryParams[field];
+            if (values && Array.isArray(values) && values.length > 0) {
+                const filteredValues = values
+                    .filter(
+                        (value): value is string =>
+                            typeof value === "string" &&
+                            value.trim().length > 0,
+                    )
+                    .map((value) => value.trim());
+
+                if (filteredValues.length > 0) {
+                    searchFilters[field] = filteredValues;
+                }
+            }
+        });
+
+        // Handle tuition fee range
+        let tuitionFeeRange: TuitionFeeRange | undefined;
+        if (
+            queryParams.tuitionFeeMin !== undefined ||
+            queryParams.tuitionFeeMax !== undefined
+        ) {
+            tuitionFeeRange = {};
+            if (queryParams.tuitionFeeMin !== undefined) {
+                tuitionFeeRange.min = queryParams.tuitionFeeMin;
+            }
+            if (queryParams.tuitionFeeMax !== undefined) {
+                tuitionFeeRange.max = queryParams.tuitionFeeMax;
+            }
+        }
+
+        // Return undefined if no search criteria provided
+        if (Object.keys(searchFilters).length === 0 && !tuitionFeeRange) {
+            return undefined;
+        }
+
+        return { filters: searchFilters, tuitionFeeRange };
     }
 
     private async validateStudentExists(

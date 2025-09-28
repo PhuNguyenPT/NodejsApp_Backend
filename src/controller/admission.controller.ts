@@ -16,18 +16,12 @@ import {
 
 import { AdmissionFieldResponse } from "@/dto/admission/admission-field-response.js";
 import { AdmissionResponse } from "@/dto/admission/admission-response.js";
-import {
-    AdmissionSearchQuery,
-    buildSearchFilters,
-} from "@/dto/admission/admission-search-query.dto.js";
+import { AdmissionSearchQuery } from "@/dto/admission/admission-search-query.dto.js";
 import { AdmissionEntity, AdmissionField } from "@/entity/admission.entity.js";
 import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
-import {
-    AdmissionSearchOptions,
-    AdmissionService,
-} from "@/service/impl/admission.service.js";
+import { AdmissionService } from "@/service/impl/admission.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -156,7 +150,7 @@ export class AdmissionController extends Controller {
      * @summary Get student profile's admission(s) for authenticated user
      * @param {string} studentId - UUID of the student profile to retrieve admissions for
      * @param {AuthenticatedRequest} request - Express request object containing authenticated user information
-     * @param {AdmissionSearchQuery} queryParams - Query parameters for pagination, sorting, and filtering
+     * @param {AdmissionSearchQuery} searchQuery - Query parameters for pagination, sorting, and filtering
      * @returns {Promise<Page<AdmissionResponse>>} Paginated list of admission responses
      *
      * @throws {ValidationException} When the page request parameters are invalid
@@ -181,10 +175,10 @@ export class AdmissionController extends Controller {
     public async getAdmissionResponsePage(
         @Path() studentId: string,
         @Request() request: AuthenticatedRequest,
-        @Queries() queryParams: AdmissionSearchQuery,
+        @Queries() searchQuery: AdmissionSearchQuery,
     ): Promise<PageResponse<AdmissionResponse>> {
         // Convert PageableQuery to PageRequest
-        const queryDto = plainToInstance(PageableQuery, queryParams);
+        const queryDto = plainToInstance(PageableQuery, searchQuery);
         const pageRequest = PageRequest.fromQuery(queryDto);
 
         // Validate the PageRequest
@@ -193,21 +187,15 @@ export class AdmissionController extends Controller {
             throw new ValidationException(errors);
         }
 
-        // Build search filters and tuition fee range
-        const { filters, tuitionFeeRange } = buildSearchFilters(queryParams);
-        const searchOptions: AdmissionSearchOptions | undefined =
-            Object.keys(filters).length > 0 || tuitionFeeRange
-                ? { filters, tuitionFeeRange }
-                : undefined;
-
         const user: Express.User = request.user;
         const userId = user.id;
 
+        // Pass the search query directly to the service
         const admissionPage: Page<AdmissionEntity> =
             await this.admissionService.getAdmissionsPageByStudentIdAndUserId(
                 studentId,
                 pageRequest,
-                { searchOptions, userId },
+                { searchQuery, userId },
             );
 
         const admissionResponsePage: PageResponse<AdmissionResponse> =
@@ -222,7 +210,7 @@ export class AdmissionController extends Controller {
      *
      * @summary Get student profile's admission(s) for guest user
      * @param {string} studentId - UUID of the public student profile to retrieve admissions for
-     * @param {AdmissionSearchQuery} queryParams - Query parameters for pagination, sorting, and filtering
+     * @param {AdmissionSearchQuery} searchQuery - Query parameters for pagination, sorting, and filtering
      * @returns {Promise<Page<AdmissionResponse>>} Paginated list of admission responses
      *
      * @throws {ValidationException} When the page request parameters are invalid
@@ -245,10 +233,10 @@ export class AdmissionController extends Controller {
     )
     public async getAdmissionResponsePageForGuest(
         @Path() studentId: string,
-        @Queries() queryParams: AdmissionSearchQuery,
+        @Queries() searchQuery: AdmissionSearchQuery,
     ): Promise<PageResponse<AdmissionResponse>> {
         // Convert PageableQuery to PageRequest
-        const queryDto = plainToInstance(PageableQuery, queryParams);
+        const queryDto = plainToInstance(PageableQuery, searchQuery);
         const pageRequest = PageRequest.fromQuery(queryDto);
 
         // Validate the PageRequest
@@ -257,18 +245,12 @@ export class AdmissionController extends Controller {
             throw new ValidationException(errors);
         }
 
-        // Build search filters and tuition fee range
-        const { filters, tuitionFeeRange } = buildSearchFilters(queryParams);
-        const searchOptions: AdmissionSearchOptions | undefined =
-            Object.keys(filters).length > 0 || tuitionFeeRange
-                ? { filters, tuitionFeeRange }
-                : undefined;
-
+        // Pass the search query directly to the service
         const admissionPage: Page<AdmissionEntity> =
             await this.admissionService.getAdmissionsPageByStudentIdAndUserId(
                 studentId,
                 pageRequest,
-                { searchOptions },
+                { searchQuery },
             );
 
         const admissionResponsePage: PageResponse<AdmissionResponse> =

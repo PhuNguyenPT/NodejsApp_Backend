@@ -7,10 +7,6 @@ import {
     IsString,
 } from "class-validator";
 
-import {
-    AdmissionField,
-    ALLOWED_ADMISSION_FIELDS,
-} from "@/entity/admission.entity.js";
 import { PageableQuery } from "@/type/pagination/page-request.js";
 
 /**
@@ -256,56 +252,4 @@ export class AdmissionSearchQuery extends PageableQuery {
     @Transform(transformToArray)
     @Type(() => String)
     uniWebLink?: string[];
-}
-
-/**
- * Builds a search filters record from admission search query parameters.
- * Processes arrays of values for each field to create comprehensive filter objects.
- * Special handling for tuition fee range filtering.
- *
- * @param queryParams - The admission search query parameters from the HTTP request
- * @returns A record containing arrays of valid, non-empty search filters and tuition fee range
- */
-export function buildSearchFilters(queryParams: AdmissionSearchQuery): {
-    filters: Record<AdmissionField, string[]>;
-    tuitionFeeRange?: TuitionFeeRange;
-} {
-    const searchFilters = {} as Record<AdmissionField, string[]>;
-
-    // Process regular fields (excluding tuition fee)
-    ALLOWED_ADMISSION_FIELDS.filter((field) => field !== "tuitionFee").forEach(
-        (field) => {
-            const values = queryParams[field];
-            if (values && Array.isArray(values) && values.length > 0) {
-                const filteredValues = values
-                    .filter(
-                        (value): value is string =>
-                            typeof value === "string" &&
-                            value.trim().length > 0,
-                    )
-                    .map((value) => value.trim());
-
-                if (filteredValues.length > 0) {
-                    searchFilters[field] = filteredValues;
-                }
-            }
-        },
-    );
-
-    // Handle tuition fee range
-    let tuitionFeeRange: TuitionFeeRange | undefined;
-    if (
-        queryParams.tuitionFeeMin !== undefined ||
-        queryParams.tuitionFeeMax !== undefined
-    ) {
-        tuitionFeeRange = {};
-        if (queryParams.tuitionFeeMin !== undefined) {
-            tuitionFeeRange.min = queryParams.tuitionFeeMin;
-        }
-        if (queryParams.tuitionFeeMax !== undefined) {
-            tuitionFeeRange.max = queryParams.tuitionFeeMax;
-        }
-    }
-
-    return { filters: searchFilters, tuitionFeeRange };
 }
