@@ -24,7 +24,10 @@ import { AdmissionEntity, AdmissionField } from "@/entity/admission.entity.js";
 import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
-import { AdmissionService } from "@/service/impl/admission.service.js";
+import {
+    AdmissionSearchOptions,
+    AdmissionService,
+} from "@/service/impl/admission.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -190,11 +193,11 @@ export class AdmissionController extends Controller {
             throw new ValidationException(errors);
         }
 
-        // Use the private method instead of inline code
-        const searchFilters = buildSearchFilters(queryParams);
-        const searchOptions =
-            Object.keys(searchFilters).length > 0
-                ? { filters: searchFilters }
+        // Build search filters and tuition fee range
+        const { filters, tuitionFeeRange } = buildSearchFilters(queryParams);
+        const searchOptions: AdmissionSearchOptions | undefined =
+            Object.keys(filters).length > 0 || tuitionFeeRange
+                ? { filters, tuitionFeeRange }
                 : undefined;
 
         const user: Express.User = request.user;
@@ -254,11 +257,11 @@ export class AdmissionController extends Controller {
             throw new ValidationException(errors);
         }
 
-        // Use the private method instead of inline code
-        const searchFilters = buildSearchFilters(queryParams);
-        const searchOptions =
-            Object.keys(searchFilters).length > 0
-                ? { filters: searchFilters }
+        // Build search filters and tuition fee range
+        const { filters, tuitionFeeRange } = buildSearchFilters(queryParams);
+        const searchOptions: AdmissionSearchOptions | undefined =
+            Object.keys(filters).length > 0 || tuitionFeeRange
+                ? { filters, tuitionFeeRange }
                 : undefined;
 
         const admissionPage: Page<AdmissionEntity> =

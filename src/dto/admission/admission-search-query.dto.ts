@@ -1,5 +1,11 @@
 import { Transform, Type } from "class-transformer";
-import { IsArray, IsNumberString, IsOptional, IsString } from "class-validator";
+import {
+    IsArray,
+    IsNumber,
+    IsNumberString,
+    IsOptional,
+    IsString,
+} from "class-validator";
 
 import {
     AdmissionField,
@@ -29,6 +35,27 @@ const transformToArray = ({
     // For other types, return undefined to avoid unexpected stringification
     return undefined;
 };
+
+/**
+ * Helper function to transform string to number
+ */
+const transformToNumber = ({
+    value,
+}: {
+    value: unknown;
+}): number | undefined => {
+    if (value === undefined || value === null || value === "") return undefined;
+    const num = Number(value);
+    return isNaN(num) ? undefined : num;
+};
+
+/**
+ * Interface for tuition fee range filtering
+ */
+export interface TuitionFeeRange {
+    max?: number;
+    min?: number;
+}
 
 /**
  * DTO for searching admissions with pagination support.
@@ -149,18 +176,30 @@ export class AdmissionSearchQuery extends PageableQuery {
     subjectCombination?: string[];
 
     /**
-     * Tuition fees for filtering results by cost ranges.
-     * Supports multiple tuition fee values for flexible cost filtering.
+     * Maximum tuition fee for range filtering.
+     * Used to filter results where tuition fee is less than or equal to this value.
      *
-     * @type {string[]}
+     * @type {number}
      * @optional
      */
-    @IsArray()
-    @IsNumberString({}, { each: true })
+    @IsNumber()
     @IsOptional()
-    @Transform(transformToArray)
-    @Type(() => String)
-    tuitionFee?: string[];
+    @Transform(transformToNumber)
+    @Type(() => Number)
+    tuitionFeeMax?: number;
+
+    /**
+     * Minimum tuition fee for range filtering.
+     * Used to filter results where tuition fee is greater than or equal to this value.
+     *
+     * @type {number}
+     * @optional
+     */
+    @IsNumber()
+    @IsOptional()
+    @Transform(transformToNumber)
+    @Type(() => Number)
+    tuitionFeeMin?: number;
 
     /**
      * University codes for filtering results by institutions.
@@ -222,30 +261,51 @@ export class AdmissionSearchQuery extends PageableQuery {
 /**
  * Builds a search filters record from admission search query parameters.
  * Processes arrays of values for each field to create comprehensive filter objects.
+ * Special handling for tuition fee range filtering.
  *
  * @param queryParams - The admission search query parameters from the HTTP request
- * @returns A record containing arrays of valid, non-empty search filters
+ * @returns A record containing arrays of valid, non-empty search filters and tuition fee range
  */
-export function buildSearchFilters(
-    queryParams: AdmissionSearchQuery,
-): Record<AdmissionField, string[]> {
+export function buildSearchFilters(queryParams: AdmissionSearchQuery): {
+    filters: Record<AdmissionField, string[]>;
+    tuitionFeeRange?: TuitionFeeRange;
+} {
     const searchFilters = {} as Record<AdmissionField, string[]>;
 
-    ALLOWED_ADMISSION_FIELDS.forEach((field) => {
-        const values = queryParams[field];
-        if (values && Array.isArray(values) && values.length > 0) {
-            const filteredValues = values
-                .filter(
-                    (value): value is string =>
-                        typeof value === "string" && value.trim().length > 0,
-                )
-                .map((value) => value.trim());
+    // Process regular fields (excluding tuition fee)
+    ALLOWED_ADMISSION_FIELDS.filter((field) => field !== "tuitionFee").forEach(
+        (field) => {
+            const values = queryParams[field];
+            if (values && Array.isArray(values) && values.length > 0) {
+                const filteredValues = values
+                    .filter(
+                        (value): value is string =>
+                            typeof value === "string" &&
+                            value.trim().length > 0,
+                    )
+                    .map((value) => value.trim());
 
-            if (filteredValues.length > 0) {
-                searchFilters[field] = filteredValues;
+                if (filteredValues.length > 0) {
+                    searchFilters[field] = filteredValues;
+                }
             }
-        }
-    });
+        },
+    );
 
-    return searchFilters;
+    // Handle tuition fee range
+    let tuitionFeeRange: TuitionFeeRange | undefined;
+    if (
+        queryParams.tuitionFeeMin !== undefined ||
+        queryParams.tuitionFeeMax !== undefined
+    ) {
+        tuitionFeeRange = {};
+        if (queryParams.tuitionFeeMin !== undefined) {
+            tuitionFeeRange.min = queryParams.tuitionFeeMin;
+        }
+        if (queryParams.tuitionFeeMax !== undefined) {
+            tuitionFeeRange.max = queryParams.tuitionFeeMax;
+        }
+    }
+
+    return { filters: searchFilters, tuitionFeeRange };
 }

@@ -25,8 +25,13 @@ export interface AdmissionQueryOptions {
 
 export interface AdmissionSearchOptions {
     filters?: Record<AdmissionField, string[]>;
+    tuitionFeeRange?: TuitionFeeRange;
 }
 
+export interface TuitionFeeRange {
+    max?: number;
+    min?: number;
+}
 @injectable()
 export class AdmissionService {
     constructor(
@@ -133,17 +138,17 @@ export class AdmissionService {
         queryBuilder: SelectQueryBuilder<StudentAdmissionEntity>,
         searchOptions?: AdmissionSearchOptions,
     ): void {
-        if (
-            !searchOptions?.filters ||
-            Object.keys(searchOptions.filters).length === 0
-        ) {
+        if (!searchOptions) {
             return;
         }
 
-        queryBuilder.andWhere(
-            new Brackets((qb) => {
-                Object.entries(searchOptions.filters ?? {}).forEach(
-                    ([field, values]) => {
+        const { filters, tuitionFeeRange } = searchOptions;
+
+        // Apply regular field filters
+        if (filters && Object.keys(filters).length > 0) {
+            queryBuilder.andWhere(
+                new Brackets((qb) => {
+                    Object.entries(filters).forEach(([field, values]) => {
                         if (isAdmissionField(field) && values.length > 0) {
                             const paramName = `param_${field}`;
 
@@ -182,10 +187,32 @@ export class AdmissionService {
                                 );
                             }
                         }
-                    },
-                );
-            }),
-        );
+                    });
+                }),
+            );
+        }
+
+        // Apply tuition fee range filter
+        if (
+            tuitionFeeRange &&
+            (tuitionFeeRange.min !== undefined ||
+                tuitionFeeRange.max !== undefined)
+        ) {
+            queryBuilder.andWhere(
+                new Brackets((qb) => {
+                    if (tuitionFeeRange.min !== undefined) {
+                        qb.andWhere("admission.tuitionFee >= :minTuition", {
+                            minTuition: tuitionFeeRange.min,
+                        });
+                    }
+                    if (tuitionFeeRange.max !== undefined) {
+                        qb.andWhere("admission.tuitionFee <= :maxTuition", {
+                            maxTuition: tuitionFeeRange.max,
+                        });
+                    }
+                }),
+            );
+        }
     }
 
     private applySorting(
