@@ -40,6 +40,7 @@ import {
     VietnameseSubject,
 } from "@/type/enum/subject.js";
 import { UniType } from "@/type/enum/uni-type.js";
+import { VsatExamSubject } from "@/type/enum/vsat-exam-subject.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 
 import { IPredictionModelService } from "../prediction-model-service.interface.js";
@@ -222,10 +223,7 @@ export class PredictionModelService implements IPredictionModelService {
             const ccqtCerts =
                 studentInfoDTO.getCertificationsByExamType("CCQT");
             return ccqtCerts.reduce<ExamScenario[]>((acc, cert) => {
-                if (
-                    cert.examType.type === "CCQT" &&
-                    cert.examType.value !== CCQTType.OTHER
-                ) {
+                if (cert.examType.type === "CCQT") {
                     const score = this.getAndValidateScoreByCCQT(
                         cert.examType.value,
                         cert.level,
@@ -254,7 +252,6 @@ export class PredictionModelService implements IPredictionModelService {
             if (
                 examType?.type === "DGNL" &&
                 examType.value in DGNLType &&
-                examType.value !== DGNLType.OTHER &&
                 aptitudeScore !== undefined
             ) {
                 return [
@@ -269,45 +266,34 @@ export class PredictionModelService implements IPredictionModelService {
         return [];
     }
 
-    private _createNationalAndVsatScenarios(
+    private _createNationalScenarios(
         student: StudentEntity,
         studentInfoDTO: StudentInfoDTO,
-        possibleSubjectGroups: SubjectGroupKey[],
     ): ExamScenario[] {
         const scenarios: ExamScenario[] = [];
 
-        if (student.hasValidNationalExamData()) {
-            const subjectGroupScores: SubjectGroupScore[] =
-                this.calculateSubjectGroupScores(studentInfoDTO);
-
-            // Filter to only groups that can be formed with national exam subjects only
-            const nationalSubjects = new Set<VietnameseSubject>(
-                studentInfoDTO.nationalExams.map((e) => e.name),
-            );
-            const nationalOnlyGroups = subjectGroupScores.filter((group) =>
-                group.subjects.every((subject) =>
-                    nationalSubjects.has(subject),
-                ),
-            );
-
-            scenarios.push(
-                ...nationalOnlyGroups.map((group) => ({
-                    diem_chuan: group.totalScore,
-                    to_hop_mon: group.groupName,
-                    type: "national" as const,
-                })),
-            );
+        if (!student.hasValidNationalExamData()) {
+            return scenarios;
         }
 
-        if (studentInfoDTO.hasValidVSATScores()) {
-            scenarios.push(
-                ...possibleSubjectGroups.map((subjectGroup) => ({
-                    diem_chuan: studentInfoDTO.getTotalVSATScore(),
-                    to_hop_mon: subjectGroup,
-                    type: "vsat" as const,
-                })),
-            );
-        }
+        const subjectGroupScores: SubjectGroupScore[] =
+            this.calculateSubjectGroupScores(studentInfoDTO);
+
+        // Filter to only groups that can be formed with national exam subjects only
+        const nationalSubjects = new Set<VietnameseSubject>(
+            studentInfoDTO.nationalExams.map((e) => e.name),
+        );
+        const nationalOnlyGroups = subjectGroupScores.filter((group) =>
+            group.subjects.every((subject) => nationalSubjects.has(subject)),
+        );
+
+        scenarios.push(
+            ...nationalOnlyGroups.map((group) => ({
+                diem_chuan: group.totalScore,
+                to_hop_mon: group.groupName,
+                type: "national" as const,
+            })),
+        );
 
         return scenarios;
     }
@@ -346,6 +332,70 @@ export class PredictionModelService implements IPredictionModelService {
         });
 
         return talentScenarios;
+    }
+
+    private _createVsatScenarios(
+        studentInfoDTO: StudentInfoDTO,
+    ): ExamScenario[] {
+        const scenarios: ExamScenario[] = [];
+
+        if (!studentInfoDTO.hasValidVSATScores()) {
+            return scenarios;
+        }
+
+        // Create a map of VSAT subject scores for quick lookup
+        const vsatScoreMap = new Map<VsatExamSubject, number>();
+        studentInfoDTO.vsatScores?.forEach((exam) => {
+            vsatScoreMap.set(exam.name, exam.score);
+        });
+
+        // Get VSAT subjects and calculate possible subject groups from VSAT data
+        const vsatSubjects: VietnameseSubject[] =
+            studentInfoDTO.vsatScores?.map((exam) => exam.name) ?? [];
+        const vsatPossibleGroups: SubjectGroupKey[] =
+            getAllPossibleSubjectGroups(vsatSubjects);
+
+        // Filter to only the specified groups
+        const allowedVsatGroups: SubjectGroupKey[] = [
+            "A00",
+            "A01",
+            "D01",
+            "D07",
+            "C01",
+            "D10",
+        ];
+
+        for (const subjectGroup of vsatPossibleGroups) {
+            if (!allowedVsatGroups.includes(subjectGroup)) {
+                continue;
+            }
+
+            const groupSubjects = SUBJECT_GROUPS[subjectGroup];
+
+            // Calculate the sum of scores for the 3 subjects in this group
+            let totalScore = 0;
+            let hasAllSubjects = true;
+
+            for (const subject of groupSubjects) {
+                const score = vsatScoreMap.get(subject as VsatExamSubject);
+                if (score === undefined) {
+                    hasAllSubjects = false;
+                    break;
+                }
+                totalScore += score;
+            }
+
+            // Only include if all 3 subjects are available
+            if (hasAllSubjects) {
+                scenarios.push({
+                    diem_chuan: totalScore,
+                    to_hop_mon: subjectGroup,
+                    type: "vsat" as const,
+                });
+            }
+        }
+
+        return scenarios;
     }
 
     private async _performL1BatchPrediction(
@@ -927,24 +977,9 @@ export class PredictionModelService implements IPredictionModelService {
         student: StudentEntity,
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
-        const vietnameseSubjects: VietnameseSubject[] =
-            studentInfoDTO.nationalExams.map((exam) => exam.name);
-        const possibleSubjectGroups: SubjectGroupKey[] =
-            getAllPossibleSubjectGroups(vietnameseSubjects);
-
-        if (possibleSubjectGroups.length === 0) {
-            this.logger.warn(
-                "L2 Prediction: Cannot determine any valid subject groups from national exam data",
-                { vietnameseSubjects },
-            );
-        }
-
         const scenarios = [
-            ...this._createNationalAndVsatScenarios(
-                student,
-                studentInfoDTO,
-                possibleSubjectGroups,
-            ),
+            ...this._createNationalScenarios(student, studentInfoDTO),
+            ...this._createVsatScenarios(studentInfoDTO),
             ...this._createDgnlScenarios(studentInfoDTO),
             ...this._createCcqtScenarios(studentInfoDTO),
             ...this._createTalentScenarios(studentInfoDTO),
@@ -1397,13 +1432,6 @@ export class PredictionModelService implements IPredictionModelService {
         const certificationMap = new Map<string, CertificationDTO[]>();
 
         ccnnCertifications.forEach((cert) => {
-            if (
-                cert.examType.type !== "CCNN" ||
-                cert.examType.value === CCNNType.OTHER
-            ) {
-                return; // Skip non-CCNN and OTHER types
-            }
-
             if (cert.examType.value === CCNNType.JLPT && cert.level) {
                 // Group JLPT certifications
                 if (!certificationMap.has("JLPT")) {

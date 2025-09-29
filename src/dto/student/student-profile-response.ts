@@ -10,7 +10,7 @@ import { ConductResponse } from "@/dto/student/conduct-response.js";
 import {
     NationalExam,
     TalentExam,
-    VsatExamSubject,
+    VsatExam,
 } from "@/dto/student/exam-profile-dto.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
@@ -57,9 +57,9 @@ export class StudentProfileResponse {
      * Optional field that can contain multiple award entries.
      * Each award includes details like name, category, level, and award date.
      *
-     * @type {AwardRequest[]}
+     * @type {AwardResponse[]}
      * @optional
-     * @see AwardRequest for detailed structure and validation rules
+     * @see AwardResponse for detailed structure and validation rules
      * @example
      * [
      *   {
@@ -225,15 +225,21 @@ export class StudentProfileResponse {
 
     /**
      * VSAT score (Vietnamese Scholastic Aptitude Test)
-     * Array of exactly 3 exam subjects with names and scores (0-150 each)
+     * Array of at lease 3 exam subjects, at most 8 subjects, with names and scores (0-150 each)
      * Each subject contains a name and score following the ExamSubject structure
      * @example [
      *     { "name": "Toán", "score": 120 },
      *     { "name": "Ngữ Văn", "score": 130 },
      *     { "name": "Tiếng Anh", "score": 125 }
      * ]
+     * @validation
+     * - Must be an array of at lease 3 exam subjects, at most 8 subjects,
+     * - Each ExamSubject must have a valid name (string) and score (number 0-150)
+     * - Optional field (can be null or undefined)
+     * @type {VsatExam[]}
+     * @see VsatExam for detailed structure and validation rules
      */
     @Expose()
-    @Type(() => VsatExamSubject) // Ensure correct type mapping
-    vsatScores?: VsatExamSubject[];
+    @Type(() => VsatExam) // Ensure correct type mapping
+    vsatScores?: VsatExam[];
 }

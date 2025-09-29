@@ -20,7 +20,7 @@ import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import {
     NationalExam,
     TalentExam,
-    VsatExamSubject,
+    VsatExam,
 } from "@/dto/student/exam-profile-dto.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
@@ -331,7 +331,7 @@ export class StudentInfoDTO {
 
     /**
      * VSAT score (Vietnamese Scholastic Aptitude Test)
-     * Array of exactly 3 exam subjects with names and scores (0-150 each)
+     * Array of at lease 3 exam subjects, at most 8 subjects, with names and scores (0-150 each)
      * Each subject contains a name and score following the ExamSubject structure
      * @example [
      *     { "name": "Toán", "score": 120 },
@@ -339,19 +339,21 @@ export class StudentInfoDTO {
      *     { "name": "Tiếng Anh", "score": 125 }
      * ]
      * @validation
-     * - Must be an array of exactly 3 ExamSubject objects
+     * - Must be an array of at lease 3 exam subjects, at most 8 subjects,
      * - Each ExamSubject must have a valid name (string) and score (number 0-150)
      * - Optional field (can be null or undefined)
+     * @type {VsatExam[]}
+     * @see VsatExam for detailed structure and validation rules
      */
-    @ArrayMaxSize(3, { message: "VSAT scores must have exactly 3 subjects." })
-    @ArrayMinSize(3, { message: "VSAT scores must have exactly 3 subjects." })
+    @ArrayMaxSize(8)
+    @ArrayMinSize(3)
     @Expose()
     @IsArray({ message: "VSAT scores must be an array" })
     @IsOptional()
     @IsUniqueSubject({ message: "VSAT scores must have unique names" })
-    @Type(() => VsatExamSubject)
+    @Type(() => VsatExam)
     @ValidateNested({ each: true })
-    vsatScores?: VsatExamSubject[];
+    vsatScores?: VsatExam[];
 
     getAptitudeTestScore(): number | undefined {
         if (
@@ -398,13 +400,14 @@ export class StudentInfoDTO {
         return (
             this.vsatScores !== undefined &&
             Array.isArray(this.vsatScores) &&
-            this.vsatScores.length === 3 &&
+            this.vsatScores.length >= 3 &&
+            this.vsatScores.length <= 8 &&
             this.vsatScores.every(
                 (examSubject) =>
                     typeof examSubject === "object" &&
                     Object.values(VietnameseSubject).includes(
                         examSubject.name,
-                    ) && // Validate enum value
+                    ) &&
                     typeof examSubject.score === "number" &&
                     examSubject.score >= 0 &&
                     examSubject.score <= 150,
