@@ -14,7 +14,6 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { ExamProfileDTO } from "@/dto/student/exam-profile-dto.js";
 import { AdmissionEntity } from "@/entity/admission.entity.js";
 import { AwardEntity } from "@/entity/award.entity.js";
 import { CertificationEntity } from "@/entity/certification.entity.js";
@@ -377,16 +376,6 @@ export class StudentEntity {
         return this.conducts.find((c) => c.grade === grade) ?? null;
     }
 
-    getExamProfileDTO(): ExamProfileDTO | null {
-        if (!this.nationalExams) return null;
-
-        return ExamProfileDTO.fromStudentEntity(
-            this.nationalExams,
-            this.aptitudeTestScore,
-            this.vsatScores,
-        );
-    }
-
     // Helper method to get expired certifications
     getExpiredCertifications(): CertificationEntity[] {
         if (!this.certifications) return [];
@@ -684,13 +673,6 @@ export class StudentEntity {
     // Helper method to set conduct data
     setConduct(conductData: ConductData[]): void {
         this.conducts = conductData;
-    }
-
-    setExamProfileDTO(examProfile: ExamProfileDTO): void {
-        const data = examProfile.toStudentEntityData();
-        this.nationalExams = data.nationalExams;
-        this.aptitudeTestScore = data.aptitudeTestScore;
-        this.vsatScores = data.vsatScores;
     }
 
     /**

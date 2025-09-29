@@ -4,12 +4,7 @@ import { Repository } from "typeorm";
 import { CertificationRequest } from "@/dto/student/certification-request.js";
 import { CEFR, CertificationEntity } from "@/entity/certification.entity.js";
 import { TYPES } from "@/type/container/types.js";
-import {
-    CCNNType,
-    CCQTType,
-    ExamType,
-    handleExamValidation,
-} from "@/type/enum/exam.js";
+import { CCNNType, ExamType, handleExamValidation } from "@/type/enum/exam.js";
 
 @injectable()
 export class CertificationService {
@@ -44,13 +39,7 @@ export class CertificationService {
             certificationRequest.level,
         );
 
-        const isExcludedExam: boolean = this.isExcludedExamType(
-            certificationRequest.examType,
-        );
-
-        if (!isExcludedExam) {
-            certificationEntity.name ??= certificationRequest.examType.value;
-        }
+        certificationEntity.name ??= certificationRequest.examType.value;
 
         return certificationEntity;
     }
@@ -182,14 +171,5 @@ export class CertificationService {
             return CEFR.C2;
         }
         return undefined;
-    }
-
-    private isExcludedExamType(examType: ExamType): boolean {
-        return (
-            // Case 1: The exam type is "CCQT" and the value is "OTHER"
-            (examType.type === "CCQT" && examType.value === CCQTType.OTHER) ||
-            // Case 2: The exam type is "CCNN" and the value is "OTHER"
-            (examType.type === "CCNN" && examType.value === CCNNType.OTHER)
-        );
     }
 }

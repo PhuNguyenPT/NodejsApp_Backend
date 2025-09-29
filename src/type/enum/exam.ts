@@ -3,7 +3,6 @@ import { ValidationException } from "../exception/validation.exception.js";
 export enum CCNNType {
     IELTS = "IELTS",
     JLPT = "JLPT",
-    OTHER = "Khác",
     TOEFL_CBT = "TOEFL CBT",
     TOEFL_iBT = "TOEFL iBT",
     TOEFL_Paper = "TOEFL Paper",
@@ -16,14 +15,12 @@ export enum CCQTType {
     "Duolingo English Test" = "DoulingoEnglishTest",
     IB = "IB",
     OSSD = "OSSD",
-    OTHER = "Khác",
     "PTE Academic" = "PTEAcademic",
     SAT = "SAT",
 }
 
 export enum DGNLType {
     HSA = "HSA",
-    OTHER = "Khác",
     TSA = "TSA",
     VNUHCM = "VNUHCM",
 }
@@ -109,11 +106,6 @@ export function validateExamTypeScore(
                 `Level must be one of: ${validJLPTGrades.join(", ")}`,
             );
         }
-        return errors;
-    }
-
-    // 'OTHER' types are considered valid by default and may not have a numeric level
-    if (examType.value.toUpperCase().includes("OTHER")) {
         return errors;
     }
 
