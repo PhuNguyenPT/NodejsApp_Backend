@@ -2,7 +2,7 @@
 # Stage 1: The "Builder" Stage
 # =============================================================================
 # Use the specific Node.js version from your package.json and .nvmrc
-FROM node:22.17.0-bookworm-slim AS builder
+FROM node:22-trixie-slim AS builder
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -24,7 +24,7 @@ RUN npm run build
 # Stage 2: The "Production" Stage
 # =============================================================================
 # Start from the same clean, lightweight base image
-FROM node:22.17.0-bookworm-slim
+FROM node:22-trixie-slim
 
 WORKDIR /app
 
