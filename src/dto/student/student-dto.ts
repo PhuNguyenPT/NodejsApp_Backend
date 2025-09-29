@@ -1,5 +1,5 @@
 // src/dto/student.info.dto.ts
-import { Expose, Type } from "class-transformer";
+import { Expose, Transform, Type } from "class-transformer";
 import {
     ArrayMaxSize,
     ArrayMinSize,
@@ -241,6 +241,11 @@ export class StudentInfoDTO {
     @IsNotEmpty({ message: "Max budget is required" })
     @IsNumber({}, { message: "Max budget must be a number" })
     @Min(1, { message: "Max budget must be greater than 0" })
+    @Transform(({ value }: { value: unknown }) => {
+        if (value === null || value === undefined) return value;
+        const num = Number(value);
+        return isNaN(num) ? value : num;
+    })
     maxBudget!: number;
 
     /**
@@ -262,6 +267,11 @@ export class StudentInfoDTO {
     @IsNotEmpty({ message: "Min budget is required" })
     @IsNumber({}, { message: "Min budget must be greater than 0" })
     @Min(1, { message: "Min budget must be greater than 0" })
+    @Transform(({ value }: { value: unknown }) => {
+        if (value === null || value === undefined) return value;
+        const num = Number(value);
+        return isNaN(num) ? value : num;
+    })
     minBudget!: number;
 
     /**
@@ -394,6 +404,10 @@ export class StudentInfoDTO {
 
     hasCertificationExamType(type: "CCNN" | "CCQT" | "ĐGNL"): boolean {
         return this.getCertificationsByExamType(type).length > 0;
+    }
+
+    hasValidNationalExam(): boolean {
+        return this.nationalExams.length === 4;
     }
 
     hasValidVSATScores(): boolean {
