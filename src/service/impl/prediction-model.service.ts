@@ -20,7 +20,6 @@ import { AwardDTO } from "@/dto/student/award-dto.js";
 import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student-dto.js";
-import { StudentEntity } from "@/entity/student.entity.js";
 import { StudentService } from "@/service/impl/student.service.js";
 import { TYPES } from "@/type/container/types.js";
 import {
@@ -42,6 +41,7 @@ import {
 import { UniType } from "@/type/enum/uni-type.js";
 import { VsatExamSubject } from "@/type/enum/vsat-exam-subject.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
+import { validateAndTransformSync } from "@/util/validation.util.js";
 
 import { IPredictionModelService } from "../prediction-model-service.interface.js";
 
@@ -98,7 +98,8 @@ export class PredictionModelService implements IPredictionModelService {
             studentId,
             userId,
         );
-        const studentInfoDTO: StudentInfoDTO = plainToInstance(
+
+        const studentInfoDTO = validateAndTransformSync(
             StudentInfoDTO,
             student,
         );
@@ -138,10 +139,11 @@ export class PredictionModelService implements IPredictionModelService {
             userId,
         );
 
-        const studentInfoDTO: StudentInfoDTO = plainToInstance(
+        const studentInfoDTO = validateAndTransformSync(
             StudentInfoDTO,
             student,
         );
+
         const ccnnCertifications: CertificationDTO[] =
             studentInfoDTO.getCertificationsByExamType("CCNN");
 
@@ -149,10 +151,7 @@ export class PredictionModelService implements IPredictionModelService {
         const baseTemplate = this.createBaseL2UserInputTemplate(studentInfoDTO);
 
         // Collect all possible exam scenarios
-        const examScenarios = this.collectExamScenarios(
-            student,
-            studentInfoDTO,
-        );
+        const examScenarios = this.collectExamScenarios(studentInfoDTO);
 
         this.logger.info("L2 Prediction: Generated exam scenarios", {
             ccqtScenarios: examScenarios.filter((s) => s.type === "ccqt")
@@ -267,12 +266,11 @@ export class PredictionModelService implements IPredictionModelService {
     }
 
     private _createNationalScenarios(
-        student: StudentEntity,
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
         const scenarios: ExamScenario[] = [];
 
-        if (!student.hasValidNationalExamData()) {
+        if (!studentInfoDTO.hasValidNationalExam()) {
             return scenarios;
         }
 
@@ -974,11 +972,10 @@ export class PredictionModelService implements IPredictionModelService {
     }
 
     private collectExamScenarios(
-        student: StudentEntity,
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
         const scenarios = [
-            ...this._createNationalScenarios(student, studentInfoDTO),
+            ...this._createNationalScenarios(studentInfoDTO),
             ...this._createVsatScenarios(studentInfoDTO),
             ...this._createDgnlScenarios(studentInfoDTO),
             ...this._createCcqtScenarios(studentInfoDTO),
