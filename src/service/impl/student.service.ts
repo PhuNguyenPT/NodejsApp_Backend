@@ -1,5 +1,4 @@
 import { inject, injectable } from "inversify";
-import { RedisClientType } from "redis";
 import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
@@ -7,7 +6,7 @@ import { StudentRequest } from "@/dto/student/student-request.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import {
-    PREDICTION_CHANNEL,
+    PredictionModelEventListenerService,
     StudentCreatedEvent,
 } from "@/event/prediction-model-event-listener.service.js";
 import { AwardService } from "@/service/impl/award.service.js";
@@ -34,11 +33,12 @@ export class StudentService {
         private readonly awardService: AwardService,
         @inject(TYPES.CertificationService)
         private readonly certificationService: CertificationService,
+        @inject(TYPES.PredictionModelEventListenerService)
+        private readonly predictionModelEventListenerService: PredictionModelEventListenerService,
         @inject(TYPES.MajorService)
         private readonly majorService: MajorService,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
-        @inject(TYPES.RedisPublisher) private redisPublisher: RedisClientType,
     ) {}
 
     /**
@@ -284,25 +284,37 @@ export class StudentService {
         const savedStudent = await this.studentRepository.save(studentEntity);
         this.logger.info(`Saved student profile id: ${savedStudent.id}`);
 
-        await this._publishStudentCreatedEvent(savedStudent.id, userEntity?.id);
+        this._publishStudentCreatedEvent(savedStudent.id, userEntity?.id);
 
         return savedStudent;
     }
 
-    private async _publishStudentCreatedEvent(
+    private _publishStudentCreatedEvent(
         studentId: string,
         userId?: string,
-    ): Promise<void> {
-        const payload: StudentCreatedEvent = { studentId, userId };
-        await this.redisPublisher.publish(
-            PREDICTION_CHANNEL,
-            JSON.stringify(payload),
-        );
+    ): void {
+        const studentCreatedEvent: StudentCreatedEvent = { studentId, userId };
+
+        // Fire-and-forget: don't await, let it run in background
+        this.predictionModelEventListenerService
+            .handleStudentCreatedEvent(studentCreatedEvent)
+            .catch((error: unknown) => {
+                this.logger.error(
+                    "Failed to handle student created event in background",
+                    {
+                        error,
+                        studentId,
+                        userId,
+                    },
+                );
+            });
+
         this.logger.info(
-            `Published StudentCreatedEvent for studentId ${studentId}` +
+            `Triggered StudentCreatedEvent for studentId ${studentId}` +
                 (userId ? ` and userId ${userId}` : ""),
         );
     }
+
     /**
      * Handles the validation of the aptitude test score for a student request.
      * Delegates to the shared `handleExamValidation` function for core logic.

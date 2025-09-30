@@ -33,7 +33,6 @@ import { UserEntity } from "@/entity/user.entity.js";
 import { OcrEventListenerService } from "@/event/orc-event-listener.service.js";
 import { PredictionModelEventListenerService } from "@/event/prediction-model-event-listener.service.js";
 import { TokenCleanupJob } from "@/job/token-cleanup-job.js";
-import { EventListenerManager } from "@/manager/event-listener-manager.js";
 import { JwtTokenRepository } from "@/repository/impl/jwt-repository.js";
 import { UserRepository } from "@/repository/impl/user-repository.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
@@ -68,11 +67,6 @@ const iocContainer = new Container();
 iocContainer
     .bind<Container>(TYPES.InversifyContainer)
     .toConstantValue(iocContainer);
-
-iocContainer
-    .bind<EventListenerManager>(TYPES.EventListenerManager)
-    .to(EventListenerManager)
-    .inSingletonScope();
 
 iocContainer.bind<Logger>(TYPES.Logger).toConstantValue(logger);
 

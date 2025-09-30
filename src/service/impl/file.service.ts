@@ -1,5 +1,4 @@
 import { inject, injectable } from "inversify";
-import { RedisClientType } from "redis";
 import { EntityManager, IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
@@ -9,7 +8,7 @@ import { FileEntity, FileStatus, FileType } from "@/entity/file.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import {
     FilesCreatedEvent,
-    OCR_CHANNEL,
+    OcrEventListenerService,
     SingleFileCreatedEvent,
 } from "@/event/orc-event-listener.service.js";
 import { TYPES } from "@/type/container/types.js";
@@ -22,10 +21,11 @@ export class FileService {
     constructor(
         @inject(TYPES.Logger) private readonly logger: Logger,
         @inject(TYPES.FileRepository)
-        private fileRepository: Repository<FileEntity>,
+        private readonly fileRepository: Repository<FileEntity>,
         @inject(TYPES.StudentRepository)
-        private studentRepository: Repository<StudentEntity>,
-        @inject(TYPES.RedisPublisher) private redisPublisher: RedisClientType,
+        private readonly studentRepository: Repository<StudentEntity>,
+        @inject(TYPES.OcrEventListenerService)
+        private readonly ocrEventListenerService: OcrEventListenerService,
     ) {}
 
     /**
@@ -33,7 +33,7 @@ export class FileService {
      */
     public async createFile(
         createFileDTO: CreateFileDTO,
-        userId: string,
+        userId?: string,
     ): Promise<FileEntity> {
         const savedFile = await this.studentRepository.manager.transaction(
             async (transactionalEntityManager) => {
@@ -53,62 +53,22 @@ export class FileService {
             },
         );
 
-        // Publish event after commit
-        const payload: SingleFileCreatedEvent = {
+        this._publishFileCreatedEvent({
             fileId: savedFile.id,
             studentId: savedFile.studentId,
             userId: userId,
-        };
-        await this.redisPublisher.publish(OCR_CHANNEL, JSON.stringify(payload));
-        this.logger.info(
-            `Created 1 file. Published single event to ${OCR_CHANNEL}. File ID: ${savedFile.id}`,
-        );
+        });
 
         return savedFile;
     }
 
     /**
-     * Creates a single file for guset and emits a SingleFileCreatedEvent.
-     */
-    public async createFileAnonymously(
-        createFileDTO: CreateFileDTO,
-    ): Promise<FileEntity> {
-        const savedFile = await this.studentRepository.manager.transaction(
-            async (transactionalEntityManager) => {
-                // The same helper works for anonymous uploads by omitting the userId.
-                await this._getAndValidateStudentForUpload(
-                    transactionalEntityManager,
-                    createFileDTO.studentId,
-                    1, // Adding 1 file
-                );
-
-                const newFile = this.fileRepository.create(createFileDTO);
-                return await transactionalEntityManager.save(
-                    FileEntity,
-                    newFile,
-                );
-            },
-        );
-
-        const payload: SingleFileCreatedEvent = {
-            fileId: savedFile.id,
-            studentId: savedFile.studentId,
-        };
-        await this.redisPublisher.publish(OCR_CHANNEL, JSON.stringify(payload));
-        this.logger.info(
-            `File created with ID: ${savedFile.id}. Published event to ${OCR_CHANNEL}.`,
-        );
-
-        return savedFile;
-    }
-
-    /**
-     * Creates a batch of files and emits a single FilesCreatedEvent.
+     * Creates a batch of files and emits a FilesCreatedEvent.
      */
     public async createFiles(
         createFileDTOs: CreateFileDTO[],
-        userId: string,
         studentId: string,
+        userId?: string,
     ): Promise<FileEntity[]> {
         if (createFileDTOs.length === 0) {
             return [];
@@ -146,76 +106,13 @@ export class FileService {
         );
 
         if (savedFiles.length > 0) {
-            const payload: FilesCreatedEvent = {
+            this._publishFilesCreatedEvent({
                 fileIds: savedFiles.map((file) => file.id),
                 studentId: studentId,
                 userId: userId,
-            };
-            await this.redisPublisher.publish(
-                OCR_CHANNEL,
-                JSON.stringify(payload),
-            );
-            this.logger.info(
-                `Created ${savedFiles.length.toString()} files. Published batch event to ${OCR_CHANNEL}.`,
-            );
-        }
-        return savedFiles;
-    }
-
-    /**
-     * Creates a batch of files for guest and emits a single FilesCreatedEvent.
-     */
-    public async createFilesAnonymously(
-        createFileDTOs: CreateFileDTO[],
-        studentId: string,
-    ): Promise<FileEntity[]> {
-        if (createFileDTOs.length === 0) {
-            return [];
+            });
         }
 
-        // Validate all DTOs have the same studentId
-        for (let i = 0; i < createFileDTOs.length; i++) {
-            const dto = createFileDTOs[i];
-            if (dto.studentId !== studentId) {
-                throw new ValidationException({
-                    studentId: `All files must be for the same student. Expected studentId: ${studentId}, but file at index ${i.toString()} has studentId: ${dto.studentId}`,
-                });
-            }
-        }
-
-        // Use transaction to handle pessimistic lock properly
-        const savedFiles = await this.studentRepository.manager.transaction(
-            async (transactionalEntityManager) => {
-                // Use the helper for batch validation too.
-                await this._getAndValidateStudentForUpload(
-                    transactionalEntityManager,
-                    studentId,
-                    createFileDTOs.length, // Number of files being added
-                );
-
-                const newFiles = createFileDTOs.map((dto) =>
-                    this.fileRepository.create(dto),
-                );
-                return await transactionalEntityManager.save(
-                    FileEntity,
-                    newFiles,
-                );
-            },
-        );
-
-        if (savedFiles.length > 0) {
-            const payload: FilesCreatedEvent = {
-                fileIds: savedFiles.map((file) => file.id),
-                studentId: studentId,
-            };
-            await this.redisPublisher.publish(
-                OCR_CHANNEL,
-                JSON.stringify(payload),
-            );
-            this.logger.info(
-                `Created ${savedFiles.length.toString()} files. Published batch event to ${OCR_CHANNEL}.`,
-            );
-        }
         return savedFiles;
     }
 
@@ -348,14 +245,14 @@ export class FileService {
         transactionalEntityManager: EntityManager,
         studentId: string,
         filesToAdd: number,
-        userId?: string, // userId is optional for anonymous uploads
+        userId?: string,
     ): Promise<void> {
         // 1. Lock the student row to prevent concurrent modifications.
         const student = await transactionalEntityManager.findOne(
             StudentEntity,
             {
                 lock: { mode: "pessimistic_write" },
-                where: { id: studentId },
+                where: { id: studentId, userId: userId ?? IsNull() },
             },
         );
 
@@ -386,6 +283,42 @@ export class FileService {
                     `Student currently has ${currentActiveFiles.toString()} active file(s).`,
             });
         }
+    }
+
+    private _publishFileCreatedEvent(event: SingleFileCreatedEvent): void {
+        this.ocrEventListenerService
+            .handleFileCreatedEvent(event)
+            .catch((error: unknown) => {
+                this.logger.error(
+                    "Failed to handle file created event in background",
+                    {
+                        error,
+                        event,
+                    },
+                );
+            });
+
+        this.logger.info(
+            `Triggered OCR event for file ${event.fileId} of student ${event.studentId}`,
+        );
+    }
+
+    private _publishFilesCreatedEvent(event: FilesCreatedEvent): void {
+        this.ocrEventListenerService
+            .handleFileCreatedEvent(event)
+            .catch((error: unknown) => {
+                this.logger.error(
+                    "Failed to handle files created event in background",
+                    {
+                        error,
+                        event,
+                    },
+                );
+            });
+
+        this.logger.info(
+            `Triggered OCR batch event for ${event.fileIds.length.toString()} files of student ${event.studentId}`,
+        );
     }
 
     private applyUpdatesAndDetectChanges(

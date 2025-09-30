@@ -10,7 +10,6 @@ export const TYPES = {
     CertificationService: Symbol.for("CertificationService"),
     ClientConfig: Symbol.for("ClientConfig"),
     DataSource: Symbol.for("DataSource"),
-    EventListenerManager: Symbol.for("EventListenerManager"),
     FileRepository: Symbol.for("FileRepository"),
     FileService: Symbol.for("FileService"),
     IJwtTokenRepository: Symbol.for("IJwtTokenRepository"),

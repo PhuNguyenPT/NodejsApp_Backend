@@ -3,10 +3,6 @@ import { DataSource, EntityManager, In } from "typeorm";
 import { Logger } from "winston";
 import z from "zod";
 
-import {
-    EventListenerService,
-    RedisEventListener,
-} from "@/decorator/redis-event-listener.decorator.js";
 import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
 import { AdmissionEntity } from "@/entity/admission.entity.js";
 import {
@@ -31,7 +27,6 @@ const StudentCreatedEventSchema = z.object({
 
 export type StudentCreatedEvent = z.infer<typeof StudentCreatedEventSchema>;
 
-@EventListenerService(TYPES.PredictionModelEventListenerService)
 @injectable()
 export class PredictionModelEventListenerService {
     constructor(
@@ -41,15 +36,15 @@ export class PredictionModelEventListenerService {
         private readonly predictionModelService: IPredictionModelService,
     ) {}
 
-    @RedisEventListener(PREDICTION_CHANNEL)
-    private async handleStudentCreatedEvent(message: string): Promise<void> {
+    public async handleStudentCreatedEvent(
+        event: StudentCreatedEvent,
+    ): Promise<void> {
         try {
-            const rawPayload: unknown = JSON.parse(message);
-            const parsed = StudentCreatedEventSchema.safeParse(rawPayload);
+            const parsed = StudentCreatedEventSchema.safeParse(event);
             if (!parsed.success) {
                 this.logger.error("Schema validation failed", {
                     errors: parsed.error.format(),
-                    message,
+                    event,
                 });
                 return;
             }
@@ -68,9 +63,9 @@ export class PredictionModelEventListenerService {
                 },
             );
         } catch (error) {
-            this.logger.error("Error handling 'student created' message.", {
+            this.logger.error("Error handling 'student created' event.", {
                 error,
-                message,
+                event,
             });
         }
     }
