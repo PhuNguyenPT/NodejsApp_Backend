@@ -24,7 +24,6 @@ import { initializeRedis, redisClient } from "@/config/redis.config.js";
 import swaggerDocs from "@/config/swagger.config.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import { TokenCleanupJob } from "@/job/token-cleanup-job.js";
-import { EventListenerManager } from "@/manager/event-listener-manager.js";
 import ErrorMiddleware from "@/middleware/error-middleware.js";
 import { PredictionServiceClient } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
@@ -62,7 +61,6 @@ class App {
         await this.initializeDatabaseConnections();
         this.initializePassportStrategies();
         this.initializeTokenCleanup();
-        await this.initializeEventListeners();
         await this.initializePredictModelServer();
     }
 
@@ -117,22 +115,6 @@ class App {
             } catch (error: unknown) {
                 this.logger.warn("⚠️ Error stopping token cleanup job:", error);
             }
-
-            // Spring-style: Use EventListenerManager for cleanup individual services
-            try {
-                const eventListenerManager =
-                    iocContainer.get<EventListenerManager>(
-                        TYPES.EventListenerManager,
-                    );
-                await eventListenerManager.cleanup();
-                this.logger.info("✅ Event listeners cleaned up");
-            } catch (error: unknown) {
-                this.logger.warn(
-                    "⚠️ Error cleaning up event listeners:",
-                    error,
-                );
-            }
-
             // Close database connections
             await this.closeDatabaseConnections();
 
@@ -226,26 +208,6 @@ class App {
 
     private initializeErrorHandling(): void {
         this.express.use(ErrorMiddleware);
-    }
-
-    private async initializeEventListeners(): Promise<void> {
-        try {
-            // Spring-style: Just get the EventListenerManager and call initialize()
-            // It will automatically discover all services decorated with @EventListenerService
-            const eventListenerManager = iocContainer.get<EventListenerManager>(
-                TYPES.EventListenerManager,
-            );
-
-            await eventListenerManager.initialize();
-
-            this.logger.info("✅ Event listeners initialized successfully");
-        } catch (error) {
-            this.logger.error(
-                "❌ Failed to initialize event listeners:",
-                error,
-            );
-            throw error;
-        }
     }
 
     private initializeKeyStore(): void {

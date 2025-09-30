@@ -4,10 +4,6 @@ import { Logger } from "winston";
 import { z } from "zod";
 
 import {
-    EventListenerService,
-    RedisEventListener,
-} from "@/decorator/redis-event-listener.decorator.js";
-import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
 } from "@/dto/predict/ocr.js";
@@ -45,10 +41,6 @@ const OcrEventSchema = z.union([
     FilesCreatedEventSchema,
 ]);
 
-export const OCR_CHANNEL = "ocr:file_created";
-
-// Spring-style: Register this service for automatic event listener discovery
-@EventListenerService(TYPES.OcrEventListenerService)
 @injectable()
 export class OcrEventListenerService {
     constructor(
@@ -63,19 +55,18 @@ export class OcrEventListenerService {
         @inject(TYPES.Logger) private readonly logger: Logger,
     ) {}
 
-    // Spring-style: Automatically handles OCR file created events
-    @RedisEventListener(OCR_CHANNEL)
-    private async handleOcrFileCreated(message: string): Promise<void> {
+    public async handleFileCreatedEvent(
+        event: FilesCreatedEvent | SingleFileCreatedEvent,
+    ): Promise<void> {
         try {
-            const rawPayload: unknown = JSON.parse(message);
-            const parsed = OcrEventSchema.safeParse(rawPayload);
+            const parsed = OcrEventSchema.safeParse(event);
 
             if (!parsed.success) {
                 this.logger.error(
-                    "Failed to parse OCR event message. Invalid schema.",
+                    "Failed to validate OCR event. Invalid schema.",
                     {
                         errors: parsed.error.format(),
-                        message,
+                        event,
                     },
                 );
                 return;
@@ -89,9 +80,9 @@ export class OcrEventListenerService {
                 await this.processSingleFile(payload);
             }
         } catch (error) {
-            this.logger.error("Error handling 'file created' message.", {
+            this.logger.error("Error handling file created event.", {
                 error,
-                message,
+                event,
             });
         }
     }

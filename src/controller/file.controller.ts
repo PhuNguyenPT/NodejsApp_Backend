@@ -727,7 +727,7 @@ export class FileController extends Controller {
         };
 
         const fileEntity: FileEntity =
-            await this.fileService.createFileAnonymously(createFileDTO);
+            await this.fileService.createFile(createFileDTO);
 
         const fileResponse: FileResponse =
             FileMapper.toFileResponse(fileEntity);
@@ -835,8 +835,8 @@ export class FileController extends Controller {
         // Create all files in a single batch operation
         const fileEntities = await this.fileService.createFiles(
             createFileDTOs,
-            user.id,
             studentId,
+            user.id,
         );
 
         // Convert to response format
@@ -939,7 +939,7 @@ export class FileController extends Controller {
         });
 
         // Create all files in a single batch operation
-        const fileEntities = await this.fileService.createFilesAnonymously(
+        const fileEntities = await this.fileService.createFiles(
             createFileDTOs,
             studentId,
         );

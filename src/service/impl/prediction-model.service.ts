@@ -3,6 +3,7 @@ import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
 import pLimit from "p-limit";
+import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
 import {
@@ -20,7 +21,7 @@ import { AwardDTO } from "@/dto/student/award-dto.js";
 import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student-dto.js";
-import { StudentService } from "@/service/impl/student.service.js";
+import { StudentEntity } from "@/entity/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import {
     AcademicPerformance,
@@ -40,6 +41,7 @@ import {
 } from "@/type/enum/subject.js";
 import { UniType } from "@/type/enum/uni-type.js";
 import { VsatExamSubject } from "@/type/enum/vsat-exam-subject.js";
+import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 import { validateAndTransformSync } from "@/util/validation.util.js";
 
@@ -80,8 +82,8 @@ export class PredictionModelService implements IPredictionModelService {
 
     constructor(
         @inject(TYPES.Logger) private readonly logger: Logger,
-        @inject(TYPES.StudentService)
-        private readonly studentService: StudentService,
+        @inject(TYPES.StudentRepository) // Changed from StudentService
+        private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.PredictHttpClient)
         private readonly httpClient: AxiosInstance,
         @inject(TYPES.PredictionModelServiceConfig)
@@ -94,10 +96,19 @@ export class PredictionModelService implements IPredictionModelService {
         studentId: string,
         userId?: string,
     ): Promise<L1PredictResult[]> {
-        const student = await this.studentService.getStudentEntityByIdAnUserId(
-            studentId,
-            userId,
-        );
+        const student = await this.studentRepository.findOne({
+            relations: ["awards", "certifications"],
+            where: {
+                id: studentId,
+                userId: userId ?? IsNull(),
+            },
+        });
+
+        if (!student) {
+            throw new EntityNotFoundException(
+                `Student profile with id: ${studentId} not found`,
+            );
+        }
 
         const studentInfoDTO = validateAndTransformSync(
             StudentInfoDTO,
@@ -134,10 +145,19 @@ export class PredictionModelService implements IPredictionModelService {
         userId?: string,
     ): Promise<L2PredictResult[]> {
         // Data retrieval and validation
-        const student = await this.studentService.getStudentEntityByIdAnUserId(
-            studentId,
-            userId,
-        );
+        const student = await this.studentRepository.findOne({
+            relations: ["awards", "certifications"], // Add relations needed by StudentInfoDTO
+            where: {
+                id: studentId,
+                userId: userId ?? IsNull(), // Handle both authenticated and anonymous
+            },
+        });
+
+        if (!student) {
+            throw new EntityNotFoundException(
+                `Student profile with id: ${studentId} not found`,
+            );
+        }
 
         const studentInfoDTO = validateAndTransformSync(
             StudentInfoDTO,
