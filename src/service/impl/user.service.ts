@@ -8,14 +8,13 @@ import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import { IUserRepository } from "@/repository/user-repository-interface.js";
+import { IUserService } from "@/service/user-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { getDefaultPermissionsByRole } from "@/type/enum/user.js";
 import { EntityExistsException } from "@/type/exception/entity-exists.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 import { hashPassword } from "@/util/bcrypt.js";
-
-import { IUserService } from "../user-service.interface.js";
 
 @injectable()
 export class UserService implements IUserService {

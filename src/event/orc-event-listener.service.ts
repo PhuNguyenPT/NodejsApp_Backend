@@ -44,9 +44,9 @@ const OcrEventSchema = z.union([
 @injectable()
 export class OcrEventListenerService {
     constructor(
-        @inject(TYPES.MistralService)
+        @inject(TYPES.IMistralService)
         private readonly mistralService: MistralService,
-        @inject(TYPES.OcrResultService)
+        @inject(TYPES.IOcrResultService)
         private readonly ocrResultService: OcrResultService,
         @inject(TYPES.FileRepository)
         private readonly fileRepository: Repository<FileEntity>,

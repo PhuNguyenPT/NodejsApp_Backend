@@ -1,6 +1,6 @@
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 
-export interface IJWTService {
+export interface IJwtService {
     decodeToken(token: string): CustomJwtPayload | null;
     generateAccessToken(
         payload: CustomJwtPayload,

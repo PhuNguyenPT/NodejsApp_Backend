@@ -2,11 +2,10 @@ import { inject, injectable } from "inversify";
 import { In, Repository } from "typeorm";
 
 import { MajorGroupEntity } from "@/entity/major-group.entity.js";
+import { IMajorService } from "@/service/major-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
-
-import { IMajorService } from "../major-service.interface.js";
 
 @injectable()
 export class MajorService implements IMajorService {

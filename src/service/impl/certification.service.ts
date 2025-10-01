@@ -3,11 +3,10 @@ import { Repository } from "typeorm";
 
 import { CertificationRequest } from "@/dto/student/certification-request.js";
 import { CEFR, CertificationEntity } from "@/entity/certification.entity.js";
+import { ICertificationService } from "@/service/certification-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { CCNNType, ExamType, handleExamValidation } from "@/type/enum/exam.js";
 import { Role } from "@/type/enum/user.js";
-
-import { ICertificationService } from "../certification-service.interface.js";
 
 @injectable()
 export class CertificationService implements ICertificationService {

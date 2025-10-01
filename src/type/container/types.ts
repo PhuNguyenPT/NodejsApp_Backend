@@ -1,50 +1,97 @@
-// src/type/container/type.ts
-export const TYPES = {
-    AdmissionController: Symbol.for("AdmissionController"),
-    AdmissionRepository: Symbol.for("AdmissionRepository"),
-    AdmissionService: Symbol.for("AdmissionService"),
-    AuthService: Symbol.for("AuthService"),
-    AwardRepository: Symbol.for("AwardRepository"),
-    AwardService: Symbol.for("AwardService"),
-    CertificationRepository: Symbol.for("CertificationRepository"),
-    CertificationService: Symbol.for("CertificationService"),
-    ClientConfig: Symbol.for("ClientConfig"),
-    DataSource: Symbol.for("DataSource"),
-    FileRepository: Symbol.for("FileRepository"),
-    FileService: Symbol.for("FileService"),
-    IJwtTokenRepository: Symbol.for("IJwtTokenRepository"),
-    InversifyContainer: Symbol.for("InversifyContainer"),
-    IPredictionModelService: Symbol.for("IPredictionModelService"),
-    IUserRepository: Symbol.for("IUserRepository"),
-    JwtEntityService: Symbol.for("JwtEntityService"),
-    JWTService: Symbol.for("JWTService"),
-    KeyStore: Symbol.for("KeyStore"),
-    Logger: Symbol.for("Logger"),
-    LoggerConfig: Symbol.for("LoggerConfig"),
-    MajorGroupRepository: Symbol.for("MajorGroupRepository"),
-    MajorRepository: Symbol.for("MajorRepository"),
-    MajorService: Symbol.for("MajorService"),
-    MistralService: Symbol.for("MistralService"),
+// src/type/container/types.ts
+
+// --- Subsets of DI Symbols ---
+/**
+ * @description Symbols for all listener services.
+ */
+export const ListenerTypes = {
     OcrEventListenerService: Symbol.for("OcrEventListenerService"),
-    OcrResultRepository: Symbol.for("OcrResultRepository"),
-    OcrResultService: Symbol.for("OcrResultService"),
-    PassportConfig: Symbol.for("PassportConfig"),
-    PredictHttpClient: Symbol.for("PredictHttpClient"),
     PredictionModelEventListenerService: Symbol.for(
         "PredictionModelEventListenerService",
     ),
-    PredictionModelServiceConfig: Symbol.for("PredictionModelServiceConfig"),
+};
+
+/**
+ * @description Symbols for all application services.
+ */
+export const ServiceTypes = {
+    IAdmissionService: Symbol.for("IAdmissionService"),
+    IAuthService: Symbol.for("IAuthService"),
+    IAwardService: Symbol.for("IAwardService"),
+    ICertificationService: Symbol.for("ICertificationService"),
+    IFileService: Symbol.for("IFileService"),
+    IJwtService: Symbol.for("IJwtService"),
+    IMajorService: Symbol.for("IMajorService"),
+    IMistralService: Symbol.for("IMistralService"),
+    IOcrResultService: Symbol.for("IOcrResultService"),
+    IPredictionModelService: Symbol.for("IPredictionModelService"),
+    IPredictionResultService: Symbol.for("IPredictionResultService"),
+    IStudentService: Symbol.for("IStudentService"),
+    IUserService: Symbol.for("IUserService"),
+};
+
+/**
+ * @description Symbols for all data repositories.
+ */
+export const RepositoryTypes = {
+    AdmissionRepository: Symbol.for("AdmissionRepository"),
+    AwardRepository: Symbol.for("AwardRepository"),
+    CertificationRepository: Symbol.for("CertificationRepository"),
+    FileRepository: Symbol.for("FileRepository"),
+    IJwtTokenRepository: Symbol.for("IJwtTokenRepository"),
+    IUserRepository: Symbol.for("IUserRepository"),
+    MajorGroupRepository: Symbol.for("MajorGroupRepository"),
+    MajorRepository: Symbol.for("MajorRepository"),
+    OcrResultRepository: Symbol.for("OcrResultRepository"),
     PredictionResultEntityRepository: Symbol.for(
         "PredictionResultEntityRepository",
     ),
-    PredictionResultRepository: Symbol.for("PredictionResultRepository"),
-    PredictionResultService: Symbol.for("PredictionResultService"),
+    StudentRepository: Symbol.for("StudentRepository"),
+    UserRepository: Symbol.for("UserRepository"),
+};
+
+/**
+ * @description Symbols for configuration objects.
+ */
+export const ConfigTypes = {
+    ClientConfig: Symbol.for("ClientConfig"),
+    LoggerConfig: Symbol.for("LoggerConfig"),
+    PassportConfig: Symbol.for("PassportConfig"),
+    PredictionModelServiceConfig: Symbol.for("PredictionModelServiceConfig"),
+};
+
+/**
+ * @description Symbols for core infrastructure and clients.
+ */
+export const InfrastructureTypes = {
+    DataSource: Symbol.for("DataSource"),
+    InversifyContainer: Symbol.for("InversifyContainer"),
+    KeyStore: Symbol.for("KeyStore"),
+    Logger: Symbol.for("Logger"),
+    PredictHttpClient: Symbol.for("PredictHttpClient"),
     PredictionServiceClient: Symbol.for("PredictionServiceClient"),
     RedisPublisher: Symbol.for("RedisPublisher"),
     RedisSubscriber: Symbol.for("RedisSubscriber"),
-    StudentRepository: Symbol.for("StudentRepository"),
-    StudentService: Symbol.for("StudentService"),
+};
+
+/**
+ * @description Symbols for scheduled jobs or background tasks.
+ */
+export const JobTypes = {
     TokenCleanupJob: Symbol.for("TokenCleanupJob"),
-    UserRepository: Symbol.for("UserRepository"),
-    UserService: Symbol.for("UserService"),
+};
+
+// --- All Types Combined ---
+
+/**
+ * @description A single object containing all symbols, merged from the subsets.
+ * This is useful for a central DI container configuration.
+ */
+export const TYPES = {
+    ...ListenerTypes,
+    ...ServiceTypes,
+    ...RepositoryTypes,
+    ...ConfigTypes,
+    ...InfrastructureTypes,
+    ...JobTypes,
 };

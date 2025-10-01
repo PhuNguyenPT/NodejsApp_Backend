@@ -9,9 +9,10 @@ import {
     PredictionModelEventListenerService,
     StudentCreatedEvent,
 } from "@/event/prediction-model-event-listener.service.js";
-import { AwardService } from "@/service/impl/award.service.js";
-import { CertificationService } from "@/service/impl/certification.service.js";
-import { MajorService } from "@/service/impl/major.service.js";
+import { IAwardService } from "@/service/award-service.interface.js";
+import { ICertificationService } from "@/service/certification-service.interface.js";
+import { IMajorService } from "@/service/major-service.interface.js";
+import { IStudentService } from "@/service/student-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { handleExamValidation } from "@/type/enum/exam.js";
 import { Role } from "@/type/enum/user.js";
@@ -21,8 +22,6 @@ import { PageImpl } from "@/type/pagination/page-impl.js";
 import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
 
-import { IStudentService } from "../student-service.interface.js";
-
 @injectable()
 export class StudentService implements IStudentService {
     constructor(
@@ -30,14 +29,14 @@ export class StudentService implements IStudentService {
         private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.UserRepository)
         private readonly userRepository: Repository<UserEntity>,
-        @inject(TYPES.AwardService)
-        private readonly awardService: AwardService,
-        @inject(TYPES.CertificationService)
-        private readonly certificationService: CertificationService,
+        @inject(TYPES.IAwardService)
+        private readonly awardService: IAwardService,
+        @inject(TYPES.ICertificationService)
+        private readonly certificationService: ICertificationService,
         @inject(TYPES.PredictionModelEventListenerService)
         private readonly predictionModelEventListenerService: PredictionModelEventListenerService,
-        @inject(TYPES.MajorService)
-        private readonly majorService: MajorService,
+        @inject(TYPES.IMajorService)
+        private readonly majorService: IMajorService,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
     ) {}

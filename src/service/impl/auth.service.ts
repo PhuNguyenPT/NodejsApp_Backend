@@ -13,7 +13,8 @@ import { User } from "@/dto/user/user.js";
 import { TokenType } from "@/entity/jwt.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
-import { JWTService } from "@/service/impl/jwt.service.js";
+import { IAuthService } from "@/service/auth-service.interface.js";
+import { IJwtService } from "@/service/jwt-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import {
     getDefaultPermissionsByRole,
@@ -30,14 +31,12 @@ import { JwtException } from "@/type/exception/jwt.exception.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt-options.js";
 
-import { IAuthService } from "../auth-service.interface.js";
-
 @injectable()
 export class AuthService implements IAuthService {
     constructor(
         @inject(TYPES.UserRepository)
         private userRepository: Repository<UserEntity>,
-        @inject(TYPES.JWTService) private readonly jwtService: JWTService,
+        @inject(TYPES.IJwtService) private readonly jwtService: IJwtService,
         @inject(TYPES.IJwtTokenRepository)
         private readonly jwtTokenRepository: IJwtTokenRepository,
         @inject(TYPES.Logger) private readonly logger: Logger,

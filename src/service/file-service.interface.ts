@@ -12,7 +12,12 @@ export interface IFileService {
         studentId: string,
         userId?: string,
     ): Promise<FileEntity[]>;
+    deleteFile(fileId: string, userId?: string): Promise<void>;
     getFileById(fileId: string, userId?: string): Promise<FileEntity>;
+    getFilesByStudentId(
+        studentId: string,
+        userId?: string,
+    ): Promise<FileEntity[]>;
     updateFile(
         fileId: string,
         updateFileDTO: UpdateFileRequest,

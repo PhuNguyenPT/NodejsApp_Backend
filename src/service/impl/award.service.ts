@@ -3,10 +3,9 @@ import { Repository } from "typeorm";
 
 import { AwardRequest } from "@/dto/student/award-request.js";
 import { AwardEntity } from "@/entity/award.entity.js";
+import { IAwardService } from "@/service/award-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
-
-import { IAwardService } from "../award-service.interface.js";
 
 @injectable()
 export class AwardService implements IAwardService {

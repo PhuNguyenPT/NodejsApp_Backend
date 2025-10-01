@@ -13,6 +13,7 @@ import {
 } from "@/entity/admission.entity.js";
 import { StudentAdmissionEntity } from "@/entity/student-admission.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
+import { IAdmissionService } from "@/service/admission-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { PageImpl } from "@/type/pagination/page-impl.js";
@@ -20,8 +21,6 @@ import { PageRequest } from "@/type/pagination/page-request.js";
 import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
 import { Order, Sort } from "@/type/pagination/sort.js";
-
-import { IAdmissionService } from "../admission-service.interface.js";
 
 export interface AdmissionQueryOptions {
     searchQuery?: AdmissionSearchQuery;

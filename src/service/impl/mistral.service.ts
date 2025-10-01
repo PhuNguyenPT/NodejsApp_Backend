@@ -14,11 +14,10 @@ import {
 } from "@/dto/predict/ocr.js";
 import { FileEntity } from "@/entity/file.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
+import { IMistralService } from "@/service/mistral-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
-
-import { IMistralService } from "../mistral-service.interface.js";
 
 @injectable()
 export class MistralService implements IMistralService {

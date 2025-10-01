@@ -15,12 +15,11 @@ import {
     OcrResultEntity,
     OcrStatus,
 } from "@/entity/ocr-result.entity.js";
+import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
-
-import { IOcrResultService } from "../ocr-result-service.interface.js";
 
 @injectable()
 export class OcrResultService implements IOcrResultService {

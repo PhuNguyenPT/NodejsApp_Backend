@@ -22,6 +22,7 @@ import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student-dto.js";
 import { StudentEntity } from "@/entity/student.entity.js";
+import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import {
     AcademicPerformance,
@@ -44,8 +45,6 @@ import { VsatExamSubject } from "@/type/enum/vsat-exam-subject.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 import { validateAndTransformSync } from "@/util/validation.util.js";
-
-import { IPredictionModelService } from "../prediction-model-service.interface.js";
 
 export interface PredictionModelServiceConfig {
     SERVER_BATCH_CONCURRENCY: number;

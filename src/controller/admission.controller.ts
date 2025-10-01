@@ -21,7 +21,7 @@ import { AdmissionEntity, AdmissionField } from "@/entity/admission.entity.js";
 import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
-import { AdmissionService } from "@/service/impl/admission.service.js";
+import { IAdmissionService } from "@/service/admission-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -48,8 +48,8 @@ export class AdmissionController extends Controller {
      * @memberof AdmissionController
      */
     constructor(
-        @inject(TYPES.AdmissionService)
-        private readonly admissionService: AdmissionService,
+        @inject(TYPES.IAdmissionService)
+        private readonly admissionService: IAdmissionService,
     ) {
         super();
     }

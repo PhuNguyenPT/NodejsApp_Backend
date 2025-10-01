@@ -5,6 +5,7 @@ import { Logger } from "winston";
 
 import { JwtEntity, TokenType } from "@/entity/jwt.entity.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import { IJwtService } from "@/service/jwt-service.interface.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import { TYPES } from "@/type/container/types.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
@@ -15,10 +16,8 @@ import {
     verifyOptions,
 } from "@/util/jwt-options.js";
 
-import { IJWTService } from "../jwt-service.interface.js";
-
 @injectable()
-export class JWTService implements IJWTService {
+export class JwtService implements IJwtService {
     constructor(
         @inject(TYPES.KeyStore)
         private readonly keyStore: KeyStore,

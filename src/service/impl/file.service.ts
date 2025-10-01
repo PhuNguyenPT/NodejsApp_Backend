@@ -11,12 +11,11 @@ import {
     OcrEventListenerService,
     SingleFileCreatedEvent,
 } from "@/event/orc-event-listener.service.js";
+import { IFileService } from "@/service/file-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
-
-import { IFileService } from "../file-service.interface.js";
 
 @injectable()
 export class FileService implements IFileService {
