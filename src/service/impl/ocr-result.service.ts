@@ -7,7 +7,7 @@ import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.js";
 import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
-    SubjectScore,
+    ISubjectScore,
 } from "@/dto/predict/ocr.js";
 import { FileEntity } from "@/entity/file.entity.js";
 import {
@@ -177,7 +177,7 @@ export class OcrResultService implements IOcrResultService {
             ocrUpdateRequest.subjectScores &&
             ocrUpdateRequest.subjectScores.length > 0
         ) {
-            const newSubjectScores: SubjectScore[] =
+            const newSubjectScores: ISubjectScore[] =
                 ocrUpdateRequest.subjectScores;
 
             // --- START: New Merging Logic ---
@@ -202,7 +202,7 @@ export class OcrResultService implements IOcrResultService {
             }
 
             // 4. Convert the map back into an array of SubjectScore objects.
-            const finalScores: SubjectScore[] = Array.from(
+            const finalScores: ISubjectScore[] = Array.from(
                 mergedScoresMap,
                 ([name, score]) => ({ name, score }),
             );

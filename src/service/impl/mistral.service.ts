@@ -8,8 +8,8 @@ import { mistralClient } from "@/config/mistralai.config.js";
 import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
+    ISubjectScore,
     ScoreExtractionResult,
-    SubjectScore,
     TranscriptSchema,
 } from "@/dto/predict/ocr.js";
 import { FileEntity } from "@/entity/file.entity.js";
@@ -332,7 +332,7 @@ export class MistralService implements IMistralService {
                 }
 
                 // Convert the map back to an array of objects.
-                const filteredScores: SubjectScore[] = Array.from(
+                const filteredScores: ISubjectScore[] = Array.from(
                     highestScores,
                     ([name, score]) => ({
                         name: name,
