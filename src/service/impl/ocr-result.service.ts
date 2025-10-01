@@ -15,13 +15,14 @@ import {
     OcrResultEntity,
     OcrStatus,
 } from "@/entity/ocr-result.entity.js";
+import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 
 @injectable()
-export class OcrResultService {
+export class OcrResultService implements IOcrResultService {
     constructor(
         @inject(TYPES.OcrResultRepository)
         private readonly ocrResultRepository: Repository<OcrResultEntity>,
@@ -96,6 +97,7 @@ export class OcrResultService {
             throw error;
         }
     }
+
     public async findById(
         id: string,
         processedBy?: string,
@@ -132,16 +134,6 @@ export class OcrResultService {
             );
         }
         return ocrResultEntities;
-    }
-
-    public async findExistingResults(
-        fileIds: string[],
-    ): Promise<OcrResultEntity[]> {
-        if (fileIds.length === 0) return [];
-
-        return await this.ocrResultRepository.find({
-            where: { fileId: In(fileIds) },
-        });
     }
 
     // Helper for handling failures during processing

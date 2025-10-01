@@ -25,7 +25,7 @@ import { UserEntity } from "@/entity/user.entity.js";
 import { UserMapper } from "@/mapper/user-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { UserService } from "@/service/impl/user.service.js";
+import { IUserService } from "@/service/user-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
 
@@ -37,8 +37,8 @@ import { AuthenticatedRequest } from "@/type/express/express.js";
 @Tags("Users")
 export class UserController extends Controller {
     constructor(
-        @inject(TYPES.UserService)
-        private readonly userService: UserService,
+        @inject(TYPES.IUserService)
+        private readonly userService: IUserService,
     ) {
         super();
     }

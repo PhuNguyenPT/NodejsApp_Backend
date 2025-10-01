@@ -24,7 +24,7 @@ import {
 } from "@/dto/auth/auth-request.js";
 import { AuthResponse } from "@/dto/auth/auth-response.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { AuthService } from "@/service/impl/auth.service.js";
+import { IAuthService } from "@/service/auth-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
@@ -51,7 +51,7 @@ export class AuthController extends Controller {
      * @memberof AuthController
      */
     constructor(
-        @inject(TYPES.AuthService) private authService: AuthService,
+        @inject(TYPES.IAuthService) private authService: IAuthService,
         @inject(TYPES.Logger) private logger: Logger,
     ) {
         super();

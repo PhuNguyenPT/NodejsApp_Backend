@@ -1,7 +1,7 @@
 import { responseFormatFromZodObject } from "@mistralai/mistralai/extra/structChat.js";
 import { OCRResponse } from "@mistralai/mistralai/models/components/ocrresponse.js";
 import { inject, injectable } from "inversify";
-import { Repository } from "typeorm";
+import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
 import { mistralClient } from "@/config/mistralai.config.js";
@@ -14,15 +14,14 @@ import {
 } from "@/dto/predict/ocr.js";
 import { FileEntity } from "@/entity/file.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
+import { IMistralService } from "@/service/mistral-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 
 @injectable()
-export class MistralService {
+export class MistralService implements IMistralService {
     constructor(
-        @inject(TYPES.FileRepository)
-        private readonly fileRepository: Repository<FileEntity>,
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.Logger)
@@ -31,15 +30,17 @@ export class MistralService {
 
     /**
      * Extracts subject scores from a single file
+     * @param file - The file entity to extract scores from
+     * @param userId - Optional user ID for access control (omit for anonymous access)
      */
     public async extractSubjectScores(
         file: FileEntity,
-        userId: string,
+        userId?: string,
     ): Promise<FileScoreExtractionResult> {
         try {
             // Get the student to check access and get expected subjects
             const student = await this.studentRepository.findOne({
-                where: { id: file.studentId },
+                where: { id: file.studentId, userId: userId ?? IsNull() },
             });
 
             if (!student) {
@@ -52,7 +53,12 @@ export class MistralService {
                 };
             }
 
-            if (student.userId !== undefined && student.userId !== userId) {
+            // Only check access if userId is provided (not anonymous)
+            if (
+                userId &&
+                student.userId !== undefined &&
+                student.userId !== userId
+            ) {
                 throw new AccessDeniedException("Access denied");
             }
 
@@ -99,80 +105,26 @@ export class MistralService {
     }
 
     /**
-     * Extracts subject scores from a single file
-     */
-    public async extractSubjectScoresAnonymously(
-        file: FileEntity,
-    ): Promise<FileScoreExtractionResult> {
-        try {
-            // Get the student to check access and get expected subjects
-            const student = await this.studentRepository.findOne({
-                where: { id: file.studentId },
-            });
-
-            if (!student) {
-                return {
-                    error: `Student not found for file ${file.id}`,
-                    fileId: file.id,
-                    fileName: file.originalFileName,
-                    scores: [],
-                    success: false,
-                };
-            }
-
-            if (!file.isImage()) {
-                return {
-                    error: `File is not an image (MIME type: ${file.mimeType}).`,
-                    fileId: file.id,
-                    fileName: file.originalFileName,
-                    scores: [],
-                    success: false,
-                };
-            }
-
-            const model = "mistral-ocr-latest";
-
-            const result: ScoreExtractionResult =
-                await this.extractScoresFromImage(file, model);
-
-            return {
-                documentAnnotation: result.documentAnnotation,
-                error: result.error,
-                fileId: file.id,
-                fileName: file.originalFileName,
-                scores: result.scores,
-                success: result.success,
-            };
-        } catch (error) {
-            this.logger.error(
-                `Error during extractSubjectScores for single file: `,
-                { error },
-            );
-            const errorMessage =
-                error instanceof Error
-                    ? error.message
-                    : "Unknown error during score extraction";
-            return {
-                error: errorMessage,
-                fileId: file.id,
-                fileName: file.originalFileName,
-                scores: [],
-                success: false,
-            };
-        }
-    }
-    /**
      * Extracts subject scores from all files of a student (batch processing)
+     * @param student - The student entity
+     * @param fileIds - Array of file IDs to process
+     * @param userId - Optional user ID for access control (omit for anonymous access)
      */
     public async extractSubjectScoresBatch(
         student: StudentEntity,
-        userId: string,
         fileIds: string[],
+        userId?: string,
     ): Promise<BatchScoreExtractionResult> {
         try {
-            if (student.userId !== undefined && student.userId !== userId) {
+            // Only check access if userId is provided (not anonymous)
+            if (
+                userId &&
+                student.userId !== undefined &&
+                student.userId !== userId
+            ) {
                 throw new AccessDeniedException("Access denied");
             }
+
             if (!student.files || student.files.length === 0) {
                 return {
                     error: `No files found for student ${student.id}`,
@@ -222,86 +174,6 @@ export class MistralService {
                 },
             );
 
-            // Wait for all the parallel requests to complete
-            const extractionResults = await Promise.all(extractionPromises);
-
-            return {
-                ocrModel: model,
-                results: extractionResults,
-                success: true,
-            };
-        } catch (error) {
-            this.logger.error(`Error during extractSubjectScoresBatch: `, {
-                error,
-            });
-            const errorMessage =
-                error instanceof Error
-                    ? error.message
-                    : "Unknown error during score extraction";
-            return {
-                error: errorMessage,
-                results: [],
-                success: false,
-            };
-        }
-    }
-    /**
-     * Extracts subject scores from all files of a student (batch processing)
-     */
-    public async extractSubjectScoresBatchAnonymously(
-        student: StudentEntity,
-        fileIds: string[],
-    ): Promise<BatchScoreExtractionResult> {
-        try {
-            if (!student.files || student.files.length === 0) {
-                return {
-                    error: `No files found for student ${student.id}`,
-                    results: [],
-                    success: false,
-                };
-            }
-
-            const filesToProcess = student.files.filter((file) =>
-                fileIds.includes(file.id),
-            );
-
-            if (filesToProcess.length === 0) {
-                return {
-                    error: `None of the requested files found for student ${student.id}`,
-                    results: [],
-                    success: false,
-                };
-            }
-
-            const model = "mistral-ocr-latest";
-
-            const extractionPromises = filesToProcess.map(
-                async (fileEntity): Promise<FileScoreExtractionResult> => {
-                    if (!fileEntity.isImage()) {
-                        return {
-                            error: `File is not an image (MIME type: ${fileEntity.mimeType}).`,
-                            fileId: fileEntity.id,
-                            fileName: fileEntity.originalFileName,
-                            scores: [],
-                            success: false,
-                        };
-                    }
-
-                    const result: ScoreExtractionResult =
-                        await this.extractScoresFromImage(fileEntity, model);
-
-                    return {
-                        documentAnnotation: result.documentAnnotation,
-                        error: result.error,
-                        fileId: fileEntity.id,
-                        fileName: fileEntity.originalFileName,
-                        scores: result.scores,
-                        success: result.success,
-                    };
-                },
-            );
-
-            // Wait for all the parallel requests to complete
             const extractionResults = await Promise.all(extractionPromises);
 
             return {

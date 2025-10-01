@@ -25,8 +25,8 @@ import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
 import { OcrResultMapper } from "@/mapper/ocr-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { MistralService } from "@/service/impl/mistral.service.js";
-import { OcrResultService } from "@/service/impl/ocr-result.service.js";
+import { IMistralService } from "@/service/mistral-service.interface.js";
+import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
@@ -36,10 +36,10 @@ import { AuthenticatedRequest } from "@/type/express/express.js";
 @Tags("OCR")
 export class OcrController extends Controller {
     constructor(
-        @inject(TYPES.MistralService)
-        private readonly mistralService: MistralService,
-        @inject(TYPES.OcrResultService)
-        private readonly ocrResultService: OcrResultService,
+        @inject(TYPES.IMistralService)
+        private readonly mistralService: IMistralService,
+        @inject(TYPES.IOcrResultService)
+        private readonly ocrResultService: IOcrResultService,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
     ) {

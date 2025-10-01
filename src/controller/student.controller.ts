@@ -24,7 +24,7 @@ import { StudentEntity } from "@/entity/student.entity.js";
 import { StudentMapper } from "@/mapper/student-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { StudentService } from "@/service/impl/student.service.js";
+import { IStudentService } from "@/service/student-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -38,8 +38,8 @@ import { Page } from "@/type/pagination/page.interface.js";
 @Tags("Students")
 export class StudentController extends Controller {
     constructor(
-        @inject(TYPES.StudentService)
-        private studentService: StudentService,
+        @inject(TYPES.IStudentService)
+        private studentService: IStudentService,
     ) {
         super();
     }
@@ -85,7 +85,7 @@ export class StudentController extends Controller {
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
         const studentEntity: StudentEntity =
-            await this.studentService.createStudentEntityByUserId(
+            await this.studentService.createStudentEntity(
                 studentRequest,
                 user.id,
             );
@@ -202,7 +202,7 @@ export class StudentController extends Controller {
         @Path() studentId: string,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentGuestWithFiles(studentId);
+            await this.studentService.getStudentWithFiles(studentId);
         return StudentMapper.toStudentProfileWithFilesResponse(studentEntity);
     }
 

@@ -1,17 +1,15 @@
 import { inject, injectable } from "inversify";
-import { EntityNotFoundError, In, Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 
 import { MajorGroupEntity } from "@/entity/major-group.entity.js";
-import { MajorEntity } from "@/entity/major.entity.js";
+import { IMajorService } from "@/service/major-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 
 @injectable()
-export class MajorService {
+export class MajorService implements IMajorService {
     constructor(
-        @inject(TYPES.MajorRepository)
-        private readonly majorRepository: Repository<MajorEntity>,
         @inject(TYPES.MajorGroupRepository)
         private readonly majorGroupRepository: Repository<MajorGroupEntity>,
     ) {}
@@ -35,24 +33,5 @@ export class MajorService {
             );
         }
         return majorGroupEntities;
-    }
-
-    public async findMajorGroupEntityBy(
-        majorGroup: MajorGroup,
-    ): Promise<MajorGroupEntity> {
-        try {
-            const majorGroupEntity: MajorGroupEntity =
-                await this.majorGroupRepository.findOneByOrFail({
-                    name: majorGroup,
-                });
-            return majorGroupEntity;
-        } catch (error) {
-            if (error instanceof EntityNotFoundError) {
-                throw new EntityNotFoundException(
-                    `Major group with name ${majorGroup}`,
-                );
-            }
-            throw error;
-        }
     }
 }

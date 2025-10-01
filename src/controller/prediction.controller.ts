@@ -26,8 +26,8 @@ import { PredictionResultEntity } from "@/entity/prediction-result.entity.js";
 import { PredictionResultMapper } from "@/mapper/prediction-result-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { PredictionResultService } from "@/service/impl/prediction-result.service.js";
 import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
+import { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
@@ -57,8 +57,8 @@ export class PredictionController extends Controller {
         private readonly predictionModelService: IPredictionModelService,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
-        @inject(TYPES.PredictionResultService)
-        private readonly predictionResultService: PredictionResultService,
+        @inject(TYPES.IPredictionResultService)
+        private readonly predictionResultService: IPredictionResultService,
     ) {
         super();
     }

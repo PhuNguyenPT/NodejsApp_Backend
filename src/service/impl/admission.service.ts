@@ -13,6 +13,7 @@ import {
 } from "@/entity/admission.entity.js";
 import { StudentAdmissionEntity } from "@/entity/student-admission.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
+import { IAdmissionService } from "@/service/admission-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { PageImpl } from "@/type/pagination/page-impl.js";
@@ -37,7 +38,7 @@ export interface TuitionFeeRange {
 }
 
 @injectable()
-export class AdmissionService {
+export class AdmissionService implements IAdmissionService {
     constructor(
         @inject(TYPES.DataSource)
         private readonly dataSource: DataSource,

@@ -31,7 +31,7 @@ import { FileEntity, FileType } from "@/entity/file.entity.js";
 import { FileMapper } from "@/mapper/file-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { FileService } from "@/service/impl/file.service.js";
+import { IFileService } from "@/service/file-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { Role } from "@/type/enum/user.js";
@@ -43,8 +43,8 @@ import { AuthenticatedRequest } from "@/type/express/express.js";
 @Tags("Files")
 export class FileController extends Controller {
     constructor(
-        @inject(TYPES.FileService)
-        private fileService: FileService,
+        @inject(TYPES.IFileService)
+        private fileService: IFileService,
         @inject(TYPES.Logger)
         private logger: Logger,
     ) {

@@ -9,9 +9,10 @@ import {
     PredictionModelEventListenerService,
     StudentCreatedEvent,
 } from "@/event/prediction-model-event-listener.service.js";
-import { AwardService } from "@/service/impl/award.service.js";
-import { CertificationService } from "@/service/impl/certification.service.js";
-import { MajorService } from "@/service/impl/major.service.js";
+import { IAwardService } from "@/service/award-service.interface.js";
+import { ICertificationService } from "@/service/certification-service.interface.js";
+import { IMajorService } from "@/service/major-service.interface.js";
+import { IStudentService } from "@/service/student-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { handleExamValidation } from "@/type/enum/exam.js";
 import { Role } from "@/type/enum/user.js";
@@ -20,65 +21,53 @@ import { ValidationException } from "@/type/exception/validation.exception.js";
 import { PageImpl } from "@/type/pagination/page-impl.js";
 import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
-// import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/util/jwt.options.js";
 
 @injectable()
-export class StudentService {
+export class StudentService implements IStudentService {
     constructor(
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.UserRepository)
         private readonly userRepository: Repository<UserEntity>,
-        @inject(TYPES.AwardService)
-        private readonly awardService: AwardService,
-        @inject(TYPES.CertificationService)
-        private readonly certificationService: CertificationService,
+        @inject(TYPES.IAwardService)
+        private readonly awardService: IAwardService,
+        @inject(TYPES.ICertificationService)
+        private readonly certificationService: ICertificationService,
         @inject(TYPES.PredictionModelEventListenerService)
         private readonly predictionModelEventListenerService: PredictionModelEventListenerService,
-        @inject(TYPES.MajorService)
-        private readonly majorService: MajorService,
+        @inject(TYPES.IMajorService)
+        private readonly majorService: IMajorService,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
     ) {}
 
     /**
-     * Creates a student profile for an anonymous user.
+     * Creates a student profile for an anonymous user or linked to an authenticated user.
      * Uses TypeORM cascades to save the student and their related awards/certifications in a single operation.
      * @param studentRequest - The DTO containing the student's information.
+     * @param userId - Optional ID of the authenticated user. If omitted, creates an anonymous student.
      * @returns A promise that resolves to the newly created StudentEntity, including its relations.
      * @throws {ValidationException} If the min budget is greater than the max budget.
+     * @throws {EntityNotFoundException} If userId is provided but the user is not found.
      */
     public async createStudentEntity(
         studentRequest: StudentRequest,
+        userId?: string,
     ): Promise<StudentEntity> {
-        return this._buildAndSaveStudent(studentRequest, null);
-    }
+        let userEntity: null | UserEntity = null;
 
-    /**
-     * Creates a student profile linked to an authenticated user.
-     * Uses TypeORM cascades to save the student and their related awards/certifications in a single operation.
-     * @param studentRequest - The DTO containing the student's information.
-     * @param userId - The ID of the authenticated user.
-     * @returns A promise that resolves to the newly created StudentEntity, including its relations.
-     * @throws {ValidationException} If budget is invalid or userId is missing.
-     * @throws {EntityNotFoundException} If the user with the given ID is not found.
-     */
-    public async createStudentEntityByUserId(
-        studentRequest: StudentRequest,
-        userId: string,
-    ): Promise<StudentEntity> {
-        if (!userId) {
-            throw new ValidationException({ userId: "User ID is required" });
+        if (userId) {
+            userEntity = await this.userRepository.findOne({
+                where: { id: userId },
+            });
+
+            if (!userEntity) {
+                throw new EntityNotFoundException(
+                    `User with ID ${userId} not found`,
+                );
+            }
         }
-        const userEntity = await this.userRepository.findOne({
-            where: { id: userId },
-        });
-        if (!userEntity) {
-            throw new EntityNotFoundException(
-                `User with ID ${userId} not found`,
-            );
-        }
-        // Fetch the user and pass it to the private builder
+
         return this._buildAndSaveStudent(studentRequest, userEntity);
     }
 
@@ -136,10 +125,6 @@ export class StudentService {
     ): Promise<StudentEntity> {
         const studentEntity: null | StudentEntity =
             await this.studentRepository.findOne({
-                // cache: {
-                //     id: `student_cache_${id}`,
-                //     milliseconds: JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
-                // },
                 relations: ["awards", "certifications"],
                 where: {
                     id,
@@ -155,49 +140,18 @@ export class StudentService {
     }
 
     /**
-     * Retrieves a student profile by ID along with its associated active files for a guest user.
-     * @param studentId - The ID of the student to retrieve.
-     * @returns A promise that resolves to the StudentEntity with its files.
-     * @throws {EntityNotFoundException} If the student is not found.
-     */
-    public async getStudentGuestWithFiles(
-        studentId: string,
-    ): Promise<StudentEntity> {
-        const queryBuilder = this.studentRepository
-            .createQueryBuilder("student")
-            .leftJoinAndSelect(
-                "student.files",
-                "files",
-                "files.status = :status",
-                { status: "active" },
-            )
-            .leftJoinAndSelect("student.awards", "awards")
-            .leftJoinAndSelect("student.certifications", "certifications")
-            .leftJoinAndSelect("student.user", "user")
-            .where("student.id = :studentId", { studentId })
-            .andWhere("student.createdBy = :createdBy", {
-                createdBy: Role.ANONYMOUS,
-            })
-            .andWhere("student.userId IS NULL");
-        const student = await queryBuilder.getOne();
-        if (!student) {
-            throw new EntityNotFoundException(
-                `Student profile with ID ${studentId} not found`,
-            );
-        }
-        return student;
-    }
-
-    /**
-     * Retrieves a student profile by ID along with its associated active files, ensuring it belongs to the specified user.
+     * Retrieves a student profile by ID along with its associated active files.
+     * If a userId is provided, it ensures the profile belongs to that user.
+     * Otherwise, it retrieves the profile for a guest user.
+     *
      * @param studentId - The ID of the student profile to retrieve.
-     * @param userId - The ID of the user who owns the profile.
+     * @param userId - (Optional) The ID of the user who owns the profile.
      * @returns A promise that resolves to the StudentEntity with its files.
-     * @throws {EntityNotFoundException} If the student is not found or does not belong to the user.
+     * @throws {EntityNotFoundException} If the student profile is not found or access is denied.
      */
     public async getStudentWithFiles(
         studentId: string,
-        userId: string,
+        userId?: string,
     ): Promise<StudentEntity> {
         const queryBuilder = this.studentRepository
             .createQueryBuilder("student")
@@ -210,17 +164,31 @@ export class StudentService {
             .leftJoinAndSelect("student.awards", "awards")
             .leftJoinAndSelect("student.certifications", "certifications")
             .leftJoinAndSelect("student.user", "user")
-            .where("student.id = :studentId", { studentId })
-            .andWhere("student.userId = :userId", { userId });
+            .where("student.id = :studentId", { studentId });
+
+        // If a userId is provided, find a profile owned by that user.
+        if (userId) {
+            queryBuilder.andWhere("student.userId = :userId", { userId });
+        } else {
+            // Otherwise, find a guest (anonymous) profile.
+            queryBuilder
+                .andWhere("student.createdBy = :createdBy", {
+                    createdBy: Role.ANONYMOUS,
+                })
+                .andWhere("student.userId IS NULL");
+        }
 
         const student = await queryBuilder.getOne();
+
         if (!student) {
             throw new EntityNotFoundException(
                 `Student profile with ID ${studentId} not found`,
             );
         }
+
         return student;
     }
+
     /**
      * Private helper to build, populate, and save a student entity.
      * Handles both anonymous and authenticated user cases.
@@ -256,7 +224,7 @@ export class StudentService {
         }
 
         if (studentRequest.awards && studentRequest.awards.length > 0) {
-            studentEntity.awards = this.awardService.create(
+            studentEntity.awards = this.awardService.createAwardEntities(
                 studentRequest.awards,
             );
             if (userEntity) {

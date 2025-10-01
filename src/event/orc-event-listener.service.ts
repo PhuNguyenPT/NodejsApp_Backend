@@ -44,9 +44,9 @@ const OcrEventSchema = z.union([
 @injectable()
 export class OcrEventListenerService {
     constructor(
-        @inject(TYPES.MistralService)
+        @inject(TYPES.IMistralService)
         private readonly mistralService: MistralService,
-        @inject(TYPES.OcrResultService)
+        @inject(TYPES.IOcrResultService)
         private readonly ocrResultService: OcrResultService,
         @inject(TYPES.FileRepository)
         private readonly fileRepository: Repository<FileEntity>,
@@ -158,21 +158,12 @@ export class OcrEventListenerService {
             );
 
             // 5. Call appropriate Mistral service method
-            let batchExtractionResult: BatchScoreExtractionResult;
-            if (payload.userId) {
-                batchExtractionResult =
-                    await this.mistralService.extractSubjectScoresBatch(
-                        student,
-                        payload.userId,
-                        fileIdsToProcess,
-                    );
-            } else {
-                batchExtractionResult =
-                    await this.mistralService.extractSubjectScoresBatchAnonymously(
-                        student,
-                        fileIdsToProcess,
-                    );
-            }
+            const batchExtractionResult: BatchScoreExtractionResult =
+                await this.mistralService.extractSubjectScoresBatch(
+                    student,
+                    fileIdsToProcess,
+                    payload.userId,
+                );
 
             // 6. Update results
             await this.ocrResultService.updateResults(
@@ -252,19 +243,11 @@ export class OcrEventListenerService {
                 return;
             }
 
-            let fileExtractionResult: FileScoreExtractionResult;
-            if (payload.userId) {
-                fileExtractionResult =
-                    await this.mistralService.extractSubjectScores(
-                        file,
-                        payload.userId,
-                    );
-            } else {
-                fileExtractionResult =
-                    await this.mistralService.extractSubjectScoresAnonymously(
-                        file,
-                    );
-            }
+            const fileExtractionResult: FileScoreExtractionResult =
+                await this.mistralService.extractSubjectScores(
+                    file,
+                    payload.userId,
+                );
 
             const batchResult: BatchScoreExtractionResult = {
                 error: fileExtractionResult.error,

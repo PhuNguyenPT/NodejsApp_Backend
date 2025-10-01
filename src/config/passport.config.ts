@@ -6,8 +6,8 @@ import { Strategy as JwtStrategy } from "passport-jwt";
 import { Logger } from "winston";
 
 import { TokenType } from "@/entity/jwt.entity.js";
+import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
 import { IUserRepository } from "@/repository/user-repository-interface.js";
-import { JwtEntityService } from "@/service/impl/jwt-entity.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 import { strategyOptionsWithRequest } from "@/util/jwt-options.js";
@@ -20,10 +20,10 @@ export class PassportConfig {
     constructor(
         @inject(TYPES.IUserRepository)
         private userRepository: IUserRepository,
+        @inject(TYPES.IJwtTokenRepository)
+        private readonly jwtTokenRepository: IJwtTokenRepository,
         @inject(TYPES.Logger)
         private logger: Logger,
-        @inject(TYPES.JwtEntityService)
-        private jwtEntityService: JwtEntityService,
     ) {}
 
     public initializeStrategies(): void {
@@ -47,6 +47,7 @@ export class PassportConfig {
                                 done(null, false, {
                                     message: `Invalid token type. This endpoint requires an '${TokenType.ACCESS}' token.`,
                                 });
+                                return;
                             }
                             const clientIP = req.ip ?? "unknown";
                             const userAgent =
@@ -70,10 +71,12 @@ export class PassportConfig {
                                 return;
                             }
 
+                            let isFallbackMode = false;
+
                             try {
                                 // 1. FIRST: Check if token is blacklisted (logout/revoked tokens)
                                 const isBlacklisted =
-                                    await this.jwtEntityService.isTokenBlacklisted(
+                                    await this.jwtTokenRepository.isTokenBlacklisted(
                                         rawToken,
                                     );
                                 if (isBlacklisted) {
@@ -95,9 +98,10 @@ export class PassportConfig {
 
                                 // 2. Check if token exists in Redis storage
                                 const tokenInfo =
-                                    await this.jwtEntityService.getTokenInfo(
+                                    await this.jwtTokenRepository.findByToken(
                                         rawToken,
                                     );
+
                                 if (!tokenInfo) {
                                     this.logger.warn(
                                         `Token not found in storage for user: ${payload.id}`,
@@ -126,7 +130,7 @@ export class PassportConfig {
                                     );
 
                                     // Auto-cleanup expired token
-                                    await this.jwtEntityService.blacklistToken(
+                                    await this.jwtTokenRepository.blacklistTokenByValue(
                                         rawToken,
                                     );
 
@@ -183,6 +187,7 @@ export class PassportConfig {
                                     },
                                 );
 
+                                isFallbackMode = true;
                                 // Option B: Fall back to JWT-only validation
                                 this.logger.warn(
                                     "Falling back to JWT-only validation due to Redis error",
@@ -193,7 +198,6 @@ export class PassportConfig {
                                     },
                                 );
                             }
-                            const isFallbackMode = true; // Set this in the catch block
 
                             // Find user in database
                             const user = await this.userRepository.findById(

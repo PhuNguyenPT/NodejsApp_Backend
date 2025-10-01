@@ -8,6 +8,7 @@ import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import { IUserRepository } from "@/repository/user-repository-interface.js";
+import { IUserService } from "@/service/user-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { getDefaultPermissionsByRole } from "@/type/enum/user.js";
 import { EntityExistsException } from "@/type/exception/entity-exists.exception.js";
@@ -16,12 +17,12 @@ import { IllegalArgumentException } from "@/type/exception/illegal-argument.exce
 import { hashPassword } from "@/util/bcrypt.js";
 
 @injectable()
-export class UserService {
+export class UserService implements IUserService {
     constructor(
         @inject(TYPES.IUserRepository)
         private readonly userRepository: IUserRepository,
         @inject(TYPES.Logger)
-        private readonly logger: Logger, // Now properly typed!
+        private readonly logger: Logger,
     ) {}
 
     public async create(
