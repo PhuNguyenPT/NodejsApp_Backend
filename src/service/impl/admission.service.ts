@@ -21,6 +21,8 @@ import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
 import { Order, Sort } from "@/type/pagination/sort.js";
 
+import { IAdmissionService } from "../admission-service.interface.js";
+
 export interface AdmissionQueryOptions {
     searchQuery?: AdmissionSearchQuery;
     userId?: string;
@@ -37,7 +39,7 @@ export interface TuitionFeeRange {
 }
 
 @injectable()
-export class AdmissionService {
+export class AdmissionService implements IAdmissionService {
     constructor(
         @inject(TYPES.DataSource)
         private readonly dataSource: DataSource,

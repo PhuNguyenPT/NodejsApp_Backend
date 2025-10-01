@@ -5,9 +5,12 @@ import { CertificationRequest } from "@/dto/student/certification-request.js";
 import { CEFR, CertificationEntity } from "@/entity/certification.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import { CCNNType, ExamType, handleExamValidation } from "@/type/enum/exam.js";
+import { Role } from "@/type/enum/user.js";
+
+import { ICertificationService } from "../certification-service.interface.js";
 
 @injectable()
-export class CertificationService {
+export class CertificationService implements ICertificationService {
     constructor(
         @inject(TYPES.CertificationRepository)
         private readonly certificationRepository: Repository<CertificationEntity>,
@@ -33,6 +36,8 @@ export class CertificationService {
 
         const certificationEntity: CertificationEntity =
             this.certificationRepository.create(certificationRequest);
+
+        certificationEntity.createdBy ??= Role.ANONYMOUS;
 
         certificationEntity.cefr = this.getCEFRLevel(
             certificationRequest.examType,

@@ -85,7 +85,7 @@ export class StudentController extends Controller {
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
         const studentEntity: StudentEntity =
-            await this.studentService.createStudentEntityByUserId(
+            await this.studentService.createStudentEntity(
                 studentRequest,
                 user.id,
             );
@@ -202,7 +202,7 @@ export class StudentController extends Controller {
         @Path() studentId: string,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentGuestWithFiles(studentId);
+            await this.studentService.getStudentWithFiles(studentId);
         return StudentMapper.toStudentProfileWithFilesResponse(studentEntity);
     }
 

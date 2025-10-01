@@ -4,7 +4,7 @@ import { Logger } from "winston";
 
 import { CreateFileDTO } from "@/dto/file/create-file.js";
 import { UpdateFileRequest } from "@/dto/file/update-file.js";
-import { FileEntity, FileStatus, FileType } from "@/entity/file.entity.js";
+import { FileEntity, FileStatus } from "@/entity/file.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import {
     FilesCreatedEvent,
@@ -16,8 +16,10 @@ import { AccessDeniedException } from "@/type/exception/access-denied.exception.
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 
+import { IFileService } from "../file-service.interface.js";
+
 @injectable()
-export class FileService {
+export class FileService implements IFileService {
     constructor(
         @inject(TYPES.Logger) private readonly logger: Logger,
         @inject(TYPES.FileRepository)
@@ -164,51 +166,6 @@ export class FileService {
             );
         }
         return files;
-    }
-
-    public async getFilesByStudentIdAndType(
-        studentId: string,
-        fileType: FileType,
-    ): Promise<FileEntity[]> {
-        return await this.fileRepository.find({
-            order: { createdAt: "DESC" },
-            where: {
-                fileType: fileType,
-                status: FileStatus.ACTIVE,
-                studentId: studentId,
-            },
-        });
-    }
-
-    public async getStudentFilesWithCounts(studentId: string): Promise<{
-        counts: Record<FileType, number>;
-        files: FileEntity[];
-        totalSize: number;
-    }> {
-        const files = await this.getFilesByStudentId(studentId);
-
-        const counts = Object.values(FileType).reduce(
-            (acc, type) => {
-                acc[type] = 0;
-                return acc;
-            },
-            {} as Record<FileType, number>,
-        );
-
-        let totalSize = 0;
-
-        files.forEach((file) => {
-            counts[file.fileType]++;
-            totalSize += file.fileSize;
-        });
-
-        return { counts, files, totalSize };
-    }
-
-    public async permanentlyDeleteFile(fileId: string): Promise<void> {
-        const file = await this.getFileById(fileId);
-        await this.fileRepository.remove(file);
-        this.logger.info(`File permanently deleted with ID: ${fileId}`);
     }
 
     public async updateFile(

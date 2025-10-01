@@ -6,8 +6,10 @@ import { PredictionResultEntity } from "@/entity/prediction-result.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 
+import { IPredictionResultService } from "../prediction-result-service.interface.js";
+
 @injectable()
-export class PredictionResultService {
+export class PredictionResultService implements IPredictionResultService {
     constructor(
         @inject(TYPES.PredictionResultEntityRepository)
         private readonly predictionResultEntityRepository: Repository<PredictionResultEntity>,

@@ -42,7 +42,6 @@ import { AuthService } from "@/service/impl/auth.service.js";
 import { AwardService } from "@/service/impl/award.service.js";
 import { CertificationService } from "@/service/impl/certification.service.js";
 import { FileService } from "@/service/impl/file.service.js";
-import { JwtEntityService } from "@/service/impl/jwt-entity.service.js";
 import { JWTService } from "@/service/impl/jwt.service.js";
 import { MajorService } from "@/service/impl/major.service.js";
 import { MistralService } from "@/service/impl/mistral.service.js";
@@ -136,11 +135,6 @@ iocContainer
 iocContainer
     .bind<Repository<AdmissionEntity>>(TYPES.AdmissionRepository)
     .toConstantValue(postgresDataSource.getRepository(AdmissionEntity));
-
-iocContainer
-    .bind<JwtEntityService>(TYPES.JwtEntityService)
-    .to(JwtEntityService)
-    .inSingletonScope();
 
 iocContainer
     .bind<UserService>(TYPES.UserService)

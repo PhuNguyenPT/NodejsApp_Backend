@@ -3,35 +3,35 @@ import { inject, injectable } from "inversify";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Logger } from "winston";
 
-import { TokenType } from "@/entity/jwt.entity.js";
+import { JwtEntity, TokenType } from "@/entity/jwt.entity.js";
+import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import { TYPES } from "@/type/container/types.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 import {
     JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
-    JWT_REFRESH_TOKEN_EXPIRATION_SECONDS,
     refreshSignOptions,
     signOptions,
     verifyOptions,
 } from "@/util/jwt-options.js";
 
-import { JwtEntityService } from "./jwt-entity.service.js";
+import { IJWTService } from "../jwt-service.interface.js";
 
 @injectable()
-export class JWTService {
+export class JWTService implements IJWTService {
     constructor(
         @inject(TYPES.KeyStore)
-        private keyStore: KeyStore,
+        private readonly keyStore: KeyStore,
         @inject(TYPES.Logger)
-        private logger: Logger,
-        @inject(TYPES.JwtEntityService)
-        private jwtEntityService: JwtEntityService,
+        private readonly logger: Logger,
+        @inject(TYPES.IJwtTokenRepository)
+        private readonly jwtTokenRepository: IJwtTokenRepository,
     ) {}
 
     /**
      * Decode token without verification (existing method - unchanged)
      */
-    decodeToken(token: string): CustomJwtPayload | null {
+    public decodeToken(token: string): CustomJwtPayload | null {
         try {
             const decoded = jwt.decode(token);
 
@@ -55,7 +55,7 @@ export class JWTService {
     /**
      * Generate JWT access token for user and store it in Redis
      */
-    async generateAccessToken(
+    public async generateAccessToken(
         payload: CustomJwtPayload,
         familyId: string,
     ): Promise<string> {
@@ -67,14 +67,14 @@ export class JWTService {
             );
 
             const ttl = this.extractTtlFromOptions(signOptions.expiresIn);
-            await this.jwtEntityService.createToken(
+            const jwtEntity = new JwtEntity({
+                familyId,
                 token,
                 ttl,
-                TokenType.ACCESS,
-                familyId,
-            );
+                type: TokenType.ACCESS,
+            });
+            await this.jwtTokenRepository.save(jwtEntity);
 
-            // Reduce logging verbosity - only log in debug mode
             this.logger.debug(`Access token generated for user: ${payload.id}`);
             return token;
         } catch (error) {
@@ -89,7 +89,7 @@ export class JWTService {
     /**
      * Generate refresh token and store it in Redis
      */
-    async generateRefreshToken(
+    public async generateRefreshToken(
         payload: CustomJwtPayload,
         familyId: string,
     ): Promise<string> {
@@ -100,12 +100,17 @@ export class JWTService {
                 refreshSignOptions,
             );
 
-            await this.jwtEntityService.createToken(
-                token,
-                JWT_REFRESH_TOKEN_EXPIRATION_SECONDS,
-                TokenType.REFRESH,
-                familyId,
+            const ttl = this.extractTtlFromOptions(
+                refreshSignOptions.expiresIn,
             );
+
+            const jwtEntity = new JwtEntity({
+                familyId,
+                token,
+                ttl,
+                type: TokenType.REFRESH,
+            });
+            await this.jwtTokenRepository.save(jwtEntity);
 
             // Reduce logging verbosity - only log in debug mode
             this.logger.debug(
@@ -122,36 +127,15 @@ export class JWTService {
     }
 
     /**
-     * Logout user by blacklisting their token
-     */
-    async logout(token: string): Promise<boolean> {
-        try {
-            const success = await this.jwtEntityService.blacklistToken(token);
-
-            // Only log once per token, not multiple times
-            if (!success) {
-                this.logger.debug("Token not found during logout attempt");
-            }
-
-            return success;
-        } catch (error) {
-            this.logger.error("Token blacklist error", {
-                error: error instanceof Error ? error.message : String(error),
-            });
-            return false;
-        }
-    }
-
-    /**
      * Verify JWT token with Redis validation
      * This method now checks both JWT validity AND Redis storage/blacklist status
      */
-    async verifyToken(token: string): Promise<CustomJwtPayload> {
+    public async verifyToken(token: string): Promise<CustomJwtPayload> {
         try {
-            // First, check if token exists and is not blacklisted in Redis
-            const isValidInRedis =
-                await this.jwtEntityService.validateToken(token);
-            if (!isValidInRedis) {
+            // Check if token exists and is valid in Redis
+            const jwtEntity = await this.jwtTokenRepository.findByToken(token);
+
+            if (!jwtEntity?.isValid()) {
                 this.logger.warn(
                     "Token validation failed in Redis (not found, expired, or blacklisted)",
                 );
@@ -180,8 +164,7 @@ export class JWTService {
             return decoded;
         } catch (error) {
             if (error instanceof jwt.TokenExpiredError) {
-                // If JWT is expired, also blacklist it in Redis
-                await this.jwtEntityService.blacklistToken(token);
+                await this.jwtTokenRepository.blacklistTokenByValue(token);
                 throw new Error("Token has expired");
             } else if (error instanceof jwt.JsonWebTokenError) {
                 throw new Error("Invalid token");

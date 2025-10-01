@@ -1,29 +1,22 @@
 import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
-import { JwtEntityService } from "@/service/impl/jwt-entity.service.js";
+import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
 import { TYPES } from "@/type/container/types.js";
-
-// src/job/token.cleanup.job.ts
 
 @injectable()
 export class TokenCleanupJob {
-    private isCleanupRunning = false; // 1. Add a state flag
+    private isCleanupRunning = false;
 
     constructor(
-        @inject(TYPES.JwtEntityService)
-        private jwtEntityService: JwtEntityService,
+        @inject(TYPES.IJwtTokenRepository)
+        private jwtTokenRepository: IJwtTokenRepository,
         @inject(TYPES.Logger)
         private logger: Logger,
         private cleanupTimeout: NodeJS.Timeout | null = null,
     ) {}
 
-    /**
-     * Run token cleanup job
-     * Checks if a cleanup is already in progress.
-     */
     async runCleanup(): Promise<void> {
-        // 2. Check the flag before running
         if (this.isCleanupRunning) {
             this.logger.info(
                 "Token cleanup job is already running. Skipping this run.",
@@ -31,19 +24,14 @@ export class TokenCleanupJob {
             return;
         }
 
-        this.isCleanupRunning = true; // Set the lock
+        this.isCleanupRunning = true;
 
         try {
-            this.logger.info("Starting token cleanup job");
-            const deletedCount =
-                await this.jwtEntityService.cleanupExpiredTokens();
-            this.logger.info(
-                `Token cleanup completed. Deleted ${deletedCount.toString()} expired tokens`,
-            );
+            await this.jwtTokenRepository.cleanup();
         } catch (error) {
             this.logger.error("Token cleanup job failed:", { error });
         } finally {
-            this.isCleanupRunning = false; // 3. Release the lock in a 'finally' block
+            this.isCleanupRunning = false;
         }
     }
 
@@ -59,7 +47,6 @@ export class TokenCleanupJob {
                     { error },
                 );
             } finally {
-                // Store the timeout reference so we can cancel it
                 this.cleanupTimeout = setTimeout(() => {
                     void run();
                 }, intervalMs);

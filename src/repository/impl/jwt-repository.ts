@@ -15,7 +15,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
     constructor(@inject(TYPES.Logger) private readonly logger: Logger) {}
     // Blacklist token by ID
-    async blacklistToken(tokenId: string): Promise<boolean> {
+    public async blacklistToken(tokenId: string): Promise<boolean> {
         try {
             const jwtEntity: JwtEntity | null = await this.findById(tokenId);
 
@@ -59,7 +59,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Blacklist token by value
-    async blacklistTokenByValue(token: string): Promise<boolean> {
+    public async blacklistTokenByValue(token: string): Promise<boolean> {
         try {
             const jwtEntity: JwtEntity | null = await this.findByToken(token);
 
@@ -75,7 +75,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Cleanup expired tokens periodically
-    async cleanup(): Promise<void> {
+    public async cleanup(): Promise<void> {
         try {
             const deletedTokens = await this.deleteExpiredTokens();
             const cleanedFamilies = await this.cleanupExpiredFamilies();
@@ -89,7 +89,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
         }
     }
 
-    async cleanupExpiredFamilies(): Promise<number> {
+    public async cleanupExpiredFamilies(): Promise<number> {
         try {
             let cursor = 0;
             let cleanedFamilies = 0;
@@ -159,7 +159,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Delete token by ID
-    async deleteById(id: string): Promise<boolean> {
+    public async deleteById(id: string): Promise<boolean> {
         try {
             const jwtEntity: JwtEntity | null = await this.findById(id);
 
@@ -193,7 +193,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Delete token by value
-    async deleteByToken(token: string): Promise<boolean> {
+    public async deleteByToken(token: string): Promise<boolean> {
         try {
             const jwtEntity: JwtEntity | null = await this.findByToken(token);
 
@@ -209,7 +209,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Delete expired tokens (cleanup job)
-    async deleteExpiredTokens(): Promise<number> {
+    public async deleteExpiredTokens(): Promise<number> {
         try {
             let cursor = 0;
             let deletedCount = 0;
@@ -248,7 +248,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Find token by ID
-    async findById(id: string): Promise<JwtEntity | null> {
+    public async findById(id: string): Promise<JwtEntity | null> {
         try {
             const key = this.getTokenKey(id);
             const exists = await redisClient.exists(key);
@@ -273,7 +273,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Find token by token value
-    async findByToken(token: string): Promise<JwtEntity | null> {
+    public async findByToken(token: string): Promise<JwtEntity | null> {
         try {
             const tokenIndexKey = this.getTokenIndexKey(token);
             const tokenId = await redisClient.get(tokenIndexKey);
@@ -290,7 +290,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Get all tokens (for admin/debugging purposes)
-    async getAllTokens(): Promise<JwtEntity[]> {
+    public async getAllTokens(): Promise<JwtEntity[]> {
         try {
             const keys = await redisClient.keys(`${this.keyPrefix}*`);
             const tokens: JwtEntity[] = [];
@@ -310,7 +310,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
         }
     }
 
-    async invalidateFamily(familyId: string): Promise<void> {
+    public async invalidateFamily(familyId: string): Promise<void> {
         try {
             const familyIndexKey = this.getFamilyIndexKey(familyId);
             const tokenIds = await redisClient.sMembers(familyIndexKey);
@@ -364,7 +364,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Check if token is blacklisted
-    async isTokenBlacklisted(token: string): Promise<boolean> {
+    public async isTokenBlacklisted(token: string): Promise<boolean> {
         try {
             const jwtEntity = await this.findByToken(token);
 
@@ -382,7 +382,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Save JWT token entity to Redis
-    async save(jwtEntity: JwtEntity): Promise<void> {
+    public async save(jwtEntity: JwtEntity): Promise<void> {
         try {
             const key = this.getTokenKey(jwtEntity.id);
             const tokenIndexKey = this.getTokenIndexKey(jwtEntity.token);

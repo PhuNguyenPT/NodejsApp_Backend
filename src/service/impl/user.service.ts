@@ -15,13 +15,15 @@ import { EntityNotFoundException } from "@/type/exception/entity-not-found.excep
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 import { hashPassword } from "@/util/bcrypt.js";
 
+import { IUserService } from "../user-service.interface.js";
+
 @injectable()
-export class UserService {
+export class UserService implements IUserService {
     constructor(
         @inject(TYPES.IUserRepository)
         private readonly userRepository: IUserRepository,
         @inject(TYPES.Logger)
-        private readonly logger: Logger, // Now properly typed!
+        private readonly logger: Logger,
     ) {}
 
     public async create(

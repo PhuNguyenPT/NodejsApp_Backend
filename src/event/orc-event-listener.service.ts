@@ -158,21 +158,12 @@ export class OcrEventListenerService {
             );
 
             // 5. Call appropriate Mistral service method
-            let batchExtractionResult: BatchScoreExtractionResult;
-            if (payload.userId) {
-                batchExtractionResult =
-                    await this.mistralService.extractSubjectScoresBatch(
-                        student,
-                        payload.userId,
-                        fileIdsToProcess,
-                    );
-            } else {
-                batchExtractionResult =
-                    await this.mistralService.extractSubjectScoresBatchAnonymously(
-                        student,
-                        fileIdsToProcess,
-                    );
-            }
+            const batchExtractionResult: BatchScoreExtractionResult =
+                await this.mistralService.extractSubjectScoresBatch(
+                    student,
+                    fileIdsToProcess,
+                    payload.userId,
+                );
 
             // 6. Update results
             await this.ocrResultService.updateResults(
@@ -252,19 +243,11 @@ export class OcrEventListenerService {
                 return;
             }
 
-            let fileExtractionResult: FileScoreExtractionResult;
-            if (payload.userId) {
-                fileExtractionResult =
-                    await this.mistralService.extractSubjectScores(
-                        file,
-                        payload.userId,
-                    );
-            } else {
-                fileExtractionResult =
-                    await this.mistralService.extractSubjectScoresAnonymously(
-                        file,
-                    );
-            }
+            const fileExtractionResult: FileScoreExtractionResult =
+                await this.mistralService.extractSubjectScores(
+                    file,
+                    payload.userId,
+                );
 
             const batchResult: BatchScoreExtractionResult = {
                 error: fileExtractionResult.error,

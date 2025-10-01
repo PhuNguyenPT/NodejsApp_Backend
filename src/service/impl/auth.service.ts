@@ -13,7 +13,6 @@ import { User } from "@/dto/user/user.js";
 import { TokenType } from "@/entity/jwt.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
-import { JwtEntityService } from "@/service/impl/jwt-entity.service.js";
 import { JWTService } from "@/service/impl/jwt.service.js";
 import { TYPES } from "@/type/container/types.js";
 import {
@@ -31,14 +30,14 @@ import { JwtException } from "@/type/exception/jwt.exception.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt-options.js";
 
+import { IAuthService } from "../auth-service.interface.js";
+
 @injectable()
-export class AuthService {
+export class AuthService implements IAuthService {
     constructor(
         @inject(TYPES.UserRepository)
         private userRepository: Repository<UserEntity>,
         @inject(TYPES.JWTService) private readonly jwtService: JWTService,
-        @inject(TYPES.JwtEntityService)
-        private readonly jwtEntityService: JwtEntityService,
         @inject(TYPES.IJwtTokenRepository)
         private readonly jwtTokenRepository: IJwtTokenRepository,
         @inject(TYPES.Logger) private readonly logger: Logger,
@@ -153,7 +152,7 @@ export class AuthService {
             // Validate access token if provided
             if (accessToken) {
                 const accessJwtEntity =
-                    await this.jwtEntityService.getTokenInfo(accessToken);
+                    await this.jwtTokenRepository.findByToken(accessToken);
                 if (!accessJwtEntity) {
                     this.logger.warn("Access token not found during logout");
                 } else {
@@ -173,7 +172,7 @@ export class AuthService {
             // Validate refresh token if provided
             if (refreshToken) {
                 const refreshJwtEntity =
-                    await this.jwtEntityService.getTokenInfo(refreshToken);
+                    await this.jwtTokenRepository.findByToken(refreshToken);
                 if (!refreshJwtEntity) {
                     this.logger.warn("Refresh token not found during logout");
                 } else {
@@ -202,7 +201,7 @@ export class AuthService {
 
             // Blacklist all tokens in parallel
             const blacklistPromises = tokensToBlacklist.map((token) =>
-                this.jwtService.logout(token),
+                this.jwtTokenRepository.blacklistTokenByValue(token),
             );
 
             const results = await Promise.allSettled(blacklistPromises);
@@ -251,7 +250,7 @@ export class AuthService {
 
             // 1. Get token entity to check for reuse and get its familyId
             const oldRefreshJwtEntity =
-                await this.jwtEntityService.getTokenInfo(refreshToken);
+                await this.jwtTokenRepository.findByToken(refreshToken);
 
             // 2. CRITICAL: Check for token reuse (stolen token detection)
             if (!oldRefreshJwtEntity) {
@@ -338,7 +337,7 @@ export class AuthService {
             }
 
             // 5. Blacklist the old refresh token immediately to prevent reuse
-            await this.jwtService.logout(refreshToken);
+            await this.jwtTokenRepository.blacklistTokenByValue(refreshToken);
 
             // 6. Generate NEW tokens using the same familyId
             const familyId = oldRefreshJwtEntity.familyId;
