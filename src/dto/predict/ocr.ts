@@ -1,18 +1,30 @@
 import { Expose } from "class-transformer";
+import { IsEnum, IsNumber, Max, Min } from "class-validator";
 import { z } from "zod";
 
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 
-interface ISubjectScore {
+export interface ISubjectScore {
     name: TranscriptSubject;
     score: number;
 }
 
-interface ITranscript {
+export interface ITranscript {
     subjects: ISubjectScore[];
 }
+export class SubjectScore implements ISubjectScore {
+    @Expose()
+    @IsEnum(TranscriptSubject)
+    name!: TranscriptSubject;
 
-export const SubjectScoreSchema = z.object({
+    @Expose()
+    @IsNumber()
+    @Max(10)
+    @Min(0)
+    score!: number;
+}
+
+export const ISubjectScoreSchema = z.object({
     name: z
         .nativeEnum(TranscriptSubject)
         .describe("Vietnamese subject name from enum"),
@@ -25,7 +37,7 @@ export const SubjectScoreSchema = z.object({
 
 export const TranscriptSchema = z.object({
     subjects: z
-        .array(SubjectScoreSchema)
+        .array(ISubjectScoreSchema)
         .describe("Subject scores extracted from transcript"),
 });
 
@@ -47,7 +59,7 @@ export interface FileScoreExtractionResult {
     error?: string;
     fileId: string;
     fileName: string;
-    scores: SubjectScore[];
+    scores: ISubjectScore[];
     success: boolean;
 }
 
@@ -57,13 +69,10 @@ export interface FileScoreExtractionResult {
 export interface ScoreExtractionResult {
     documentAnnotation?: string;
     error?: string;
-    scores: SubjectScore[];
+    scores: ISubjectScore[];
     success: boolean;
 }
 
-export type SubjectScore = ISubjectScore;
-
-export type Transcript = ITranscript;
 export class OcrResultResponse {
     @Expose()
     createdAt!: Date;
@@ -78,5 +87,5 @@ export class OcrResultResponse {
     processedBy!: string;
 
     @Expose()
-    scores!: SubjectScore[];
+    scores!: ISubjectScore[];
 }

@@ -13,7 +13,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { SubjectScore } from "@/dto/predict/ocr.js";
+import { ISubjectScore } from "@/dto/predict/ocr.js";
 import { FileEntity } from "@/entity/file.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 
@@ -71,7 +71,7 @@ export class OcrResultEntity {
     processedBy?: string;
 
     @Column({ nullable: true, type: "jsonb" })
-    scores?: SubjectScore[];
+    scores?: ISubjectScore[];
 
     @Column({
         enum: OcrStatus,
@@ -125,7 +125,7 @@ export class OcrResultEntity {
         }
     }
 
-    getScoreBySubject(subjectName: string): null | SubjectScore {
+    getScoreBySubject(subjectName: string): ISubjectScore | null {
         return (
             this.scores?.find(
                 (score) =>

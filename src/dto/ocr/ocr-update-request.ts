@@ -1,10 +1,12 @@
-import { Expose } from "class-transformer";
-import { IsArray } from "class-validator";
+import { Expose, Type } from "class-transformer";
+import { IsArray, ValidateNested } from "class-validator";
 
-import { SubjectScore } from "../predict/ocr.js";
+import { SubjectScore } from "@/dto/predict/ocr.js";
 
 export class OcrUpdateRequest {
     @Expose()
     @IsArray()
+    @Type(() => SubjectScore)
+    @ValidateNested({ each: true })
     subjectScores?: SubjectScore[];
 }
