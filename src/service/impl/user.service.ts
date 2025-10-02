@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import { plainToInstance } from "class-transformer";
 // src/service/user.service.ts
 import { inject, injectable } from "inversify";
@@ -14,10 +15,11 @@ import { getDefaultPermissionsByRole } from "@/type/enum/user.js";
 import { EntityExistsException } from "@/type/exception/entity-exists.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
-import { hashPassword } from "@/util/bcrypt.js";
 
 @injectable()
 export class UserService implements IUserService {
+    private readonly SALT_ROUNDS = 12;
+
     constructor(
         @inject(TYPES.IUserRepository)
         private readonly userRepository: IUserRepository,
@@ -34,8 +36,9 @@ export class UserService implements IUserService {
             });
 
             // Hash the password before saving
-            createUserAdminDTO.password = await hashPassword(
+            createUserAdminDTO.password = await bcrypt.hash(
                 createUserAdminDTO.password,
+                this.SALT_ROUNDS,
             );
             const newUser: UserEntity = plainToInstance(
                 UserEntity,
@@ -223,7 +226,10 @@ export class UserService implements IUserService {
             });
 
             if (updateData.password) {
-                updateData.password = await hashPassword(updateData.password);
+                updateData.password = await bcrypt.hash(
+                    updateData.password,
+                    this.SALT_ROUNDS,
+                );
             }
 
             const userEntity: UserEntity = plainToInstance(
