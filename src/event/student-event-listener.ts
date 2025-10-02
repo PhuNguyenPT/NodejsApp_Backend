@@ -4,6 +4,7 @@ import { DataSource, EntityManager, In } from "typeorm";
 import { Logger } from "winston";
 import z from "zod";
 
+import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config.js";
 import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
 import { AdmissionEntity } from "@/entity/admission.entity.js";
 import {
@@ -15,7 +16,6 @@ import { UserEntity } from "@/entity/user.entity.js";
 import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
-import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/util/jwt-options.js";
 
 const StudentCreatedEventSchema = z.object({
     studentId: z.string().uuid("Invalid student ID format"),

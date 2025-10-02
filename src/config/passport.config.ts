@@ -5,12 +5,12 @@ import passport from "passport";
 import { Strategy as JwtStrategy } from "passport-jwt";
 import { Logger } from "winston";
 
+import { strategyOptionsWithRequest } from "@/config/jwt.config.js";
 import { TokenType } from "@/entity/jwt.entity.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
 import { IUserRepository } from "@/repository/user-repository-interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
-import { strategyOptionsWithRequest } from "@/util/jwt-options.js";
 import { config } from "@/util/validate-env.js";
 
 @injectable()

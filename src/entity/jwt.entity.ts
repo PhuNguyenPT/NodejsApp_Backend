@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 
 // src/entity/jwt.token.ts
-import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt-options.js";
+import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/config/jwt.config.js";
 
 export enum TokenType {
     ACCESS = "access",
