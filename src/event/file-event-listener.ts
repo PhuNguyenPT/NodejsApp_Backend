@@ -42,7 +42,7 @@ const OcrEventSchema = z.union([
 ]);
 
 @injectable()
-export class OcrEventListenerService {
+export class FileEventListener {
     constructor(
         @inject(TYPES.IMistralService)
         private readonly mistralService: IMistralService,

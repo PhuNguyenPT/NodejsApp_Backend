@@ -5,10 +5,8 @@
  * @description Symbols for all listener services.
  */
 export const ListenerTypes = {
-    OcrEventListenerService: Symbol.for("OcrEventListenerService"),
-    PredictionModelEventListenerService: Symbol.for(
-        "PredictionModelEventListenerService",
-    ),
+    FileEventListener: Symbol.for("FileEventListener"),
+    StudentEventListener: Symbol.for("StudentEventListener"),
 };
 
 /**

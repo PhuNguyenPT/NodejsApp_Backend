@@ -1,4 +1,5 @@
 import { inject, injectable } from "inversify";
+import { RedisClientType } from "redis";
 import { DataSource, EntityManager, In } from "typeorm";
 import { Logger } from "winston";
 import z from "zod";
@@ -12,13 +13,9 @@ import {
 import { StudentAdmissionEntity } from "@/entity/student-admission.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
-// REMOVE THIS IMPORT - This is causing the circular dependency
-// import { PredictionModelService } from "@/service/prediction-model.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/util/jwt-options.js";
-
-export const PREDICTION_CHANNEL = "prediction:student_created";
 
 const StudentCreatedEventSchema = z.object({
     studentId: z.string().uuid("Invalid student ID format"),
@@ -28,12 +25,14 @@ const StudentCreatedEventSchema = z.object({
 export type StudentCreatedEvent = z.infer<typeof StudentCreatedEventSchema>;
 
 @injectable()
-export class PredictionModelEventListenerService {
+export class StudentEventListener {
     constructor(
         @inject(TYPES.Logger) private readonly logger: Logger,
         @inject(TYPES.DataSource) private readonly dataSource: DataSource,
         @inject(TYPES.IPredictionModelService)
         private readonly predictionModelService: IPredictionModelService,
+        @inject(TYPES.RedisPublisher)
+        private readonly redisClient: RedisClientType,
     ) {}
 
     public async handleStudentCreatedEvent(
@@ -62,6 +61,42 @@ export class PredictionModelEventListenerService {
                 error,
                 event,
             });
+        }
+    }
+
+    /**
+     * Invalidates admission field cache for a student
+     * Called after linking new admissions to ensure fresh data
+     */
+    private async invalidateAdmissionCache(
+        studentId: string,
+        userId?: string,
+    ): Promise<void> {
+        // Build cache keys to invalidate
+        const keysToInvalidate = [
+            `admission_fields:${studentId}:guest`, // Always invalidate guest cache
+        ];
+
+        // If userId is provided, also invalidate authenticated user's cache
+        if (userId) {
+            keysToInvalidate.push(`admission_fields:${studentId}:${userId}`);
+        }
+
+        // Delete all relevant cache keys
+        for (const key of keysToInvalidate) {
+            try {
+                const deleted = await this.redisClient.del(key);
+                if (deleted > 0) {
+                    this.logger.info(`Invalidated cache key: ${key}`);
+                }
+            } catch (error) {
+                this.logger.error("Failed to invalidate cache key", {
+                    error,
+                    key,
+                    studentId,
+                });
+                // Don't throw - cache invalidation failure shouldn't break the flow
+            }
         }
     }
 
@@ -290,6 +325,8 @@ export class PredictionModelEventListenerService {
                     );
                 },
             );
+
+            await this.invalidateAdmissionCache(studentId, userId);
 
             this.logger.info("Updated prediction result", {
                 l1ResultsCount: l1PredictionResults.length,
