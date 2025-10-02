@@ -46,9 +46,10 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
             await pipeline.exec();
 
-            this.logger.info(
-                `Token blacklisted and removed from family: ${tokenId}`,
-            );
+            this.logger.info("Token blacklisted and removed from family", {
+                familyId: jwtEntity.familyId,
+                id: jwtEntity.id,
+            });
             return true;
         } catch (error: unknown) {
             this.logger.error(`Error blacklisting token ${tokenId}:`, {
