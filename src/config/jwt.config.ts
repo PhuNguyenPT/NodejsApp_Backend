@@ -3,7 +3,7 @@ import { Algorithm, SignOptions, VerifyOptions } from "jsonwebtoken";
 import { AuthenticateOptions } from "passport";
 import { ExtractJwt, StrategyOptionsWithRequest } from "passport-jwt";
 
-import { keyStore } from "@/util/key.js";
+import { keyStore } from "@/config/key.config.js";
 import { config } from "@/util/validate-env.js";
 
 // Access Token Configuration (shorter lifespan for security)

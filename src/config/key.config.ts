@@ -13,6 +13,7 @@ export const keyStore: IKeyStore = createKeyStore(
     path.resolve(config.PRIVATE_KEY_PATH),
     path.resolve(config.PUBLIC_KEY_PATH),
 );
+
 function createKeyStore(
     privateKeyPath: string,
     publicKeyPath: string,

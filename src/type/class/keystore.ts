@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 
-import { keyStore } from "@/util/key.js";
+import { keyStore } from "@/config/key.config.js";
 
 @injectable()
 export class KeyStore {
