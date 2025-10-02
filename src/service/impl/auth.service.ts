@@ -148,70 +148,83 @@ export class AuthService implements IAuthService {
         try {
             const tokensToBlacklist: string[] = [];
 
-            // Validate access token if provided
-            if (accessToken) {
-                const accessJwtEntity =
-                    await this.jwtTokenRepository.findByToken(accessToken);
-                if (!accessJwtEntity) {
-                    this.logger.warn("Access token not found during logout");
-                } else {
-                    if (accessJwtEntity.isBlacklisted) {
-                        this.logger.debug("Access token already blacklisted");
-                    } else {
-                        // Validate token type
-                        this.validateTokenType(
-                            TokenType.ACCESS,
-                            accessJwtEntity.type,
-                        );
-                        tokensToBlacklist.push(accessToken);
-                    }
-                }
+            // 1. Find the access token entity first, as it's the source of truth for the familyId
+            const accessJwtEntity =
+                await this.jwtTokenRepository.findByToken(accessToken);
+
+            if (!accessJwtEntity) {
+                this.logger.warn(
+                    "Access token not found during logout, cannot proceed with blacklisting.",
+                );
+                // We can't validate the refresh token without the access token's family, so we exit.
+                return {
+                    message: "Logout failed: invalid access token",
+                    success: false,
+                };
             }
 
-            // Validate refresh token if provided
+            // 2. Add the access token to the blacklist if it's valid
+            if (!accessJwtEntity.isBlacklisted) {
+                this.validateTokenType(TokenType.ACCESS, accessJwtEntity.type);
+                tokensToBlacklist.push(accessToken);
+            }
+
+            // 3. Process the refresh token ONLY if it was provided
             if (refreshToken) {
                 const refreshJwtEntity =
                     await this.jwtTokenRepository.findByToken(refreshToken);
+
                 if (!refreshJwtEntity) {
-                    this.logger.warn("Refresh token not found during logout");
+                    this.logger.warn(
+                        "Refresh token provided for logout not found in repository. Skipping.",
+                    );
                 } else {
-                    if (refreshJwtEntity.isBlacklisted) {
-                        this.logger.debug("Refresh token already blacklisted");
+                    // Enforce that the refresh token belongs to the same family
+                    if (
+                        refreshJwtEntity.familyId === accessJwtEntity.familyId
+                    ) {
+                        if (!refreshJwtEntity.isBlacklisted) {
+                            this.validateTokenType(
+                                TokenType.REFRESH,
+                                refreshJwtEntity.type,
+                            );
+                            tokensToBlacklist.push(refreshToken);
+                        }
                     } else {
-                        // Validate token type
-                        this.validateTokenType(
-                            TokenType.REFRESH,
-                            refreshJwtEntity.type,
+                        // Log a warning if family IDs do not match and skip blacklisting
+                        this.logger.warn(
+                            "Logout attempt with mismatching token family IDs. Ignoring refresh token.",
+                            {
+                                accessTokenFamily: accessJwtEntity.familyId,
+                                refreshTokenFamily: refreshJwtEntity.familyId,
+                            },
                         );
-                        tokensToBlacklist.push(refreshToken);
                     }
                 }
             }
 
             if (tokensToBlacklist.length === 0) {
                 this.logger.info(
-                    "No tokens to blacklist during logout (all may be expired/blacklisted)",
+                    "No new tokens to blacklist during logout (may already be blacklisted or expired)",
                 );
                 return {
-                    message: "Logout successful - no active tokens found",
+                    message:
+                        "Logout successful - no active tokens to blacklist",
                     success: true,
                 };
             }
 
-            // Blacklist all tokens in parallel
+            // 4. Blacklist all validated tokens in parallel
             const blacklistPromises = tokensToBlacklist.map((token) =>
                 this.jwtTokenRepository.blacklistTokenByValue(token),
             );
 
             const results = await Promise.allSettled(blacklistPromises);
-
             const successCount = results.filter(
                 (result) => result.status === "fulfilled" && result.value,
             ).length;
 
-            const failedCount = results.length - successCount;
-
-            if (failedCount > 0) {
+            if (results.length > successCount) {
                 this.logger.warn(
                     `Logout partial success: ${successCount.toString()}/${results.length.toString()} tokens blacklisted`,
                 );
@@ -236,10 +249,10 @@ export class AuthService implements IAuthService {
                 hasRefreshToken: !!refreshToken,
             });
 
-            return {
-                message: "Logout completed (some tokens may remain active)",
-                success: true,
-            };
+            throw new HttpException(
+                500,
+                "An internal error occurred during logout.",
+            );
         }
     }
 
