@@ -52,15 +52,10 @@ export class PredictionModelEventListenerService {
             const payload = parsed.data;
             const { studentId, userId } = payload;
 
-            // Execute everything in a transaction for consistency
-            await this.dataSource.transaction(
-                async (manager: EntityManager) => {
-                    await this.processStudentPredictionInTransaction(
-                        manager,
-                        studentId,
-                        userId,
-                    );
-                },
+            await this.processStudentPredictionInTransaction(
+                this.dataSource.manager,
+                studentId,
+                userId,
             );
         } catch (error) {
             this.logger.error("Error handling 'student created' event.", {
@@ -206,6 +201,7 @@ export class PredictionModelEventListenerService {
         }
 
         // Step 1: Create initial PredictionResultEntity with PROCESSING status
+        // Do this OUTSIDE the main transaction to release locks quickly
         const predictionResultEntity = manager.create(PredictionResultEntity, {
             createdBy: userEntity?.email ?? Role.ANONYMOUS,
             l1PredictResults: [],
@@ -226,8 +222,8 @@ export class PredictionModelEventListenerService {
         });
 
         try {
-            // Step 2: Get prediction results concurrently with individual error handling
-            // Use the lazy getter here instead of the injected service
+            // Step 2: Get prediction results concurrently
+            // This happens OUTSIDE any transaction - no locks held during slow API calls
             const [l2Result, l1Result] = await Promise.allSettled([
                 this.predictionModelService.getL2PredictResults(
                     studentId,
@@ -258,30 +254,41 @@ export class PredictionModelEventListenerService {
                 });
             }
 
-            // Step 3: Update with results first (even if some are empty due to failures)
-            savedPredictionResult.l1PredictResults = l1PredictionResults;
-            savedPredictionResult.l2PredictResults = l2PredictionResults;
+            // Step 3: NOW wrap only the database writes in a transaction
+            // This minimizes lock duration to just a few milliseconds
+            await this.dataSource.transaction(
+                async (txManager: EntityManager) => {
+                    // Update prediction results
+                    savedPredictionResult.l1PredictResults =
+                        l1PredictionResults;
+                    savedPredictionResult.l2PredictResults =
+                        l2PredictionResults;
 
-            // Decide status based on results
-            const hasL1Results = l1PredictionResults.length > 0;
-            const hasL2Results = l2PredictionResults.length > 0;
+                    // Decide status based on results
+                    const hasL1Results = l1PredictionResults.length > 0;
+                    const hasL2Results = l2PredictionResults.length > 0;
 
-            if (hasL1Results && hasL2Results) {
-                savedPredictionResult.status = PredictionResultStatus.COMPLETED;
-            } else if (hasL1Results || hasL2Results) {
-                savedPredictionResult.status = PredictionResultStatus.PARTIAL;
-            } else {
-                savedPredictionResult.status = PredictionResultStatus.FAILED;
-            }
+                    if (hasL1Results && hasL2Results) {
+                        savedPredictionResult.status =
+                            PredictionResultStatus.COMPLETED;
+                    } else if (hasL1Results || hasL2Results) {
+                        savedPredictionResult.status =
+                            PredictionResultStatus.PARTIAL;
+                    } else {
+                        savedPredictionResult.status =
+                            PredictionResultStatus.FAILED;
+                    }
 
-            await manager.save(savedPredictionResult);
+                    await txManager.save(savedPredictionResult);
 
-            // Step 4: Process admissions from predictions after saving results
-            await this.processAdmissionsFromPredictions(
-                manager,
-                studentId,
-                l1PredictionResults,
-                l2PredictionResults,
+                    // Process admissions within the same transaction for consistency
+                    await this.processAdmissionsFromPredictions(
+                        txManager,
+                        studentId,
+                        l1PredictionResults,
+                        l2PredictionResults,
+                    );
+                },
             );
 
             this.logger.info("Updated prediction result", {
@@ -292,9 +299,15 @@ export class PredictionModelEventListenerService {
                 studentId,
             });
         } catch (error) {
-            // Update status to failed before re-throwing (transaction will rollback)
-            savedPredictionResult.status = PredictionResultStatus.FAILED;
-            await manager.save(savedPredictionResult);
+            // Update status to failed
+            // Use a separate transaction for error handling
+            await this.dataSource.transaction(
+                async (txManager: EntityManager) => {
+                    savedPredictionResult.status =
+                        PredictionResultStatus.FAILED;
+                    await txManager.save(savedPredictionResult);
+                },
+            );
 
             this.logger.error("Unexpected error in prediction handling", {
                 error,
@@ -302,7 +315,7 @@ export class PredictionModelEventListenerService {
                 studentId,
             });
 
-            // Re-throw to trigger transaction rollback
+            // Re-throw to trigger proper error handling
             throw error;
         }
     }
