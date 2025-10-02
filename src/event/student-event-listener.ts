@@ -16,6 +16,7 @@ import { UserEntity } from "@/entity/user.entity.js";
 import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
+import { CacheKeys } from "@/util/cache-key.js";
 
 const StudentCreatedEventSchema = z.object({
     studentId: z.string().uuid("Invalid student ID format"),
@@ -72,22 +73,19 @@ export class StudentEventListener {
         studentId: string,
         userId?: string,
     ): Promise<void> {
-        // Build cache keys to invalidate
-        const keysToInvalidate = [
-            `admission_fields:${studentId}:guest`, // Always invalidate guest cache
-        ];
+        const keysToInvalidate = CacheKeys.allAdmissionFieldsKeys(
+            studentId,
+            userId,
+        );
 
-        // If userId is provided, also invalidate authenticated user's cache
-        if (userId) {
-            keysToInvalidate.push(`admission_fields:${studentId}:${userId}`);
-        }
-
-        // Delete all relevant cache keys
         for (const key of keysToInvalidate) {
             try {
                 const deleted = await this.redisClient.del(key);
                 if (deleted > 0) {
-                    this.logger.info(`Invalidated cache key: ${key}`);
+                    this.logger.info("Invalidated cache key", {
+                        key,
+                        studentId,
+                    });
                 }
             } catch (error) {
                 this.logger.error("Failed to invalidate cache key", {
@@ -95,7 +93,6 @@ export class StudentEventListener {
                     key,
                     studentId,
                 });
-                // Don't throw - cache invalidation failure shouldn't break the flow
             }
         }
     }
@@ -228,7 +225,7 @@ export class StudentEventListener {
         if (userId) {
             userEntity = await manager.findOne(UserEntity, {
                 cache: {
-                    id: `user_cache_${userId}`,
+                    id: CacheKeys.user(userId),
                     milliseconds: JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
                 },
                 where: { id: userId },

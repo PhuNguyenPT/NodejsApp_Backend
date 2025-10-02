@@ -4,6 +4,9 @@ export interface Config {
     ADMIN_NAME: string;
     ADMIN_PASSWORD: string;
 
+    // Cache TTL Configuration
+    CACHE_TTL_ADMISSION_FIELDS: number;
+
     // CORS Configuration
     CORS_CREDENTIALS: boolean;
     CORS_ORIGIN: string[];

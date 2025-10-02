@@ -1,16 +1,22 @@
-import { Request } from "express";
 // passport.config.ts
+
+import { Request } from "express";
 import { inject, injectable } from "inversify";
 import passport from "passport";
 import { Strategy as JwtStrategy } from "passport-jwt";
+import { Repository } from "typeorm";
 import { Logger } from "winston";
 
-import { strategyOptionsWithRequest } from "@/config/jwt.config.js";
+import {
+    JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
+    strategyOptionsWithRequest,
+} from "@/config/jwt.config.js";
 import { TokenType } from "@/entity/jwt.entity.js";
+import { UserEntity } from "@/entity/user.entity.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
-import { IUserRepository } from "@/repository/user-repository-interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
+import { CacheKeys } from "@/util/cache-key.js";
 import { config } from "@/util/validate-env.js";
 
 @injectable()
@@ -18,8 +24,8 @@ export class PassportConfig {
     private isInitialized = false;
 
     constructor(
-        @inject(TYPES.IUserRepository)
-        private userRepository: IUserRepository,
+        @inject(TYPES.UserRepository)
+        private userRepository: Repository<UserEntity>,
         @inject(TYPES.IJwtTokenRepository)
         private readonly jwtTokenRepository: IJwtTokenRepository,
         @inject(TYPES.Logger)
@@ -200,9 +206,7 @@ export class PassportConfig {
                             }
 
                             // Find user in database
-                            const user = await this.userRepository.findById(
-                                payload.id,
-                            );
+                            const user = await this.findUserById(payload.id);
                             if (!user) {
                                 this.logger.warn(
                                     `User not found for ID: ${payload.id}`,
@@ -328,7 +332,7 @@ export class PassportConfig {
         passport.deserializeUser((id: string, done) => {
             void (async () => {
                 try {
-                    const user = await this.userRepository.findById(id);
+                    const user = await this.findUserById(id);
 
                     if (!user) {
                         this.logger.warn(
@@ -369,6 +373,16 @@ export class PassportConfig {
         });
 
         this.isInitialized = true;
+    }
+
+    private async findUserById(userId: string): Promise<null | UserEntity> {
+        return await this.userRepository.findOne({
+            cache: {
+                id: CacheKeys.user(userId),
+                milliseconds: JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
+            },
+            where: { id: userId },
+        });
     }
 
     /**

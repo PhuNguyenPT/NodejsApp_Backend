@@ -21,6 +21,8 @@ import { PageRequest } from "@/type/pagination/page-request.js";
 import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
 import { Order, Sort } from "@/type/pagination/sort.js";
+import { CacheKeys } from "@/util/cache-key.js";
+import { config } from "@/util/validate-env.js";
 
 export interface AdmissionQueryOptions {
     searchQuery?: AdmissionSearchQuery;
@@ -84,7 +86,7 @@ export class AdmissionService implements IAdmissionService {
         studentId: string,
         userId?: string,
     ): Promise<Record<AdmissionField, (number | string)[]>> {
-        const cacheKey = `admission_fields:${studentId}:${userId ?? "guest"}`;
+        const cacheKey = CacheKeys.admissionFields(studentId, userId);
 
         try {
             const cachedResult = await this.redisClient.get(cacheKey);
@@ -103,6 +105,21 @@ export class AdmissionService implements IAdmissionService {
         const query = this.buildBaseStudentAdmissionQuery(studentId, userId);
 
         const studentAdmissions = await query.getMany();
+
+        // Don't cache if there are no admissions
+        if (studentAdmissions.length === 0) {
+            this.logger.info("No admissions found, skipping cache", {
+                studentId,
+            });
+
+            const emptyResult: Partial<
+                Record<AdmissionField, (number | string)[]>
+            > = {};
+            ALLOWED_ADMISSION_FIELDS.forEach((field) => {
+                emptyResult[field] = [];
+            });
+            return emptyResult as Record<AdmissionField, (number | string)[]>;
+        }
 
         // Extract admission entities and then get distinct values
         const admissionEntities = studentAdmissions.map((sa) => sa.admission);
@@ -133,7 +150,7 @@ export class AdmissionService implements IAdmissionService {
         try {
             await this.redisClient.setEx(
                 cacheKey,
-                1800,
+                config.CACHE_TTL_ADMISSION_FIELDS,
                 JSON.stringify(finalResult),
             );
         } catch (error: unknown) {
