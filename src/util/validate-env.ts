@@ -13,6 +13,9 @@ export const config: Config = cleanEnv(process.env, {
     ADMIN_NAME: str(),
     ADMIN_PASSWORD: str(),
 
+    // Cache TTL Configuration (in seconds)
+    CACHE_TTL_ADMISSION_FIELDS: num({ default: 1800 }), // 30 minutes
+
     // CORS Configuration
     CORS_CREDENTIALS: bool({ default: true }), // Use bool validator
     CORS_ORIGIN: commaSeparatedString({ default: ["http://localhost:3000"] }),
@@ -30,7 +33,8 @@ export const config: Config = cleanEnv(process.env, {
     JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS: num({
         default: 3600, // 1 hour
     }),
-
+    JWT_AUDIENCE: str({ default: "aud" }),
+    JWT_ISSUER: str({ default: "iss" }),
     JWT_REFRESH_TOKEN_EXPIRATION_IN_SECONDS: num({
         default: 604800, // 7 days
     }),

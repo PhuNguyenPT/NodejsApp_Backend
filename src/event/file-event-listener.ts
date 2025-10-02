@@ -10,8 +10,8 @@ import {
 import { FileEntity } from "@/entity/file.entity.js";
 import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
-import { MistralService } from "@/service/impl/mistral.service.js";
-import { OcrResultService } from "@/service/impl/ocr-result.service.js";
+import { IMistralService } from "@/service/mistral-service.interface.js";
+import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
@@ -42,12 +42,12 @@ const OcrEventSchema = z.union([
 ]);
 
 @injectable()
-export class OcrEventListenerService {
+export class FileEventListener {
     constructor(
         @inject(TYPES.IMistralService)
-        private readonly mistralService: MistralService,
+        private readonly mistralService: IMistralService,
         @inject(TYPES.IOcrResultService)
-        private readonly ocrResultService: OcrResultService,
+        private readonly ocrResultService: IOcrResultService,
         @inject(TYPES.FileRepository)
         private readonly fileRepository: Repository<FileEntity>,
         @inject(TYPES.StudentRepository)

@@ -4,6 +4,9 @@ export interface Config {
     ADMIN_NAME: string;
     ADMIN_PASSWORD: string;
 
+    // Cache TTL Configuration
+    CACHE_TTL_ADMISSION_FIELDS: number;
+
     // CORS Configuration
     CORS_CREDENTIALS: boolean;
     CORS_ORIGIN: string[];
@@ -19,7 +22,8 @@ export interface Config {
     ENABLE_FILE_LOGGING: boolean;
     // JWT Configuration
     JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS: number;
-
+    JWT_AUDIENCE: string;
+    JWT_ISSUER: string;
     JWT_REFRESH_TOKEN_EXPIRATION_IN_SECONDS: number;
 
     LOG_DIR: string;

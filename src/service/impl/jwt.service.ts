@@ -3,18 +3,18 @@ import { inject, injectable } from "inversify";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Logger } from "winston";
 
+import {
+    JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
+    refreshSignOptions,
+    signOptions,
+    verifyOptions,
+} from "@/config/jwt.config.js";
 import { JwtEntity, TokenType } from "@/entity/jwt.entity.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
 import { IJwtService } from "@/service/jwt-service.interface.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import { TYPES } from "@/type/container/types.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
-import {
-    JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
-    refreshSignOptions,
-    signOptions,
-    verifyOptions,
-} from "@/util/jwt-options.js";
 
 @injectable()
 export class JwtService implements IJwtService {

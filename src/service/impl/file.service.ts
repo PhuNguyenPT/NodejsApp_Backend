@@ -7,10 +7,10 @@ import { UpdateFileRequest } from "@/dto/file/update-file.js";
 import { FileEntity, FileStatus } from "@/entity/file.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import {
+    FileEventListener,
     FilesCreatedEvent,
-    OcrEventListenerService,
     SingleFileCreatedEvent,
-} from "@/event/orc-event-listener.service.js";
+} from "@/event/file-event-listener.js";
 import { IFileService } from "@/service/file-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
@@ -25,8 +25,8 @@ export class FileService implements IFileService {
         private readonly fileRepository: Repository<FileEntity>,
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
-        @inject(TYPES.OcrEventListenerService)
-        private readonly ocrEventListenerService: OcrEventListenerService,
+        @inject(TYPES.FileEventListener)
+        private readonly fileEventListener: FileEventListener,
     ) {}
 
     /**
@@ -242,7 +242,7 @@ export class FileService implements IFileService {
     }
 
     private _publishFileCreatedEvent(event: SingleFileCreatedEvent): void {
-        this.ocrEventListenerService
+        this.fileEventListener
             .handleFileCreatedEvent(event)
             .catch((error: unknown) => {
                 this.logger.error(
@@ -260,7 +260,7 @@ export class FileService implements IFileService {
     }
 
     private _publishFilesCreatedEvent(event: FilesCreatedEvent): void {
-        this.ocrEventListenerService
+        this.fileEventListener
             .handleFileCreatedEvent(event)
             .catch((error: unknown) => {
                 this.logger.error(

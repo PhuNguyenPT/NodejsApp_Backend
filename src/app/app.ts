@@ -14,6 +14,7 @@ import {
     postgresDataSource,
 } from "@/config/data-source.config.js";
 import { helmetOptions } from "@/config/helmet.config.js";
+import { keyStore } from "@/config/key.config.js";
 import { logger } from "@/config/logger.config.js";
 import {
     getMorganConfig,
@@ -28,7 +29,6 @@ import ErrorMiddleware from "@/middleware/error-middleware.js";
 import { PredictionServiceClient } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
 import { Config } from "@/type/interface/config.js";
-import { keyStore } from "@/util/key.js";
 class App {
     public readonly basePath: string;
     public readonly express: Express;

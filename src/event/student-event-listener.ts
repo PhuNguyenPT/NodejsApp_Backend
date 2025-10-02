@@ -1,8 +1,10 @@
 import { inject, injectable } from "inversify";
+import { RedisClientType } from "redis";
 import { DataSource, EntityManager, In } from "typeorm";
 import { Logger } from "winston";
 import z from "zod";
 
+import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config.js";
 import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
 import { AdmissionEntity } from "@/entity/admission.entity.js";
 import {
@@ -12,13 +14,9 @@ import {
 import { StudentAdmissionEntity } from "@/entity/student-admission.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
-// REMOVE THIS IMPORT - This is causing the circular dependency
-// import { PredictionModelService } from "@/service/prediction-model.service.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
-import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/util/jwt-options.js";
-
-export const PREDICTION_CHANNEL = "prediction:student_created";
+import { CacheKeys } from "@/util/cache-key.js";
 
 const StudentCreatedEventSchema = z.object({
     studentId: z.string().uuid("Invalid student ID format"),
@@ -28,12 +26,14 @@ const StudentCreatedEventSchema = z.object({
 export type StudentCreatedEvent = z.infer<typeof StudentCreatedEventSchema>;
 
 @injectable()
-export class PredictionModelEventListenerService {
+export class StudentEventListener {
     constructor(
         @inject(TYPES.Logger) private readonly logger: Logger,
         @inject(TYPES.DataSource) private readonly dataSource: DataSource,
         @inject(TYPES.IPredictionModelService)
         private readonly predictionModelService: IPredictionModelService,
+        @inject(TYPES.RedisPublisher)
+        private readonly redisClient: RedisClientType,
     ) {}
 
     public async handleStudentCreatedEvent(
@@ -52,21 +52,48 @@ export class PredictionModelEventListenerService {
             const payload = parsed.data;
             const { studentId, userId } = payload;
 
-            // Execute everything in a transaction for consistency
-            await this.dataSource.transaction(
-                async (manager: EntityManager) => {
-                    await this.processStudentPredictionInTransaction(
-                        manager,
-                        studentId,
-                        userId,
-                    );
-                },
+            await this.processStudentPredictionInTransaction(
+                this.dataSource.manager,
+                studentId,
+                userId,
             );
         } catch (error) {
             this.logger.error("Error handling 'student created' event.", {
                 error,
                 event,
             });
+        }
+    }
+
+    /**
+     * Invalidates admission field cache for a student
+     * Called after linking new admissions to ensure fresh data
+     */
+    private async invalidateAdmissionCache(
+        studentId: string,
+        userId?: string,
+    ): Promise<void> {
+        const keysToInvalidate = CacheKeys.allAdmissionFieldsKeys(
+            studentId,
+            userId,
+        );
+
+        for (const key of keysToInvalidate) {
+            try {
+                const deleted = await this.redisClient.del(key);
+                if (deleted > 0) {
+                    this.logger.info("Invalidated cache key", {
+                        key,
+                        studentId,
+                    });
+                }
+            } catch (error) {
+                this.logger.error("Failed to invalidate cache key", {
+                    error,
+                    key,
+                    studentId,
+                });
+            }
         }
     }
 
@@ -198,7 +225,7 @@ export class PredictionModelEventListenerService {
         if (userId) {
             userEntity = await manager.findOne(UserEntity, {
                 cache: {
-                    id: `user_cache_${userId}`,
+                    id: CacheKeys.user(userId),
                     milliseconds: JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
                 },
                 where: { id: userId },
@@ -206,6 +233,7 @@ export class PredictionModelEventListenerService {
         }
 
         // Step 1: Create initial PredictionResultEntity with PROCESSING status
+        // Do this OUTSIDE the main transaction to release locks quickly
         const predictionResultEntity = manager.create(PredictionResultEntity, {
             createdBy: userEntity?.email ?? Role.ANONYMOUS,
             l1PredictResults: [],
@@ -226,8 +254,8 @@ export class PredictionModelEventListenerService {
         });
 
         try {
-            // Step 2: Get prediction results concurrently with individual error handling
-            // Use the lazy getter here instead of the injected service
+            // Step 2: Get prediction results concurrently
+            // This happens OUTSIDE any transaction - no locks held during slow API calls
             const [l2Result, l1Result] = await Promise.allSettled([
                 this.predictionModelService.getL2PredictResults(
                     studentId,
@@ -258,31 +286,44 @@ export class PredictionModelEventListenerService {
                 });
             }
 
-            // Step 3: Update with results first (even if some are empty due to failures)
-            savedPredictionResult.l1PredictResults = l1PredictionResults;
-            savedPredictionResult.l2PredictResults = l2PredictionResults;
+            // Step 3: NOW wrap only the database writes in a transaction
+            // This minimizes lock duration to just a few milliseconds
+            await this.dataSource.transaction(
+                async (txManager: EntityManager) => {
+                    // Update prediction results
+                    savedPredictionResult.l1PredictResults =
+                        l1PredictionResults;
+                    savedPredictionResult.l2PredictResults =
+                        l2PredictionResults;
 
-            // Decide status based on results
-            const hasL1Results = l1PredictionResults.length > 0;
-            const hasL2Results = l2PredictionResults.length > 0;
+                    // Decide status based on results
+                    const hasL1Results = l1PredictionResults.length > 0;
+                    const hasL2Results = l2PredictionResults.length > 0;
 
-            if (hasL1Results && hasL2Results) {
-                savedPredictionResult.status = PredictionResultStatus.COMPLETED;
-            } else if (hasL1Results || hasL2Results) {
-                savedPredictionResult.status = PredictionResultStatus.PARTIAL;
-            } else {
-                savedPredictionResult.status = PredictionResultStatus.FAILED;
-            }
+                    if (hasL1Results && hasL2Results) {
+                        savedPredictionResult.status =
+                            PredictionResultStatus.COMPLETED;
+                    } else if (hasL1Results || hasL2Results) {
+                        savedPredictionResult.status =
+                            PredictionResultStatus.PARTIAL;
+                    } else {
+                        savedPredictionResult.status =
+                            PredictionResultStatus.FAILED;
+                    }
 
-            await manager.save(savedPredictionResult);
+                    await txManager.save(savedPredictionResult);
 
-            // Step 4: Process admissions from predictions after saving results
-            await this.processAdmissionsFromPredictions(
-                manager,
-                studentId,
-                l1PredictionResults,
-                l2PredictionResults,
+                    // Process admissions within the same transaction for consistency
+                    await this.processAdmissionsFromPredictions(
+                        txManager,
+                        studentId,
+                        l1PredictionResults,
+                        l2PredictionResults,
+                    );
+                },
             );
+
+            await this.invalidateAdmissionCache(studentId, userId);
 
             this.logger.info("Updated prediction result", {
                 l1ResultsCount: l1PredictionResults.length,
@@ -292,9 +333,15 @@ export class PredictionModelEventListenerService {
                 studentId,
             });
         } catch (error) {
-            // Update status to failed before re-throwing (transaction will rollback)
-            savedPredictionResult.status = PredictionResultStatus.FAILED;
-            await manager.save(savedPredictionResult);
+            // Update status to failed
+            // Use a separate transaction for error handling
+            await this.dataSource.transaction(
+                async (txManager: EntityManager) => {
+                    savedPredictionResult.status =
+                        PredictionResultStatus.FAILED;
+                    await txManager.save(savedPredictionResult);
+                },
+            );
 
             this.logger.error("Unexpected error in prediction handling", {
                 error,
@@ -302,7 +349,7 @@ export class PredictionModelEventListenerService {
                 studentId,
             });
 
-            // Re-throw to trigger transaction rollback
+            // Re-throw to trigger proper error handling
             throw error;
         }
     }

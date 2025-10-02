@@ -30,8 +30,8 @@ import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
 import { PredictionResultEntity } from "@/entity/prediction-result.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
-import { OcrEventListenerService } from "@/event/orc-event-listener.service.js";
-import { PredictionModelEventListenerService } from "@/event/prediction-model-event-listener.service.js";
+import { FileEventListener } from "@/event/file-event-listener.js";
+import { StudentEventListener } from "@/event/student-event-listener.js";
 import { TokenCleanupJob } from "@/job/token-cleanup-job.js";
 import { JwtTokenRepository } from "@/repository/impl/jwt-repository.js";
 import { UserRepository } from "@/repository/impl/user-repository.js";
@@ -214,14 +214,12 @@ iocContainer
 
 // --- Event Listener Bindings ---
 iocContainer
-    .bind<OcrEventListenerService>(TYPES.OcrEventListenerService)
-    .to(OcrEventListenerService)
+    .bind<FileEventListener>(TYPES.FileEventListener)
+    .to(FileEventListener)
     .inSingletonScope();
 iocContainer
-    .bind<PredictionModelEventListenerService>(
-        TYPES.PredictionModelEventListenerService,
-    )
-    .to(PredictionModelEventListenerService)
+    .bind<StudentEventListener>(TYPES.StudentEventListener)
+    .to(StudentEventListener)
     .inSingletonScope();
 
 // ############## --- Job Bindings --- ##############

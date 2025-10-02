@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { Repository } from "typeorm";
 import { Logger } from "winston";
 
+import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/config/jwt.config.js";
 import { LoginRequest, RegisterRequest } from "@/dto/auth/auth-request.js";
 import { AuthResponse } from "@/dto/auth/auth-response.js";
 import { User } from "@/dto/user/user.js";
@@ -29,7 +30,6 @@ import { EntityNotFoundException } from "@/type/exception/entity-not-found.excep
 import { HttpException } from "@/type/exception/http.exception.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
-import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/util/jwt-options.js";
 
 @injectable()
 export class AuthService implements IAuthService {

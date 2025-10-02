@@ -6,9 +6,9 @@ import { StudentRequest } from "@/dto/student/student-request.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
 import {
-    PredictionModelEventListenerService,
     StudentCreatedEvent,
-} from "@/event/prediction-model-event-listener.service.js";
+    StudentEventListener,
+} from "@/event/student-event-listener.js";
 import { IAwardService } from "@/service/award-service.interface.js";
 import { ICertificationService } from "@/service/certification-service.interface.js";
 import { IMajorService } from "@/service/major-service.interface.js";
@@ -33,8 +33,8 @@ export class StudentService implements IStudentService {
         private readonly awardService: IAwardService,
         @inject(TYPES.ICertificationService)
         private readonly certificationService: ICertificationService,
-        @inject(TYPES.PredictionModelEventListenerService)
-        private readonly predictionModelEventListenerService: PredictionModelEventListenerService,
+        @inject(TYPES.StudentEventListener)
+        private readonly studentEventListener: StudentEventListener,
         @inject(TYPES.IMajorService)
         private readonly majorService: IMajorService,
         @inject(TYPES.Logger)
@@ -264,7 +264,7 @@ export class StudentService implements IStudentService {
         const studentCreatedEvent: StudentCreatedEvent = { studentId, userId };
 
         // Fire-and-forget: don't await, let it run in background
-        this.predictionModelEventListenerService
+        this.studentEventListener
             .handleStudentCreatedEvent(studentCreatedEvent)
             .catch((error: unknown) => {
                 this.logger.error(
