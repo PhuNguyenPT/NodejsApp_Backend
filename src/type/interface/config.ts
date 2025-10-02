@@ -22,7 +22,8 @@ export interface Config {
     ENABLE_FILE_LOGGING: boolean;
     // JWT Configuration
     JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS: number;
-
+    JWT_AUDIENCE: string;
+    JWT_ISSUER: string;
     JWT_REFRESH_TOKEN_EXPIRATION_IN_SECONDS: number;
 
     LOG_DIR: string;
