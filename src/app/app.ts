@@ -54,6 +54,10 @@ class App {
     }
 
     public getServerUrl(): string {
+        // Use relative path for Swagger when hostname is 0.0.0.0 or localhost
+        if (this.hostname === "0.0.0.0" || this.hostname === "localhost") {
+            return `http://localhost:${this.port.toString()}${this.basePath}`;
+        }
         return `http://${this.hostname}:${this.port.toString()}${this.basePath}`;
     }
 
