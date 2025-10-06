@@ -1,4 +1,4 @@
-// src/config/data.source.ts
+// src/config/data.source.config.ts
 import { DataSource } from "typeorm";
 
 import { redisConfig } from "@/config/redis.config.js";
@@ -21,7 +21,7 @@ export const postgresDataSource = new DataSource({
     },
     database: config.POSTGRES_DB,
     entities: [
-        config.NODE_ENV === "development" || config.NODE_ENV === "staging"
+        config.NODE_ENV === "development"
             ? "src/entity/**/*.ts"
             : "dist/entity/**/*.js",
     ],
@@ -35,7 +35,7 @@ export const postgresDataSource = new DataSource({
     logging: config.DB_LOGGING,
     maxQueryExecutionTime: 5000,
     migrations: [
-        config.NODE_ENV === "development" || config.NODE_ENV === "staging"
+        config.NODE_ENV === "development"
             ? "src/migration/**/*.ts"
             : "dist/migration/**/*.js",
     ],
