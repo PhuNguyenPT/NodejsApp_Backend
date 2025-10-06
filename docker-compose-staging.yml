@@ -12,21 +12,21 @@ secrets:
     file: ./public.pem
 
 services:
-  app-prod:
+  app-staging:
     image: phunpt01/nodejs-backend:latest
-    container_name: app-prod
+    container_name: app-staging
     restart: always
     env_file:
-      - .env.prod
+      - .env.staging
     ports:
       - "${SERVER_HOSTNAME}:${SERVER_PORT}:${SERVER_PORT}"
     networks:
       - app-network # Internal network for DB/Redis
       - shared-network # External network for ML service
     depends_on:
-      postgres-prod:
+      postgres-staging:
         condition: service_healthy
-      redis-prod:
+      redis-staging:
         condition: service_healthy
     secrets:
       - private_key
@@ -43,9 +43,9 @@ services:
       retries: 3
       start_period: 60s
 
-  postgres-prod:
+  postgres-staging:
     image: ${POSTGRES_IMAGE}
-    container_name: postgres-prod
+    container_name: postgres-staging
     restart: always
     ports:
       - "${POSTGRES_PORT}:5432"
@@ -66,9 +66,9 @@ services:
       retries: 3
       start_period: 10s
 
-  redis-prod:
+  redis-staging:
     image: ${REDIS_IMAGE}
-    container_name: redis-prod
+    container_name: redis-staging
     restart: always
     ports:
       - "${REDIS_PORT}:6379"
