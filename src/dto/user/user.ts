@@ -1,7 +1,7 @@
 // src/dto/user/user.ts
 import { Exclude, Expose, Type } from "class-transformer";
 
-import { Permission, Role, UserStatus } from "@/type/enum/user.js";
+import { Permission, Role } from "@/type/enum/user.js";
 
 /**
  * Data Transfer Object for user response
@@ -42,10 +42,6 @@ export class User {
 
     @Expose()
     phoneNumbers?: string[];
-
-    @Expose()
-    @Type(() => String) // Ensure enum is properly serialized
-    status!: UserStatus;
 
     constructor(partial?: Partial<User>) {
         if (partial) {

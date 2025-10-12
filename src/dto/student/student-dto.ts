@@ -173,29 +173,6 @@ export class StudentInfoDTO {
     @ValidateNested({ each: true })
     conducts!: ConductDTO[];
 
-    // /**
-    //  * Geographic location or preferred study location of the student.
-    //  * Can include city, state, country, or specific address information.
-    //  * Used for matching with location-based opportunities or programs.
-    //  *
-    //  * @type {string}
-    //  * @required
-    //  * @minLength 1
-    //  * @maxLength 500
-    //  * @example "1 Lê Duẩn, Bến Nghé, Quận 1, Thành phố Hồ Chí Minh, Việt Nam"
-    //  * @example "Ho Chi Minh City, Vietnam"
-    //  * @example "Hanoi, Vietnam"
-    //  * @example "Da Nang, Vietnam"
-    //  * @example "Can Tho, Vietnam"
-    //  * @example "Nha Trang, Khanh Hoa, Vietnam"
-    //  */
-    // @Expose()
-    // @IsOptional()
-    // @IsString({ message: "Location must be a string" })
-    // @MaxLength(500, { message: "Location cannot exceed 500 characters" })
-    // @MinLength(1, { message: "Location must be at least 1 character long" })
-    // location?: string;
-
     /**
      * Student's major group classifications using standardized Vietnamese categories.
      * Array of major group values that the student is interested in pursuing.

@@ -1,10 +1,12 @@
 import {
     Column,
+    CreateDateColumn,
     Entity,
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
     Relation,
+    UpdateDateColumn,
 } from "typeorm";
 
 import { MajorGroupEntity } from "@/entity/major-group.entity.js";
@@ -17,6 +19,13 @@ import { MajorGroupEntity } from "@/entity/major-group.entity.js";
 export class MajorEntity {
     @Column({ length: 255, nullable: false, type: "varchar", unique: true })
     code!: string; // The full major code, e.g., "71401"
+
+    @CreateDateColumn({
+        insert: true,
+        type: "timestamp with time zone",
+        update: false,
+    })
+    createdAt!: Date;
 
     @JoinColumn({ name: "group_id" })
     @ManyToOne("MajorGroupEntity", "majors", {
@@ -33,6 +42,13 @@ export class MajorEntity {
 
     @Column({ nullable: false, type: "varchar" })
     name!: string; // The Vietnamese name of the major, e.g., "Khoa học giáo dục"
+
+    @UpdateDateColumn({
+        insert: false,
+        type: "timestamp with time zone",
+        update: true,
+    })
+    updatedAt!: Date;
 
     constructor(major?: Partial<MajorEntity>) {
         if (major) {

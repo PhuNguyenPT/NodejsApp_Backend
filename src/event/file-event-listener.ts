@@ -10,6 +10,7 @@ import {
 import { FileEntity } from "@/entity/file.entity.js";
 import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
+import { UserEntity } from "@/entity/user.entity.js";
 import { IMistralService } from "@/service/mistral-service.interface.js";
 import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
@@ -52,6 +53,8 @@ export class FileEventListener {
         private readonly fileRepository: Repository<FileEntity>,
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
+        @inject(TYPES.UserRepository)
+        private readonly userRepository: Repository<UserEntity>,
         @inject(TYPES.Logger) private readonly logger: Logger,
     ) {}
 
@@ -107,7 +110,6 @@ export class FileEventListener {
                 `Processing batch OCR for ${fileIds.length.toString()} files for student ${studentId}`,
             );
 
-            // 1. Fetch student with files in a single query
             const student: null | StudentEntity =
                 await this.studentRepository.findOne({
                     relations: ["files"],
@@ -120,12 +122,19 @@ export class FileEventListener {
                 );
             }
 
-            // Check access permissions
-            if (userId && student.userId !== userId) {
-                throw new AccessDeniedException("Access denied");
+            let createdBy: string = Role.ANONYMOUS;
+            if (userId) {
+                const userEntity: null | UserEntity =
+                    await this.userRepository.findOne({
+                        where: { id: userId },
+                    });
+
+                if (userEntity) {
+                    createdBy = userEntity.email;
+                }
             }
 
-            // 2. Filter files to only those requested in the payload
+            // Filter files to only those requested in the payload
             const filesToProcess: FileEntity[] =
                 student.files?.filter((file) => fileIds.includes(file.id)) ??
                 [];
@@ -141,7 +150,7 @@ export class FileEventListener {
             initialOcrResults =
                 await this.ocrResultService.createInitialOcrResults(
                     studentId,
-                    userId ?? Role.ANONYMOUS,
+                    createdBy,
                     filesToProcess,
                 );
 
@@ -229,10 +238,22 @@ export class FileEventListener {
                 );
             }
 
+            let createdBy: string = Role.ANONYMOUS;
+            if (payload.userId) {
+                const userEntity: null | UserEntity =
+                    await this.userRepository.findOne({
+                        where: { id: payload.userId },
+                    });
+
+                if (userEntity) {
+                    createdBy = userEntity.email;
+                }
+            }
+
             initialOcrResults =
                 await this.ocrResultService.createInitialOcrResults(
                     payload.studentId,
-                    payload.userId ?? Role.ANONYMOUS,
+                    createdBy,
                     [file],
                 );
 

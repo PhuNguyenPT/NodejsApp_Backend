@@ -180,7 +180,7 @@ export class FileService implements IFileService {
         );
 
         if (hasChanges && userId) {
-            file.modifiedBy = userId;
+            file.updatedBy = userId;
             const updatedFile: FileEntity =
                 await this.fileRepository.save(file);
             this.logger.info(

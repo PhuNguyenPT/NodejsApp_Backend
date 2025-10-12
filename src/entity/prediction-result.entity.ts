@@ -2,6 +2,7 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    Index,
     JoinColumn,
     OneToOne,
     PrimaryGeneratedColumn,
@@ -20,11 +21,21 @@ export enum PredictionResultStatus {
 }
 
 @Entity("prediction_results")
+@Index("idx_prediction_results_created_at", ["createdAt"])
+@Index("idx_prediction_results_created_by", ["createdBy"])
+@Index("idx_prediction_results_status", ["status"])
+@Index("idx_prediction_results_student_id", ["studentId"])
+@Index("idx_prediction_results_updated_at", ["updatedAt"])
+@Index("idx_prediction_results_updated_by", ["updatedBy"])
 export class PredictionResultEntity {
-    @CreateDateColumn({ type: "timestamp with time zone" })
+    @CreateDateColumn({
+        insert: true,
+        type: "timestamp with time zone",
+        update: false,
+    })
     createdAt!: Date;
 
-    @Column({ nullable: true, type: "varchar" })
+    @Column({ insert: true, nullable: true, type: "varchar", update: false })
     createdBy!: string;
 
     @PrimaryGeneratedColumn("uuid")
@@ -51,8 +62,15 @@ export class PredictionResultEntity {
     @Column({ type: "uuid" })
     studentId!: string;
 
-    @UpdateDateColumn({ type: "timestamp with time zone" })
+    @UpdateDateColumn({
+        insert: false,
+        type: "timestamp with time zone",
+        update: true,
+    })
     updatedAt!: Date;
+
+    @Column({ insert: false, nullable: true, type: "varchar", update: true })
+    updatedBy!: string;
 
     @Column({ nullable: true, type: "uuid" })
     userId?: string;

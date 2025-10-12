@@ -12,7 +12,6 @@ import {
 } from "typeorm";
 
 import { StudentEntity } from "@/entity/student.entity.js";
-import { ExamType } from "@/type/enum/exam.js";
 import {
     NationalExcellentExamType,
     NationalExcellentStudentExamSubject,
@@ -21,21 +20,11 @@ import { Rank } from "@/type/enum/rank.js";
 
 @Entity({ name: "awards" })
 @Index("idx_award_student_id", ["studentId"])
-@Index("idx_award_date", ["awardDate"])
 @Index("idx_award_category", ["category"])
 @Index("idx_award_level", ["level"])
 @Index("idx_award_created_at", ["createdAt"])
-@Index("idx_award_modified_at", ["modifiedAt"])
+@Index("idx_award_updated_at", ["updatedAt"])
 export class AwardEntity {
-    @Column({ nullable: true, type: "date" })
-    awardDate?: Date;
-
-    @Column({ length: 100, nullable: true, type: "varchar" })
-    awardId?: string;
-
-    @Column({ length: 200, nullable: true, type: "varchar" })
-    awardingOrganization?: string;
-
     @Column({
         enum: NationalExcellentStudentExamSubject,
         nullable: true,
@@ -43,7 +32,11 @@ export class AwardEntity {
     })
     category?: NationalExcellentStudentExamSubject;
 
-    @CreateDateColumn({ type: "timestamp with time zone" })
+    @CreateDateColumn({
+        insert: true,
+        type: "timestamp with time zone",
+        update: false,
+    })
     createdAt!: Date;
 
     @Column({
@@ -55,29 +48,11 @@ export class AwardEntity {
     })
     createdBy?: string;
 
-    @Column({ nullable: true, type: "text" })
-    description?: string;
-
-    @Column({ nullable: true, type: "jsonb" })
-    examType!: ExamType;
-
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
     @Column({ enum: Rank, nullable: true, type: "enum" })
     level?: Rank;
-
-    @UpdateDateColumn({ type: "timestamp with time zone" })
-    modifiedAt!: Date;
-
-    @Column({
-        insert: false,
-        length: 255,
-        nullable: true,
-        type: "varchar",
-        update: true,
-    })
-    modifiedBy?: string;
 
     @Column({ enum: NationalExcellentExamType, nullable: true, type: "enum" })
     name?: NationalExcellentExamType;
@@ -90,6 +65,22 @@ export class AwardEntity {
 
     @Column({ type: "uuid" })
     studentId!: string;
+
+    @UpdateDateColumn({
+        insert: false,
+        type: "timestamp with time zone",
+        update: true,
+    })
+    updatedAt!: Date;
+
+    @Column({
+        insert: false,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+        update: true,
+    })
+    updatedBy?: string;
 
     constructor(award?: Partial<AwardEntity>) {
         if (award) {

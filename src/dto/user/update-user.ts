@@ -9,7 +9,7 @@ import {
     Matches,
 } from "class-validator";
 
-import { Role, UserStatus } from "@/type/enum/user.js";
+import { Role } from "@/type/enum/user.js";
 
 /**
  * Data Transfer Object for updating a new user
@@ -54,12 +54,6 @@ export class UpdateUserDTO {
         message: "Invalid phone number format",
     })
     phoneNumbers?: string[];
-
-    @IsEnum(UserStatus, {
-        message: `Status must be one of: ${Object.values(UserStatus).join(", ")}`,
-    })
-    @IsOptional()
-    status?: UserStatus;
 }
 
 /**

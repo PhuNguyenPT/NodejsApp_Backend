@@ -2,17 +2,15 @@ import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.js";
 import { BatchScoreExtractionResult } from "@/dto/predict/ocr.js";
 import { FileEntity } from "@/entity/file.entity.js";
 import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
-
 export interface IOcrResultService {
     createInitialOcrResults(
         studentId: string,
-        userId: string,
+        createdBy: string,
         files: FileEntity[],
     ): Promise<OcrResultEntity[]>;
-    findById(id: string, processedBy?: string): Promise<OcrResultEntity>;
-    findByStudentId(
+    findByStudentIdAndUsername(
         studentId: string,
-        userId?: string,
+        username?: string,
     ): Promise<OcrResultEntity[]>;
     markAsFailed(
         results: OcrResultEntity[],
@@ -22,7 +20,7 @@ export interface IOcrResultService {
     patchByStudentIdAndFileId(
         id: string,
         ocrUpdateRequest: OcrUpdateRequest,
-        userId?: string,
+        username?: string,
     ): Promise<OcrResultEntity>;
     updateResults(
         initialResults: OcrResultEntity[],

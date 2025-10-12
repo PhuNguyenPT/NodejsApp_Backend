@@ -32,15 +32,10 @@ export enum Permission {
 }
 
 export enum Role {
-    ADMIN = "ADMIN",
-    ANONYMOUS = "ANONYMOUS",
-    MODERATOR = "MODERATOR",
-    USER = "USER",
-}
-
-export enum UserStatus {
-    HAPPY = "Happy",
-    SAD = "Sad",
+    ADMIN = "admin",
+    ANONYMOUS = "anonymous",
+    MODERATOR = "moderator",
+    USER = "user",
 }
 
 // Helper function to get default permissions by role

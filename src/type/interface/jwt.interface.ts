@@ -2,7 +2,7 @@
 import { JwtPayload } from "jsonwebtoken";
 
 import { TokenType } from "@/entity/jwt.entity.js";
-import { Permission, Role, UserStatus } from "@/type/enum/user.js";
+import { Permission, Role } from "@/type/enum/user.js";
 
 // Extend the standard JwtPayload with our custom claims
 export interface CustomJwtPayload extends JwtPayload {
@@ -11,6 +11,5 @@ export interface CustomJwtPayload extends JwtPayload {
     name?: string;
     permissions?: Permission[];
     role: Role;
-    status: UserStatus;
     type: TokenType;
 }

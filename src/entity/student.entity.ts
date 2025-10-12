@@ -69,12 +69,13 @@ export interface TalentExamData {
 }
 
 @Entity({ name: "students" })
-@Index("idx_student_user_id", ["userId"])
-@Index("idx_student_location", ["location"])
-@Index("idx_student_province", ["province"])
-@Index("idx_student_budget", ["minBudget", "maxBudget"])
-@Index("idx_student_created_at", ["createdAt"])
-@Index("idx_student_modified_at", ["modifiedAt"])
+@Index("idx_students_user_id", ["userId"])
+@Index("idx_students_province", ["province"])
+@Index("idx_students_budget", ["minBudget", "maxBudget"])
+@Index("idx_students_created_at", ["createdAt"])
+@Index("idx_students_created_by", ["createdBy"])
+@Index("idx_students_updated_at", ["updatedAt"])
+@Index("idx_students_updated_by", ["updatedBy"])
 export class StudentEntity {
     /**
      * Academic performance data for different grades
@@ -108,7 +109,11 @@ export class StudentEntity {
     @Column({ nullable: true, type: "jsonb" })
     conducts?: ConductData[];
 
-    @CreateDateColumn({ type: "timestamp with time zone" })
+    @CreateDateColumn({
+        insert: true,
+        type: "timestamp with time zone",
+        update: false,
+    })
     createdAt!: Date;
 
     @Column({
@@ -128,9 +133,6 @@ export class StudentEntity {
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
-
-    @Column({ length: 500, nullable: true, type: "varchar" })
-    location?: string;
 
     @JoinTable({
         inverseJoinColumn: {
@@ -154,18 +156,6 @@ export class StudentEntity {
 
     @Column({ nullable: true, precision: 14, scale: 2, type: "decimal" })
     minBudget?: number;
-
-    @UpdateDateColumn({ type: "timestamp with time zone" })
-    modifiedAt!: Date;
-
-    @Column({
-        insert: false,
-        length: 255,
-        nullable: true,
-        type: "varchar",
-        update: true,
-    })
-    modifiedBy?: string;
 
     @Column({ nullable: true, type: "jsonb" })
     nationalExams?: NationalExamData[];
@@ -204,6 +194,22 @@ export class StudentEntity {
 
     @Column({ enum: UniType, nullable: true, type: "enum" })
     uniType?: UniType;
+
+    @UpdateDateColumn({
+        insert: false,
+        type: "timestamp with time zone",
+        update: true,
+    })
+    updatedAt!: Date;
+
+    @Column({
+        insert: false,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+        update: true,
+    })
+    updatedBy?: string;
 
     @JoinColumn({ name: "userId" })
     @ManyToOne("UserEntity", "studentEntities", {
@@ -307,16 +313,6 @@ export class StudentEntity {
         );
     }
 
-    // Helper method to get active certifications (not expired)
-    getActiveCertifications(): CertificationEntity[] {
-        if (!this.certifications) return [];
-
-        const now = new Date();
-        return this.certifications.filter(
-            (cert) => !cert.expirationDate || cert.expirationDate >= now,
-        );
-    }
-
     // Helper method to get active files only
     getActiveFiles(): FileEntity[] {
         if (!this.files) return [];
@@ -376,16 +372,6 @@ export class StudentEntity {
         return this.conducts.find((c) => c.grade === grade) ?? null;
     }
 
-    // Helper method to get expired certifications
-    getExpiredCertifications(): CertificationEntity[] {
-        if (!this.certifications) return [];
-        const now = new Date();
-
-        return this.certifications.filter(
-            (cert) => cert.expirationDate && cert.expirationDate < now,
-        );
-    }
-
     // Helper method to get files by type
     getFilesByType(fileType: FileType): FileEntity[] {
         if (!this.files) return [];
@@ -434,17 +420,6 @@ export class StudentEntity {
         return this.conducts.reduce((latest, current) =>
             current.grade > latest.grade ? current : latest,
         );
-    }
-
-    // Helper method to get recent awards (within specified days)
-    getRecentAwards(days = 365): AwardEntity[] {
-        if (!this.awards) return [];
-
-        const cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - days);
-        return this.awards.filter((award) => {
-            return award.awardDate && award.awardDate >= cutoffDate;
-        });
     }
 
     // Helper method to get recent files (within specified days)

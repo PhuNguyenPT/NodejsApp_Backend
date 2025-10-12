@@ -43,10 +43,24 @@ export interface OcrMetadata {
 @Index("idx_ocr_file_id", ["fileId"])
 @Index("idx_ocr_status", ["status"])
 @Index("idx_ocr_created_at", ["createdAt"])
+@Index("idx_ocr_updated_at", ["updatedAt"])
 @Unique("UQ_ocr_student_file", ["studentId", "fileId"])
 export class OcrResultEntity {
-    @CreateDateColumn({ type: "timestamp with time zone" })
+    @CreateDateColumn({
+        insert: true,
+        type: "timestamp with time zone",
+        update: false,
+    })
     createdAt!: Date;
+
+    @Column({
+        insert: true,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+        update: false,
+    })
+    createdBy?: string;
 
     @Column({ nullable: true, type: "text" })
     documentAnnotation?: string;
@@ -67,9 +81,6 @@ export class OcrResultEntity {
     @Column({ nullable: true, type: "jsonb" })
     metadata?: OcrMetadata;
 
-    @Column({ length: 255, nullable: true, type: "varchar" })
-    processedBy?: string;
-
     @Column({ nullable: true, type: "jsonb" })
     scores?: ISubjectScore[];
 
@@ -86,8 +97,21 @@ export class OcrResultEntity {
     @Column({ type: "uuid" })
     studentId!: string;
 
-    @UpdateDateColumn({ type: "timestamp with time zone" })
+    @UpdateDateColumn({
+        insert: false,
+        type: "timestamp with time zone",
+        update: true,
+    })
     updatedAt!: Date;
+
+    @Column({
+        insert: false,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+        update: true,
+    })
+    updatedBy?: string;
 
     constructor(ocrResult?: Partial<OcrResultEntity>) {
         if (ocrResult) {

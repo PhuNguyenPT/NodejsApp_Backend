@@ -90,7 +90,10 @@ export class OcrController extends Controller {
         );
         const user: Express.User = request.user;
         const results: OcrResultEntity[] =
-            await this.ocrResultService.findByStudentId(studentId, user.id);
+            await this.ocrResultService.findByStudentIdAndUsername(
+                studentId,
+                user.email,
+            );
         const resultResponses: OcrResultResponse[] =
             OcrResultMapper.toResponseList(results);
         return resultResponses;
@@ -107,7 +110,7 @@ export class OcrController extends Controller {
             `Retrieving OCR result for student with id ${studentId}`,
         );
         const results: OcrResultEntity[] =
-            await this.ocrResultService.findByStudentId(studentId);
+            await this.ocrResultService.findByStudentIdAndUsername(studentId);
         const resultResponses: OcrResultResponse[] =
             OcrResultMapper.toResponseList(results);
         return resultResponses;
@@ -143,13 +146,12 @@ export class OcrController extends Controller {
         @Request() authenticatedRequest: AuthenticatedRequest,
     ): Promise<OcrResultResponse> {
         const user = authenticatedRequest.user;
-        const userId: string = user.id;
 
         const result: OcrResultEntity =
             await this.ocrResultService.patchByStudentIdAndFileId(
                 id,
                 ocrUpdateRequest,
-                userId,
+                user.email,
             );
         const resultResponse: OcrResultResponse =
             OcrResultMapper.toResponse(result);

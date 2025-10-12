@@ -18,27 +18,10 @@ import { Rank } from "@/type/enum/rank.js";
  * }
  */
 export class AwardResponse {
-    // @Expose()
-    // @IsOptional()
-    // @Type(() => Date)
-    // awardDate?: Date;
-
-    // @Expose()
-    // @IsOptional()
-    // awardId?: string;
-
-    // @Expose()
-    // @IsOptional()
-    // awardingOrganization?: string;
-
     @Expose()
     @IsNotEmpty()
     @Type(() => String)
     category!: NationalExcellentStudentExamSubject;
-
-    // @Expose()
-    // @IsOptional()
-    // description?: string;
 
     @Expose()
     @IsNotEmpty()

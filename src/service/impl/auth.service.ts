@@ -17,11 +17,7 @@ import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface
 import { IAuthService } from "@/service/auth-service.interface.js";
 import { IJwtService } from "@/service/jwt-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
-import {
-    getDefaultPermissionsByRole,
-    Role,
-    UserStatus,
-} from "@/type/enum/user.js";
+import { getDefaultPermissionsByRole, Role } from "@/type/enum/user.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { AuthenticationException } from "@/type/exception/authentication.exception.js";
 import { BadCredentialsException } from "@/type/exception/bad-credentials.exception.js";
@@ -53,14 +49,6 @@ export class AuthService implements IAuthService {
                 throw new BadCredentialsException();
             }
 
-            // Check if account is active
-            if (user.status !== UserStatus.HAPPY) {
-                this.logger.warn(
-                    `Login attempt for inactive account: ${email}`,
-                );
-                throw new HttpException(403, "Account is not active");
-            }
-
             // Verify password
             const isPasswordValid = await bcrypt.compare(
                 password,
@@ -77,7 +65,6 @@ export class AuthService implements IAuthService {
                 name: user.name,
                 permissions: user.permissions,
                 role: user.role,
-                status: user.status,
                 type: TokenType.ACCESS,
             };
 
@@ -96,7 +83,6 @@ export class AuthService implements IAuthService {
                 name: user.name,
                 permissions: user.permissions,
                 role: user.role,
-                status: user.status,
                 type: TokenType.REFRESH,
             };
             const refreshToken = await this.jwtService.generateRefreshToken(
@@ -361,7 +347,6 @@ export class AuthService implements IAuthService {
                 name: user.name,
                 permissions: user.permissions,
                 role: user.role,
-                status: user.status,
                 type: TokenType.ACCESS,
             };
 
@@ -376,7 +361,6 @@ export class AuthService implements IAuthService {
                 name: user.name,
                 permissions: user.permissions,
                 role: user.role,
-                status: user.status,
                 type: TokenType.REFRESH,
             };
             const newRefreshToken = await this.jwtService.generateRefreshToken(
@@ -440,7 +424,6 @@ export class AuthService implements IAuthService {
                 name: savedUser.name,
                 permissions: savedUser.permissions,
                 role: savedUser.role,
-                status: savedUser.status,
                 type: TokenType.ACCESS,
             };
 
@@ -457,7 +440,6 @@ export class AuthService implements IAuthService {
                 name: savedUser.name,
                 permissions: savedUser.permissions,
                 role: savedUser.role,
-                status: savedUser.status,
                 type: TokenType.REFRESH,
             };
 
@@ -539,7 +521,6 @@ export class AuthService implements IAuthService {
                     password: hashedPassword,
                     permissions: getDefaultPermissionsByRole(Role.USER),
                     role: Role.USER,
-                    status: UserStatus.HAPPY,
                 });
 
                 // Save user within transaction

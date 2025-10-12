@@ -302,7 +302,6 @@ export class PassportConfig {
                                 name: user.name,
                                 permissions: user.permissions,
                                 role: user.role,
-                                status: user.status,
                             };
 
                             done(null, userPayload);
@@ -356,7 +355,6 @@ export class PassportConfig {
                         name: user.name,
                         permissions: user.permissions,
                         role: user.role,
-                        status: user.status,
                     };
                     done(null, userPayload);
                 } catch (error) {

@@ -43,8 +43,6 @@ export class CertificationService implements ICertificationService {
             certificationRequest.level,
         );
 
-        certificationEntity.name ??= certificationRequest.examType.value;
-
         return certificationEntity;
     }
 
