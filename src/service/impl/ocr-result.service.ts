@@ -26,13 +26,14 @@ export class OcrResultService implements IOcrResultService {
     constructor(
         @inject(TYPES.OcrResultRepository)
         private readonly ocrResultRepository: Repository<OcrResultEntity>,
+
         @inject(TYPES.Logger)
         private readonly logger: Logger,
     ) {}
 
     public async createInitialOcrResults(
         studentId: string,
-        userId: string,
+        createdBy: string,
         files: FileEntity[],
     ): Promise<OcrResultEntity[]> {
         if (files.length === 0) {
@@ -70,7 +71,7 @@ export class OcrResultService implements IOcrResultService {
                     const initialEntities = filesToProcess.map(
                         (file) =>
                             new OcrResultEntity({
-                                createdBy: userId,
+                                createdBy: createdBy,
                                 fileId: file.id,
                                 status: OcrStatus.PROCESSING,
                                 studentId,
@@ -100,12 +101,12 @@ export class OcrResultService implements IOcrResultService {
 
     public async findById(
         id: string,
-        processedBy?: string,
+        username?: string,
     ): Promise<OcrResultEntity> {
         const ocrResultEntity: null | OcrResultEntity =
             await this.ocrResultRepository.findOne({
                 where: {
-                    createdBy: processedBy ?? Role.ANONYMOUS,
+                    createdBy: username ?? Role.ANONYMOUS,
                     id,
                 },
             });
@@ -119,13 +120,13 @@ export class OcrResultService implements IOcrResultService {
         return ocrResultEntity;
     }
 
-    public async findByStudentId(
+    public async findByStudentIdAndUsername(
         studentId: string,
-        userId?: string,
+        username?: string,
     ): Promise<OcrResultEntity[]> {
         const ocrResultEntities: OcrResultEntity[] =
             await this.ocrResultRepository.find({
-                where: { createdBy: userId ?? Role.ANONYMOUS, studentId },
+                where: { createdBy: username ?? Role.ANONYMOUS, studentId },
             });
 
         if (ocrResultEntities.length === 0) {
@@ -166,11 +167,11 @@ export class OcrResultService implements IOcrResultService {
     public async patchByStudentIdAndFileId(
         id: string,
         ocrUpdateRequest: OcrUpdateRequest,
-        userId?: string,
+        username?: string,
     ): Promise<OcrResultEntity> {
         const ocrResultEntity: OcrResultEntity = await this.findById(
             id,
-            userId,
+            username,
         );
 
         if (
