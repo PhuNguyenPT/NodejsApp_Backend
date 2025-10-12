@@ -17,6 +17,8 @@ import { StudentEntity } from "./student.entity.js";
 @Index("idx_student_admissions_student_id", ["studentId"])
 @Index("idx_student_admissions_admission_id", ["admissionId"])
 @Index("idx_student_admissions_composite", ["studentId", "admissionId"])
+@Index("idx_student_admissions_created_at", ["createdAt"])
+@Index("idx_student_admissions_updated_at", ["updatedAt"])
 export class StudentAdmissionEntity {
     @JoinColumn({ name: "admission_id" })
     @ManyToOne("AdmissionEntity", "studentAdmissions", {
@@ -28,14 +30,15 @@ export class StudentAdmissionEntity {
     @Column({ name: "admission_id", type: "uuid" })
     admissionId!: string;
 
-    @CreateDateColumn()
+    @CreateDateColumn({
+        insert: true,
+        type: "timestamp with time zone",
+        update: false,
+    })
     createdAt!: Date;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
-
-    @UpdateDateColumn()
-    modifiedAt!: Date;
 
     @JoinColumn({ name: "student_id" })
     @ManyToOne("StudentEntity", "studentAdmissions", {
@@ -46,4 +49,11 @@ export class StudentAdmissionEntity {
 
     @Column({ name: "student_id", type: "uuid" })
     studentId!: string;
+
+    @UpdateDateColumn({
+        insert: false,
+        type: "timestamp with time zone",
+        update: true,
+    })
+    updatedAt!: Date;
 }

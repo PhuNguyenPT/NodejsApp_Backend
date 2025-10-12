@@ -70,8 +70,8 @@ export class OcrResultService implements IOcrResultService {
                     const initialEntities = filesToProcess.map(
                         (file) =>
                             new OcrResultEntity({
+                                createdBy: userId,
                                 fileId: file.id,
-                                processedBy: userId,
                                 status: OcrStatus.PROCESSING,
                                 studentId,
                             }),
@@ -105,8 +105,8 @@ export class OcrResultService implements IOcrResultService {
         const ocrResultEntity: null | OcrResultEntity =
             await this.ocrResultRepository.findOne({
                 where: {
+                    createdBy: processedBy ?? Role.ANONYMOUS,
                     id,
-                    processedBy: processedBy ?? Role.ANONYMOUS,
                 },
             });
 
@@ -125,7 +125,7 @@ export class OcrResultService implements IOcrResultService {
     ): Promise<OcrResultEntity[]> {
         const ocrResultEntities: OcrResultEntity[] =
             await this.ocrResultRepository.find({
-                where: { processedBy: userId ?? Role.ANONYMOUS, studentId },
+                where: { createdBy: userId ?? Role.ANONYMOUS, studentId },
             });
 
         if (ocrResultEntities.length === 0) {

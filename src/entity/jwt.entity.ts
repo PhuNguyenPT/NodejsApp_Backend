@@ -13,10 +13,10 @@ export class JwtEntity {
     public readonly familyId: string;
     public readonly id: string;
     public isBlacklisted: boolean;
-    public modifiedAt?: Date;
     public readonly token: string;
     public ttl: number; // Time to live in seconds
     public readonly type: TokenType;
+    public updatedAt?: Date;
 
     /**
      * Single constructor that supports both use cases:
@@ -28,10 +28,10 @@ export class JwtEntity {
         familyId?: string;
         id?: string;
         isBlacklisted?: boolean;
-        modifiedAt?: Date;
         token: string;
         ttl?: number;
         type?: TokenType;
+        updatedAt?: Date;
     }) {
         this.token = params.token;
         this.ttl = params.ttl ?? JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS;
@@ -39,7 +39,7 @@ export class JwtEntity {
         this.id = params.id ?? randomUUID();
         this.createdAt = params.createdAt ?? new Date();
         this.type = params.type ?? TokenType.ACCESS;
-        this.modifiedAt = params.modifiedAt;
+        this.updatedAt = params.updatedAt;
         this.familyId = params.familyId ?? randomUUID();
     }
 
@@ -50,17 +50,17 @@ export class JwtEntity {
             familyId: data.familyId,
             id: data.id,
             isBlacklisted: data.isBlacklisted === "true",
-            modifiedAt: data.modifiedAt ? new Date(data.modifiedAt) : undefined,
             token: data.token,
             ttl: parseInt(data.ttl, 10),
             type: data.type ? (data.type as TokenType) : TokenType.ACCESS,
+            updatedAt: data.updatedAt ? new Date(data.updatedAt) : undefined,
         });
     }
 
     // Blacklist the token
     blacklist(): void {
         this.isBlacklisted = true;
-        this.modifiedAt = new Date();
+        this.updatedAt = new Date();
     }
 
     // Get remaining TTL in ms
@@ -101,8 +101,8 @@ export class JwtEntity {
             type: this.type,
         };
 
-        if (this.modifiedAt) {
-            obj.modifiedAt = this.modifiedAt.toISOString();
+        if (this.updatedAt) {
+            obj.updatedAt = this.updatedAt.toISOString();
         }
 
         return obj;

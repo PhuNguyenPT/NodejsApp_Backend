@@ -15,7 +15,6 @@ import {
 import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
 import { StudentEntity } from "@/entity/student.entity.js";
 import { UserEntity } from "@/entity/user.entity.js";
-import { Role } from "@/type/enum/user.js";
 
 /**
  * File status - must be one of: active, archived, deleted
@@ -46,13 +45,16 @@ export enum FileType {
 @Index("idx_file_type", ["fileType"])
 @Index("idx_file_status", ["status"])
 @Index("idx_file_created_at", ["createdAt"])
-@Index("idx_file_modified_at", ["modifiedAt"])
+@Index("idx_file_updated_at", ["updatedAt"])
 export class FileEntity {
-    @CreateDateColumn({ type: "timestamp with time zone" })
+    @CreateDateColumn({
+        insert: true,
+        type: "timestamp with time zone",
+        update: false,
+    })
     createdAt!: Date;
 
     @Column({
-        default: Role.ANONYMOUS,
         insert: true,
         length: 255,
         nullable: true,
@@ -92,18 +94,6 @@ export class FileEntity {
     @Column({ length: 100, type: "varchar" })
     mimeType!: string;
 
-    @UpdateDateColumn({ type: "timestamp with time zone" })
-    modifiedAt!: Date;
-
-    @Column({
-        insert: false,
-        length: 255,
-        nullable: true,
-        type: "varchar",
-        update: true,
-    })
-    modifiedBy?: string;
-
     @OneToOne("OcrResultEntity", "file", {
         cascade: true,
         eager: false,
@@ -132,6 +122,22 @@ export class FileEntity {
 
     @Column({ length: 255, nullable: true, type: "varchar" })
     tags?: string;
+
+    @UpdateDateColumn({
+        insert: false,
+        type: "timestamp with time zone",
+        update: true,
+    })
+    updatedAt!: Date;
+
+    @Column({
+        insert: false,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+        update: true,
+    })
+    updatedBy?: string;
 
     @JoinColumn({ name: "userId" })
     @ManyToOne("UserEntity", "studentEntities", {

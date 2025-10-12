@@ -128,12 +128,6 @@ export class StudentProfileResponse {
     @Expose()
     id!: string;
 
-    // /**
-    //  * Geographic location or preferred study location of the student.
-    //  */
-    // @Expose()
-    // location?: string;
-
     /**
      * Primary field of study or academic major of the student.
      * @example ["Kỹ thuật", "Máy tính và công nghệ thông tin", "Toán và thống kê"]

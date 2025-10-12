@@ -25,7 +25,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
             jwtEntity.blacklist();
             jwtEntity.ttl = this.BLACKLIST_TTL_SECONDS;
-            jwtEntity.modifiedAt = new Date();
+            jwtEntity.updatedAt = new Date();
 
             const key = this.getTokenKey(jwtEntity.id);
             const tokenIndexKey = this.getTokenIndexKey(jwtEntity.token);

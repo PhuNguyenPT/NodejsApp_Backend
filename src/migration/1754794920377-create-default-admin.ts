@@ -62,7 +62,7 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
 
         // Get default admin permissions
         const adminPermissions = getDefaultPermissionsByRole(Role.ADMIN);
-        const permissionsString = adminPermissions.join(",");
+        const permissionsJson = JSON.stringify(adminPermissions);
 
         // Create the admin user
         await queryRunner.query(
@@ -72,13 +72,10 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
                 password, 
                 name, 
                 role, 
-                status, 
                 permissions,
-                "createdAt",
-                "modifiedAt",
                 "createdBy"
             ) VALUES (
-                $1, $2, $3, $4, $5, $6, NOW(), NOW(), 'system'
+                $1, $2, $3, $4, $5, 'system'
             )
         `,
             [
@@ -86,8 +83,7 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
                 hashedPassword,
                 adminName,
                 Role.ADMIN,
-                "Happy", // Default status
-                permissionsString,
+                permissionsJson,
             ],
         );
 

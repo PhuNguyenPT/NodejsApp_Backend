@@ -6,6 +6,7 @@ import { FileType } from "@/entity/file.entity.js";
  * @example
  * {
  *   "createdAt": "2024-01-15T10:30:00.000Z",
+ *   "createdBy": "456e7890-e89b-12d3-a456-426614174001",
  *   "description": "Student transcript for Fall 2024 semester",
  *   "downloadUrl": "/api/files/123e4567-e89b-12d3-a456-426614174000/download",
  *   "fileName": "john_doe_transcript.pdf",
@@ -19,13 +20,12 @@ import { FileType } from "@/entity/file.entity.js";
  *     "grade": "A"
  *   },
  *   "mimeType": "application/pdf",
- *   "modifiedAt": "2024-01-20T14:45:00.000Z",
  *   "originalFileName": "transcript_fall_2024.pdf",
  *   "previewUrl": "/api/files/123e4567-e89b-12d3-a456-426614174000/preview",
  *   "status": "active",
  *   "studentId": "123e4567-e89b-12d3-a456-426614174000",
- *   "tags": "academic,transcript,fall2024",
- *   "uploadedBy": "456e7890-e89b-12d3-a456-426614174001"
+ *   "tags": "academic,transcript,fall2024".
+ *   "updatedAt": "2024-01-20T14:45:00.000Z"
  * }
  */
 export class FileResponse {
@@ -35,6 +35,13 @@ export class FileResponse {
      * @example new Date("2024-01-15T10:30:00.000Z")
      */
     createdAt!: Date;
+
+    /**
+     * Optional uploader identifier
+     * @description UUID of the user who uploaded the file
+     * @example "456e7890-e89b-12d3-a456-426614174001"
+     */
+    createdBy?: string;
 
     /**
      * Optional file description
@@ -107,13 +114,6 @@ export class FileResponse {
     mimeType!: string;
 
     /**
-     * Last modification timestamp
-     * @description When the file metadata was last updated
-     * @example new Date("2024-01-20T14:45:00.000Z")
-     */
-    modifiedAt!: Date;
-
-    /**
      * Original filename from upload
      * @description The filename as it was when originally uploaded
      * @example "transcript_fall_2024.pdf"
@@ -149,9 +149,9 @@ export class FileResponse {
     tags?: string;
 
     /**
-     * Optional uploader identifier
-     * @description UUID of the user who uploaded the file
-     * @example "456e7890-e89b-12d3-a456-426614174001"
+     * Last modification timestamp
+     * @description When the file metadata was last updated
+     * @example new Date("2024-01-20T14:45:00.000Z")
      */
-    uploadedBy?: string;
+    updatedAt!: Date;
 }

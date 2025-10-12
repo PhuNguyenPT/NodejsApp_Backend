@@ -23,7 +23,6 @@ export const FileMapper = {
             id: file.id,
             metadata: file.metadata,
             mimeType: file.mimeType,
-            modifiedAt: file.modifiedAt,
             originalFileName: file.originalFileName,
             previewUrl: file.isImage()
                 ? `/files/${file.id}/preview`
@@ -31,6 +30,7 @@ export const FileMapper = {
             status: file.status,
             studentId: file.studentId,
             tags: file.tags,
+            updatedAt: file.updatedAt,
         };
     },
 

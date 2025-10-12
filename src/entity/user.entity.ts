@@ -11,12 +11,11 @@ import {
 } from "typeorm";
 
 import { StudentEntity } from "@/entity/student.entity.js";
-import { Permission, Role, UserStatus } from "@/type/enum/user.js";
+import { Permission, Role } from "@/type/enum/user.js";
 
 @Entity({ name: "users" })
 @Index("idx_user_id_name", ["id", "name"])
 @Index("idx_user_email", ["email"])
-@Index("idx_user_status", ["status"])
 @Index("idx_user_role", ["role"]) // Add index for role queries
 @Index("idx_user_account_status", [
     "enabled",
@@ -25,7 +24,7 @@ import { Permission, Role, UserStatus } from "@/type/enum/user.js";
     "accountNonLocked",
 ])
 @Index("idx_user_created_at", ["createdAt"])
-@Index("idx_user_modified_at", ["modifiedAt"])
+@Index("idx_user_updated_at", ["updatedAt"])
 @Index("idx_user_permissions", ["permissions"])
 @Index("idx_user_phone_numbers", ["phoneNumbers"])
 export class UserEntity {
@@ -35,7 +34,11 @@ export class UserEntity {
     @Column({ default: true, type: "boolean" })
     accountNonLocked = true;
 
-    @CreateDateColumn({ type: "timestamp with time zone" })
+    @CreateDateColumn({
+        insert: true,
+        type: "timestamp with time zone",
+        update: false,
+    })
     createdAt!: Date;
 
     @Column({
@@ -60,18 +63,6 @@ export class UserEntity {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @UpdateDateColumn({ type: "timestamp with time zone" })
-    modifiedAt!: Date;
-
-    @Column({
-        insert: false,
-        length: 255,
-        nullable: true,
-        type: "varchar",
-        update: true,
-    })
-    modifiedBy?: string;
-
     @Column({ length: 255, nullable: true, type: "varchar" })
     name?: string;
 
@@ -79,10 +70,10 @@ export class UserEntity {
     password!: string;
 
     // Store permissions as an array of strings
-    @Column("simple-array", { nullable: true })
+    @Column({ nullable: true, type: "jsonb" })
     permissions!: Permission[];
 
-    @Column("simple-array", { nullable: true })
+    @Column({ nullable: true, type: "jsonb" })
     phoneNumbers?: string[];
 
     @Column({
@@ -92,17 +83,26 @@ export class UserEntity {
     })
     role!: Role;
 
-    @Column({
-        default: UserStatus.HAPPY,
-        enum: UserStatus,
-        type: "enum",
-    })
-    status!: UserStatus;
-
     @OneToMany("StudentEntity", "user", {
         eager: false,
     })
     studentEntities?: Relation<StudentEntity[]>;
+
+    @UpdateDateColumn({
+        insert: false,
+        type: "timestamp with time zone",
+        update: true,
+    })
+    updatedAt!: Date;
+
+    @Column({
+        insert: false,
+        length: 255,
+        nullable: true,
+        type: "varchar",
+        update: true,
+    })
+    updatedBy?: string;
 
     constructor(user?: Partial<UserEntity>) {
         if (user) {

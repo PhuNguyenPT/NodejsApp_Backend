@@ -1,10 +1,12 @@
 import {
     Column,
+    CreateDateColumn,
     Entity,
     Index,
     OneToMany,
     PrimaryGeneratedColumn,
     Relation,
+    UpdateDateColumn,
 } from "typeorm";
 
 import { StudentAdmissionEntity } from "./student-admission.entity.js";
@@ -52,22 +54,27 @@ export function isAdmissionTextField(
     return ADMISSION_TEXT_FIELDS.includes(field as AdmissionTextField);
 }
 @Entity("admissions")
-@Index("idx_admission_code", ["admissionCode"])
-@Index("idx_admission_type", ["admissionType"])
-@Index("idx_major_code", ["majorCode"])
-@Index("idx_major_name", ["majorName"])
-@Index("idx_province", ["province"])
-@Index("idx_study_program", ["studyProgram"])
-@Index("idx_uni_code", ["uniCode"])
-@Index("idx_uni_name", ["uniName"])
-@Index("idx_uni_type", ["uniType"])
-@Index("idx_tuition_fee", ["tuitionFee"])
-@Index("idx_uni_major", ["uniCode", "majorCode"])
-@Index("idx_province_uni_type", ["province", "uniType"])
-@Index("idx_admission_type_major", ["admissionType", "majorCode"])
-@Index("idx_study_program_admission_type", ["studyProgram", "admissionType"])
-@Index("idx_province_tuition_fee", ["province", "tuitionFee"])
-@Index("idx_uni_type_tuition_fee", ["uniType", "tuitionFee"])
+@Index("idx_admissions_code", ["admissionCode"])
+@Index("idx_admissions_type", ["admissionType"])
+@Index("idx_admissions_major_code", ["majorCode"])
+@Index("idx_admissions_major_name", ["majorName"])
+@Index("idx_admissions_province", ["province"])
+@Index("idx_admissions_study_program", ["studyProgram"])
+@Index("idx_admissions_uni_code", ["uniCode"])
+@Index("idx_admissions_uni_name", ["uniName"])
+@Index("idx_admissions_uni_type", ["uniType"])
+@Index("idx_admissions_tuition_fee", ["tuitionFee"])
+@Index("idx_admissions_uni_major", ["uniCode", "majorCode"])
+@Index("idx_admissions_province_uni_type", ["province", "uniType"])
+@Index("idx_admissions_admission_type_major", ["admissionType", "majorCode"])
+@Index("idx_admissions_study_program_admission_type", [
+    "studyProgram",
+    "admissionType",
+])
+@Index("idx_admissions_province_tuition_fee", ["province", "tuitionFee"])
+@Index("idx_admissions_uni_type_tuition_fee", ["uniType", "tuitionFee"])
+@Index("idx_admissions_created_at", ["createdAt"])
+@Index("idx_admissions_updated_at", ["updatedAt"])
 export class AdmissionEntity {
     @Column({ name: "admission_code", nullable: false, type: "varchar" })
     admissionCode!: string;
@@ -77,6 +84,13 @@ export class AdmissionEntity {
 
     @Column({ name: "admission_type_name", nullable: false, type: "varchar" })
     admissionTypeName!: string;
+
+    @CreateDateColumn({
+        insert: true,
+        type: "timestamp with time zone",
+        update: false,
+    })
+    createdAt!: Date;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
@@ -113,4 +127,11 @@ export class AdmissionEntity {
 
     @Column({ name: "uni_web_link", nullable: false, type: "varchar" })
     uniWebLink!: string;
+
+    @UpdateDateColumn({
+        insert: false,
+        type: "timestamp with time zone",
+        update: true,
+    })
+    updatedAt!: Date;
 }

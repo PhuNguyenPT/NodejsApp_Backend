@@ -236,7 +236,7 @@ export class UserService implements IUserService {
                 UserEntity,
                 updateData,
             );
-            userEntity.modifiedBy = user.email;
+            userEntity.updatedBy = user.email;
 
             // Only update permissions if role is explicitly provided in update data
             if (updateData.role !== undefined) {
