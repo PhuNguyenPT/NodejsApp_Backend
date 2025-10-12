@@ -10,7 +10,7 @@ export class StudentResponse {
     id!: string;
 
     @Expose()
-    modifiedAt!: Date;
+    updatedAt!: Date;
 
     @Expose()
     userId!: string;

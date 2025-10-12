@@ -103,15 +103,6 @@ export class CreateFileDTO {
     mimeType!: string;
 
     /**
-     * Optional uploader identifier
-     * @description UUID of the user who is uploading the file
-     * @example "456e7890-e89b-12d3-a456-426614174001"
-     */
-    @IsNotEmpty()
-    @IsString()
-    modifiedBy?: string;
-
-    /**
      * Original filename from upload
      * @description The filename as it was when originally uploaded
      * @example "transcript_fall_2024.pdf"
