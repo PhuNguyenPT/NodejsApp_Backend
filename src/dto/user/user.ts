@@ -28,12 +28,6 @@ export class User {
     @Expose()
     id!: string;
 
-    @Exclude()
-    modifiedAt?: Date;
-
-    @Exclude()
-    modifiedBy?: string;
-
     @Expose()
     name?: string;
 
@@ -42,6 +36,12 @@ export class User {
 
     @Expose()
     phoneNumbers?: string[];
+
+    @Exclude()
+    updatedAt?: Date;
+
+    @Exclude()
+    updatedBy?: string;
 
     constructor(partial?: Partial<User>) {
         if (partial) {
