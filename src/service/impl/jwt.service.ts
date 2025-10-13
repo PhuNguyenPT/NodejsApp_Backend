@@ -213,7 +213,7 @@ export class JwtService implements IJwtService {
     }
 
     /**
-     * Validate payload structure (existing method - unchanged)
+     * Validate payload structure
      */
     private isValidCustomPayload(
         payload: JwtPayload,
@@ -222,8 +222,7 @@ export class JwtService implements IJwtService {
             email: typeof payload.email,
             id: typeof payload.id,
             name: typeof payload.name,
-            status: typeof payload.status,
-            statusValue: payload.status as unknown,
+            type: typeof payload.type,
         });
 
         if (typeof payload.id !== "string" || !payload.id) {
@@ -248,10 +247,14 @@ export class JwtService implements IJwtService {
             return false;
         }
 
-        if (!payload.status || typeof payload.status !== "string") {
-            this.logger.error("Invalid or missing status field", {
-                statusType: typeof payload.status,
-                statusValue: payload.status as unknown,
+        // Validate type field (ACCESS or REFRESH)
+        if (
+            !payload.type ||
+            (payload.type !== TokenType.ACCESS &&
+                payload.type !== TokenType.REFRESH)
+        ) {
+            this.logger.error("Invalid or missing type field", {
+                typeValue: payload.type as unknown,
             });
             return false;
         }
