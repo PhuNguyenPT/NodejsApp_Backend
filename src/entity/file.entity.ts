@@ -40,7 +40,7 @@ export enum FileType {
     TRANSCRIPT = "transcript",
 }
 
-@Entity({ name: "files" })
+@Entity({ name: "files", schema: "uni_guide" })
 @Index("idx_file_student_id", ["studentId"])
 @Index("idx_file_type", ["fileType"])
 @Index("idx_file_status", ["status"])

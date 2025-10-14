@@ -20,7 +20,7 @@ export enum PredictionResultStatus {
     PROCESSING = "processing",
 }
 
-@Entity("prediction_results")
+@Entity({ name: "prediction_results", schema: "uni_guide" })
 @Index("idx_prediction_results_created_at", ["createdAt"])
 @Index("idx_prediction_results_created_by", ["createdBy"])
 @Index("idx_prediction_results_status", ["status"])

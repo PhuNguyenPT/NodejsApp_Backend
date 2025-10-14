@@ -1,5 +1,4 @@
 import * as bcrypt from "bcrypt";
-// src/migration/1754022674557-CreateDefaultAdmin.ts
 import { MigrationInterface, QueryRunner } from "typeorm";
 
 import { UserEntity } from "@/entity/user.entity.js";
@@ -10,7 +9,7 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
     name = "CreateDefaultAdmin1754794920377";
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminEmail = config.ADMIN_EMAIL;
 
         if (!adminEmail) {
             console.warn(
@@ -19,11 +18,12 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
             return;
         }
 
-        // Remove the admin user
-        await queryRunner.query(
-            `DELETE FROM users WHERE email = $1 AND "createdBy" = 'system'`,
-            [adminEmail],
-        );
+        // Use the repository to delete the admin user
+        const userRepository = queryRunner.manager.getRepository(UserEntity);
+        await userRepository.delete({
+            createdBy: "system",
+            email: adminEmail,
+        });
 
         console.info(
             `Default admin user with email ${adminEmail} has been removed`,
@@ -43,13 +43,13 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
             return;
         }
 
-        // Check if admin user already exists
-        const existingAdminResult = (await queryRunner.query(
-            `SELECT id FROM users WHERE email = $1`,
-            [adminEmail],
-        )) as Pick<UserEntity, "id">[];
+        // Use the repository to check if admin exists
+        const userRepository = queryRunner.manager.getRepository(UserEntity);
+        const existingAdmin = await userRepository.findOne({
+            where: { email: adminEmail },
+        });
 
-        if (existingAdminResult.length > 0) {
+        if (existingAdmin) {
             console.info(
                 `Admin user with email ${adminEmail} already exists, skipping creation`,
             );
@@ -62,30 +62,23 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
 
         // Get default admin permissions
         const adminPermissions = getDefaultPermissionsByRole(Role.ADMIN);
-        const permissionsJson = JSON.stringify(adminPermissions);
 
-        // Create the admin user
-        await queryRunner.query(
-            `
-            INSERT INTO users (
-                email, 
-                password, 
-                name, 
-                role, 
-                permissions,
-                "createdBy"
-            ) VALUES (
-                $1, $2, $3, $4, $5, 'system'
-            )
-        `,
-            [
-                adminEmail,
-                hashedPassword,
-                adminName,
-                Role.ADMIN,
-                permissionsJson,
-            ],
-        );
+        // Create the admin user entity
+        const adminUser = new UserEntity({
+            accountNonExpired: true,
+            accountNonLocked: true,
+            createdBy: "system",
+            credentialsNonExpired: true,
+            email: adminEmail,
+            enabled: true,
+            name: adminName,
+            password: hashedPassword,
+            permissions: adminPermissions,
+            role: Role.ADMIN,
+        });
+
+        // Save the admin user
+        await userRepository.save(adminUser);
 
         console.info(`Default admin user created with email: ${adminEmail}`);
     }

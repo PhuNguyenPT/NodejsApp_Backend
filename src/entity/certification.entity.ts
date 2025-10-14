@@ -22,7 +22,7 @@ export enum CEFR {
     C1 = "C1",
     C2 = "C2",
 }
-@Entity({ name: "certifications" })
+@Entity({ name: "certifications", schema: "uni_guide" })
 @Index("idx_certification_student_id", ["studentId"])
 @Index("idx_certification_cefr", ["cefr"])
 @Index("idx_certification_level", ["level"])

@@ -53,7 +53,7 @@ export function isAdmissionTextField(
 ): field is AdmissionTextField {
     return ADMISSION_TEXT_FIELDS.includes(field as AdmissionTextField);
 }
-@Entity("admissions")
+@Entity({ name: "admissions", schema: "uni_guide" })
 @Index("idx_admissions_code", ["admissionCode"])
 @Index("idx_admissions_type", ["admissionType"])
 @Index("idx_admissions_major_code", ["majorCode"])

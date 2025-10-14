@@ -68,7 +68,7 @@ export interface TalentExamData {
     score: number;
 }
 
-@Entity({ name: "students" })
+@Entity({ name: "students", schema: "uni_guide" })
 @Index("idx_students_user_id", ["userId"])
 @Index("idx_students_province", ["province"])
 @Index("idx_students_budget", ["minBudget", "maxBudget"])
