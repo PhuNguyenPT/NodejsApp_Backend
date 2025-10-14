@@ -13,7 +13,7 @@ import {
 import { AdmissionEntity } from "./admission.entity.js";
 import { StudentEntity } from "./student.entity.js";
 
-@Entity("student_admissions")
+@Entity({ name: "student_admissions", schema: "uni_guide" })
 @Index("idx_student_admissions_student_id", ["studentId"])
 @Index("idx_student_admissions_admission_id", ["admissionId"])
 @Index("idx_student_admissions_composite", ["studentId", "admissionId"])

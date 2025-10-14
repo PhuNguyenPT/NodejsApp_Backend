@@ -38,7 +38,7 @@ export interface OcrMetadata {
     totalFilesProcessed: number;
 }
 
-@Entity({ name: "ocr_results" })
+@Entity({ name: "ocr_results", schema: "uni_guide" })
 @Index("idx_ocr_student_id", ["studentId"])
 @Index("idx_ocr_file_id", ["fileId"])
 @Index("idx_ocr_status", ["status"])

@@ -15,7 +15,7 @@ import { MajorGroupEntity } from "@/entity/major-group.entity.js";
  * Represents a specific Major (e.g., "71401: Khoa học giáo dục").
  * This entity holds the detailed major information and links back to its group.
  */
-@Entity("majors")
+@Entity({ name: "majors", schema: "uni_guide" })
 export class MajorEntity {
     @Column({ length: 255, nullable: false, type: "varchar", unique: true })
     code!: string; // The full major code, e.g., "71401"

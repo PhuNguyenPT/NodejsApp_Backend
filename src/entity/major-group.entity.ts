@@ -18,7 +18,7 @@ import { MajorGroup, MajorGroupKey } from "@/type/enum/major.js";
  * Represents a Major Group (e.g., "714: Khoa học giáo dục và đào tạo giáo viên").
  * This entity holds the top-level categories for majors.
  */
-@Entity("major_groups")
+@Entity({ name: "major_groups", schema: "uni_guide" })
 @Index("idx_major_groups_code", ["code"])
 @Index("idx_major_groups_created_at", ["createdAt"])
 @Index("idx_major_groups_english_name", ["englishName"])

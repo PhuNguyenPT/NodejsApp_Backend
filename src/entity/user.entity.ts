@@ -13,7 +13,7 @@ import {
 import { StudentEntity } from "@/entity/student.entity.js";
 import { Permission, Role } from "@/type/enum/user.js";
 
-@Entity({ name: "users" })
+@Entity({ name: "users", schema: "security" })
 @Index("idx_user_id_name", ["id", "name"])
 @Index("idx_user_email", ["email"])
 @Index("idx_user_role", ["role"]) // Add index for role queries
