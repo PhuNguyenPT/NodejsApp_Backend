@@ -49,9 +49,7 @@ export class L2Data1760411108656 implements MigrationInterface {
             __dirname,
             "../data/l2-uni-requirement-data.csv",
         );
-        // Reduce batch size to avoid PostgreSQL parameter limit
-        // With 19 columns per row: 1000 rows = 19,000 parameters (well under 65,535 limit)
-        const batchSize = 1000;
+        const batchSize = 3000;
 
         try {
             const totalRecords = await this.processCsvFile(
@@ -166,9 +164,6 @@ export class L2Data1760411108656 implements MigrationInterface {
             await queryRunner.manager.save(L2Entity, batch);
         }
 
-        logger.info(
-            `Successfully imported ${fileRecords.toString()} records from L2 CSV`,
-        );
         return fileRecords;
     }
 }

@@ -110,9 +110,6 @@ export class L3Data1760925742503 implements MigrationInterface {
             await queryRunner.manager.save(L3Entity, batch);
         }
 
-        logger.info(
-            `Successfully imported ${fileRecords.toString()} records from L3 CSV`,
-        );
         return fileRecords;
     }
 }

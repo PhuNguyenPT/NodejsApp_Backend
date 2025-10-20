@@ -57,7 +57,7 @@ export class AdmissionData1757342612756 implements MigrationInterface {
             }
 
             logger.info(
-                `Successfully imported ${totalRecords.toString()} total records from all CSV files.`,
+                `Successfully imported ${totalRecords.toString()} total records from all admission CSV files.`,
             );
         } catch (error: unknown) {
             logger.error("Failed to import CSV data:", error);
