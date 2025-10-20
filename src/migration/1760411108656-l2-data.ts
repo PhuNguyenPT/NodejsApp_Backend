@@ -1,6 +1,7 @@
 import csv from "csv-parser";
 import fs from "fs";
 import path from "path";
+import stripBomStream from "strip-bom-stream";
 import { MigrationInterface, QueryRunner } from "typeorm";
 import { fileURLToPath } from "url";
 
@@ -97,6 +98,7 @@ export class L2Data1760411108656 implements MigrationInterface {
         // Note: CSV uses semicolon as delimiter
         const stream = fs
             .createReadStream(csvPath, { encoding: "utf-8" })
+            .pipe(stripBomStream())
             .pipe(csv({ separator: ";" }));
 
         // Use 'for await...of' to reliably process the stream.

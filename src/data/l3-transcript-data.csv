@@ -1,0 +1,151 @@
+﻿uni_code;major_code;major_name;score;major_group;province;uni_type;tuition_fee
+SPK;7140231V;Sư phạm tiếng Anh (đào tạo bằng tiếng Việt);29,57;714;TP. Hồ Chí Minh;1;30000000
+SPK;7140246V;Sư phạm công nghệ (đào tạo bằng tiếng Việt);26,79;714;TP. Hồ Chí Minh;1;30000000
+SPK;7210403V;Thiết kế đồ họa (đào tạo bằng tiếng Việt);24,6;721;TP. Hồ Chí Minh;1;30000000
+SPK;7210404V;Thiết kế thời trang (đào tạo bằng tiếng Việt);22,7;721;TP. Hồ Chí Minh;1;30000000
+SPK;7220201BP;Ngôn ngữ Anh (đào tạo tại phân hiệu Bình Phước);24;722;Bình Phước;1;30000000
+SPK;7220201V;Ngôn ngữ Anh (đào tạo bằng tiếng Việt);26,6;722;TP. Hồ Chí Minh;1;30000000
+SPK;7310403V;Tâm lý học giáo dục (đào tạo bằng tiếng Việt);25,18;731;TP. Hồ Chí Minh;1;32000000
+SPK;7320106V;Công nghệ truyền thông (Truyền thông số và Công nghệ đa phương tiện) (đào tạo bằng tiếng Việt);26,5;732;TP. Hồ Chí Minh;1;30000000
+SPK;7340101V;Quản trị kinh doanh (đào tạo bằng tiếng Việt);24,74;734;TP. Hồ Chí Minh;1;32000000
+SPK;7340120BP;Kinh doanh Quốc tế (đào tạo tại phân hiệu Bình Phước);24,5;734;Bình Phước;1;32000000
+SPK;7340120V;Kinh doanh Quốc tế (đào tạo bằng tiếng Việt);24,95;734;TP. Hồ Chí Minh;1;36000000
+SPK;7340122BP;Thương mại điện tử (đào tạo tại phân hiệu Bình Phước);24,7;734;Bình Phước;1;32000000
+SPK;7340122V;Thương mại điện tử (đào tạo bằng tiếng Việt);25,7;734;TP. Hồ Chí Minh;1;30000000
+SPK;7340205V;Công nghệ tài chính (đào tạo bằng tiếng Việt);24,7;734;TP. Hồ Chí Minh;1;30000000
+SPK;7340301A;Kế toán (đào tạo bằng tiếng Anh);23,65;734;TP. Hồ Chí Minh;1;62000000
+SPK;7340301BP;Kế toán (đào tạo tại phân hiệu Bình Phước);23,55;734;Bình Phước;1;30000000
+SPK;7340301V;Kế toán (đào tạo bằng tiếng Việt);23,65;734;TP. Hồ Chí Minh;1;30000000
+SPK;7380101V;Luật (đào tạo bằng tiếng Việt);24,73;738;TP. Hồ Chí Minh;1;32000000
+SPK;7480108A;Công nghệ Kỹ thuật máy tính (đào tạo bằng tiếng Anh);25,45;748;TP. Hồ Chí Minh;1;62000000
+SPK;7480108V;Công nghệ Kỹ thuật máy tính (đào tạo bằng tiếng Việt);26,2;748;TP. Hồ Chí Minh;1;32000000
+SPK;7480118V;Hệ thống nhúng và IoT (đào tạo bằng tiếng Việt);25,9;748;TP. Hồ Chí Minh;1;32000000
+SPK;7480201A;Công nghệ thông tin (đào tạo bằng tiếng Anh);26,4;748;TP. Hồ Chí Minh;1;62000000
+SPK;7480201BP;Công nghệ thông tin (đào tạo tại phân hiệu Bình Phước);24,75;748;Bình Phước;1;32000000
+SPK;7480201N;Công nghệ thông tin (chương trình Việt - Nhật);24,55;748;TP. Hồ Chí Minh;1;49000000
+SPK;7480201V;Công nghệ thông tin (đào tạo bằng tiếng Việt);27,45;748;TP. Hồ Chí Minh;1;30000000
+SPK;7480202V;An toàn thông tin (đào tạo bằng tiếng Việt);26;748;TP. Hồ Chí Minh;1;32000000
+SPK;7480203V;Kỹ thuật dữ liệu (đào tạo bằng tiếng Việt);26,1;748;TP. Hồ Chí Minh;1;32000000
+SPK;7510102A;Công nghệ Kỹ thuật công trình xây dựng (đào tạo bằng tiếng Anh);21,55;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510102V;Công nghệ Kỹ thuật công trình xây dựng (đào tạo bằng tiếng Việt);22,7;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510106V;Hệ thống kỹ thuật công trình xây dựng (đào tạo bằng tiếng Việt);22,27;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510201A;Công nghệ Kỹ thuật cơ khí (đào tạo bằng tiếng Anh);23,64;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510201BP;Công nghệ Kỹ thuật cơ khí (đào tạo tại phân hiệu Bình Phước);23,37;751;Bình Phước;1;32000000
+SPK;7510201TDA;Chương trình đào tạo Cơ khí - Tự động Hóa (thuộc ngành Công nghệ Kỹ thuật Cơ khí) (đào tạo bằng tiếng Anh);23,37;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510201V;Công nghệ Kỹ thuật cơ khí (đào tạo bằng tiếng Việt);26,45;751;TP. Hồ Chí Minh;1;30000000
+SPK;7510202A;Công nghệ chế tạo máy (đào tạo bằng tiếng Anh);22,8;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510202N;Công nghệ chế tạo máy (chương trình Việt - Nhật);22,8;751;TP. Hồ Chí Minh;1;49000000
+SPK;7510202V;Công nghệ chế tạo máy (đào tạo bằng tiếng Việt);25,15;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510203A;Công nghệ Kỹ thuật cơ điện tử (đào tạo bằng tiếng Anh);25;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510203V;Công nghệ Kỹ thuật cơ điện tử (đào tạo bằng tiếng Việt);27,7;751;TP. Hồ Chí Minh;1;30000000
+SPK;7510205A;Công nghệ Kỹ thuật ô tô (đào tạo bằng tiếng Anh);24,15;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510205BP;Công nghệ Kỹ thuật ô tô (đào tạo tại phân hiệu Bình Phước);23,6;751;Bình Phước;1;30000000
+SPK;7510205N;Công nghệ Kỹ thuật ô tô (chương trình Việt - Nhật);23,55;751;TP. Hồ Chí Minh;1;49000000
+SPK;7510205V;Công nghệ Kỹ thuật ô tô (đào tạo bằng tiếng Việt);25,65;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510206A;Công nghệ Kỹ thuật nhiệt (đào tạo bằng tiếng Anh);22,3;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510206N;Công nghệ Kỹ thuật nhiệt (chương trình Việt - Nhật);24,7;751;TP. Hồ Chí Minh;1;49000000
+SPK;7510206V;Công nghệ Kỹ thuật nhiệt (đào tạo bằng tiếng Việt);24,7;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510208V;Năng lượng tái tạo (đào tạo bằng tiếng Việt);24;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510209V;Robot và trí tuệ nhân tạo (đào tạo bằng tiếng Việt);27,5;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510301A;Công nghệ Kỹ thuật điện, điện tử (đào tạo bằng tiếng Anh);24,25;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510301BP;Công nghệ Kỹ thuật điện, điện tử (đào tạo tại phân hiệu Bình Phước);23,5;751;Bình Phước;1;32000000
+SPK;7510301V;Công nghệ Kỹ thuật điện, điện tử (đào tạo bằng tiếng Việt);26,75;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510302A;Công nghệ Kỹ thuật điện tử - viễn thông (đào tạo bằng tiếng Anh);24,2;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510302TKVM;Chương trình đào tạo Kỹ thuật Thiết kế vi mạch (thuộc ngành CNKT Điện tử - viễn thông) (đào tạo bằng tiếng Việt);28,65;751;TP. Hồ Chí Minh;1;38000000
+SPK;7510302N;Công nghệ Kỹ thuật điện tử - viễn thông (chương trình Việt - Nhật);23;751;TP. Hồ Chí Minh;1;55000000
+SPK;7510302V;Công nghệ Kỹ thuật điện tử - viễn thông (đào tạo bằng tiếng Việt);26,45;751;TP. Hồ Chí Minh;1;30000000
+SPK;7510303A;Công nghệ Kỹ thuật điều khiển và tự động hóa (đào tạo bằng tiếng Anh);25,75;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510303BP;Công nghệ Kỹ thuật điều khiển và tự động hóa (đào tạo tại phân hiệu Bình Phước);25,45;751;Bình Phước;1;30000000
+SPK;7510303V;Công nghệ Kỹ thuật điều khiển và tự động hóa (đào tạo bằng tiếng Việt);28,7;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510401A;Công nghệ Kỹ thuật hóa học (đào tạo bằng tiếng Anh);24,1;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510401V;Công nghệ Kỹ thuật hóa học (đào tạo bằng tiếng Việt);28,35;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510402A;Công nghệ vật liệu (đào tạo bằng tiếng Anh);24,55;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510402V;Công nghệ vật liệu (đào tạo bằng tiếng Việt);24,55;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510406V;Công nghệ Kỹ thuật môi trường (đào tạo bằng tiếng Việt);23,1;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510601A;Quản lý công nghiệp (đào tạo bằng tiếng Anh);22;751;TP. Hồ Chí Minh;1;62000000
+SPK;7510601BP;Quản lý công nghiệp (đào tạo tại phân hiệu Bình Phước);22;751;Bình Phước;1;30000000
+SPK;7510601V;Quản lý công nghiệp (đào tạo bằng tiếng Việt);24,6;751;TP. Hồ Chí Minh;1;30000000
+SPK;7510605BP;Logistics và quản lý chuỗi cung ứng (đào tạo tại phân hiệu Bình Phước);25;751;Bình Phước;1;30000000
+SPK;7510605V;Logistics và quản lý chuỗi cung ứng (đào tạo bằng tiếng Việt);27,65;751;TP. Hồ Chí Minh;1;32000000
+SPK;7510801V;Công nghệ Kỹ thuật in (đào tạo bằng tiếng Việt);22,1;751;TP. Hồ Chí Minh;1;32000000
+SPK;7520117V;Kỹ thuật công nghiệp (đào tạo bằng tiếng Việt);24,1;752;TP. Hồ Chí Minh;1;32000000
+SPK;7520212A;Kỹ thuật y sinh (Điện tử y sinh) (đào tạo bằng tiếng Anh);22,15;752;TP. Hồ Chí Minh;1;62000000
+SPK;7520212V;Kỹ thuật y sinh (Điện tử y sinh) (đào tạo bằng tiếng Việt);25,8;752;TP. Hồ Chí Minh;1;32000000
+SPK;7520401V;Vật lý kỹ thuật (định hướng công nghệ bán dẫn và cảm biến, đo lường) (đào tạo bằng tiếng Việt);28,65;752;TP. Hồ Chí Minh;1;32000000
+SPK;7540101A;Công nghệ thực phẩm (đào tạo bằng tiếng Anh);22;754;TP. Hồ Chí Minh;1;62000000
+SPK;7540101DD;Chương trình đào tạo Khoa học thực phẩm \& Dinh dưỡng (thuộc ngành Công nghệ thực phẩm) (đào tạo bằng tiếng Việt);22,15;754;TP. Hồ Chí Minh;1;32000000
+SPK;7540101V;Công nghệ thực phẩm (đào tạo bằng tiếng Việt);24,85;754;TP. Hồ Chí Minh;1;32000000
+SPK;7540209V;Công nghệ may (đào tạo bằng tiếng Việt);22;754;TP. Hồ Chí Minh;1;32000000
+SPK;7549002V;Kỹ nghệ gỗ và nội thất (đào tạo bằng tiếng Việt);21,1;754;TP. Hồ Chí Minh;1;32000000
+SPK;7580101V;Kiến trúc (đào tạo bằng tiếng Việt);21,75;758;TP. Hồ Chí Minh;1;36000000
+SPK;7580103V;Kiến trúc nội thất (đào tạo bằng tiếng Việt);21,2;758;TP. Hồ Chí Minh;1;36000000
+SPK;7580205V;Kỹ thuật xây dựng công trình giao thông (đào tạo bằng tiếng Việt);22,5;758;TP. Hồ Chí Minh;1;32000000
+SPK;7580302BP;Quản lý xây dựng (đào tạo tại phân hiệu Bình Phước);22,5;758;Bình Phước;1;32000000
+SPK;7580302V;Quản lý xây dựng (đào tạo bằng tiếng Việt);22,5;758;TP. Hồ Chí Minh;1;32000000
+SPK;7810202V;Quản trị NH và DV ăn uống (đào tạo bằng tiếng Việt);23,35;781;TP. Hồ Chí Minh;1;30000000
+SPK;7840110V;Quản lý và vận hành hạ tầng (đào tạo bằng tiếng Việt);22;784;TP. Hồ Chí Minh;1;32000000
+SPK;7850101V;Chương trình đào tạo Môi trường và Phát triển bền vững (thuộc ngành Quản lý tài nguyên \& môi trường) (đào tạo bằng tiếng Việt);21,25;785;TP. Hồ Chí Minh;1;30000000
+QSB;237;Kỹ thuật Y sinh;64,74;752;TP. Hồ Chí Minh;1;80000000
+QSB;141;Bảo dưỡng Công nghiệp;65,59;751;TP. Hồ Chí Minh;1;30000000
+QSB;310;Kỹ thuật Cơ Điện tử | Mỹ, Úc;78,44;752;TP. Hồ Chí Minh;1;40000000
+QSB;120;Dầu khí - Địa chất;60;752;TP. Hồ Chí Minh;1;30000000
+QSB;210;Kỹ thuật Cơ Điện tử;78,44;752;TP. Hồ Chí Minh;1;80000000
+QSB;416;Công nghệ Thông tin | ĐH Công nghệ Sydney (Úc) cấp bằng;57,38;748;TP. Hồ Chí Minh;1;250000000
+QSB;123;Quản lý Công nghiệp;75,98;751;TP. Hồ Chí Minh;1;30000000
+QSB;108;Điện - Điện tử - Viễn Thông - Tự động hoá - Thiết kế vi mạch;80,77;751;TP. Hồ Chí Minh;1;60000000
+QSB;323;Quản lý Công nghiệp | Úc;61,08;751;TP. Hồ Chí Minh;1;40000000
+QSB;206;Khoa học Máy tính;83,74;748;TP. Hồ Chí Minh;1;80000000
+QSB;319;Công nghệ Thực phẩm | New Zealand;56,2;754;TP. Hồ Chí Minh;1;40000000
+QSB;112;Dệt - May;60,75;754;TP. Hồ Chí Minh;1;30000000
+QSB;228;Logistics và Hệ thống Công nghiệp;73,05;752;TP. Hồ Chí Minh;1;80000000
+QSB;107;Kỹ thuật Máy tính;82,91;748;TP. Hồ Chí Minh;1;30000000
+QSB;138;Cơ Kỹ thuật;75,98;752;TP. Hồ Chí Minh;1;30000000
+QSB;266;Khoa học Máy tính;77,05;748;TP. Hồ Chí Minh;1;60000000
+QSB;253;Kinh doanh số (Ngành mới);59,06;785;TP. Hồ Chí Minh;1;80000000
+QSB;114;Hoá - Thực phẩm - Sinh học;75,43;742;TP. Hồ Chí Minh;1;30000000
+QSB;223;Quản lý Công nghiệp;61,08;751;TP. Hồ Chí Minh;1;80000000
+QSB;268;Cơ Kỹ thuật;69,4;752;TP. Hồ Chí Minh;1;60000000
+QSB;242;Kỹ thuật Ô tô;69,49;752;TP. Hồ Chí Minh;1;80000000
+QSB;137;Vật lý Kỹ thuật;76,61;752;TP. Hồ Chí Minh;1;30000000
+QSB;207;Kỹ thuật Máy tính;78,66;748;TP. Hồ Chí Minh;1;80000000
+QSB;406;Trí tuệ Nhân tạo | ĐH Công nghệ Sydney (Úc) cấp bằng;65,5;748;TP. Hồ Chí Minh;1;250000000
+QSB;325;Kỹ thuật Môi trường, Quản lý Tài nguyên & Môi trường | Úc;55,46;752;TP. Hồ Chí Minh;1;40000000
+QSB;217;Kiến trúc Cảnh quan (Chuyên ngành của kiến trúc);55,45;758;TP. Hồ Chí Minh;1;80000000
+QSB;117;Kiến Trúc;67,42;758;TP. Hồ Chí Minh;1;30000000
+QSB;142;Kỹ thuật Ô tô;76,34;751;TP. Hồ Chí Minh;1;30000000
+QSB;257;Năng lượng Tái tạo (Ngành mới);58,07;751;TP. Hồ Chí Minh;1;80000000
+QSB;129;Kỹ thuật Vật liệu;71,1;752;TP. Hồ Chí Minh;1;30000000
+QSB;309;Kỹ thuật Cơ khí | Mỹ, Úc;74,3;752;TP. Hồ Chí Minh;1;40000000
+QSB;220;Kỹ thuật Dầu khí;60,25;752;TP. Hồ Chí Minh;1;80000000
+QSB;153;Quản trị Kinh doanh (Ngành mới);71,24;734;TP. Hồ Chí Minh;1;30000000
+QSB;209;Kỹ thuật Cơ khí;74,3;752;TP. Hồ Chí Minh;1;80000000
+QSB;115;Xây dựng và Quản lý Dự án Xây dựng;55,05;758;TP. Hồ Chí Minh;1;30000000
+QSB;140;Kỹ thuật Nhiệt;73,5;752;TP. Hồ Chí Minh;1;30000000
+QSB;229;Kỹ thuật Vật liệu;55,23;752;TP. Hồ Chí Minh;1;80000000
+QSB;245;Kỹ thuật Hàng không;78,79;752;TP. Hồ Chí Minh;1;80000000
+QSB;218;Công nghệ Sinh học;66,13;742;TP. Hồ Chí Minh;1;80000000
+QSB;255;Kinh tế Tuần hoàn (Ngành mới);64,38;785;TP. Hồ Chí Minh;1;80000000
+QSB;214;Kỹ thuật Hóa học;63,3;752;TP. Hồ Chí Minh;1;80000000
+QSB;125;Tài nguyên và Môi trường;60,93;785;TP. Hồ Chí Minh;1;30000000
+QSB;306;Khoa học Máy tính | Úc, New Zealand, Mỹ;72,9;748;TP. Hồ Chí Minh;1;40000000
+QSB;314;Kỹ thuật Hóa học | Úc;63,3;752;TP. Hồ Chí Minh;1;40000000
+QSB;215;Quản lý Dự án Xây dựng và Kỹ thuật Xây dựng;56,2;758;TP. Hồ Chí Minh;1;80000000
+QSB;128;Logistics và Hệ thống Công nghiệp;80,52;752;TP. Hồ Chí Minh;1;30000000
+QSB;148;Kinh tế Xây dựng;55,72;758;TP. Hồ Chí Minh;1;30000000
+QSB;208;Kỹ thuật Điện - Điện tử;79,5;752;TP. Hồ Chí Minh;1;80000000
+QSB;109;Kỹ Thuật Cơ khí;75,43;752;TP. Hồ Chí Minh;1;30000000
+QSB;219;Công nghệ Thực phẩm;59,21;754;TP. Hồ Chí Minh;1;80000000
+QSB;145;(Song ngành) Tàu thủy - Hàng không;76,63;752;TP. Hồ Chí Minh;1;30000000
+QSB;225;Tài nguyên và Môi trường;55,46;785;TP. Hồ Chí Minh;1;80000000
+QSB;110;Kỹ Thuật Cơ Điện tử;81,82;751;TP. Hồ Chí Minh;1;30000000
+QSB;307;Kỹ thuật Máy tính | Úc, New Zealand;67,68;748;TP. Hồ Chí Minh;1;40000000
+QSB;147;Địa Kỹ thuật Xây dựng;55,06;758;TP. Hồ Chí Minh;1;30000000
+QSB;254;Công nghệ Sinh học số (Ngành mới);56,42;742;TP. Hồ Chí Minh;1;80000000
+QSB;345;Kỹ thuật Hàng không | Úc;78,79;752;TP. Hồ Chí Minh;1;40000000
+QSB;106;Khoa học Máy tính;85,41;748;TP. Hồ Chí Minh;1;30000000
+QSB;315;Kỹ thuật Xây dựng | Úc;56,2;758;TP. Hồ Chí Minh;1;40000000
+QSB;308;Kỹ thuật Điện - Điện tử | Úc, Hàn Quốc;65,52;752;TP. Hồ Chí Minh;1;40000000
+QSB;146;Khoa học Dữ liệu;83,85;751;TP. Hồ Chí Minh;1;30000000
+QSB;342;Kỹ thuật Ô tô | Úc;69,49;752;TP. Hồ Chí Minh;1;40000000
+QSB;258;Thiết kế Vi mạch (Ngành mới);83,09;752;TP. Hồ Chí Minh;1;80000000
+QSB;211;Kỹ thuật Robot;73,89;752;TP. Hồ Chí Minh;1;80000000
