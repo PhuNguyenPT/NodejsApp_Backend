@@ -76,7 +76,7 @@ export class L3Data1760925742503 implements MigrationInterface {
         const stream = fs
             .createReadStream(csvPath, { encoding: "utf-8" })
             .pipe(stripBomStream())
-            .pipe(csv({ separator: ";" }));
+            .pipe(csv({ separator: "," }));
 
         for await (const row of stream) {
             const csvRow = row as L3CsvRow;

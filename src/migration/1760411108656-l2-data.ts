@@ -99,7 +99,7 @@ export class L2Data1760411108656 implements MigrationInterface {
         const stream = fs
             .createReadStream(csvPath, { encoding: "utf-8" })
             .pipe(stripBomStream())
-            .pipe(csv({ separator: ";" }));
+            .pipe(csv({ separator: "," }));
 
         // Use 'for await...of' to reliably process the stream.
         for await (const row of stream) {
