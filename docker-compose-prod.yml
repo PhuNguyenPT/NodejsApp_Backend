@@ -19,7 +19,7 @@ services:
     env_file:
       - .env.prod
     ports:
-      - "${SERVER_HOSTNAME}:${SERVER_PORT}:${SERVER_PORT}"
+      - "${SERVER_PORT}:${SERVER_PORT}"
     networks:
       - app-network # Internal network for DB/Redis
       - shared-network # External network for ML service
@@ -48,7 +48,7 @@ services:
     container_name: postgres-prod
     restart: always
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_EXTERNAL_PORT}:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -72,7 +72,7 @@ services:
     container_name: redis-prod
     restart: always
     ports:
-      - "${REDIS_PORT}:6379"
+      - "${REDIS_EXTERNAL_PORT}:6379"
     command: >
       sh -c "
       redis-server 
