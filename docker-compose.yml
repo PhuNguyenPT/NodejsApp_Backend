@@ -18,7 +18,7 @@ services:
       POSTGRES_HOST_AUTH_METHOD: scram-sha-256
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_EXTERNAL_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -46,7 +46,7 @@ services:
       REDIS_USERNAME: ${REDIS_USERNAME}
       REDIS_USER_PASSWORD: ${REDIS_USER_PASSWORD}
     ports:
-      - "${REDIS_PORT}:6379"
+      - "${REDIS_EXTERNAL_PORT}:6379"
     volumes:
       - redis_data:/data
     networks:
