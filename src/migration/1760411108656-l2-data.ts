@@ -6,7 +6,7 @@ import { MigrationInterface, QueryRunner } from "typeorm";
 import { fileURLToPath } from "url";
 
 import { logger } from "@/config/logger.config.js";
-import { L2Entity } from "@/entity/l2.entity.js";
+import { L2Entity } from "@/entity/machine_learning/l2.entity.js";
 
 // Define the CSV row structure for type safety
 interface L2CsvRow {

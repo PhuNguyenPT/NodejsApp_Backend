@@ -17,7 +17,10 @@ import {
 import { AdmissionFieldResponse } from "@/dto/admission/admission-field-response.js";
 import { AdmissionResponse } from "@/dto/admission/admission-response.js";
 import { AdmissionSearchQuery } from "@/dto/admission/admission-search-query.dto.js";
-import { AdmissionEntity, AdmissionField } from "@/entity/admission.entity.js";
+import {
+    AdmissionEntity,
+    AdmissionField,
+} from "@/entity/uni_guide/admission.entity.js";
 import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";

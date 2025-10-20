@@ -21,7 +21,7 @@ import {
 import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
 import { UserAdmin } from "@/dto/user/user.js";
-import { UserEntity } from "@/entity/user.entity.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
 import { UserMapper } from "@/mapper/user-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";

@@ -2,8 +2,8 @@ import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
 } from "@/dto/predict/ocr.js";
-import { FileEntity } from "@/entity/file.entity.js";
-import { StudentEntity } from "@/entity/student.entity.js";
+import { FileEntity } from "@/entity/uni_guide/file.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
 export interface IMistralService {
     extractSubjectScores(

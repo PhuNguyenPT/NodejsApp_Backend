@@ -1,4 +1,4 @@
-import { PredictionResultEntity } from "@/entity/prediction-result.entity.js";
+import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
 
 export interface IPredictionResultService {
     findByStudentIdAndUserId(

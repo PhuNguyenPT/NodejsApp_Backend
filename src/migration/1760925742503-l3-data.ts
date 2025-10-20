@@ -6,7 +6,7 @@ import { MigrationInterface, QueryRunner } from "typeorm";
 import { fileURLToPath } from "url";
 
 import { logger } from "@/config/logger.config.js";
-import { L3Entity } from "@/entity/l3.entity.js";
+import { L3Entity } from "@/entity/machine_learning/l3.entity.js";
 
 interface L3CsvRow {
     major_code?: string;

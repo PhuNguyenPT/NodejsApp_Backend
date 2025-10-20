@@ -1,6 +1,6 @@
 import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
-import { UserEntity } from "@/entity/user.entity.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
 
 export interface IUserService {
     create(createUserAdminDTO: CreateUserAdminDTO): Promise<UserEntity>;

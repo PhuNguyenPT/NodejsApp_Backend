@@ -1,7 +1,7 @@
 // src/type/interface/jwt.ts
 import { JwtPayload } from "jsonwebtoken";
 
-import { TokenType } from "@/entity/jwt.entity.js";
+import { TokenType } from "@/entity/security/jwt.entity.js";
 import { Permission, Role } from "@/type/enum/user.js";
 
 // Extend the standard JwtPayload with our custom claims

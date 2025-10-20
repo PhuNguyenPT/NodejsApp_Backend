@@ -11,7 +11,7 @@ import {
     Min,
 } from "class-validator";
 
-import { FileType } from "@/entity/file.entity.js";
+import { FileType } from "@/entity/uni_guide/file.entity.js";
 
 /**
  * Data Transfer Object for creating new files

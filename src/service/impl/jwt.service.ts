@@ -9,7 +9,7 @@ import {
     signOptions,
     verifyOptions,
 } from "@/config/jwt.config.js";
-import { JwtEntity, TokenType } from "@/entity/jwt.entity.js";
+import { JwtEntity, TokenType } from "@/entity/security/jwt.entity.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
 import { IJwtService } from "@/service/jwt-service.interface.js";
 import { KeyStore } from "@/type/class/keystore.js";

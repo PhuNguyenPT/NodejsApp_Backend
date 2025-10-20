@@ -2,7 +2,7 @@ import { plainToInstance } from "class-transformer";
 
 import { StudentProfileResponse } from "@/dto/student/student-profile-response.js";
 import { StudentResponse } from "@/dto/student/student.js";
-import { StudentEntity } from "@/entity/student.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { FileMapper } from "@/mapper/file-mapper.js";
 import { PageResponse } from "@/type/pagination/page-response.js";
 import { Page } from "@/type/pagination/page.interface.js";

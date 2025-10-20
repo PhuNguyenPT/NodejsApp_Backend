@@ -14,8 +14,8 @@ import {
 } from "typeorm";
 
 import { ISubjectScore } from "@/dto/predict/ocr.js";
-import { FileEntity } from "@/entity/file.entity.js";
-import { StudentEntity } from "@/entity/student.entity.js";
+import { FileEntity } from "@/entity/uni_guide/file.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
 /**
  * OCR processing status

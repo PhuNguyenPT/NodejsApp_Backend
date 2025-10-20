@@ -1,5 +1,8 @@
 import { CertificationRequest } from "@/dto/student/certification-request.js";
-import { CEFR, CertificationEntity } from "@/entity/certification.entity.js";
+import {
+    CEFR,
+    CertificationEntity,
+} from "@/entity/uni_guide/certification.entity.js";
 import { ExamType } from "@/type/enum/exam.js";
 
 export interface ICertificationService {

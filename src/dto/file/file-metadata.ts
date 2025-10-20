@@ -1,7 +1,7 @@
 // src/dto/file/file.metadata.ts
 import { z } from "zod";
 
-import { FileType } from "@/entity/file.entity.js";
+import { FileType } from "@/entity/uni_guide/file.entity.js";
 
 export const FileMetadataSchema = z.object({
     description: z.string().optional(),

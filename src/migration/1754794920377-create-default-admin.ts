@@ -1,7 +1,7 @@
 import * as bcrypt from "bcrypt";
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-import { UserEntity } from "@/entity/user.entity.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
 import { getDefaultPermissionsByRole, Role } from "@/type/enum/user.js";
 import { config } from "@/util/validate-env.js";
 

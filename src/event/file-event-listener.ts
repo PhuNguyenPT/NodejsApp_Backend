@@ -7,10 +7,10 @@ import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
 } from "@/dto/predict/ocr.js";
-import { FileEntity } from "@/entity/file.entity.js";
-import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
-import { StudentEntity } from "@/entity/student.entity.js";
-import { UserEntity } from "@/entity/user.entity.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
+import { FileEntity } from "@/entity/uni_guide/file.entity.js";
+import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { IMistralService } from "@/service/mistral-service.interface.js";
 import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";

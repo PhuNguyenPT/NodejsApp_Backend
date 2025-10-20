@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
-import { PredictionResultEntity } from "@/entity/prediction-result.entity.js";
+import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
 import { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";

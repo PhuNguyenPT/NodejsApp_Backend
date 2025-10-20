@@ -4,8 +4,8 @@ import { Logger } from "winston";
 
 import { CreateFileDTO } from "@/dto/file/create-file.js";
 import { UpdateFileRequest } from "@/dto/file/update-file.js";
-import { FileEntity, FileStatus } from "@/entity/file.entity.js";
-import { StudentEntity } from "@/entity/student.entity.js";
+import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import {
     FileEventListener,
     FilesCreatedEvent,

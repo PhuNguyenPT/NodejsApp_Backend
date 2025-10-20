@@ -27,7 +27,7 @@ import { CreateFileDTO } from "@/dto/file/create-file.js";
 import { FilesMetadataSchema } from "@/dto/file/file-metadata.js";
 import { FileResponse } from "@/dto/file/file-response.js";
 import { UpdateFileRequest } from "@/dto/file/update-file.js";
-import { FileEntity, FileType } from "@/entity/file.entity.js";
+import { FileEntity, FileType } from "@/entity/uni_guide/file.entity.js";
 import { FileMapper } from "@/mapper/file-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";

@@ -11,7 +11,7 @@ import {
 } from "typeorm";
 
 import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
-import { StudentEntity } from "@/entity/student.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
 export enum PredictionResultStatus {
     COMPLETED = "completed",

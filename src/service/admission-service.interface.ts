@@ -1,4 +1,7 @@
-import { AdmissionEntity, AdmissionField } from "@/entity/admission.entity.js";
+import {
+    AdmissionEntity,
+    AdmissionField,
+} from "@/entity/uni_guide/admission.entity.js";
 import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
 

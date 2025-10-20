@@ -10,8 +10,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { MajorEntity } from "@/entity/major.entity.js";
-import { StudentEntity } from "@/entity/student.entity.js";
+import { MajorEntity } from "@/entity/uni_guide/major.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { MajorGroup, MajorGroupKey } from "@/type/enum/major.js";
 
 /**

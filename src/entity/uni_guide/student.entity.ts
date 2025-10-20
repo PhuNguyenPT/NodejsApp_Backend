@@ -14,14 +14,14 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { AdmissionEntity } from "@/entity/admission.entity.js";
-import { AwardEntity } from "@/entity/award.entity.js";
-import { CertificationEntity } from "@/entity/certification.entity.js";
-import { FileEntity } from "@/entity/file.entity.js";
-import { FileType } from "@/entity/file.entity.js";
-import { MajorGroupEntity } from "@/entity/major-group.entity.js";
-import { PredictionResultEntity } from "@/entity/prediction-result.entity.js";
-import { UserEntity } from "@/entity/user.entity.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
+import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
+import { AwardEntity } from "@/entity/uni_guide/award.entity.js";
+import { CertificationEntity } from "@/entity/uni_guide/certification.entity.js";
+import { FileEntity } from "@/entity/uni_guide/file.entity.js";
+import { FileType } from "@/entity/uni_guide/file.entity.js";
+import { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
+import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
 import { ExamType } from "@/type/enum/exam.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { NationalExamSubject } from "@/type/enum/national-exam-subject.js";

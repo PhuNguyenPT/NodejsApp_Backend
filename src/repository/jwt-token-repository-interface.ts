@@ -1,5 +1,5 @@
 // src/repository/jwt.token.repository.interface.ts
-import { JwtEntity } from "@/entity/jwt.entity.js";
+import { JwtEntity } from "@/entity/security/jwt.entity.js";
 
 export interface IJwtTokenRepository {
     blacklistToken(tokenId: string): Promise<boolean>;

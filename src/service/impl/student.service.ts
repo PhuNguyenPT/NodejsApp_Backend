@@ -3,8 +3,8 @@ import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
 import { StudentRequest } from "@/dto/student/student-request.js";
-import { StudentEntity } from "@/entity/student.entity.js";
-import { UserEntity } from "@/entity/user.entity.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import {
     StudentCreatedEvent,
     StudentEventListener,

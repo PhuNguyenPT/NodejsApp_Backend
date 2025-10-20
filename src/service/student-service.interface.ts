@@ -1,5 +1,5 @@
 import { StudentRequest } from "@/dto/student/student-request.js";
-import { StudentEntity } from "@/entity/student.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
 

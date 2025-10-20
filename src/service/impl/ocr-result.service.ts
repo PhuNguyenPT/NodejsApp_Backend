@@ -9,12 +9,12 @@ import {
     FileScoreExtractionResult,
     ISubjectScore,
 } from "@/dto/predict/ocr.js";
-import { FileEntity } from "@/entity/file.entity.js";
+import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import {
     OcrMetadata,
     OcrResultEntity,
     OcrStatus,
-} from "@/entity/ocr-result.entity.js";
+} from "@/entity/uni_guide/ocr-result.entity.js";
 import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
