@@ -2,7 +2,10 @@ import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
 import { CertificationRequest } from "@/dto/student/certification-request.js";
-import { CEFR, CertificationEntity } from "@/entity/certification.entity.js";
+import {
+    CEFR,
+    CertificationEntity,
+} from "@/entity/uni_guide/certification.entity.js";
 import { ICertificationService } from "@/service/certification-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { CCNNType, ExamType, handleExamValidation } from "@/type/enum/exam.js";

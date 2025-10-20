@@ -1,7 +1,8 @@
 import * as bcrypt from "bcrypt";
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-import { UserEntity } from "@/entity/user.entity.js";
+import { logger } from "@/config/logger.config.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
 import { getDefaultPermissionsByRole, Role } from "@/type/enum/user.js";
 import { config } from "@/util/validate-env.js";
 
@@ -12,7 +13,7 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
         const adminEmail = config.ADMIN_EMAIL;
 
         if (!adminEmail) {
-            console.warn(
+            logger.warn(
                 "ADMIN_EMAIL environment variable is required to remove default admin user",
             );
             return;
@@ -25,7 +26,7 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
             email: adminEmail,
         });
 
-        console.info(
+        logger.info(
             `Default admin user with email ${adminEmail} has been removed`,
         );
     }
@@ -37,7 +38,7 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
         const adminName: string = config.ADMIN_NAME || "System Administrator";
 
         if (!adminEmail || !adminPassword) {
-            console.warn(
+            logger.warn(
                 "ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required to create default admin user",
             );
             return;
@@ -50,7 +51,7 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
         });
 
         if (existingAdmin) {
-            console.info(
+            logger.info(
                 `Admin user with email ${adminEmail} already exists, skipping creation`,
             );
             return;
@@ -80,6 +81,6 @@ export class CreateDefaultAdmin1754794920377 implements MigrationInterface {
         // Save the admin user
         await userRepository.save(adminUser);
 
-        console.info(`Default admin user created with email: ${adminEmail}`);
+        logger.info(`Default admin user created with email: ${adminEmail}`);
     }
 }

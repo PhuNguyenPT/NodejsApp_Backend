@@ -1,11 +1,12 @@
 import csv from "csv-parser";
 import fs from "fs";
 import path from "path";
+import stripBomStream from "strip-bom-stream";
 import { MigrationInterface, QueryRunner } from "typeorm";
 import { fileURLToPath } from "url";
 
 import { logger } from "@/config/logger.config.js";
-import { L2Entity } from "@/entity/l2.entity.js";
+import { L2Entity } from "@/entity/machine_learning/l2.entity.js";
 
 // Define the CSV row structure for type safety
 interface L2CsvRow {
@@ -48,9 +49,7 @@ export class L2Data1760411108656 implements MigrationInterface {
             __dirname,
             "../data/l2-uni-requirement-data.csv",
         );
-        // Reduce batch size to avoid PostgreSQL parameter limit
-        // With 19 columns per row: 1000 rows = 19,000 parameters (well under 65,535 limit)
-        const batchSize = 1000;
+        const batchSize = 3000;
 
         try {
             const totalRecords = await this.processCsvFile(
@@ -97,7 +96,8 @@ export class L2Data1760411108656 implements MigrationInterface {
         // Note: CSV uses semicolon as delimiter
         const stream = fs
             .createReadStream(csvPath, { encoding: "utf-8" })
-            .pipe(csv({ separator: ";" }));
+            .pipe(stripBomStream())
+            .pipe(csv({ separator: "," }));
 
         // Use 'for await...of' to reliably process the stream.
         for await (const row of stream) {
@@ -164,9 +164,6 @@ export class L2Data1760411108656 implements MigrationInterface {
             await queryRunner.manager.save(L2Entity, batch);
         }
 
-        logger.info(
-            `Successfully imported ${fileRecords.toString()} records from L2 CSV`,
-        );
         return fileRecords;
     }
 }

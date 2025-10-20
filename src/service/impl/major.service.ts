@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { In, Repository } from "typeorm";
 
-import { MajorGroupEntity } from "@/entity/major-group.entity.js";
+import { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
 import { IMajorService } from "@/service/major-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { MajorGroup } from "@/type/enum/major.js";

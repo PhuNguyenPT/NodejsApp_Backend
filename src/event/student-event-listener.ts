@@ -6,13 +6,13 @@ import z from "zod";
 
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config.js";
 import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
-import { AdmissionEntity } from "@/entity/admission.entity.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
+import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
 import {
     PredictionResultEntity,
     PredictionResultStatus,
-} from "@/entity/prediction-result.entity.js";
-import { StudentAdmissionEntity } from "@/entity/student-admission.entity.js";
-import { UserEntity } from "@/entity/user.entity.js";
+} from "@/entity/uni_guide/prediction-result.entity.js";
+import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
 import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";

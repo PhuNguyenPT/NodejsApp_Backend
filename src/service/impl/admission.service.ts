@@ -10,9 +10,9 @@ import {
     ALLOWED_ADMISSION_FIELDS,
     isAdmissionField,
     isAdmissionNumericField,
-} from "@/entity/admission.entity.js";
-import { StudentAdmissionEntity } from "@/entity/student-admission.entity.js";
-import { StudentEntity } from "@/entity/student.entity.js";
+} from "@/entity/uni_guide/admission.entity.js";
+import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { IAdmissionService } from "@/service/admission-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";

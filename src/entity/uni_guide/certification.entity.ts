@@ -11,7 +11,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { StudentEntity } from "@/entity/student.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { ExamType } from "@/type/enum/exam.js";
 
 export enum CEFR {

@@ -1,7 +1,7 @@
 import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.js";
 import { BatchScoreExtractionResult } from "@/dto/predict/ocr.js";
-import { FileEntity } from "@/entity/file.entity.js";
-import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
+import { FileEntity } from "@/entity/uni_guide/file.entity.js";
+import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 export interface IOcrResultService {
     createInitialOcrResults(
         studentId: string,

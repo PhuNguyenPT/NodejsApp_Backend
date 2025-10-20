@@ -20,7 +20,7 @@ import {
 import { StudentProfileResponse } from "@/dto/student/student-profile-response.js";
 import { StudentRequest } from "@/dto/student/student-request.js";
 import { StudentResponse } from "@/dto/student/student.js";
-import { StudentEntity } from "@/entity/student.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { StudentMapper } from "@/mapper/student-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";

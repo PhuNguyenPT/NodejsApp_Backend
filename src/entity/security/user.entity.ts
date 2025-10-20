@@ -10,7 +10,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { StudentEntity } from "@/entity/student.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { Permission, Role } from "@/type/enum/user.js";
 
 @Entity({ name: "users", schema: "security" })

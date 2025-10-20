@@ -1,0 +1,591 @@
+﻿uni_code,major_code,subject_combination
+SPK,7140231V,"(Anh, Toán, Tin)"
+SPK,7140231V,"(Anh, Toán, Sử)"
+SPK,7140231V,"(Anh, Toán, Địa)"
+SPK,7140231V,"(Anh, Văn, Toán)"
+SPK,7140246V,"(Toán, Văn, Lý)"
+SPK,7140246V,"(Toán, Văn, Anh)"
+SPK,7140246V,"(Toán, Lý, Anh)"
+SPK,7140246V,"(Toán, Lý, Hoá)"
+SPK,7210403V,"(Vẽ TT, Văn, Vẽ ĐT)"
+SPK,7210403V,"(Vẽ TT, Văn, Lý)"
+SPK,7210403V,"(Vẽ TT, Toán, Anh)"
+SPK,7210403V,"(Vẽ TT, Văn, Anh)"
+SPK,7210403V,"(Vẽ TT, Toán, Văn)"
+SPK,7210404V,"(Vẽ TT, Văn, Vẽ ĐT)"
+SPK,7210404V,"(Vẽ TT, Toán, Vẽ ĐT)"
+SPK,7210404V,"(Vẽ TT, Văn, Sử)"
+SPK,7210404V,"(Vẽ TT, Toán, Văn)"
+SPK,7210404V,"(Vẽ TT, Anh, Văn)"
+SPK,7220201BP,"(Anh, Toán, Địa)"
+SPK,7220201BP,"(Anh, Toán, Sử)"
+SPK,7220201BP,"(Anh, Toán, Tin)"
+SPK,7220201BP,"(Anh, Văn, Toán)"
+SPK,7220201V,"(Anh, Toán, Địa)"
+SPK,7220201V,"(Anh, Văn, Toán)"
+SPK,7220201V,"(Anh, Toán, Sử)"
+SPK,7220201V,"(Anh, Toán, Tin)"
+SPK,7310403V,"(Văn, Sử, GDKT&PL)"
+SPK,7310403V,"(Văn, Anh, GDKT&PL)"
+SPK,7310403V,"(Văn, Địa, GDKT&PL)"
+SPK,7310403V,"(Văn, Toán , Anh)"
+SPK,7310403V,"(Văn, Sử, Địa)"
+SPK,7310403V,"(Văn, Sử, Anh)"
+SPK,7320106V,"(Toán, Văn, Sử)"
+SPK,7320106V,"(Toán, Văn , Anh)"
+SPK,7320106V,"(Toán, Văn, Tin)"
+SPK,7340101V,"(Toán, Lý, Hoá)"
+SPK,7340101V,"(Toán, Lý, Anh)"
+SPK,7340101V,"(Toán, Văn, Anh)"
+SPK,7340120BP,"(Toán, Lý, Hoá)"
+SPK,7340120BP,"(Toán, Văn, Lý)"
+SPK,7340120BP,"(Toán, Lý, Anh)"
+SPK,7340120BP,"(Toán, Văn, Anh)"
+SPK,7340120V,"(Toán, Lý, Anh)"
+SPK,7340120V,"(Toán, Văn, Lý)"
+SPK,7340120V,"(Toán, Lý, Hoá)"
+SPK,7340120V,"(Toán, Văn, Anh)"
+SPK,7340122BP,"(Toán, Lý, Hoá)"
+SPK,7340122BP,"(Toán, Văn, Anh)"
+SPK,7340122BP,"(Toán, Văn, Lý)"
+SPK,7340122BP,"(Toán, Lý, Anh)"
+SPK,7340122V,"(Toán, Văn, Anh)"
+SPK,7340122V,"(Toán, Lý, Hoá)"
+SPK,7340122V,"(Toán, Văn, Lý)"
+SPK,7340122V,"(Toán, Lý, Anh)"
+SPK,7340205V,"(Toán, Lý, Anh)"
+SPK,7340205V,"(Toán, Lý, Hoá)"
+SPK,7340205V,"(Toán, Văn, Anh)"
+SPK,7340301A,"(Toán, Lý, Hoá)"
+SPK,7340301A,"(Toán, Lý, Anh)"
+SPK,7340301A,"(Toán, Văn, Lý)"
+SPK,7340301A,"(Toán, Văn, Anh)"
+SPK,7340301BP,"(Toán, Văn, Anh)"
+SPK,7340301BP,"(Toán, Lý, Hoá)"
+SPK,7340301BP,"(Toán, Lý, Anh)"
+SPK,7340301BP,"(Toán, Văn, Lý)"
+SPK,7340301V,"(Toán, Lý, Anh)"
+SPK,7340301V,"(Toán, Lý, Hoá)"
+SPK,7340301V,"(Toán, Văn, Lý)"
+SPK,7340301V,"(Toán, Văn, Anh)"
+SPK,7380101V,"(Văn, Toán , Anh)"
+SPK,7380101V,"(Văn, Sử, GDKT&PL)"
+SPK,7380101V,"(Văn, Sử, Địa)"
+SPK,7380101V,"(Văn, Anh, GDKT&PL)"
+SPK,7380101V,"(Văn, Địa, GDKT&PL)"
+SPK,7380101V,"(Văn, Sử, Anh)"
+SPK,7480108A,"(Toán, Lý, Anh)"
+SPK,7480108A,"(Toán, Lý, Hoá)"
+SPK,7480108A,"(Toán, Văn, Anh)"
+SPK,7480108A,"(Toán, Văn, Lý)"
+SPK,7480108V,"(Toán, Văn, Anh)"
+SPK,7480108V,"(Toán, Văn, Lý)"
+SPK,7480108V,"(Toán, Lý, Anh)"
+SPK,7480108V,"(Toán, Lý, Hoá)"
+SPK,7480118V,"(Toán, Văn, Lý)"
+SPK,7480118V,"(Toán, Lý, Anh)"
+SPK,7480118V,"(Toán, Lý, Hoá)"
+SPK,7480118V,"(Toán, Văn, Anh)"
+SPK,7480201A,"(Toán, Lý, Hoá)"
+SPK,7480201A,"(Toán, Lý, Anh)"
+SPK,7480201A,"(Toán, Văn, Anh)"
+SPK,7480201A,"(Toán, Văn, Lý)"
+SPK,7480201BP,"(Toán, Văn, Anh)"
+SPK,7480201BP,"(Toán, Lý, Anh)"
+SPK,7480201BP,"(Toán, Lý, Hoá)"
+SPK,7480201BP,"(Toán, Văn, Lý)"
+SPK,7480201N,"(Toán, Văn, Anh)"
+SPK,7480201N,"(Toán, Văn, Lý)"
+SPK,7480201N,"(Toán, Lý, Hoá)"
+SPK,7480201N,"(Toán, Lý, Anh)"
+SPK,7480201V,"(Toán, Văn, Anh)"
+SPK,7480201V,"(Toán, Lý, Hoá)"
+SPK,7480201V,"(Toán, Văn, Lý)"
+SPK,7480201V,"(Toán, Lý, Anh)"
+SPK,7480202V,"(Toán, Văn, Anh)"
+SPK,7480202V,"(Toán, Văn, Lý)"
+SPK,7480202V,"(Toán, Lý, Anh)"
+SPK,7480202V,"(Toán, Lý, Hoá)"
+SPK,7480203V,"(Toán, Văn, Lý)"
+SPK,7480203V,"(Toán, Văn, Anh)"
+SPK,7480203V,"(Toán, Lý, Anh)"
+SPK,7480203V,"(Toán, Lý, Hoá)"
+SPK,7510102A,"(Toán, Lý, Anh)"
+SPK,7510102A,"(Toán, Văn, Anh)"
+SPK,7510102A,"(Toán, Lý, Hoá)"
+SPK,7510102A,"(Toán, Văn, Lý)"
+SPK,7510102V,"(Toán, Lý, Anh)"
+SPK,7510102V,"(Toán, Lý, Hoá)"
+SPK,7510102V,"(Toán, Văn, Anh)"
+SPK,7510102V,"(Toán, Văn, Lý)"
+SPK,7510106V,"(Toán, Văn, Anh)"
+SPK,7510106V,"(Toán, Văn, Lý)"
+SPK,7510106V,"(Toán, Lý, Anh)"
+SPK,7510106V,"(Toán, Lý, Hoá)"
+SPK,7510201A,"(Toán, Lý, Anh)"
+SPK,7510201A,"(Toán, Văn, Lý)"
+SPK,7510201A,"(Toán, Lý, Hoá)"
+SPK,7510201A,"(Toán, Văn, Anh)"
+SPK,7510201BP,"(Toán, Lý, Hoá)"
+SPK,7510201BP,"(Toán, Văn, Anh)"
+SPK,7510201BP,"(Toán, Lý, Anh)"
+SPK,7510201BP,"(Toán, Văn, Lý)"
+SPK,7510201V,"(Toán, Văn, Lý)"
+SPK,7510201V,"(Toán, Lý, Anh)"
+SPK,7510201V,"(Toán, Văn, Anh)"
+SPK,7510201V,"(Toán, Lý, Hoá)"
+SPK,7510202A,"(Toán, Văn, Anh)"
+SPK,7510202A,"(Toán, Lý, Hoá)"
+SPK,7510202A,"(Toán, Văn, Lý)"
+SPK,7510202A,"(Toán, Lý, Anh)"
+SPK,7510202N,"(Toán, Lý, Anh)"
+SPK,7510202N,"(Toán, Văn, Anh)"
+SPK,7510202N,"(Toán, Lý, Hoá)"
+SPK,7510202N,"(Toán, Văn, Lý)"
+SPK,7510202V,"(Toán, Lý, Hoá)"
+SPK,7510202V,"(Toán, Lý, Anh)"
+SPK,7510202V,"(Toán, Văn, Anh)"
+SPK,7510202V,"(Toán, Văn, Lý)"
+SPK,7510203A,"(Toán, Văn, Lý)"
+SPK,7510203A,"(Toán, Lý, Hoá)"
+SPK,7510203A,"(Toán, Lý, Anh)"
+SPK,7510203A,"(Toán, Văn, Anh)"
+SPK,7510203V,"(Toán, Văn, Anh)"
+SPK,7510203V,"(Toán, Lý, Anh)"
+SPK,7510203V,"(Toán, Văn, Lý)"
+SPK,7510203V,"(Toán, Lý, Hoá)"
+SPK,7510205A,"(Toán, Lý, Hoá)"
+SPK,7510205A,"(Toán, Lý, Anh)"
+SPK,7510205A,"(Toán, Văn, Anh)"
+SPK,7510205A,"(Toán, Văn, Lý)"
+SPK,7510205BP,"(Toán, Lý, Anh)"
+SPK,7510205BP,"(Toán, Lý, Hoá)"
+SPK,7510205BP,"(Toán, Văn, Anh)"
+SPK,7510205BP,"(Toán, Văn, Lý)"
+SPK,7510205N,"(Toán, Văn, Anh)"
+SPK,7510205N,"(Toán, Lý, Hoá)"
+SPK,7510205N,"(Toán, Văn, Lý)"
+SPK,7510205N,"(Toán, Lý, Anh)"
+SPK,7510205V,"(Toán, Văn, Lý)"
+SPK,7510205V,"(Toán, Văn, Anh)"
+SPK,7510205V,"(Toán, Lý, Hoá)"
+SPK,7510205V,"(Toán, Lý, Anh)"
+SPK,7510206A,"(Toán, Lý, Hoá)"
+SPK,7510206A,"(Toán, Văn, Lý)"
+SPK,7510206A,"(Toán, Văn, Anh)"
+SPK,7510206A,"(Toán, Lý, Anh)"
+SPK,7510206N,"(Toán, Văn, Anh)"
+SPK,7510206N,"(Toán, Lý, Anh)"
+SPK,7510206N,"(Toán, Lý, Hoá)"
+SPK,7510206N,"(Toán, Văn, Lý)"
+SPK,7510206V,"(Toán, Văn, Anh)"
+SPK,7510206V,"(Toán, Lý, Hoá)"
+SPK,7510206V,"(Toán, Lý, Anh)"
+SPK,7510206V,"(Toán, Văn, Lý)"
+SPK,7510208V,"(Toán, Lý, Hoá)"
+SPK,7510208V,"(Toán, Lý, Anh)"
+SPK,7510208V,"(Toán, Văn, Anh)"
+SPK,7510208V,"(Toán, Văn, Lý)"
+SPK,7510209V,"(Toán, Lý, Hoá)"
+SPK,7510209V,"(Toán, Văn, Lý)"
+SPK,7510209V,"(Toán, Văn, Anh)"
+SPK,7510209V,"(Toán, Lý, Anh)"
+SPK,7510301A,"(Toán, Lý, Anh)"
+SPK,7510301A,"(Toán, Văn, Lý)"
+SPK,7510301A,"(Toán, Văn, Anh)"
+SPK,7510301A,"(Toán, Lý, Hoá)"
+SPK,7510301BP,"(Toán, Lý, Hoá)"
+SPK,7510301BP,"(Toán, Văn, Anh)"
+SPK,7510301BP,"(Toán, Lý, Anh)"
+SPK,7510301BP,"(Toán, Văn, Lý)"
+SPK,7510301V,"(Toán, Văn, Lý)"
+SPK,7510301V,"(Toán, Lý, Hoá)"
+SPK,7510301V,"(Toán, Văn, Anh)"
+SPK,7510301V,"(Toán, Lý, Anh)"
+SPK,7510302A,"(Toán, Văn, Anh)"
+SPK,7510302A,"(Toán, Lý, Hoá)"
+SPK,7510302A,"(Toán, Lý, Anh)"
+SPK,7510302A,"(Toán, Văn, Lý)"
+SPK,7510302N,"(Toán, Văn, Anh)"
+SPK,7510302N,"(Toán, Văn, Lý)"
+SPK,7510302N,"(Toán, Lý, Hoá)"
+SPK,7510302N,"(Toán, Lý, Anh)"
+SPK,7510302TKVM,"(Toán, Lý, Anh)"
+SPK,7510302TKVM,"(Toán, Văn, Lý)"
+SPK,7510302TKVM,"(Toán, Lý, Hoá)"
+SPK,7510302TKVM,"(Toán, Văn, Anh)"
+SPK,7510302V,"(Toán, Lý, Hoá)"
+SPK,7510302V,"(Toán, Văn, Lý)"
+SPK,7510302V,"(Toán, Văn, Anh)"
+SPK,7510302V,"(Toán, Lý, Anh)"
+SPK,7510303A,"(Toán, Lý, Anh)"
+SPK,7510303A,"(Toán, Văn, Lý)"
+SPK,7510303A,"(Toán, Lý, Hoá)"
+SPK,7510303A,"(Toán, Văn, Anh)"
+SPK,7510303BP,"(Toán, Lý, Anh)"
+SPK,7510303BP,"(Toán, Văn, Anh)"
+SPK,7510303BP,"(Toán, Lý, Hoá)"
+SPK,7510303BP,"(Toán, Văn, Lý)"
+SPK,7510303V,"(Toán, Lý, Anh)"
+SPK,7510303V,"(Toán, Văn, Lý)"
+SPK,7510303V,"(Toán, Lý, Hoá)"
+SPK,7510303V,"(Toán, Văn, Anh)"
+SPK,7510401V,"(Hoá, Toán, Lý)"
+SPK,7510401V,"(Hoá, Toán, Sinh)"
+SPK,7510401V,"(Hoá, Toán, Văn)"
+SPK,7510401V,"(Hoá, Toán, Anh)"
+SPK,7510402V,"(Lý, Toán, Hoá)"
+SPK,7510402V,"(Hoá, Toán, Anh) "
+SPK,7510402V,"(Lý, Toán, Anh)"
+SPK,7510406V,"(Hoá, Toán, Anh)"
+SPK,7510406V,"(Hoá, Toán, Sinh)"
+SPK,7510406V,"(Hoá, Toán, Văn)"
+SPK,7510406V,"(Hoá, Toán, Lý)"
+SPK,7510601A,"(Toán, Văn, Anh)"
+SPK,7510601A,"(Toán, Văn, Lý)"
+SPK,7510601A,"(Toán, Lý, Anh)"
+SPK,7510601A,"(Toán, Lý, Hoá)"
+SPK,7510601BP,"(Toán, Văn, Lý)"
+SPK,7510601BP,"(Toán, Văn, Anh)"
+SPK,7510601BP,"(Toán, Lý, Hoá)"
+SPK,7510601BP,"(Toán, Lý, Anh)"
+SPK,7510601V,"(Toán, Lý, Hoá)"
+SPK,7510601V,"(Toán, Lý, Anh)"
+SPK,7510601V,"(Toán, Văn, Anh)"
+SPK,7510601V,"(Toán, Văn, Lý)"
+SPK,7510605BP,"(Toán, Lý, Hoá)"
+SPK,7510605BP,"(Toán, Văn, Anh)"
+SPK,7510605BP,"(Toán, Lý, Anh)"
+SPK,7510605BP,"(Toán, Văn, Lý)"
+SPK,7510605V,"(Toán, Văn, Anh)"
+SPK,7510605V,"(Toán, Văn, Lý)"
+SPK,7510605V,"(Toán, Lý, Anh)"
+SPK,7510605V,"(Toán, Lý, Hoá)"
+SPK,7510801V,"(Toán, Lý, Anh)"
+SPK,7510801V,"(Toán, Văn, Anh)"
+SPK,7510801V,"(Toán, Lý, Hoá)"
+SPK,7510801V,"(Toán, Văn, Lý)"
+SPK,7520117V,"(Toán, Lý, Anh)"
+SPK,7520117V,"(Toán, Văn, Anh)"
+SPK,7520117V,"(Toán, Văn, Lý)"
+SPK,7520117V,"(Toán, Lý, Hoá)"
+SPK,7520212A,"(Toán, Lý, Anh)"
+SPK,7520212A,"(Toán, Văn, Anh)"
+SPK,7520212A,"(Toán, Văn, Lý)"
+SPK,7520212A,"(Toán, Lý, Hoá)"
+SPK,7520212V,"(Toán, Lý, Hoá)"
+SPK,7520212V,"(Toán, Văn, Anh)"
+SPK,7520212V,"(Toán, Lý, Anh)"
+SPK,7520212V,"(Toán, Văn, Lý)"
+SPK,7520401V,"(Lý, Toán, Anh)"
+SPK,7520401V,"(Lý, Toán, Sinh)"
+SPK,7520401V,"(Lý, Toán, Hoá)"
+SPK,7520401V,"(Lý, Toán, Tin)"
+SPK,7540101A,"(Hoá, Toán, Sinh)"
+SPK,7540101A,"(Hoá, Toán, Văn)"
+SPK,7540101A,"(Hoá, Toán, Anh)"
+SPK,7540101A,"(Hoá, Toán, Lý)"
+SPK,7540101DD,"(Hoá, Toán, Văn)"
+SPK,7540101DD,"(Hoá, Toán, Lý)"
+SPK,7540101DD,"(Hoá, Toán, Sinh)"
+SPK,7540101DD,"(Hoá, Toán, Anh)"
+SPK,7540101V,"(Hoá, Toán, Văn)"
+SPK,7540101V,"(Hoá, Toán, Anh)"
+SPK,7540101V,"(Hoá, Toán, Lý)"
+SPK,7540101V,"(Hoá, Toán, Sinh)"
+SPK,7540209V,"(Toán, Văn, Lý)"
+SPK,7540209V,"(Toán, Lý, Anh)"
+SPK,7540209V,"(Toán, Văn, Anh)"
+SPK,7540209V,"(Toán, Lý, Hoá)"
+SPK,7549002V,"(Toán, Lý, Anh)"
+SPK,7549002V,"(Toán, Văn, Lý)"
+SPK,7549002V,"(Toán, Văn, Anh)"
+SPK,7549002V,"(Toán, Lý, Hoá)"
+SPK,7580101V,"(Vẽ ĐT, Toán, Sử)"
+SPK,7580101V,"(Vẽ ĐT, Văn, Anh)"
+SPK,7580101V,"(Vẽ ĐT, Toán, Lý)"
+SPK,7580101V,"(Vẽ ĐT, Toán, Anh)"
+SPK,7580101V,"(Vẽ ĐT, Toán, Văn)"
+SPK,7580103V,"(Vẽ ĐT, Toán, Lý)"
+SPK,7580103V,"(Vẽ ĐT, Toán, Văn)"
+SPK,7580103V,"(Vẽ ĐT, Toán, Anh)"
+SPK,7580103V,"(Vẽ ĐT, Văn, Anh)"
+SPK,7580103V,"(Vẽ ĐT, Toán, Sử)"
+SPK,7580205V,"(Toán, Văn, Lý)"
+SPK,7580205V,"(Toán, Lý, Hoá)"
+SPK,7580205V,"(Toán, Lý, Anh)"
+SPK,7580205V,"(Toán, Văn, Anh)"
+SPK,7580302BP,"(Toán, Lý, Anh)"
+SPK,7580302BP,"(Toán, Văn, Lý)"
+SPK,7580302BP,"(Toán, Lý, Hoá)"
+SPK,7580302BP,"(Toán, Văn, Anh)"
+SPK,7580302V,"(Toán, Lý, Anh)"
+SPK,7580302V,"(Toán, Lý, Hoá)"
+SPK,7580302V,"(Toán, Văn, Lý)"
+SPK,7580302V,"(Toán, Văn, Anh)"
+SPK,7810202V,"(Toán, Lý, Hoá)"
+SPK,7810202V,"(Toán, Hoá, Anh)"
+SPK,7810202V,"(Toán, Lý, Anh)"
+SPK,7810202V,"(Toán, Văn, Anh)"
+SPK,7810202V,"(Toán, Hoá, Văn)"
+SPK,7840110V,"(Toán, Văn, Anh)"
+SPK,7840110V,"(Toán, Văn, Lý)"
+SPK,7840110V,"(Toán, Lý, Hoá)"
+SPK,7840110V,"(Toán, Lý, Anh)"
+SPK,7850101V,"(Toán, Anh, Hoá)"
+SPK,7850101V,"(Toán, Anh, Văn)"
+SPK,7850101V,"(Toán, Anh, Lý)"
+SPK,7850101V," (Toán, Anh, GDKT&PL)"
+SPK,7850101V,"(Toán, Anh, Sinh)"
+QSB,106,"(Toán, Lý, Hoá)"
+QSB,106,"(Toán, Lý, Anh)"
+QSB,106,"(Toán, Lý, Tin)"
+QSB,106,"(Toán, Lý, Công nghệ)"
+QSB,107,"(Toán, Lý, Hoá)"
+QSB,107,"(Toán, Lý, Anh)"
+QSB,107,"(Toán, Lý, Tin)"
+QSB,107,"(Toán, Lý, Công nghệ)"
+QSB,108,"(Toán, Lý, Hoá)"
+QSB,108,"(Toán, Lý, Anh)"
+QSB,108,"(Toán, Lý, Tin)"
+QSB,108,"(Toán, Lý, Công nghệ)"
+QSB,109,"(Toán, Lý, Hoá)"
+QSB,109,"(Toán, Lý, Anh)"
+QSB,109,"(Toán, Lý, Tin)"
+QSB,109,"(Toán, Lý, Công nghệ)"
+QSB,110,"(Toán, Lý, Hoá)"
+QSB,110,"(Toán, Lý, Anh)"
+QSB,110,"(Toán, Lý, Tin)"
+QSB,110,"(Toán, Lý, Công nghệ)"
+QSB,112,"(Toán, Lý, Hoá)"
+QSB,112,"(Toán, Lý, Anh)"
+QSB,112,"(Toán, Lý, Tin)"
+QSB,112,"(Toán, Lý, Công nghệ)"
+QSB,128,"(Toán, Lý, Hoá)"
+QSB,128,"(Toán, Lý, Anh)"
+QSB,128,"(Toán, Lý, Tin)"
+QSB,128,"(Toán, Lý, Công nghệ)"
+QSB,140,"(Toán, Lý, Hoá)"
+QSB,140,"(Toán, Lý, Anh)"
+QSB,140,"(Toán, Lý, Tin)"
+QSB,140,"(Toán, Lý, Công nghệ)"
+QSB,114,"(Toán, Hoá, Sinh)"
+QSB,114,"(Toán, Hoá, Lý)"
+QSB,114,"(Toán, Hoá, Anh)"
+QSB,114,"(Toán, Hoá, Tin)"
+QSB,114,"(Toán, Hoá, Công nghệ)"
+QSB,115,"(Toán, Lý, Hoá)"
+QSB,115,"(Toán, Lý, Anh)"
+QSB,115,"(Toán, Lý, Tin)"
+QSB,115,"(Toán, Lý, Công nghệ)"
+QSB,117,"(Toán, Lý, Anh)"
+QSB,117,"(Toán, Lý, Công nghệ)"
+QSB,148,"(Toán, Lý, Hoá)"
+QSB,148,"(Toán, Lý, Anh)"
+QSB,148,"(Toán, Lý, Tin)"
+QSB,148,"(Toán, Lý, Công nghệ)"
+QSB,120,"(Toán, Lý, Hoá)"
+QSB,120,"(Toán, Lý, Anh)"
+QSB,120,"(Toán, Lý, Công nghệ)"
+QSB,147,"(Toán, Lý, Hoá)"
+QSB,147,"(Toán, Lý, Anh)"
+QSB,147,"(Toán, Lý, Công nghệ)"
+QSB,129,"(Toán, Lý, Hoá)"
+QSB,129,"(Toán, Lý, Anh)"
+QSB,129,"(Toán, Lý, Công nghệ)"
+QSB,137,"(Toán, Lý, Sinh)"
+QSB,137,"(Toán, Lý, Hoá)"
+QSB,137,"(Toán, Lý, Anh)"
+QSB,137,"(Toán, Lý, Tin)"
+QSB,137,"(Toán, Lý, Công nghệ)"
+QSB,138,"(Toán, Lý, Hoá)"
+QSB,138,"(Toán, Lý, Anh)"
+QSB,138,"(Toán, Lý, Tin)"
+QSB,138,"(Toán, Lý, Công nghệ)"
+QSB,146,"(Toán, Lý, Hoá)"
+QSB,146,"(Toán, Lý, Anh)"
+QSB,146,"(Toán, Lý, Tin)"
+QSB,146,"(Toán, Lý, Công nghệ)"
+QSB,142,"(Toán, Lý, Hoá)"
+QSB,142,"(Toán, Lý, Anh)"
+QSB,142,"(Toán, Lý, Tin)"
+QSB,142,"(Toán, Lý, Công nghệ)"
+QSB,145,"(Toán, Lý, Hoá)"
+QSB,145,"(Toán, Lý, Anh)"
+QSB,145,"(Toán, Lý, Tin)"
+QSB,145,"(Toán, Lý, Công nghệ)"
+QSB,123,"(Toán, Lý, Hoá)"
+QSB,123,"(Toán, Lý, Anh)"
+QSB,123,"(Toán, Lý, Tin)"
+QSB,123,"(Toán, Lý, Công nghệ)"
+QSB,153,"(Toán, Lý, Hoá)"
+QSB,153,"(Toán, Lý, Anh)"
+QSB,153,"(Toán, Lý, Tin)"
+QSB,153,"(Toán, Lý, Công nghệ)"
+QSB,125,"(Toán, Lý, Hoá)"
+QSB,125,"(Toán, Lý, Anh)"
+QSB,125,"(Toán, Lý, Công nghệ)"
+QSB,141,"(Toán, Lý, Hoá)"
+QSB,141,"(Toán, Lý, Anh)"
+QSB,141,"(Toán, Lý, Tin)"
+QSB,141,"(Toán, Lý, Công nghệ)"
+QSB,208,"(Toán, Lý, Hoá)"
+QSB,208,"(Toán, Lý, Anh)"
+QSB,208,"(Toán, Lý, Tin)"
+QSB,208,"(Toán, Lý, Công nghệ)"
+QSB,206,"(Toán, Lý, Hoá)"
+QSB,206,"(Toán, Lý, Anh)"
+QSB,206,"(Toán, Lý, Tin)"
+QSB,206,"(Toán, Lý, Công nghệ)"
+QSB,207,"(Toán, Lý, Hoá)"
+QSB,207,"(Toán, Lý, Anh)"
+QSB,207,"(Toán, Lý, Tin)"
+QSB,207,"(Toán, Lý, Công nghệ)"
+QSB,258,"(Toán, Lý, Hoá)"
+QSB,258,"(Toán, Lý, Anh)"
+QSB,258,"(Toán, Lý, Tin)"
+QSB,258,"(Toán, Lý, Công nghệ)"
+QSB,257,"(Toán, Lý, Hoá)"
+QSB,257,"(Toán, Lý, Anh)"
+QSB,257,"(Toán, Lý, Tin)"
+QSB,257,"(Toán, Lý, Công nghệ)"
+QSB,209,"(Toán, Lý, Hoá)"
+QSB,209,"(Toán, Lý, Anh)"
+QSB,209,"(Toán, Lý, Tin)"
+QSB,209,"(Toán, Lý, Công nghệ)"
+QSB,210,"(Toán, Lý, Hoá)"
+QSB,210,"(Toán, Lý, Anh)"
+QSB,210,"(Toán, Lý, Tin)"
+QSB,210,"(Toán, Lý, Công nghệ)"
+QSB,211,"(Toán, Lý, Hoá)"
+QSB,211,"(Toán, Lý, Anh)"
+QSB,211,"(Toán, Lý, Tin)"
+QSB,211,"(Toán, Lý, Công nghệ)"
+QSB,214,"(Toán, Hoá, Sinh)"
+QSB,214,"(Toán, Hoá, Lý)"
+QSB,214,"(Toán, Hoá, Anh)"
+QSB,214,"(Toán, Hoá, Tin)"
+QSB,214,"(Toán, Hoá, Công nghệ)"
+QSB,218,"(Toán, Sinh, Hóa)"
+QSB,218,"(Toán, Sinh, Lý)"
+QSB,218,"(Toán, Sinh, Anh)"
+QSB,218,"(Toán, Sinh, Tin)"
+QSB,218,"(Toán, Sinh, Công nghệ)"
+QSB,254,"(Toán, Sinh, Hóa)"
+QSB,254,"(Toán, Sinh, Lý)"
+QSB,254,"(Toán, Sinh, Anh)"
+QSB,254,"(Toán, Sinh, Tin)"
+QSB,254,"(Toán, Sinh, Công nghệ)"
+QSB,219,"(Toán, Hoá, Sinh)"
+QSB,219,"(Toán, Hoá, Lý)"
+QSB,219,"(Toán, Hoá, Anh)"
+QSB,219,"(Toán, Hoá, Tin)"
+QSB,219,"(Toán, Hoá, Công nghệ)"
+QSB,215,"(Toán, Lý, Hoá)"
+QSB,215,"(Toán, Lý, Anh)"
+QSB,215,"(Toán, Lý, Tin)"
+QSB,215,"(Toán, Lý, Công nghệ)"
+QSB,217,"(Toán, Lý, Anh)"
+QSB,217,"(Toán, Lý, Công nghệ)"
+QSB,220,"(Toán, Lý, Hoá)"
+QSB,220,"(Toán, Lý, Anh)"
+QSB,220,"(Toán, Lý, Công nghệ)"
+QSB,223,"(Toán, Lý, Hoá)"
+QSB,223,"(Toán, Lý, Anh)"
+QSB,223,"(Toán, Lý, Tin)"
+QSB,223,"(Toán, Lý, Công nghệ)"
+QSB,253,"(Toán, Lý, Hoá)"
+QSB,253,"(Toán, Lý, Anh)"
+QSB,253,"(Toán, Lý, Tin)"
+QSB,253,"(Toán, Lý, Công nghệ)"
+QSB,225,"(Toán, Lý, Hoá)"
+QSB,225,"(Toán, Lý, Anh)"
+QSB,225,"(Toán, Lý, Công nghệ)"
+QSB,255,"(Toán, Lý, Hoá)"
+QSB,255,"(Toán, Lý, Anh)"
+QSB,255,"(Toán, Lý, Công nghệ)"
+QSB,228,"(Toán, Lý, Hoá)"
+QSB,228,"(Toán, Lý, Anh)"
+QSB,228,"(Toán, Lý, Tin)"
+QSB,228,"(Toán, Lý, Công nghệ)"
+QSB,229,"(Toán, Lý, Hoá)"
+QSB,229,"(Toán, Lý, Anh)"
+QSB,229,"(Toán, Lý, Công nghệ)"
+QSB,237,"(Toán, Lý, Sinh)"
+QSB,237,"(Toán, Lý, Hoá)"
+QSB,237,"(Toán, Lý, Anh)"
+QSB,237,"(Toán, Lý, Tin)"
+QSB,237,"(Toán, Lý, Công nghệ)"
+QSB,242,"(Toán, Lý, Hoá)"
+QSB,242,"(Toán, Lý, Anh)"
+QSB,242,"(Toán, Lý, Tin)"
+QSB,242,"(Toán, Lý, Công nghệ)"
+QSB,245,"(Toán, Lý, Hoá)"
+QSB,245,"(Toán, Lý, Anh)"
+QSB,245,"(Toán, Lý, Tin)"
+QSB,245,"(Toán, Lý, Công nghệ)"
+QSB,266,"(Toán, Lý, Hoá)"
+QSB,266,"(Toán, Lý, Anh)"
+QSB,266,"(Toán, Lý, Tin)"
+QSB,266,"(Toán, Lý, Công nghệ)"
+QSB,268,"(Toán, Lý, Hoá)"
+QSB,268,"(Toán, Lý, Anh)"
+QSB,268,"(Toán, Lý, Tin)"
+QSB,268,"(Toán, Lý, Công nghệ)"
+QSB,306,"(Toán, Lý, Hoá)"
+QSB,306,"(Toán, Lý, Anh)"
+QSB,306,"(Toán, Lý, Tin)"
+QSB,306,"(Toán, Lý, Công nghệ)"
+QSB,307,"(Toán, Lý, Hoá)"
+QSB,307,"(Toán, Lý, Anh)"
+QSB,307,"(Toán, Lý, Tin)"
+QSB,307,"(Toán, Lý, Công nghệ)"
+QSB,308,"(Toán, Lý, Hoá)"
+QSB,308,"(Toán, Lý, Anh)"
+QSB,308,"(Toán, Lý, Tin)"
+QSB,308,"(Toán, Lý, Công nghệ)"
+QSB,309,"(Toán, Lý, Hoá)"
+QSB,309,"(Toán, Lý, Anh)"
+QSB,309,"(Toán, Lý, Tin)"
+QSB,309,"(Toán, Lý, Công nghệ)"
+QSB,310,"(Toán, Lý, Hoá)"
+QSB,310,"(Toán, Lý, Anh)"
+QSB,310,"(Toán, Lý, Tin)"
+QSB,310,"(Toán, Lý, Công nghệ)"
+QSB,314,"(Toán, Hoá, Sinh)"
+QSB,314,"(Toán, Hoá, Lý)"
+QSB,314,"(Toán, Hoá, Anh)"
+QSB,314,"(Toán, Hoá, Tin)"
+QSB,314,"(Toán, Hoá, Công nghệ)"
+QSB,315,"(Toán, Lý, Hoá)"
+QSB,315,"(Toán, Lý, Anh)"
+QSB,315,"(Toán, Lý, Tin)"
+QSB,315,"(Toán, Lý, Công nghệ)"
+QSB,319,"(Toán, Hoá, Sinh)"
+QSB,319,"(Toán, Hoá, Lý)"
+QSB,319,"(Toán, Hoá, Anh)"
+QSB,319,"(Toán, Hoá, Tin)"
+QSB,319,"(Toán, Hoá, Công nghệ)"
+QSB,323,"(Toán, Lý, Hoá)"
+QSB,323,"(Toán, Lý, Anh)"
+QSB,323,"(Toán, Lý, Tin)"
+QSB,323,"(Toán, Lý, Công nghệ)"
+QSB,325,"(Toán, Lý, Hoá)"
+QSB,325,"(Toán, Lý, Anh)"
+QSB,325,"(Toán, Lý, Công nghệ)"
+QSB,342,"(Toán, Lý, Hoá)"
+QSB,342,"(Toán, Lý, Anh)"
+QSB,342,"(Toán, Lý, Tin)"
+QSB,342,"(Toán, Lý, Công nghệ)"
+QSB,345,"(Toán, Lý, Hoá)"
+QSB,345,"(Toán, Lý, Anh)"
+QSB,345,"(Toán, Lý, Tin)"
+QSB,345,"(Toán, Lý, Công nghệ)"
+QSB,406,"(Toán, Lý, Hoá)"
+QSB,406,"(Toán, Lý, Anh)"
+QSB,406,"(Toán, Lý, Tin)"
+QSB,406,"(Toán, Lý, Công nghệ)"
+QSB,416,"(Toán, Lý, Hoá)"
+QSB,416,"(Toán, Lý, Anh)"
+QSB,416,"(Toán, Lý, Tin)"
+QSB,416,"(Toán, Lý, Công nghệ)"

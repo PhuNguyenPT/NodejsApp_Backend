@@ -7,7 +7,7 @@ import { Logger } from "winston";
 
 import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
-import { UserEntity } from "@/entity/user.entity.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
 import { IUserRepository } from "@/repository/user-repository-interface.js";
 import { IUserService } from "@/service/user-service.interface.js";
 import { TYPES } from "@/type/container/types.js";

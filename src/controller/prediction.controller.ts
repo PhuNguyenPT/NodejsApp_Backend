@@ -22,7 +22,7 @@ import {
     L2PredictResult,
     UserInputL2,
 } from "@/dto/predict/predict.js";
-import { PredictionResultEntity } from "@/entity/prediction-result.entity.js";
+import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
 import { PredictionResultMapper } from "@/mapper/prediction-result-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";

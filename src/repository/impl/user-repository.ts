@@ -4,7 +4,7 @@ import { Repository } from "typeorm";
 import { postgresDataSource } from "@/config/data-source.config.js";
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config.js";
 import { User, UserAdmin } from "@/dto/user/user.js";
-import { UserEntity } from "@/entity/user.entity.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
 import { IUserRepository } from "@/repository/user-repository-interface.js";
 import { EntityExistsException } from "@/type/exception/entity-exists.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";

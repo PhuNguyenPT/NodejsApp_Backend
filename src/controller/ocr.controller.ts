@@ -21,7 +21,7 @@ import {
     BatchScoreExtractionResult,
     OcrResultResponse,
 } from "@/dto/predict/ocr.js";
-import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
+import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 import { OcrResultMapper } from "@/mapper/ocr-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";

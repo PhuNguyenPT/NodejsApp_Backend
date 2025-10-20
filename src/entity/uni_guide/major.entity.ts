@@ -9,7 +9,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { MajorGroupEntity } from "@/entity/major-group.entity.js";
+import { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
 
 /**
  * Represents a specific Major (e.g., "71401: Khoa học giáo dục").

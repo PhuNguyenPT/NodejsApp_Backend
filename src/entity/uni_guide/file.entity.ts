@@ -12,9 +12,9 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { OcrResultEntity } from "@/entity/ocr-result.entity.js";
-import { StudentEntity } from "@/entity/student.entity.js";
-import { UserEntity } from "@/entity/user.entity.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
+import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
 /**
  * File status - must be one of: active, archived, deleted

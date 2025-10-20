@@ -11,8 +11,8 @@ import {
     JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
     strategyOptionsWithRequest,
 } from "@/config/jwt.config.js";
-import { TokenType } from "@/entity/jwt.entity.js";
-import { UserEntity } from "@/entity/user.entity.js";
+import { TokenType } from "@/entity/security/jwt.entity.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";

@@ -5,7 +5,7 @@ import { MigrationInterface, QueryRunner } from "typeorm";
 import { fileURLToPath } from "url";
 
 import { logger } from "@/config/logger.config.js";
-import { AdmissionEntity } from "@/entity/admission.entity.js";
+import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
 
 // Define the CSV row structure for type safety
 interface AdmissionCsvRow {
@@ -57,7 +57,7 @@ export class AdmissionData1757342612756 implements MigrationInterface {
             }
 
             logger.info(
-                `Successfully imported ${totalRecords.toString()} total records from all CSV files.`,
+                `Successfully imported ${totalRecords.toString()} total records from all admission CSV files.`,
             );
         } catch (error: unknown) {
             logger.error("Failed to import CSV data:", error);

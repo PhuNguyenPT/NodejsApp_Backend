@@ -1,5 +1,5 @@
 import { FileResponse } from "@/dto/file/file-response.js";
-import { FileEntity } from "@/entity/file.entity.js";
+import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 
 export const FileMapper = {
     toFileDownloadResponse(file: FileEntity) {
