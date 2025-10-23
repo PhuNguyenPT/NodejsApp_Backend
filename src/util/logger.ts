@@ -52,17 +52,26 @@ export function createLoggerOptions(
                 logMessage += `\n${stack}`;
             }
 
-            // Add metadata if present
-            const metaKeys = Object.keys(meta);
+            // Add metadata if present - filter out winston internals
+            const metaKeys = Object.keys(meta).filter(
+                (key) => !["level", "message", "timestamp"].includes(key),
+            );
             if (metaKeys.length > 0) {
-                logMessage += `\n${JSON.stringify(meta, null, 2)}`;
+                const cleanMeta = metaKeys.reduce<Record<string, unknown>>(
+                    (acc, key) => {
+                        acc[key] = meta[key];
+                        return acc;
+                    },
+                    {},
+                );
+                logMessage += `\n${JSON.stringify(cleanMeta, null, 2)}`;
             }
 
             return logMessage;
         }),
     );
 
-    // Production format - structured JSON
+    // Production format - structured JSON (NO COLORS)
     const productionFormat = format.combine(
         format.errors({ stack: true }),
         format.timestamp(),
@@ -85,27 +94,59 @@ export function createLoggerOptions(
                 level: "error",
                 maxFiles: 5,
                 maxsize: 5242880, // 5MB
+                tailable: true, // Better for log rotation
             }),
             new transports.File({
                 filename: `${logDir}/combined.log`,
                 format: productionFormat,
                 maxFiles: 5,
                 maxsize: 5242880, // 5MB
+                tailable: true,
             }),
         );
     }
 
+    // Exception handlers
+    const exceptionHandlers: winston.transport[] = [];
+    const rejectionHandlers: winston.transport[] = [];
+
+    if (enableFileLogging || isProduction) {
+        exceptionHandlers.push(
+            new transports.File({
+                filename: `${logDir}/exceptions.log`,
+                format: productionFormat, // Add format
+                maxFiles: 5,
+                maxsize: 5242880,
+            }),
+        );
+
+        rejectionHandlers.push(
+            new transports.File({
+                filename: `${logDir}/rejections.log`,
+                format: productionFormat, // Add format
+                maxFiles: 5,
+                maxsize: 5242880,
+            }),
+        );
+
+        // Also log to console in development for better visibility
+        if (!isProduction) {
+            exceptionHandlers.push(
+                new transports.Console({
+                    format: developmentFormat,
+                }),
+            );
+            rejectionHandlers.push(
+                new transports.Console({
+                    format: developmentFormat,
+                }),
+            );
+        }
+    }
+
     return {
         exceptionHandlers:
-            enableFileLogging || isProduction
-                ? [
-                      new transports.File({
-                          filename: `${logDir}/exceptions.log`,
-                          maxFiles: 5,
-                          maxsize: 5242880,
-                      }),
-                  ]
-                : undefined,
+            exceptionHandlers.length > 0 ? exceptionHandlers : undefined,
         exitOnError: false,
         format: format.combine(
             format.errors({ stack: true }),
@@ -114,15 +155,7 @@ export function createLoggerOptions(
         level: logLevel,
         levels: logLevels,
         rejectionHandlers:
-            enableFileLogging || isProduction
-                ? [
-                      new transports.File({
-                          filename: `${logDir}/rejections.log`,
-                          maxFiles: 5,
-                          maxsize: 5242880,
-                      }),
-                  ]
-                : undefined,
+            rejectionHandlers.length > 0 ? rejectionHandlers : undefined,
         transports: loggerTransports,
     };
 }
