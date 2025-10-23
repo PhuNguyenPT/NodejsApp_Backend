@@ -1,4 +1,4 @@
-// src/config/authentication.ts - Updated version
+// src/config/authentication.ts - Async/Await version (cleanest stack traces)
 import type { AuthenticateCallback } from "passport";
 
 import express from "express";
@@ -23,44 +23,52 @@ type SecurityType = (typeof SECURITY_TYPES)[keyof typeof SECURITY_TYPES];
  * TSOA Authentication function for Express.
  * This function is called by the TSOA runtime for each secured route.
  */
-export function expressAuthentication(
+export async function expressAuthentication(
     request: express.Request,
     securityName: string,
     scopes?: string[],
 ): Promise<Express.User> {
-    return new Promise((resolve, reject) => {
-        if (!isSupportedSecurityType(securityName)) {
-            reject(
-                new AuthenticationException(
-                    `Unknown security type: ${securityName}`,
-                ),
-            );
-            return;
-        }
+    if (!isSupportedSecurityType(securityName)) {
+        throw new AuthenticationException(
+            `Unknown security type: ${securityName}`,
+        );
+    }
 
-        try {
-            const customCallback = createJWTCallback(
-                request,
-                scopes,
-                resolve,
-                reject,
-            );
+    try {
+        const user = await authenticateRequest(request, scopes);
+        return user;
+    } catch (error) {
+        // Convert any unexpected errors to AuthenticationException
+        const authError =
+            error instanceof Error
+                ? error
+                : new AuthenticationException("Authentication failed");
+        throw authError;
+    }
+}
 
-            const authenticator = passport.authenticate(
-                "jwt",
-                authenticateOptions,
-                customCallback,
-            ) as (req: express.Request) => void;
+/**
+ * Authenticate the request using passport JWT strategy
+ */
+function authenticateRequest(
+    request: express.Request,
+    scopes?: string[],
+): Promise<Express.User> {
+    return new Promise(function passportAuthenticatePromise(resolve, reject) {
+        const customCallback = createJWTCallback(
+            request,
+            scopes,
+            resolve,
+            reject,
+        );
 
-            authenticator(request);
-        } catch (error) {
-            // Convert any unexpected errors to AuthenticationException
-            const authError =
-                error instanceof Error
-                    ? new AuthenticationException(error.message)
-                    : new AuthenticationException("Authentication failed");
-            reject(authError);
-        }
+        const authenticator = passport.authenticate(
+            "jwt",
+            authenticateOptions,
+            customCallback,
+        ) as (req: express.Request) => void;
+
+        authenticator(request);
     });
 }
 
@@ -135,7 +143,7 @@ function createJWTCallback(
     resolve: (value: Express.User) => void,
     reject: (reason: Error) => void,
 ): AuthenticateCallback {
-    return (err, user, info) => {
+    return function jwtAuthenticationCallback(err, user, info) {
         try {
             // Handle authentication errors (network issues, malformed requests, etc.)
             if (err) {

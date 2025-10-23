@@ -37,12 +37,7 @@
         "bearerFormat": "JWT",
         "in": "header"
       }
-    },
-    "security": [
-      {
-        "bearerAuth": []
-      }
-    ]
+    }
   },
   "routes": {
     "routesDir": "src/generated",

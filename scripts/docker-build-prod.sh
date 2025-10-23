@@ -15,7 +15,6 @@ echo "📦 Building for local testing..."
 docker buildx build \
   --platform linux/amd64 \
   -t "$IMAGE_NAME:latest" \
-  -t "$IMAGE_NAME:$VERSION" \
   --cache-from type=local,src="$CACHE_DIR" \
   --cache-to type=local,dest="$CACHE_DIR",mode=max \
   --load \
@@ -24,7 +23,6 @@ docker buildx build \
 echo "✅ Build complete! Image ready for testing."
 echo "📦 Tagged as:"
 echo "   - $IMAGE_NAME:latest"
-echo "   - $IMAGE_NAME:$VERSION"
 echo ""
 echo "🧪 To test locally: docker run --rm $IMAGE_NAME:latest node --version"
 echo "🚀 To push: ./docker-push-prod.sh"
