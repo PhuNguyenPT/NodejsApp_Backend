@@ -7,7 +7,6 @@ import { fileURLToPath } from "url";
 import { logger } from "@/config/logger.config.js";
 import { UniL1Entity } from "@/entity/machine_learning/uni_l1.entity.js";
 
-// Define the Parquet row structure for type safety
 interface TfidfContentStructure {
     list: { element: number }[];
 }
@@ -78,15 +77,12 @@ export class UniItemL1Data1761452875227 implements MigrationInterface {
             uniL1Record.admissionCode = record.admission_code ?? null;
             uniL1Record.tuitionFee = record.tuition_fee ?? null;
 
-            // Handle tfidf_content - convert from nested structure to flat array
-            // Store in vector format: [1,2,3] not "[1,2,3]"
             if (!record.tfidf_content) {
                 uniL1Record.tfidfContent = null;
             } else if (Array.isArray(record.tfidf_content.list)) {
                 const flatArray = record.tfidf_content.list.map(
                     (item) => item.element,
                 );
-                // Use vector format: [x,y,z] without JSON.stringify
                 uniL1Record.tfidfContent =
                     flatArray.length === 0 ? "[]" : `[${flatArray.join(",")}]`;
             } else {
