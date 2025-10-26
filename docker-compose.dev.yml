@@ -15,12 +15,12 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      PGDATA: /var/lib/postgresql/${POSTGRES_VERSION}/docker
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
     ports:
       - "${POSTGRES_EXTERNAL_PORT}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data/pgdata
+      - postgres_data:/var/lib/postgresql
     networks:
       - app-network
       - shared-network
