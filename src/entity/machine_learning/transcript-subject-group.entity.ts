@@ -25,13 +25,13 @@ export class TranscriptSubjectGroupEntity {
     id!: string;
 
     @Column({ name: "major_code", nullable: true, type: "varchar" })
-    major_code!: string;
+    major_code!: null | string;
 
     @Column({ name: "subject_combination", nullable: true, type: "varchar" })
-    subject_combination!: string;
+    subject_combination!: null | string;
 
     @Column({ name: "uni_code", nullable: true, type: "varchar" })
-    uni_code!: string;
+    uni_code!: null | string;
 
     @UpdateDateColumn({
         insert: false,

@@ -43,46 +43,46 @@ export class L2Entity {
         nullable: true,
         type: "integer",
     })
-    academic_performance_grade_10!: number;
+    academic_performance_grade_10!: null | number;
 
     @Column({
         name: "academic_performance_grade_11",
         nullable: true,
         type: "integer",
     })
-    academic_performance_grade_11!: number;
+    academic_performance_grade_11!: null | number;
 
     @Column({
         name: "academic_performance_grade_12",
         nullable: true,
         type: "integer",
     })
-    academic_performance_grade_12!: number;
+    academic_performance_grade_12!: null | number;
 
     @Column({ name: "admission_code", nullable: true, type: "varchar" })
-    admissionCode!: string;
+    admissionCode!: null | string;
 
     @Column({ name: "certification_name", nullable: true, type: "integer" })
-    certificationName!: number;
+    certificationName!: null | number;
 
     @Column({ name: "certification_score", nullable: true, type: "integer" })
-    certificationScore!: number;
+    certificationScore!: null | number;
 
     @Column({
         name: "certification_score_equivalence",
         nullable: true,
         type: "integer",
     })
-    certificationScoreEquivalence!: number;
+    certificationScoreEquivalence!: null | number;
 
     @Column({ name: "conduct_grade_10", nullable: true, type: "integer" })
-    conduct_grade_10!: number;
+    conduct_grade_10!: null | number;
 
     @Column({ name: "conduct_grade_11", nullable: true, type: "integer" })
-    conduct_grade_11!: number;
+    conduct_grade_11!: null | number;
 
     @Column({ name: "conduct_grade_12", nullable: true, type: "integer" })
-    conduct_grade_12!: number;
+    conduct_grade_12!: null | number;
 
     @CreateDateColumn({
         insert: true,
@@ -95,28 +95,28 @@ export class L2Entity {
     id!: string;
 
     @Column({ name: "is_base_row", nullable: true, type: "boolean" })
-    isBaseRow!: boolean;
+    isBaseRow!: boolean | null;
 
     @Column({ name: "major_code", nullable: true, type: "integer" })
-    majorCode!: number;
+    majorCode!: null | number;
 
     @Column({ name: "province", nullable: true, type: "varchar" })
-    province!: string;
+    province!: null | string;
 
     @Column({ name: "score", nullable: true, type: "numeric" })
-    score!: number;
+    score!: null | number;
 
     @Column({ name: "score_final", nullable: true, type: "numeric" })
-    scoreFinal!: number;
+    scoreFinal!: null | number;
 
     @Column({ name: "subject_combination", nullable: true, type: "varchar" })
-    subjectCombination!: string;
+    subjectCombination!: null | string;
 
     @Column({ name: "tuition_fee", nullable: true, type: "numeric" })
-    tuitionFee!: number;
+    tuitionFee!: null | number;
 
     @Column({ name: "uni_type_label", nullable: true, type: "smallint" })
-    uniTypeLabel!: number;
+    uniTypeLabel!: null | number;
 
     @UpdateDateColumn({
         insert: false,
@@ -126,5 +126,5 @@ export class L2Entity {
     updatedAt!: Date;
 
     @Column({ name: "y_base", nullable: true, type: "numeric" })
-    yBase!: number;
+    yBase!: null | number;
 }

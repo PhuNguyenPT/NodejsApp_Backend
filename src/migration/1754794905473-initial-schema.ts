@@ -17,16 +17,13 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "uni_guide"."awards" DROP CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae"`,
         );
         await queryRunner.query(
+            `ALTER TABLE "uni_guide"."certifications" DROP CONSTRAINT "FK_94ecc704512cfe5019d2577a994"`,
+        );
+        await queryRunner.query(
             `ALTER TABLE "uni_guide"."files" DROP CONSTRAINT "FK_7e7425b17f9e707331e9a6c7335"`,
         );
         await queryRunner.query(
             `ALTER TABLE "uni_guide"."files" DROP CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "uni_guide"."certifications" DROP CONSTRAINT "FK_94ecc704512cfe5019d2577a994"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "uni_guide"."majors" DROP CONSTRAINT "FK_10c322c60cd25c2c170a3302033"`,
         );
         await queryRunner.query(
             `ALTER TABLE "uni_guide"."ocr_results" DROP CONSTRAINT "FK_4067652cc759950247f03b4a002"`,
@@ -36,6 +33,9 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `ALTER TABLE "uni_guide"."prediction_results" DROP CONSTRAINT "FK_7c8315e2178499a49cf2439e47b"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "uni_guide"."majors" DROP CONSTRAINT "FK_10c322c60cd25c2c170a3302033"`,
         );
         await queryRunner.query(
             `ALTER TABLE "uni_guide"."student_admissions" DROP CONSTRAINT "FK_223f964a2fff3f7a45610f43ded"`,
@@ -105,44 +105,6 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(`DROP TYPE "uni_guide"."awards_level_enum"`);
         await queryRunner.query(`DROP TYPE "uni_guide"."awards_category_enum"`);
         await queryRunner.query(
-            `DROP INDEX "uni_guide"."idx_major_groups_code"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "uni_guide"."idx_major_groups_created_at"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "uni_guide"."idx_major_groups_english_name"`,
-        );
-        await queryRunner.query(`DROP INDEX "uni_guide"."idx_major_groups_id"`);
-        await queryRunner.query(
-            `DROP INDEX "uni_guide"."idx_major_groups_name"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "uni_guide"."idx_major_groups_updated_at"`,
-        );
-        await queryRunner.query(`DROP TABLE "uni_guide"."major_groups"`);
-        await queryRunner.query(
-            `DROP TYPE "uni_guide"."major_groups_name_enum"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "machine_learning"."idx_tsg_major_code"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "machine_learning"."idx_tsg_uni_code"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "machine_learning"."idx_tsg_subject_combination"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "machine_learning"."idx_tsg_created_at"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "machine_learning"."idx_tsg_updated_at"`,
-        );
-        await queryRunner.query(
-            `DROP TABLE "machine_learning"."transcript_subject_group"`,
-        );
-        await queryRunner.query(
             `DROP INDEX "machine_learning"."idx_l2_academic_performance_grade_10"`,
         );
         await queryRunner.query(
@@ -207,6 +169,26 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `DROP TABLE "machine_learning"."l2_uni_requirement"`,
         );
         await queryRunner.query(
+            `DROP INDEX "uni_guide"."idx_major_groups_code"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "uni_guide"."idx_major_groups_created_at"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "uni_guide"."idx_major_groups_english_name"`,
+        );
+        await queryRunner.query(`DROP INDEX "uni_guide"."idx_major_groups_id"`);
+        await queryRunner.query(
+            `DROP INDEX "uni_guide"."idx_major_groups_name"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "uni_guide"."idx_major_groups_updated_at"`,
+        );
+        await queryRunner.query(`DROP TABLE "uni_guide"."major_groups"`);
+        await queryRunner.query(
+            `DROP TYPE "uni_guide"."major_groups_name_enum"`,
+        );
+        await queryRunner.query(
             `DROP INDEX "machine_learning"."idx_l3_major_code"`,
         );
         await queryRunner.query(
@@ -237,6 +219,25 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(
             `DROP TABLE "machine_learning"."l3_transcript"`,
         );
+        await queryRunner.query(
+            `DROP INDEX "machine_learning"."idx_tsg_major_code"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "machine_learning"."idx_tsg_uni_code"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "machine_learning"."idx_tsg_subject_combination"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "machine_learning"."idx_tsg_created_at"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "machine_learning"."idx_tsg_updated_at"`,
+        );
+        await queryRunner.query(
+            `DROP TABLE "machine_learning"."transcript_subject_group"`,
+        );
+        await queryRunner.query(`DROP TABLE "machine_learning"."uni_l1"`);
         await queryRunner.query(`DROP INDEX "uni_guide"."idx_admissions_code"`);
         await queryRunner.query(`DROP INDEX "uni_guide"."idx_admissions_type"`);
         await queryRunner.query(
@@ -288,14 +289,6 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `DROP INDEX "uni_guide"."idx_admissions_updated_at"`,
         );
         await queryRunner.query(`DROP TABLE "uni_guide"."admissions"`);
-        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_student_id"`);
-        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_type"`);
-        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_status"`);
-        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_created_at"`);
-        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_updated_at"`);
-        await queryRunner.query(`DROP TABLE "uni_guide"."files"`);
-        await queryRunner.query(`DROP TYPE "uni_guide"."files_status_enum"`);
-        await queryRunner.query(`DROP TYPE "uni_guide"."files_filetype_enum"`);
         await queryRunner.query(
             `DROP INDEX "uni_guide"."idx_certification_student_id"`,
         );
@@ -315,7 +308,14 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(
             `DROP TYPE "uni_guide"."certifications_cefr_enum"`,
         );
-        await queryRunner.query(`DROP TABLE "uni_guide"."majors"`);
+        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_student_id"`);
+        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_type"`);
+        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_status"`);
+        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_created_at"`);
+        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_updated_at"`);
+        await queryRunner.query(`DROP TABLE "uni_guide"."files"`);
+        await queryRunner.query(`DROP TYPE "uni_guide"."files_status_enum"`);
+        await queryRunner.query(`DROP TYPE "uni_guide"."files_filetype_enum"`);
         await queryRunner.query(`DROP INDEX "uni_guide"."idx_ocr_student_id"`);
         await queryRunner.query(`DROP INDEX "uni_guide"."idx_ocr_file_id"`);
         await queryRunner.query(`DROP INDEX "uni_guide"."idx_ocr_status"`);
@@ -347,6 +347,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(
             `DROP TYPE "uni_guide"."prediction_results_status_enum"`,
         );
+        await queryRunner.query(`DROP TABLE "uni_guide"."majors"`);
         await queryRunner.query(
             `DROP INDEX "uni_guide"."idx_student_admissions_student_id"`,
         );
@@ -383,6 +384,9 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE INDEX "idx_student_admissions_student_id" ON "uni_guide"."student_admissions" ("student_id") `,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "uni_guide"."majors" ("code" character varying(255) NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "group_id" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "UQ_8b287db61b00b45e58c854f19da" UNIQUE ("code"), CONSTRAINT "PK_9d82cf80fe0593040e50ccb297e" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE TYPE "uni_guide"."prediction_results_status_enum" AS ENUM('completed', 'failed', 'partial', 'processing')`,
@@ -430,30 +434,6 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "idx_ocr_student_id" ON "uni_guide"."ocr_results" ("studentId") `,
         );
         await queryRunner.query(
-            `CREATE TABLE "uni_guide"."majors" ("code" character varying(255) NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "group_id" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "UQ_8b287db61b00b45e58c854f19da" UNIQUE ("code"), CONSTRAINT "PK_9d82cf80fe0593040e50ccb297e" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
-            `CREATE TYPE "uni_guide"."certifications_cefr_enum" AS ENUM('A1', 'A2', 'B1', 'B2', 'C1', 'C2')`,
-        );
-        await queryRunner.query(
-            `CREATE TABLE "uni_guide"."certifications" ("cefr" "uni_guide"."certifications_cefr_enum", "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "examType" jsonb, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "level" character varying(50), "studentId" uuid NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedBy" character varying(255), CONSTRAINT "PK_fd763d412e4a1fb1b6dadd6e72b" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_certification_updated_at" ON "uni_guide"."certifications" ("updatedAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_certification_created_at" ON "uni_guide"."certifications" ("createdAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_certification_level" ON "uni_guide"."certifications" ("level") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_certification_cefr" ON "uni_guide"."certifications" ("cefr") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_certification_student_id" ON "uni_guide"."certifications" ("studentId") `,
-        );
-        await queryRunner.query(
             `CREATE TYPE "uni_guide"."files_filetype_enum" AS ENUM('certificate', 'document', 'image', 'other', 'portfolio', 'resume', 'transcript')`,
         );
         await queryRunner.query(
@@ -476,6 +456,27 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE INDEX "idx_file_student_id" ON "uni_guide"."files" ("studentId") `,
+        );
+        await queryRunner.query(
+            `CREATE TYPE "uni_guide"."certifications_cefr_enum" AS ENUM('A1', 'A2', 'B1', 'B2', 'C1', 'C2')`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "uni_guide"."certifications" ("cefr" "uni_guide"."certifications_cefr_enum", "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "examType" jsonb, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "level" character varying(50), "studentId" uuid NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedBy" character varying(255), CONSTRAINT "PK_fd763d412e4a1fb1b6dadd6e72b" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_certification_updated_at" ON "uni_guide"."certifications" ("updatedAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_certification_created_at" ON "uni_guide"."certifications" ("createdAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_certification_level" ON "uni_guide"."certifications" ("level") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_certification_cefr" ON "uni_guide"."certifications" ("cefr") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_certification_student_id" ON "uni_guide"."certifications" ("studentId") `,
         );
         await queryRunner.query(
             `CREATE TABLE "uni_guide"."admissions" ("admission_code" character varying NOT NULL, "admission_type" character varying NOT NULL, "admission_type_name" character varying NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "major_code" integer NOT NULL, "major_name" character varying NOT NULL, "province" character varying NOT NULL, "study_program" character varying NOT NULL, "subject_combination" character varying NOT NULL, "tuition_fee" bigint NOT NULL, "uni_code" character varying NOT NULL, "uni_name" character varying NOT NULL, "uni_type" character varying NOT NULL, "uni_web_link" character varying NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_6d47682a899dfa0a78ce11fe98a" PRIMARY KEY ("id"))`,
@@ -535,6 +536,27 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "idx_admissions_code" ON "uni_guide"."admissions" ("admission_code") `,
         );
         await queryRunner.query(
+            `CREATE TABLE "machine_learning"."uni_l1" ("admission_code" character varying, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "tfidf_content" text, "tuition_fee" numeric, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_44be078a5009cc7dd612b8f68f4" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "machine_learning"."transcript_subject_group" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "major_code" character varying, "subject_combination" character varying, "uni_code" character varying, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_5e73487bc6e343ec891916e616c" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_tsg_updated_at" ON "machine_learning"."transcript_subject_group" ("updatedAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_tsg_created_at" ON "machine_learning"."transcript_subject_group" ("createdAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_tsg_subject_combination" ON "machine_learning"."transcript_subject_group" ("subject_combination") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_tsg_uni_code" ON "machine_learning"."transcript_subject_group" ("uni_code") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_tsg_major_code" ON "machine_learning"."transcript_subject_group" ("major_code") `,
+        );
+        await queryRunner.query(
             `CREATE TABLE "machine_learning"."l3_transcript" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "major_code" character varying, "major_group" integer, "major_name" character varying, "province" character varying, "score" numeric, "tuition_fee" numeric, "uni_code" character varying, "uni_type" smallint, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_114e86d760f6c009065b0d3435b" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
@@ -566,6 +588,30 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE INDEX "idx_l3_major_code" ON "machine_learning"."l3_transcript" ("major_code") `,
+        );
+        await queryRunner.query(
+            `CREATE TYPE "uni_guide"."major_groups_name_enum" AS ENUM('Nông, lâm nghiệp và thủy sản', 'Kiến trúc và xây dựng', 'Nghệ thuật', 'Kinh doanh và quản lý', 'Máy tính và công nghệ thông tin', 'Khoa học giáo dục và đào tạo giáo viên', 'Kỹ thuật', 'Công nghệ kỹ thuật', 'Môi trường và bảo vệ môi trường', 'Sức khỏe', 'Nhân văn', 'Báo chí và thông tin', 'Pháp luật', 'Khoa học sự sống', 'Sản xuất và chế biến', 'Toán và thống kê', 'Khoa học tự nhiên', 'Khác', 'An ninh, Quốc phòng', 'Khoa học xã hội và hành vi', 'Dịch vụ xã hội', 'Du lịch, khách sạn, thể thao và dịch vụ cá nhân', 'Dịch vụ vận tải', 'Thú y')`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "uni_guide"."major_groups" ("code" character varying(255) NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "english_name" character varying(255) NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" "uni_guide"."major_groups_name_enum" NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "UQ_aed9ebe4ce2616b293ff84997a3" UNIQUE ("code"), CONSTRAINT "PK_81b0cba483bec614241a6d20369" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_major_groups_updated_at" ON "uni_guide"."major_groups" ("updatedAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_major_groups_name" ON "uni_guide"."major_groups" ("name") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_major_groups_id" ON "uni_guide"."major_groups" ("id") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_major_groups_english_name" ON "uni_guide"."major_groups" ("english_name") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_major_groups_created_at" ON "uni_guide"."major_groups" ("createdAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_major_groups_code" ON "uni_guide"."major_groups" ("code") `,
         );
         await queryRunner.query(
             `CREATE TABLE "machine_learning"."l2_uni_requirement" ("academic_performance_grade_10" integer, "academic_performance_grade_11" integer, "academic_performance_grade_12" integer, "admission_code" character varying, "certification_name" integer, "certification_score" integer, "certification_score_equivalence" integer, "conduct_grade_10" integer, "conduct_grade_11" integer, "conduct_grade_12" integer, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "is_base_row" boolean, "major_code" integer, "province" character varying, "score" numeric, "score_final" numeric, "subject_combination" character varying, "tuition_fee" numeric, "uni_type_label" smallint, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "y_base" numeric, CONSTRAINT "PK_8de7bae2fd96ba7e808ccc8e236" PRIMARY KEY ("id"))`,
@@ -632,48 +678,6 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE INDEX "idx_l2_academic_performance_grade_10" ON "machine_learning"."l2_uni_requirement" ("academic_performance_grade_10") `,
-        );
-        await queryRunner.query(
-            `CREATE TABLE "machine_learning"."transcript_subject_group" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "major_code" character varying, "subject_combination" character varying, "uni_code" character varying, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_5e73487bc6e343ec891916e616c" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_tsg_updated_at" ON "machine_learning"."transcript_subject_group" ("updatedAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_tsg_created_at" ON "machine_learning"."transcript_subject_group" ("createdAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_tsg_subject_combination" ON "machine_learning"."transcript_subject_group" ("subject_combination") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_tsg_uni_code" ON "machine_learning"."transcript_subject_group" ("uni_code") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_tsg_major_code" ON "machine_learning"."transcript_subject_group" ("major_code") `,
-        );
-        await queryRunner.query(
-            `CREATE TYPE "uni_guide"."major_groups_name_enum" AS ENUM('Nông, lâm nghiệp và thủy sản', 'Kiến trúc và xây dựng', 'Nghệ thuật', 'Kinh doanh và quản lý', 'Máy tính và công nghệ thông tin', 'Khoa học giáo dục và đào tạo giáo viên', 'Kỹ thuật', 'Công nghệ kỹ thuật', 'Môi trường và bảo vệ môi trường', 'Sức khỏe', 'Nhân văn', 'Báo chí và thông tin', 'Pháp luật', 'Khoa học sự sống', 'Sản xuất và chế biến', 'Toán và thống kê', 'Khoa học tự nhiên', 'Khác', 'An ninh, Quốc phòng', 'Khoa học xã hội và hành vi', 'Dịch vụ xã hội', 'Du lịch, khách sạn, thể thao và dịch vụ cá nhân', 'Dịch vụ vận tải', 'Thú y')`,
-        );
-        await queryRunner.query(
-            `CREATE TABLE "uni_guide"."major_groups" ("code" character varying(255) NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "english_name" character varying(255) NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" "uni_guide"."major_groups_name_enum" NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "UQ_aed9ebe4ce2616b293ff84997a3" UNIQUE ("code"), CONSTRAINT "PK_81b0cba483bec614241a6d20369" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_major_groups_updated_at" ON "uni_guide"."major_groups" ("updatedAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_major_groups_name" ON "uni_guide"."major_groups" ("name") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_major_groups_id" ON "uni_guide"."major_groups" ("id") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_major_groups_english_name" ON "uni_guide"."major_groups" ("english_name") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_major_groups_created_at" ON "uni_guide"."major_groups" ("createdAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_major_groups_code" ON "uni_guide"."major_groups" ("code") `,
         );
         await queryRunner.query(
             `CREATE TYPE "uni_guide"."awards_category_enum" AS ENUM('Sinh Học', 'Hoá Học', 'Tiếng Trung', 'Tiếng Anh', 'Tiếng Pháp', 'Địa Lý', 'Lịch Sử', 'Tin Học', 'Tiếng Nhật', 'Ngữ Văn', 'Toán', 'Vật Lý', 'Tiếng Nga')`,
@@ -775,6 +779,9 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "uni_guide"."student_admissions" ADD CONSTRAINT "FK_223f964a2fff3f7a45610f43ded" FOREIGN KEY ("student_id") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
+            `ALTER TABLE "uni_guide"."majors" ADD CONSTRAINT "FK_10c322c60cd25c2c170a3302033" FOREIGN KEY ("group_id") REFERENCES "uni_guide"."major_groups"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+        );
+        await queryRunner.query(
             `ALTER TABLE "uni_guide"."prediction_results" ADD CONSTRAINT "FK_7c8315e2178499a49cf2439e47b" FOREIGN KEY ("studentId") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
@@ -784,16 +791,13 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "uni_guide"."ocr_results" ADD CONSTRAINT "FK_4067652cc759950247f03b4a002" FOREIGN KEY ("studentId") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
-            `ALTER TABLE "uni_guide"."majors" ADD CONSTRAINT "FK_10c322c60cd25c2c170a3302033" FOREIGN KEY ("group_id") REFERENCES "uni_guide"."major_groups"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "uni_guide"."certifications" ADD CONSTRAINT "FK_94ecc704512cfe5019d2577a994" FOREIGN KEY ("studentId") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-        );
-        await queryRunner.query(
             `ALTER TABLE "uni_guide"."files" ADD CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212" FOREIGN KEY ("studentId") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
             `ALTER TABLE "uni_guide"."files" ADD CONSTRAINT "FK_7e7425b17f9e707331e9a6c7335" FOREIGN KEY ("userId") REFERENCES "security"."users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "uni_guide"."certifications" ADD CONSTRAINT "FK_94ecc704512cfe5019d2577a994" FOREIGN KEY ("studentId") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
             `ALTER TABLE "uni_guide"."awards" ADD CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae" FOREIGN KEY ("studentId") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,

@@ -30,28 +30,28 @@ export class L3Entity {
     id!: string;
 
     @Column({ name: "major_code", nullable: true, type: "varchar" })
-    major_code!: string;
+    major_code!: null | string;
 
     @Column({ name: "major_group", nullable: true, type: "integer" })
-    major_group!: number;
+    major_group!: null | number;
 
     @Column({ name: "major_name", nullable: true, type: "varchar" })
-    major_name!: string;
+    major_name!: null | string;
 
     @Column({ name: "province", nullable: true, type: "varchar" })
-    province!: string;
+    province!: null | string;
 
     @Column({ name: "score", nullable: true, type: "numeric" })
-    score!: number;
+    score!: null | number;
 
     @Column({ name: "tuition_fee", nullable: true, type: "numeric" })
-    tuition_fee!: number;
+    tuition_fee!: null | number;
 
     @Column({ name: "uni_code", nullable: true, type: "varchar" })
-    uni_code!: string;
+    uni_code!: null | string;
 
     @Column({ name: "uni_type", nullable: true, type: "smallint" })
-    uni_type!: number;
+    uni_type!: null | number;
 
     @UpdateDateColumn({
         insert: false,
