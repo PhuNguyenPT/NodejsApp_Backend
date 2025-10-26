@@ -20,7 +20,7 @@ services:
     ports:
       - "${POSTGRES_EXTERNAL_PORT}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data/pgdata
     networks:
       - app-network
       - shared-network
