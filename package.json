@@ -70,6 +70,7 @@
   },
   "homepage": "https://github.com/PhuNguyenPT/NodejsApp#readme",
   "dependencies": {
+    "@dsnp/parquetjs": "^1.8.7",
     "@mistralai/mistralai": "^1.7.5",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
