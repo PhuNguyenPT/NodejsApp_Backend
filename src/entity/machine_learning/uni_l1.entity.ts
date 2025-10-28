@@ -9,7 +9,7 @@ import {
 @Entity({ name: "uni_l1", schema: "machine_learning" })
 export class UniL1Entity {
     @Column({ name: "admission_code", nullable: true, type: "varchar" })
-    admissionCode!: null | string;
+    admissionCode?: string;
 
     @CreateDateColumn({
         insert: true,
@@ -25,22 +25,19 @@ export class UniL1Entity {
         name: "tfidf_content",
         nullable: true,
         transformer: {
-            from: (value: null | string) => {
-                if (value === null) return null;
-                return value;
-            },
-            to: (value: null | number[] | string) => {
-                if (value === null) return null;
+            from: (value: null | string | undefined) => value ?? null,
+            to: (value: null | number[] | string | undefined) => {
+                if (value == null) return null;
                 if (typeof value === "string") return value;
                 return `[${value.join(",")}]`;
             },
         },
         type: "text",
     })
-    tfidfContent!: null | string;
+    tfidfContent?: string;
 
     @Column({ name: "tuition_fee", nullable: true, type: "numeric" })
-    tuitionFee!: null | number;
+    tuitionFee?: number;
 
     @UpdateDateColumn({
         insert: false,
