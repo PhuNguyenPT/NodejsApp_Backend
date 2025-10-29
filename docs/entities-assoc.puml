@@ -1,0 +1,901 @@
+@startuml
+class L2Entity {
+    +academic_performance_grade_10: number | null
+    +academic_performance_grade_11: number | null
+    +academic_performance_grade_12: number | null
+    +admissionCode: string | null
+    +certificationName: number | null
+    +certificationScore: number | null
+    +certificationScoreEquivalence: number | null
+    +conduct_grade_10: number | null
+    +conduct_grade_11: number | null
+    +conduct_grade_12: number | null
+    +createdAt: Date
+    +id: string
+    +isBaseRow: boolean | null
+    +majorCode: number | null
+    +province: string | null
+    +score: number | null
+    +scoreFinal: number | null
+    +subjectCombination: string | null
+    +tuitionFee: number | null
+    +uniTypeLabel: number | null
+    +updatedAt: Date
+    +yBase: number | null
+}
+class L3Entity {
+    +createdAt: Date
+    +id: string
+    +major_code: string | null
+    +major_group: number | null
+    +major_name: string | null
+    +province: string | null
+    +score: number | null
+    +tuition_fee: number | null
+    +uni_code: string | null
+    +uni_type: number | null
+    +updatedAt: Date
+}
+class TranscriptSubjectGroupEntity {
+    +createdAt: Date
+    +id: string
+    +major_code: string | null
+    +subject_combination: string | null
+    +uni_code: string | null
+    +updatedAt: Date
+}
+class UniL1Entity {
+    +admissionCode?: string | undefined
+    +createdAt: Date
+    +id: string
+    +tfidfContent?: string | undefined
+    +tuitionFee?: number | undefined
+    +updatedAt: Date
+}
+interface LoggerConfig {
+    +enableFileLogging: boolean
+    +isProduction: boolean
+    +logDir: string
+    +logLevel: string
+}
+interface Config {
+    +ADMIN_EMAIL: string
+    +ADMIN_NAME: string
+    +ADMIN_PASSWORD: string
+    +CACHE_TTL_ADMISSION_FIELDS: number
+    +CORS_CREDENTIALS: boolean
+    +CORS_ORIGIN: string[]
+    +DB_LOGGING: boolean
+    +DB_RUN_MIGRATIONS_ON_STARTUP: boolean
+    +DB_SYNCHRONIZE: boolean
+    +ENABLE_FILE_LOGGING: boolean
+    +JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS: number
+    +JWT_AUDIENCE: string
+    +JWT_ISSUER: string
+    +JWT_REFRESH_TOKEN_EXPIRATION_IN_SECONDS: number
+    +LOG_DIR: string
+    +LOG_LEVEL: "debug" | "error" | "http" | "info" | "warn"
+    +MISTRAL_API_KEY: string
+    +NODE_ENV: "development" | "production" | "staging"
+    +PAGINATION_DEFAULT_PAGE: number
+    +PAGINATION_DEFAULT_SIZE: number
+    +PAGINATION_MAX_SIZE: number
+    +PAGINATION_MIN_SIZE: number
+    +POSTGRES_DB: string
+    +POSTGRES_HOST: string
+    +POSTGRES_PASSWORD: string
+    +POSTGRES_PORT: number
+    +POSTGRES_USER: string
+    +PRIVATE_KEY_PATH: string
+    +PUBLIC_KEY_PATH: string
+    +REDIS_DB: number
+    +REDIS_HOST: string
+    +REDIS_PASSWORD?: string | undefined
+    +REDIS_PORT: number
+    +REDIS_USER_PASSWORD?: string | undefined
+    +REDIS_USERNAME?: string | undefined
+    +SERVER_BATCH_CONCURRENCY: number
+    +SERVER_HOSTNAME: string
+    +SERVER_PATH: string
+    +SERVER_PORT: number
+    +SERVICE_BATCH_CONCURRENCY: number
+    +SERVICE_INPUTS_PER_WORKER: number
+    +SERVICE_L1_CHUNK_DELAY_MS: number
+    +SERVICE_L1_CHUNK_SIZE_INPUT_ARRAY: number
+    +SERVICE_L2_CHUNK_DELAY_MS: number
+    +SERVICE_L2_CHUNK_SIZE_INPUT_ARRAY: number
+    +SERVICE_MAX_RETRIES: number
+    +SERVICE_MIN_BATCH_CONCURRENCY: number
+    +SERVICE_NETWORK_LATENCY_MS: number
+    +SERVICE_PREDICTION_CONCURRENCY: number
+    +SERVICE_REQUEST_DELAY_MS: number
+    +SERVICE_RETRY_BASE_DELAY_MS: number
+    +SERVICE_RETRY_ITERATION_DELAY_MS: number
+    +SERVICE_SERVER_HOSTNAME: string
+    +SERVICE_SERVER_PATH: string
+    +SERVICE_SERVER_PORT: number
+    +SERVICE_TIMEOUT_IN_MS: number
+}
+interface IKeyStore {
+    +privateKey: string
+    +publicKey: string
+}
+enum TokenType {
+    ACCESS
+    REFRESH
+}
+class JwtEntity {
+    +createdAt: Date
+    +familyId: string
+    +id: string
+    +isBlacklisted: boolean
+    +token: string
+    +ttl: number
+    +type: TokenType
+    +updatedAt?: Date | undefined
+    +blacklist(): void
+    +getRemainingTtl(): number
+    +isExpired(): boolean
+    +isValid(): boolean
+    +toRedisObject(): Record<string, string>
+    +{static} fromRedisObject(data: Record<string, string>): JwtEntity
+}
+class StudentAdmissionEntity {
+    +admission: AdmissionEntity
+    +admissionId: string
+    +createdAt: Date
+    +id: string
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+}
+class AdmissionEntity {
+    +admissionCode: string
+    +admissionType: string
+    +admissionTypeName: string
+    +createdAt: Date
+    +id: string
+    +majorCode: number
+    +majorName: string
+    +province: string
+    +studentAdmissions: StudentAdmissionEntity[]
+    +studyProgram: string
+    +subjectCombination: string
+    +tuitionFee: number
+    +uniCode: string
+    +uniName: string
+    +uniType: string
+    +uniWebLink: string
+    +updatedAt: Date
+}
+enum NationalExcellentExamType {
+    NATIONAL
+}
+enum NationalExcellentStudentExamSubject {
+    BIOLOGY
+    CHEMISTRY
+    CHINESE
+    ENGLISH
+    FRENCH
+    GEOGRAPHY
+    HISTORY
+    INFORMATION_TECHNOLOGY
+    JAPANESE
+    LITERATURE
+    MATHEMATICS
+    PHYSICS
+    RUSSIAN
+}
+enum Rank {
+    FIRST
+    SECOND
+    THIRD
+}
+class AwardEntity {
+    +category?: NationalExcellentStudentExamSubject | undefined
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +level?: Rank | undefined
+    +name?: NationalExcellentExamType | undefined
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+enum HttpStatus {
+    ACCEPTED
+    ALREADY_REPORTED
+    BAD_GATEWAY
+    BAD_REQUEST
+    CONFLICT
+    CONTINUE
+    CREATED
+    EARLY_HINTS
+    EXPECTATION_FAILED
+    FAILED_DEPENDENCY
+    FORBIDDEN
+    FOUND
+    GATEWAY_TIMEOUT
+    GONE
+    HTTP_VERSION_NOT_SUPPORTED
+    IM_A_TEAPOT
+    IM_USED
+    INSUFFICIENT_STORAGE
+    INTERNAL_SERVER_ERROR
+    LENGTH_REQUIRED
+    LOCKED
+    LOOP_DETECTED
+    METHOD_NOT_ALLOWED
+    MISDIRECTED_REQUEST
+    MOVED_PERMANENTLY
+    MULTI_STATUS
+    MULTIPLE_CHOICES
+    NETWORK_AUTHENTICATION_REQUIRED
+    NO_CONTENT
+    NON_AUTHORITATIVE_INFORMATION
+    NOT_ACCEPTABLE
+    NOT_EXTENDED
+    NOT_FOUND
+    NOT_IMPLEMENTED
+    NOT_MODIFIED
+    OK
+    PARTIAL_CONTENT
+    PAYLOAD_TOO_LARGE
+    PAYMENT_REQUIRED
+    PERMANENT_REDIRECT
+    PRECONDITION_FAILED
+    PRECONDITION_REQUIRED
+    PROCESSING
+    PROXY_AUTHENTICATION_REQUIRED
+    RANGE_NOT_SATISFIABLE
+    REQUEST_HEADER_FIELDS_TOO_LARGE
+    REQUEST_TIMEOUT
+    RESET_CONTENT
+    SEE_OTHER
+    SERVICE_UNAVAILABLE
+    SWITCHING_PROTOCOLS
+    TEMPORARY_REDIRECT
+    TOO_EARLY
+    TOO_MANY_REQUESTS
+    UNAUTHORIZED
+    UNAVAILABLE_FOR_LEGAL_REASONS
+    UNPROCESSABLE_ENTITY
+    UNSUPPORTED_MEDIA_TYPE
+    UPGRADE_REQUIRED
+    URI_TOO_LONG
+    USE_PROXY
+    VARIANT_ALSO_NEGOTIATES
+}
+class HttpException extends Error implements Exception {
+    +status: number
+}
+class ValidationException extends HttpException {
+    +validationErrors: Record<string, string>
+}
+enum CCNNType {
+    IELTS
+    JLPT
+    TOEFL_CBT
+    TOEFL_iBT
+    TOEFL_Paper
+    TOEIC
+}
+enum CCQTType {
+    A-Level
+    ACT
+    Duolingo English Test
+    IB
+    OSSD
+    PTE Academic
+    SAT
+}
+enum DGNLType {
+    HSA
+    TSA
+    VNUHCM
+}
+interface Exam {
+    +examType: ExamType
+    +level: string
+}
+interface ExamTypeValueMap {
+    +CCNN: CCNNType
+    +CCQT: CCQTType
+    +DGNL: DGNLType
+}
+enum CEFR {
+    A1
+    A2
+    B1
+    B2
+    C1
+    C2
+}
+class CertificationEntity {
+    +cefr?: CEFR | undefined
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +examType?: ExamType | undefined
+    +id: string
+    +level?: string | undefined
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+enum VietnameseSubject {
+    BIEU_DIEN_NGHE_THUAT
+    CONG_NGHE
+    DIA_LY
+    DOC_HIEU
+    DOC_KE_DIEN_CAM
+    GDKTPL
+    HAT
+    HAT_BIEU_DIEN_NHAC_CU
+    HAT_MUA
+    HINH_HOA
+    HOA_HOC
+    KY_XUONG_AM
+    LICH_SU
+    NANG_KHIEU
+    NANG_KHIEU_1
+    NANG_KHIEU_2
+    NANG_KHIEU_AM_NHAC_1
+    NANG_KHIEU_AM_NHAC_2
+    NANG_KHIEU_BAO_CHI
+    NANG_KHIEU_MAM_NON_1
+    NANG_KHIEU_MAM_NON_2
+    NANG_KHIEU_SKDA_1
+    NANG_KHIEU_SKDA_2
+    NANG_KHIEU_TDTT
+    NANG_KHIEU_VE
+    NGU_VAN
+    SINH_HOC
+    TIENG_ANH
+    TIENG_DUC
+    TIENG_NGA
+    TIENG_NHAT
+    TIENG_PHAP
+    TIENG_TRUNG
+    TIN_HOC
+    TOAN
+    TRANG_TRI
+    TU_DUY_GIAI_QUYET_NGU_VAN_DE
+    VAT_LY
+    VE_HINH_HOA_MY_THUAT
+    VE_MY_THUAT
+    VE_TRANG_TRI_MAU
+    XAY_DUNG_KICH_BAN_SU_KIEN
+    XUONG_AM
+}
+enum TranscriptSubject {
+    CONG_NGHE
+    DIA_LY
+    GDKTPL
+    HOA_HOC
+    LICH_SU
+    NGU_VAN
+    SINH_HOC
+    TIENG_ANH
+    TIENG_DUC
+    TIENG_NGA
+    TIENG_NHAT
+    TIENG_PHAP
+    TIENG_TRUNG
+    TIN_HOC
+    TOAN
+    VAT_LY
+}
+interface ISubjectScore {
+    +name: TranscriptSubject
+    +score: number
+}
+interface ITranscript {
+    +subjects: ISubjectScore[]
+}
+class SubjectScore implements ISubjectScore {
+    +name: TranscriptSubject
+    +score: number
+}
+interface BatchScoreExtractionResult {
+    +error?: string | undefined
+    +ocrModel?: string | undefined
+    +results: FileScoreExtractionResult[]
+    +success: boolean
+}
+interface FileScoreExtractionResult {
+    +documentAnnotation?: string | undefined
+    +error?: string | undefined
+    +fileId: string
+    +fileName: string
+    +scores: ISubjectScore[]
+    +success: boolean
+}
+interface ScoreExtractionResult {
+    +documentAnnotation?: string | undefined
+    +error?: string | undefined
+    +scores: ISubjectScore[]
+    +success: boolean
+}
+class OcrResultResponse {
+    +createdAt: Date
+    +fileId: string
+    +id: string
+    +processedBy: string
+    +scores: ISubjectScore[]
+}
+enum OcrStatus {
+    COMPLETED
+    FAILED
+    PROCESSING
+}
+interface OcrMetadata {
+    +extractedAt: Date
+    +failedFiles: number
+    +ocrModel?: string | undefined
+    +processingTimeMs: number
+    +successfulFiles: number
+    +totalFilesProcessed: number
+}
+class OcrResultEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +documentAnnotation?: string | undefined
+    +errorMessage?: string | undefined
+    +file: FileEntity
+    +fileId: string
+    +id: string
+    +metadata?: OcrMetadata | undefined
+    +scores?: ISubjectScore[] | undefined
+    +status: OcrStatus
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+    +getAverageScore(): number | null
+    +getProcessingDuration(): string
+    +getScoreBySubject(subjectName: string): ISubjectScore | null
+    +getTotalScores(): number
+    +hasErrors(): boolean
+    +isSuccessful(): boolean
+}
+enum FileStatus {
+    ACTIVE
+    ARCHIVED
+    DELETED
+}
+enum FileType {
+    CERTIFICATE
+    DOCUMENT
+    IMAGE
+    OTHER
+    PORTFOLIO
+    RESUME
+    TRANSCRIPT
+}
+class FileEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +description?: string | undefined
+    +fileContent: Buffer
+    +fileName: string
+    +filePath: string
+    +fileSize: number
+    +fileType: FileType
+    +id: string
+    +metadata?: Record<string, unknown> | undefined
+    +mimeType: string
+    +ocrResult?: OcrResultEntity | undefined
+    +originalFileName: string
+    +status: FileStatus
+    +student: StudentEntity
+    +studentId: string
+    +tags?: string | undefined
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+    +user?: UserEntity | undefined
+    +userId?: string | undefined
+    +getFileExtension(): string
+    +getHumanReadableFileSize(): string
+    +getTagsArray(): string[]
+    +isActive(): boolean
+    +isDocument(): boolean
+    +isImage(): boolean
+    +setTagsFromArray(tags: string[]): void
+}
+class MajorEntity {
+    +code: string
+    +createdAt: Date
+    +group: MajorGroupEntity
+    +group_id: string
+    +id: string
+    +name: string
+    +updatedAt: Date
+}
+enum MajorGroup {
+    AGRICULTURE_FORESTRY_FISHERIES
+    ARCHITECTURE_AND_CONSTRUCTION
+    ARTS
+    BUSINESS_AND_MANAGEMENT
+    COMPUTER_AND_IT
+    EDUCATION_AND_TEACHER_TRAINING
+    ENGINEERING
+    ENGINEERING_TECHNOLOGY
+    ENVIRONMENT_AND_PROTECTION
+    HEALTH
+    HUMANITIES
+    JOURNALISM_AND_INFORMATION
+    LAW
+    LIFE_SCIENCES
+    MANUFACTURING_AND_PROCESSING
+    MATHEMATICS_AND_STATISTICS
+    NATURAL_SCIENCES
+    OTHER
+    SECURITY_DEFENSE
+    SOCIAL_AND_BEHAVIORAL_SCIENCES
+    SOCIAL_SERVICES
+    TOURISM_HOSPITALITY_SPORTS_PERSONAL
+    TRANSPORT_SERVICES
+    VETERINARY
+}
+class MajorGroupEntity {
+    +code: string
+    +createdAt: Date
+    +englishName: "AGRICULTURE_FORESTRY_FISHERIES" | "ARCHITECTURE_AND_CONSTRUCTION" | "ARTS" | "BUSINESS_AND_MANAGEMENT" | "COMPUTER_AND_IT" | "EDUCATION_AND_TEACHER_TRAINING" | "ENGINEERING" | ... 16 more ... | "VETERINARY"
+    +id: string
+    +majors: MajorEntity[]
+    +name: MajorGroup
+    +students?: StudentEntity[] | undefined
+    +updatedAt: Date
+}
+enum HsgSubject {
+    ANH
+    DIA
+    HOA
+    LY
+    SINH
+    SU
+    TIENG_NGA
+    TIENG_NHAT
+    TIENG_PHAP
+    TIENG_TRUNG
+    TIN
+    TOAN
+    VAN
+}
+class HTTPValidationError {
+    +detail: ValidationError[]
+}
+class L1BatchRequest {
+    +items: UserInputL1[]
+}
+class L1PredictResult {
+    +loai_uu_tien: string
+    +ma_xet_tuyen: Record<string, number>
+}
+class L2BatchRequest {
+    +items: UserInputL2[]
+}
+class L2PredictResult {
+    +ma_xet_tuyen: string
+    +score: number
+}
+class UserInputL1 {
+    +ahld?: number | undefined
+    +cong_lap: number
+    +dan_toc_thieu_so?: number | undefined
+    +haimuoi_huyen_ngheo_tnb?: number | undefined
+    +hoc_phi: number
+    +hsg_1?: number | HsgSubject | undefined
+    +hsg_2?: number | HsgSubject | undefined
+    +hsg_3?: number | HsgSubject | undefined
+    +nhom_nganh: number
+    +tinh_tp: string
+}
+class UserInputL2 {
+    +cong_lap: number
+    +diem_ccta?: string | undefined
+    +diem_chuan: number
+    +hk10: number
+    +hk11: number
+    +hk12: number
+    +hl10: number
+    +hl11: number
+    +hl12: number
+    +hoc_phi: number
+    +nhom_nganh: number
+    +ten_ccta?: string | undefined
+    +tinh_tp: string
+    +to_hop_mon: string
+}
+class ValidationError {
+    +loc: (string | number)[]
+    +msg: string
+    +type: string
+}
+enum PredictionResultStatus {
+    COMPLETED
+    FAILED
+    PARTIAL
+    PROCESSING
+}
+class PredictionResultEntity {
+    +createdAt: Date
+    +createdBy: string
+    +id: string
+    +l1PredictResults: L1PredictResult[]
+    +l2PredictResults: L2PredictResult[]
+    +status: PredictionResultStatus
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy: string
+    +userId?: string | undefined
+}
+enum SpecialStudentCase {
+    ETHNIC_MINORITY_STUDENT
+    HEROES_AND_CONTRIBUTORS
+    TRANSFER_STUDENT
+    VERY_FEW_ETHNIC_MINORITY
+}
+enum UniType {
+    PRIVATE
+    PUBLIC
+}
+enum VietnamSouthernProvinces {
+    AN_GIANG
+    BAC_LIEU
+    BEN_TRE
+    BINH_DUONG
+    BINH_PHUOC
+    CA_MAU
+    CAN_THO
+    DA_LAT
+    DONG_NAI
+    DONG_THAP
+    HAU_GIANG
+    HO_CHI_MINH
+    KIEN_GIANG
+    LONG_AN
+    SOC_TRANG
+    TAY_NINH
+    TIEN_GIANG
+    TRA_VINH
+    VINH_LONG
+    VUNG_TAU
+}
+interface AcademicPerformanceData {
+    +academicPerformance: string
+    +grade: number
+}
+interface AptitudeTestData {
+    +examType: ExamType
+    +score: number
+}
+interface ConductData {
+    +conduct: string
+    +grade: number
+}
+interface ExamSubjectData {
+    +name: VietnameseSubject
+    +score: number
+}
+interface NationalExamData {
+    +name: VietnameseSubject
+    +score: number
+}
+interface TalentExamData {
+    +name: VietnameseSubject
+    +score: number
+}
+class StudentEntity {
+    +academicPerformances?: AcademicPerformanceData[] | undefined
+    +aptitudeTestScore?: AptitudeTestData | undefined
+    +awards?: AwardEntity[] | undefined
+    +certifications?: CertificationEntity[] | undefined
+    +conducts?: ConductData[] | undefined
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +files?: FileEntity[] | undefined
+    +id: string
+    +majorGroupsEntities?: MajorGroupEntity[] | undefined
+    +majors?: MajorGroup[] | undefined
+    +maxBudget?: number | undefined
+    +minBudget?: number | undefined
+    +nationalExams?: NationalExamData[] | undefined
+    +predictionResult?: PredictionResultEntity | undefined
+    +province?: VietnamSouthernProvinces | undefined
+    +specialStudentCases?: SpecialStudentCase[] | undefined
+    +studentAdmissions?: StudentAdmissionEntity[] | undefined
+    +talentScores?: TalentExamData[] | undefined
+    +uniType?: UniType | undefined
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+    +user?: UserEntity | undefined
+    +userId?: string | undefined
+    +vsatScores?: ExamSubjectData[] | undefined
+    +addAcademicPerformance(academicPerformance: string, grade: number): void
+    +addAdmission(admission: AdmissionEntity): void
+    +addConduct(conduct: string, grade: number): void
+    +addTalentScore(subjectName: VietnameseSubject, score: number): void
+    +clearAdmissions(): void
+    +getAcademicPerformanceByGrade(grade: number): AcademicPerformanceData | null
+    +getActiveFiles(): FileEntity[]
+    +getAptitudeTestScore(): number | undefined
+    +getAptitudeTestType(): ExamType | undefined
+    +getAwardsByCategory(category: NationalExcellentStudentExamSubject): AwardEntity[]
+    +getBudgetRangeString(): string
+    +getCertificationsByExamType(type: "CCNN" | "CCQT" | "ĐGNL"): CertificationEntity[]
+    +getConductByGrade(grade: number): ConductData | null
+    +getFilesByType(fileType: FileType): FileEntity[]
+    +getFilesCountByType(): Record<FileType, number>
+    +getLatestAcademicPerformance(): AcademicPerformanceData | null
+    +getLatestConduct(): ConductData | null
+    +getRecentFiles(days?: number): FileEntity[]
+    +getSubjectScore(subjectName: VietnameseSubject): number | null
+    +getTalentScore(subjectName: VietnameseSubject): number | null
+    +getTotalFileSize(): number
+    +getTotalNationalExamScore(): number
+    +getTotalTalentScore(): number
+    +getTotalVSATScore(): number
+    +getUserEmail(): string | null
+    +getVSATScore(index: number): number | undefined
+    +getVSATScoreByName(subjectName: VietnameseSubject): number | undefined
+    +hasAcademicPerformanceData(): boolean
+    +hasAptitudeTestScore(): boolean
+    +hasCertificationExamType(type: "CCNN" | "CCQT" | "ĐGNL"): boolean
+    +hasConductData(): boolean
+    +hasFileType(fileType: FileType): boolean
+    +hasTalentScores(): boolean
+    +hasUser(): boolean
+    +hasValidNationalExamData(): boolean
+    +hasValidVSATScores(): boolean
+    +isBudgetRangeValid(): boolean
+    +isWithinBudget(amount: number): boolean
+    +removeAdmission(admissionId: string): void
+    +setAcademicPerformance(academicPerformanceDataArray: AcademicPerformanceData[]): void
+    +setAdmissions(admissions: AdmissionEntity[]): void
+    +setAptitudeTest(examType: ExamType, score: number): void
+    +setConduct(conductData: ConductData[]): void
+    +setTalentScores(talentScores: TalentExamData[]): void
+    +setVSATScores(vsatScores: ExamSubjectData[]): void
+    +setVSATScoresFromNumbers(scores: number[], subjectNames?: VietnameseSubject[] | undefined): void
+}
+enum Permission {
+    ADMIN_ACCESS
+    ADMIN_SYSTEM_CONFIG
+    ADMIN_USER_MANAGEMENT
+    API_DELETE
+    API_READ
+    API_WRITE
+    FILE_CREATE
+    FILE_DELETE
+    FILE_READ
+    FILE_UPDATE
+    PROFILE_CREATE_OWN
+    PROFILE_READ_ANY
+    PROFILE_READ_OWN
+    PROFILE_UPDATE_ANY
+    PROFILE_UPDATE_OWN
+    USER_CREATE
+    USER_DELETE
+    USER_LIST
+    USER_READ
+    USER_UPDATE
+}
+enum Role {
+    ADMIN
+    ANONYMOUS
+    MODERATOR
+    USER
+}
+class UserEntity {
+    +accountNonExpired: boolean
+    +accountNonLocked: boolean
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +credentialsNonExpired: boolean
+    +email: string
+    +enabled: boolean
+    +id: string
+    +name?: string | undefined
+    +password: string
+    +permissions: Permission[]
+    +phoneNumbers?: string[] | undefined
+    +role: Role
+    +studentEntities?: StudentEntity[] | undefined
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+    +disableAccount(): void
+    +enableAccount(): void
+    +expireAccount(): void
+    +expireCredentials(): void
+    +getPermissions(): Permission[]
+    +hasAllPermissions(permissions: Permission[]): boolean
+    +hasAnyPermission(permissions: Permission[]): boolean
+    +hasPermission(permission: Permission): boolean
+    +isAccountActive(): boolean
+    +isAccountNonExpired(): boolean
+    +isAccountNonLocked(): boolean
+    +isCredentialsNonExpired(): boolean
+    +isEnabled(): boolean
+    +lockAccount(): void
+    +unlockAccount(): void
+}
+JwtEntity --> "1" TokenType
+StudentAdmissionEntity --> "1" AdmissionEntity
+StudentAdmissionEntity --> "1" StudentEntity
+AdmissionEntity --> "*" StudentAdmissionEntity
+AwardEntity --> "1" NationalExcellentStudentExamSubject
+AwardEntity --> "1" Rank
+AwardEntity --> "1" NationalExcellentExamType
+AwardEntity --> "1" StudentEntity
+ExamTypeValueMap --> "1" CCNNType
+ExamTypeValueMap --> "1" CCQTType
+ExamTypeValueMap --> "1" DGNLType
+CertificationEntity --> "1" CEFR
+CertificationEntity --> "1" StudentEntity
+ISubjectScore --> "1" TranscriptSubject
+ITranscript --> "*" ISubjectScore
+SubjectScore --> "1" TranscriptSubject
+BatchScoreExtractionResult --> "*" FileScoreExtractionResult
+FileScoreExtractionResult --> "*" ISubjectScore
+ScoreExtractionResult --> "*" ISubjectScore
+OcrResultResponse --> "*" ISubjectScore
+OcrResultEntity --> "1" FileEntity
+OcrResultEntity --> "1" OcrMetadata
+OcrResultEntity --> "*" ISubjectScore
+OcrResultEntity --> "1" OcrStatus
+OcrResultEntity --> "1" StudentEntity
+OcrResultEntity --> "1" ISubjectScore
+FileEntity --> "1" FileType
+FileEntity --> "1" OcrResultEntity
+FileEntity --> "1" FileStatus
+FileEntity --> "1" StudentEntity
+FileEntity --> "1" UserEntity
+MajorEntity --> "1" MajorGroupEntity
+MajorGroupEntity --> "*" MajorEntity
+MajorGroupEntity --> "1" MajorGroup
+MajorGroupEntity --> "*" StudentEntity
+HTTPValidationError --> "*" ValidationError
+L1BatchRequest --> "*" UserInputL1
+L2BatchRequest --> "*" UserInputL2
+UserInputL1 --> "1" HsgSubject
+PredictionResultEntity --> "*" L1PredictResult
+PredictionResultEntity --> "*" L2PredictResult
+PredictionResultEntity --> "1" PredictionResultStatus
+PredictionResultEntity --> "1" StudentEntity
+ExamSubjectData --> "1" VietnameseSubject
+NationalExamData --> "1" VietnameseSubject
+TalentExamData --> "1" VietnameseSubject
+StudentEntity --> "*" AcademicPerformanceData
+StudentEntity --> "1" AptitudeTestData
+StudentEntity --> "*" AwardEntity
+StudentEntity --> "*" CertificationEntity
+StudentEntity --> "*" ConductData
+StudentEntity --> "*" FileEntity
+StudentEntity --> "*" MajorGroupEntity
+StudentEntity --> "*" MajorGroup
+StudentEntity --> "*" NationalExamData
+StudentEntity --> "1" PredictionResultEntity
+StudentEntity --> "1" VietnamSouthernProvinces
+StudentEntity --> "*" SpecialStudentCase
+StudentEntity --> "*" StudentAdmissionEntity
+StudentEntity --> "*" TalentExamData
+StudentEntity --> "1" UniType
+StudentEntity --> "1" UserEntity
+StudentEntity --> "*" ExamSubjectData
+StudentEntity --> "1" AdmissionEntity
+StudentEntity --> "1" VietnameseSubject
+StudentEntity --> "1" AcademicPerformanceData
+StudentEntity --> "1" NationalExcellentStudentExamSubject
+StudentEntity --> "1" ConductData
+StudentEntity --> "1" FileType
+StudentEntity --> "1" TalentExamData
+StudentEntity --> "1" ExamSubjectData
+UserEntity --> "*" Permission
+UserEntity --> "1" Role
+UserEntity --> "*" StudentEntity
+UserEntity --> "1" Permission
+@enduml

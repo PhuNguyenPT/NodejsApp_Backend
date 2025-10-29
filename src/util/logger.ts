@@ -1,5 +1,12 @@
-// src/util/logger.ts
-import winston, { format, transports } from "winston";
+import {
+    addColors,
+    createLogger,
+    format,
+    Logger,
+    LoggerOptions,
+    transport,
+    transports,
+} from "winston";
 
 // Configuration interface for logger options
 export interface LoggerConfig {
@@ -28,12 +35,16 @@ const logColors = {
 };
 
 // Tell winston about colors
-winston.addColors(logColors);
+addColors(logColors);
+
+// Simple factory function using winston.createLogger
+export function createWinstonLogger(loggerConfig: LoggerConfig): Logger {
+    const options = createLoggerOptions(loggerConfig);
+    return createLogger(options);
+}
 
 // Simple function to create logger options
-export function createLoggerOptions(
-    loggerConfig: LoggerConfig,
-): winston.LoggerOptions {
+function createLoggerOptions(loggerConfig: LoggerConfig): LoggerOptions {
     const { enableFileLogging, isProduction, logDir, logLevel } = loggerConfig;
 
     // Development format - more readable
@@ -79,7 +90,7 @@ export function createLoggerOptions(
     );
 
     // Create transports array
-    const loggerTransports: winston.transport[] = [
+    const loggerTransports: transport[] = [
         new transports.Console({
             format: isProduction ? productionFormat : developmentFormat,
         }),
@@ -107,8 +118,8 @@ export function createLoggerOptions(
     }
 
     // Exception handlers
-    const exceptionHandlers: winston.transport[] = [];
-    const rejectionHandlers: winston.transport[] = [];
+    const exceptionHandlers: transport[] = [];
+    const rejectionHandlers: transport[] = [];
 
     if (enableFileLogging || isProduction) {
         exceptionHandlers.push(
@@ -158,12 +169,4 @@ export function createLoggerOptions(
             rejectionHandlers.length > 0 ? rejectionHandlers : undefined,
         transports: loggerTransports,
     };
-}
-
-// Simple factory function using winston.createLogger
-export function createWinstonLogger(
-    loggerConfig: LoggerConfig,
-): winston.Logger {
-    const options = createLoggerOptions(loggerConfig);
-    return winston.createLogger(options);
 }
