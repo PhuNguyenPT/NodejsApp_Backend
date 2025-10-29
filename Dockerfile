@@ -7,6 +7,11 @@ FROM node:22-trixie-slim AS builder
 # Set the working directory inside the container
 WORKDIR /app
 
+# Install Java Runtime Environment (required by node-plantuml)
+RUN apt-get update && \
+    apt-get install -y default-jre-headless && \
+    rm -rf /var/lib/apt/lists/*
+    
 # Copy package.json and package-lock.json first to leverage Docker's layer caching
 COPY package*.json ./
 
