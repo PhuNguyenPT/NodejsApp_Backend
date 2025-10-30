@@ -30,8 +30,10 @@ import { MajorEntity } from "@/entity/uni_guide/major.entity.js";
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { FileEventListener } from "@/event/file-event-listener.js";
-import { StudentEventListener } from "@/event/student-event-listener.js";
+import { IFileEventListener } from "@/event/file-event-listener.interface.js";
+import { FileEventListener } from "@/event/impl/file-event-listener.js";
+import { StudentEventListener } from "@/event/impl/student-event-listener.js";
+import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
 import { TokenCleanupJob } from "@/job/token-cleanup-job.js";
 import { JwtTokenRepository } from "@/repository/impl/jwt-repository.js";
 import { UserRepository } from "@/repository/impl/user-repository.js";
@@ -214,11 +216,11 @@ iocContainer
 
 // --- Event Listener Bindings ---
 iocContainer
-    .bind<FileEventListener>(TYPES.FileEventListener)
+    .bind<IFileEventListener>(TYPES.IFileEventListener)
     .to(FileEventListener)
     .inSingletonScope();
 iocContainer
-    .bind<StudentEventListener>(TYPES.StudentEventListener)
+    .bind<IStudentEventListener>(TYPES.IStudentEventListener)
     .to(StudentEventListener)
     .inSingletonScope();
 

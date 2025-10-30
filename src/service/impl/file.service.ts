@@ -6,11 +6,11 @@ import { CreateFileDTO } from "@/dto/file/create-file.js";
 import { UpdateFileRequest } from "@/dto/file/update-file.js";
 import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { IFileEventListener } from "@/event/file-event-listener.interface.js";
 import {
-    FileEventListener,
     FilesCreatedEvent,
     SingleFileCreatedEvent,
-} from "@/event/file-event-listener.js";
+} from "@/event/file.event.js";
 import { IFileService } from "@/service/file-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
@@ -25,8 +25,8 @@ export class FileService implements IFileService {
         private readonly fileRepository: Repository<FileEntity>,
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
-        @inject(TYPES.FileEventListener)
-        private readonly fileEventListener: FileEventListener,
+        @inject(TYPES.IFileEventListener)
+        private readonly fileEventListener: IFileEventListener,
     ) {}
 
     /**

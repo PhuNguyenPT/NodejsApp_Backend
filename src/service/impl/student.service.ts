@@ -5,10 +5,8 @@ import { Logger } from "winston";
 import { StudentRequest } from "@/dto/student/student-request.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import {
-    StudentCreatedEvent,
-    StudentEventListener,
-} from "@/event/student-event-listener.js";
+import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
+import { StudentCreatedEvent } from "@/event/student.event.js";
 import { IAwardService } from "@/service/award-service.interface.js";
 import { ICertificationService } from "@/service/certification-service.interface.js";
 import { IMajorService } from "@/service/major-service.interface.js";
@@ -33,8 +31,8 @@ export class StudentService implements IStudentService {
         private readonly awardService: IAwardService,
         @inject(TYPES.ICertificationService)
         private readonly certificationService: ICertificationService,
-        @inject(TYPES.StudentEventListener)
-        private readonly studentEventListener: StudentEventListener,
+        @inject(TYPES.IStudentEventListener)
+        private readonly studentEventListener: IStudentEventListener,
         @inject(TYPES.IMajorService)
         private readonly majorService: IMajorService,
         @inject(TYPES.Logger)

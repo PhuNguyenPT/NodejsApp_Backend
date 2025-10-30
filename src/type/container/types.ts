@@ -5,8 +5,8 @@
  * @description Symbols for all listener services.
  */
 export const ListenerTypes = {
-    FileEventListener: Symbol.for("FileEventListener"),
-    StudentEventListener: Symbol.for("StudentEventListener"),
+    IFileEventListener: Symbol.for("IFileEventListener"),
+    IStudentEventListener: Symbol.for("IStudentEventListener"),
 };
 
 /**

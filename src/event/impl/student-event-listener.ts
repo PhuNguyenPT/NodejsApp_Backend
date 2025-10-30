@@ -2,7 +2,6 @@ import { inject, injectable } from "inversify";
 import { RedisClientType } from "redis";
 import { DataSource, EntityManager, In } from "typeorm";
 import { Logger } from "winston";
-import z from "zod";
 
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config.js";
 import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
@@ -18,15 +17,14 @@ import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
 import { CacheKeys } from "@/util/cache-key.js";
 
-const StudentCreatedEventSchema = z.object({
-    studentId: z.string().uuid("Invalid student ID format"),
-    userId: z.string().uuid("Invalid user ID format").optional(),
-});
-
-export type StudentCreatedEvent = z.infer<typeof StudentCreatedEventSchema>;
+import { IStudentEventListener } from "../student-event-listener.interface.js";
+import {
+    StudentCreatedEvent,
+    StudentCreatedEventSchema,
+} from "../student.event.js";
 
 @injectable()
-export class StudentEventListener {
+export class StudentEventListener implements IStudentEventListener {
     constructor(
         @inject(TYPES.Logger) private readonly logger: Logger,
         @inject(TYPES.DataSource) private readonly dataSource: DataSource,
