@@ -46,6 +46,12 @@ import { EntityNotFoundException } from "@/type/exception/entity-not-found.excep
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 import { validateAndTransformSync } from "@/util/validation.util.js";
 
+export interface ExamScenario {
+    diem_chuan: number;
+    to_hop_mon: string;
+    type: "ccqt" | "dgnl" | "national" | "talent" | "vsat";
+}
+
 export interface PredictionModelServiceConfig {
     SERVER_BATCH_CONCURRENCY: number;
     SERVICE_BATCH_CONCURRENCY: number;
@@ -63,18 +69,13 @@ export interface PredictionModelServiceConfig {
     SERVICE_RETRY_ITERATION_DELAY_MS: number;
 }
 
-interface ExamScenario {
-    diem_chuan: number;
-    to_hop_mon: string;
-    type: "ccqt" | "dgnl" | "national" | "talent" | "vsat";
-}
-
-interface SubjectGroupScore {
+export interface SubjectGroupScore {
     groupName: string;
     scoreBreakdown: { score: number; subject: VietnameseSubject }[];
     subjects: VietnameseSubject[];
     totalScore: number;
 }
+
 @injectable()
 export class PredictionModelService implements IPredictionModelService {
     private readonly config: PredictionModelServiceConfig;
@@ -89,6 +90,20 @@ export class PredictionModelService implements IPredictionModelService {
         config: PredictionModelServiceConfig,
     ) {
         this.config = config;
+    }
+
+    public collectExamScenarios(
+        studentInfoDTO: StudentInfoDTO,
+    ): ExamScenario[] {
+        const scenarios = [
+            ...this._createNationalScenarios(studentInfoDTO),
+            ...this._createVsatScenarios(studentInfoDTO),
+            ...this._createDgnlScenarios(studentInfoDTO),
+            ...this._createCcqtScenarios(studentInfoDTO),
+            ...this._createTalentScenarios(studentInfoDTO),
+        ];
+
+        return scenarios;
     }
 
     public async getL1PredictResults(
@@ -988,20 +1003,6 @@ export class PredictionModelService implements IPredictionModelService {
             chunks.push(array.slice(i, i + chunkSize));
         }
         return chunks;
-    }
-
-    private collectExamScenarios(
-        studentInfoDTO: StudentInfoDTO,
-    ): ExamScenario[] {
-        const scenarios = [
-            ...this._createNationalScenarios(studentInfoDTO),
-            ...this._createVsatScenarios(studentInfoDTO),
-            ...this._createDgnlScenarios(studentInfoDTO),
-            ...this._createCcqtScenarios(studentInfoDTO),
-            ...this._createTalentScenarios(studentInfoDTO),
-        ];
-
-        return scenarios;
     }
 
     /**

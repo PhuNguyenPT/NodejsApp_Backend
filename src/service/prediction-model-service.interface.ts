@@ -3,8 +3,12 @@ import {
     L2PredictResult,
     UserInputL2,
 } from "@/dto/predict/predict.js";
+import { StudentInfoDTO } from "@/dto/student/student-dto.js";
+
+import { ExamScenario } from "./impl/prediction-model.service.js";
 
 export interface IPredictionModelService {
+    collectExamScenarios(studentInfoDTO: StudentInfoDTO): ExamScenario[];
     getL1PredictResults(
         studentId: string,
         userId?: string,
