@@ -17,13 +17,13 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "uni_guide"."awards" DROP CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae"`,
         );
         await queryRunner.query(
+            `ALTER TABLE "uni_guide"."student_admissions" DROP CONSTRAINT "FK_223f964a2fff3f7a45610f43ded"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "uni_guide"."student_admissions" DROP CONSTRAINT "FK_794414569ff641b86139a029912"`,
+        );
+        await queryRunner.query(
             `ALTER TABLE "uni_guide"."certifications" DROP CONSTRAINT "FK_94ecc704512cfe5019d2577a994"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "uni_guide"."files" DROP CONSTRAINT "FK_7e7425b17f9e707331e9a6c7335"`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "uni_guide"."files" DROP CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212"`,
         );
         await queryRunner.query(
             `ALTER TABLE "uni_guide"."ocr_results" DROP CONSTRAINT "FK_4067652cc759950247f03b4a002"`,
@@ -32,16 +32,16 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "uni_guide"."ocr_results" DROP CONSTRAINT "FK_0787a97b8492c2aebe1dc2cc644"`,
         );
         await queryRunner.query(
-            `ALTER TABLE "uni_guide"."prediction_results" DROP CONSTRAINT "FK_7c8315e2178499a49cf2439e47b"`,
-        );
-        await queryRunner.query(
             `ALTER TABLE "uni_guide"."majors" DROP CONSTRAINT "FK_10c322c60cd25c2c170a3302033"`,
         );
         await queryRunner.query(
-            `ALTER TABLE "uni_guide"."student_admissions" DROP CONSTRAINT "FK_223f964a2fff3f7a45610f43ded"`,
+            `ALTER TABLE "uni_guide"."files" DROP CONSTRAINT "FK_7e7425b17f9e707331e9a6c7335"`,
         );
         await queryRunner.query(
-            `ALTER TABLE "uni_guide"."student_admissions" DROP CONSTRAINT "FK_794414569ff641b86139a029912"`,
+            `ALTER TABLE "uni_guide"."files" DROP CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212"`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "uni_guide"."prediction_results" DROP CONSTRAINT "FK_7c8315e2178499a49cf2439e47b"`,
         );
         await queryRunner.query(
             `DROP INDEX "uni_guide"."IDX_80f55c50a4aee989a2ed83a681"`,
@@ -290,6 +290,22 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(`DROP TABLE "uni_guide"."admissions"`);
         await queryRunner.query(
+            `DROP INDEX "uni_guide"."idx_student_admissions_student_id"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "uni_guide"."idx_student_admissions_admission_id"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "uni_guide"."idx_student_admissions_composite"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "uni_guide"."idx_student_admissions_created_at"`,
+        );
+        await queryRunner.query(
+            `DROP INDEX "uni_guide"."idx_student_admissions_updated_at"`,
+        );
+        await queryRunner.query(`DROP TABLE "uni_guide"."student_admissions"`);
+        await queryRunner.query(
             `DROP INDEX "uni_guide"."idx_certification_student_id"`,
         );
         await queryRunner.query(
@@ -308,14 +324,6 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(
             `DROP TYPE "uni_guide"."certifications_cefr_enum"`,
         );
-        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_student_id"`);
-        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_type"`);
-        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_status"`);
-        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_created_at"`);
-        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_updated_at"`);
-        await queryRunner.query(`DROP TABLE "uni_guide"."files"`);
-        await queryRunner.query(`DROP TYPE "uni_guide"."files_status_enum"`);
-        await queryRunner.query(`DROP TYPE "uni_guide"."files_filetype_enum"`);
         await queryRunner.query(`DROP INDEX "uni_guide"."idx_ocr_student_id"`);
         await queryRunner.query(`DROP INDEX "uni_guide"."idx_ocr_file_id"`);
         await queryRunner.query(`DROP INDEX "uni_guide"."idx_ocr_status"`);
@@ -325,6 +333,15 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(
             `DROP TYPE "uni_guide"."ocr_results_status_enum"`,
         );
+        await queryRunner.query(`DROP TABLE "uni_guide"."majors"`);
+        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_student_id"`);
+        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_type"`);
+        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_status"`);
+        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_created_at"`);
+        await queryRunner.query(`DROP INDEX "uni_guide"."idx_file_updated_at"`);
+        await queryRunner.query(`DROP TABLE "uni_guide"."files"`);
+        await queryRunner.query(`DROP TYPE "uni_guide"."files_status_enum"`);
+        await queryRunner.query(`DROP TYPE "uni_guide"."files_filetype_enum"`);
         await queryRunner.query(
             `DROP INDEX "uni_guide"."idx_prediction_results_created_at"`,
         );
@@ -347,47 +364,9 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         await queryRunner.query(
             `DROP TYPE "uni_guide"."prediction_results_status_enum"`,
         );
-        await queryRunner.query(`DROP TABLE "uni_guide"."majors"`);
-        await queryRunner.query(
-            `DROP INDEX "uni_guide"."idx_student_admissions_student_id"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "uni_guide"."idx_student_admissions_admission_id"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "uni_guide"."idx_student_admissions_composite"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "uni_guide"."idx_student_admissions_created_at"`,
-        );
-        await queryRunner.query(
-            `DROP INDEX "uni_guide"."idx_student_admissions_updated_at"`,
-        );
-        await queryRunner.query(`DROP TABLE "uni_guide"."student_admissions"`);
     }
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(
-            `CREATE TABLE "uni_guide"."student_admissions" ("admission_id" uuid NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "student_id" uuid NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_28566988c92be41022acf22bdf3" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_student_admissions_updated_at" ON "uni_guide"."student_admissions" ("updatedAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_student_admissions_created_at" ON "uni_guide"."student_admissions" ("createdAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_student_admissions_composite" ON "uni_guide"."student_admissions" ("student_id", "admission_id") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_student_admissions_admission_id" ON "uni_guide"."student_admissions" ("admission_id") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_student_admissions_student_id" ON "uni_guide"."student_admissions" ("student_id") `,
-        );
-        await queryRunner.query(
-            `CREATE TABLE "uni_guide"."majors" ("code" character varying(255) NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "group_id" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "UQ_8b287db61b00b45e58c854f19da" UNIQUE ("code"), CONSTRAINT "PK_9d82cf80fe0593040e50ccb297e" PRIMARY KEY ("id"))`,
-        );
         await queryRunner.query(
             `CREATE TYPE "uni_guide"."prediction_results_status_enum" AS ENUM('completed', 'failed', 'partial', 'processing')`,
         );
@@ -411,27 +390,6 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE INDEX "idx_prediction_results_created_at" ON "uni_guide"."prediction_results" ("createdAt") `,
-        );
-        await queryRunner.query(
-            `CREATE TYPE "uni_guide"."ocr_results_status_enum" AS ENUM('completed', 'failed', 'processing')`,
-        );
-        await queryRunner.query(
-            `CREATE TABLE "uni_guide"."ocr_results" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "documentAnnotation" text, "errorMessage" text, "fileId" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "scores" jsonb, "status" "uni_guide"."ocr_results_status_enum" NOT NULL, "studentId" uuid NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedBy" character varying(255), CONSTRAINT "UQ_ocr_student_file" UNIQUE ("studentId", "fileId"), CONSTRAINT "REL_0787a97b8492c2aebe1dc2cc64" UNIQUE ("fileId"), CONSTRAINT "PK_562c4e52268d72e5b1a6833beb5" PRIMARY KEY ("id"))`,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_ocr_updated_at" ON "uni_guide"."ocr_results" ("updatedAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_ocr_created_at" ON "uni_guide"."ocr_results" ("createdAt") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_ocr_status" ON "uni_guide"."ocr_results" ("status") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_ocr_file_id" ON "uni_guide"."ocr_results" ("fileId") `,
-        );
-        await queryRunner.query(
-            `CREATE INDEX "idx_ocr_student_id" ON "uni_guide"."ocr_results" ("studentId") `,
         );
         await queryRunner.query(
             `CREATE TYPE "uni_guide"."files_filetype_enum" AS ENUM('certificate', 'document', 'image', 'other', 'portfolio', 'resume', 'transcript')`,
@@ -458,6 +416,30 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "idx_file_student_id" ON "uni_guide"."files" ("studentId") `,
         );
         await queryRunner.query(
+            `CREATE TABLE "uni_guide"."majors" ("code" character varying(255) NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "group_id" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "UQ_8b287db61b00b45e58c854f19da" UNIQUE ("code"), CONSTRAINT "PK_9d82cf80fe0593040e50ccb297e" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE TYPE "uni_guide"."ocr_results_status_enum" AS ENUM('completed', 'failed', 'processing')`,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "uni_guide"."ocr_results" ("createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "createdBy" character varying(255), "documentAnnotation" text, "errorMessage" text, "fileId" uuid NOT NULL, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "metadata" jsonb, "scores" jsonb, "status" "uni_guide"."ocr_results_status_enum" NOT NULL, "studentId" uuid NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedBy" character varying(255), CONSTRAINT "UQ_ocr_student_file" UNIQUE ("studentId", "fileId"), CONSTRAINT "REL_0787a97b8492c2aebe1dc2cc64" UNIQUE ("fileId"), CONSTRAINT "PK_562c4e52268d72e5b1a6833beb5" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_ocr_updated_at" ON "uni_guide"."ocr_results" ("updatedAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_ocr_created_at" ON "uni_guide"."ocr_results" ("createdAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_ocr_status" ON "uni_guide"."ocr_results" ("status") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_ocr_file_id" ON "uni_guide"."ocr_results" ("fileId") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_ocr_student_id" ON "uni_guide"."ocr_results" ("studentId") `,
+        );
+        await queryRunner.query(
             `CREATE TYPE "uni_guide"."certifications_cefr_enum" AS ENUM('A1', 'A2', 'B1', 'B2', 'C1', 'C2')`,
         );
         await queryRunner.query(
@@ -477,6 +459,24 @@ export class InitialSchema1754794905473 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE INDEX "idx_certification_student_id" ON "uni_guide"."certifications" ("studentId") `,
+        );
+        await queryRunner.query(
+            `CREATE TABLE "uni_guide"."student_admissions" ("admission_id" uuid NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "student_id" uuid NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "UQ_student_admission" UNIQUE ("student_id", "admission_id"), CONSTRAINT "PK_28566988c92be41022acf22bdf3" PRIMARY KEY ("id"))`,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_student_admissions_updated_at" ON "uni_guide"."student_admissions" ("updatedAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_student_admissions_created_at" ON "uni_guide"."student_admissions" ("createdAt") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_student_admissions_composite" ON "uni_guide"."student_admissions" ("student_id", "admission_id") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_student_admissions_admission_id" ON "uni_guide"."student_admissions" ("admission_id") `,
+        );
+        await queryRunner.query(
+            `CREATE INDEX "idx_student_admissions_student_id" ON "uni_guide"."student_admissions" ("student_id") `,
         );
         await queryRunner.query(
             `CREATE TABLE "uni_guide"."admissions" ("admission_code" character varying NOT NULL, "admission_type" character varying NOT NULL, "admission_type_name" character varying NOT NULL, "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "major_code" integer NOT NULL, "major_name" character varying NOT NULL, "province" character varying NOT NULL, "study_program" character varying NOT NULL, "subject_combination" character varying NOT NULL, "tuition_fee" bigint NOT NULL, "uni_code" character varying NOT NULL, "uni_name" character varying NOT NULL, "uni_type" character varying NOT NULL, "uni_web_link" character varying NOT NULL, "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), CONSTRAINT "PK_6d47682a899dfa0a78ce11fe98a" PRIMARY KEY ("id"))`,
@@ -773,22 +773,7 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `CREATE INDEX "IDX_80f55c50a4aee989a2ed83a681" ON "uni_guide"."student_major_groups" ("major_group_id") `,
         );
         await queryRunner.query(
-            `ALTER TABLE "uni_guide"."student_admissions" ADD CONSTRAINT "FK_794414569ff641b86139a029912" FOREIGN KEY ("admission_id") REFERENCES "uni_guide"."admissions"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "uni_guide"."student_admissions" ADD CONSTRAINT "FK_223f964a2fff3f7a45610f43ded" FOREIGN KEY ("student_id") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "uni_guide"."majors" ADD CONSTRAINT "FK_10c322c60cd25c2c170a3302033" FOREIGN KEY ("group_id") REFERENCES "uni_guide"."major_groups"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-        );
-        await queryRunner.query(
             `ALTER TABLE "uni_guide"."prediction_results" ADD CONSTRAINT "FK_7c8315e2178499a49cf2439e47b" FOREIGN KEY ("studentId") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "uni_guide"."ocr_results" ADD CONSTRAINT "FK_0787a97b8492c2aebe1dc2cc644" FOREIGN KEY ("fileId") REFERENCES "uni_guide"."files"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-        );
-        await queryRunner.query(
-            `ALTER TABLE "uni_guide"."ocr_results" ADD CONSTRAINT "FK_4067652cc759950247f03b4a002" FOREIGN KEY ("studentId") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
             `ALTER TABLE "uni_guide"."files" ADD CONSTRAINT "FK_f2cc0c836c7f1f89e552b8c4212" FOREIGN KEY ("studentId") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
@@ -797,7 +782,22 @@ export class InitialSchema1754794905473 implements MigrationInterface {
             `ALTER TABLE "uni_guide"."files" ADD CONSTRAINT "FK_7e7425b17f9e707331e9a6c7335" FOREIGN KEY ("userId") REFERENCES "security"."users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
+            `ALTER TABLE "uni_guide"."majors" ADD CONSTRAINT "FK_10c322c60cd25c2c170a3302033" FOREIGN KEY ("group_id") REFERENCES "uni_guide"."major_groups"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "uni_guide"."ocr_results" ADD CONSTRAINT "FK_0787a97b8492c2aebe1dc2cc644" FOREIGN KEY ("fileId") REFERENCES "uni_guide"."files"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "uni_guide"."ocr_results" ADD CONSTRAINT "FK_4067652cc759950247f03b4a002" FOREIGN KEY ("studentId") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+        );
+        await queryRunner.query(
             `ALTER TABLE "uni_guide"."certifications" ADD CONSTRAINT "FK_94ecc704512cfe5019d2577a994" FOREIGN KEY ("studentId") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "uni_guide"."student_admissions" ADD CONSTRAINT "FK_794414569ff641b86139a029912" FOREIGN KEY ("admission_id") REFERENCES "uni_guide"."admissions"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+        );
+        await queryRunner.query(
+            `ALTER TABLE "uni_guide"."student_admissions" ADD CONSTRAINT "FK_223f964a2fff3f7a45610f43ded" FOREIGN KEY ("student_id") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
         );
         await queryRunner.query(
             `ALTER TABLE "uni_guide"."awards" ADD CONSTRAINT "FK_df483bf7bb17b72ea43be46d1ae" FOREIGN KEY ("studentId") REFERENCES "uni_guide"."students"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
