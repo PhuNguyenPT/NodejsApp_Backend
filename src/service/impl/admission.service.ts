@@ -15,6 +15,7 @@ import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.ent
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { IAdmissionService } from "@/service/admission-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
+import { isValidSubjectGroupKey, SUBJECT_GROUPS } from "@/type/enum/subject.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { PageImpl } from "@/type/pagination/page-impl.js";
 import { PageRequest } from "@/type/pagination/page-request.js";
@@ -38,6 +39,22 @@ export interface TuitionFeeRange {
     max?: number;
     min?: number;
 }
+
+/**
+ * UEF Scholarship tiers based on national exam scores (THPTQG)
+ * Source: UEF 2025 Admission Scholarship Policy
+ */
+interface ScholarshipTier {
+    maxScore: number;
+    minScore: number;
+    percentage: number;
+}
+
+const UEF_SCHOLARSHIP_TIERS: ScholarshipTier[] = [
+    { maxScore: 30, minScore: 28.5, percentage: 100 },
+    { maxScore: 28.5, minScore: 25, percentage: 50 },
+    { maxScore: 25, minScore: 21, percentage: 25 },
+];
 
 @injectable()
 export class AdmissionService implements IAdmissionService {
@@ -79,7 +96,15 @@ export class AdmissionService implements IAdmissionService {
             .getManyAndCount();
 
         const entities = studentAdmissions.map((sa) => sa.admission);
-        return PageImpl.of(entities, totalElements, effectivePageable);
+
+        // Apply UEF scholarship adjustments before returning
+        const adjustedEntities = await this.applyUEFScholarshipAdjustments(
+            entities,
+            studentId,
+            userId,
+        );
+
+        return PageImpl.of(adjustedEntities, totalElements, effectivePageable);
     }
 
     public async getAllDistinctAdmissionFieldValues(
@@ -121,16 +146,35 @@ export class AdmissionService implements IAdmissionService {
             return emptyResult as Record<AdmissionField, (number | string)[]>;
         }
 
-        // Extract admission entities and then get distinct values
+        // Extract admission entities
         const admissionEntities = studentAdmissions.map((sa) => sa.admission);
 
-        // Extract distinct values for all fields
+        // Filter out admissions with major_code = 0 (invalid/placeholder records)
+        const validAdmissionEntities = admissionEntities.filter(
+            (admission) => admission.majorCode !== 0,
+        );
+
+        // Apply UEF scholarship adjustments before extracting distinct values
+        const adjustedEntities = await this.applyUEFScholarshipAdjustments(
+            validAdmissionEntities,
+            studentId,
+            userId,
+        );
+
+        // Extract distinct values for all fields from adjusted entities
         const result: Partial<Record<AdmissionField, (number | string)[]>> = {};
 
         ALLOWED_ADMISSION_FIELDS.forEach((field) => {
-            const distinctValues = Array.from(
-                new Set(admissionEntities.map((admission) => admission[field])),
-            );
+            let values = adjustedEntities.map((admission) => admission[field]);
+
+            // Normalize numeric fields to ensure consistent types
+            if (isAdmissionNumericField(field)) {
+                values = values.map((val) =>
+                    typeof val === "string" ? parseInt(val, 10) : val,
+                );
+            }
+
+            const distinctValues = Array.from(new Set(values));
 
             // Sort appropriately based on type
             if (isAdmissionNumericField(field)) {
@@ -158,6 +202,21 @@ export class AdmissionService implements IAdmissionService {
         }
 
         return finalResult;
+    }
+
+    /**
+     * Applies scholarship discount to tuition fee
+     *
+     * @param originalTuition Original tuition fee
+     * @param scholarshipPercentage Scholarship percentage (0-100)
+     * @returns Discounted tuition fee (rounded)
+     */
+    private applyScholarshipDiscount(
+        originalTuition: number,
+        scholarshipPercentage: number,
+    ): number {
+        const discountMultiplier = (100 - scholarshipPercentage) / 100;
+        return Math.round(originalTuition * discountMultiplier);
     }
 
     private applySearchFilters(
@@ -282,6 +341,116 @@ export class AdmissionService implements IAdmissionService {
         return effectivePageable;
     }
 
+    /**
+     * Applies UEF scholarship adjustments to admission entities
+     * Only modifies UEF admissions with THPTQG admission type
+     *
+     * @param entities Array of admission entities
+     * @param studentId Student ID
+     * @param userId User ID (optional)
+     * @returns Modified array of admission entities with scholarship-adjusted tuition fees
+     */
+    private async applyUEFScholarshipAdjustments(
+        entities: AdmissionEntity[],
+        studentId: string,
+        userId?: string,
+    ): Promise<AdmissionEntity[]> {
+        // Quick check: any UEF THPTQG admissions?
+        const hasUEFAdmissions = entities.some(
+            (e) => e.uniCode === "UEF" && e.admissionType === "THPTQG",
+        );
+
+        if (!hasUEFAdmissions) {
+            return entities;
+        }
+
+        // Fetch student with national exam scores
+        const student = await this.dataSource
+            .getRepository(StudentEntity)
+            .findOne({
+                where: { id: studentId, userId: userId ?? IsNull() },
+            });
+
+        if (!student?.nationalExams || student.nationalExams.length === 0) {
+            return entities;
+        }
+
+        // Build subject score map from national exams
+        const subjectScoreMap = new Map<string, number>();
+        student.nationalExams.forEach((exam) => {
+            subjectScoreMap.set(exam.name, exam.score);
+        });
+
+        // Track statistics for summary logging
+        const stats = {
+            discounted: 0,
+            processed: 0,
+            skippedBelowThreshold: 0,
+            skippedNoScore: 0,
+            totalDiscount: 0,
+        };
+
+        // Apply scholarship to each entity
+        const result = entities.map((entity) => {
+            // Only process UEF THPTQG admissions
+            if (entity.uniCode !== "UEF" || entity.admissionType !== "THPTQG") {
+                return entity;
+            }
+
+            stats.processed++;
+
+            // Calculate score for this subject combination
+            const totalScore = this.calculateSubjectCombinationScore(
+                subjectScoreMap,
+                entity.subjectCombination,
+            );
+
+            if (totalScore === null) {
+                stats.skippedNoScore++;
+                return entity;
+            }
+
+            // Determine scholarship tier
+            const scholarshipPercentage =
+                this.calculateUEFScholarshipPercentage(totalScore);
+
+            if (scholarshipPercentage === 0) {
+                stats.skippedBelowThreshold++;
+                return entity;
+            }
+
+            // Apply discount
+            const originalTuition = entity.tuitionFee;
+            const adjustedTuition = this.applyScholarshipDiscount(
+                originalTuition,
+                scholarshipPercentage,
+            );
+
+            const discount = originalTuition - adjustedTuition;
+            stats.discounted++;
+            stats.totalDiscount += discount;
+
+            // Modify entity in place to preserve prototype
+            entity.tuitionFee = adjustedTuition;
+            return entity;
+        });
+
+        // Log summary instead of individual entries
+        if (stats.processed > 0) {
+            this.logger.info("UEF Scholarship: Summary", {
+                availableSubjects: Array.from(subjectScoreMap.keys()),
+                discounted: stats.discounted,
+                processed: stats.processed,
+                skippedBelowThreshold: stats.skippedBelowThreshold,
+                skippedNoScore: stats.skippedNoScore,
+                studentId,
+                totalDiscountAmount: stats.totalDiscount,
+            });
+        }
+
+        return result;
+    }
+
     private buildBaseStudentAdmissionQuery(
         studentId: string,
         userId?: string,
@@ -355,6 +524,66 @@ export class AdmissionService implements IAdmissionService {
         }
 
         return { filters: searchFilters, tuitionFeeRange };
+    }
+
+    /**
+     * Calculates total score for a subject combination
+     *
+     * @param subjectScoreMap Map of subject name to score
+     * @param subjectCombination Subject combination code (e.g., "A00", "D01")
+     * @returns Total score or null if cannot calculate
+     */
+    private calculateSubjectCombinationScore(
+        subjectScoreMap: Map<string, number>,
+        subjectCombination: string,
+    ): null | number {
+        // Validate subject combination
+        if (!isValidSubjectGroupKey(subjectCombination)) {
+            return null;
+        }
+
+        const requiredSubjects = SUBJECT_GROUPS[subjectCombination];
+
+        // Calculate total
+        let totalScore = 0;
+        const missingSubjects: string[] = [];
+
+        for (const subject of requiredSubjects) {
+            const score = subjectScoreMap.get(subject);
+            if (score === undefined) {
+                missingSubjects.push(subject);
+            } else {
+                totalScore += score;
+            }
+        }
+
+        if (missingSubjects.length > 0) {
+            return null;
+        }
+
+        return totalScore;
+    }
+
+    /**
+     * Determines UEF scholarship percentage based on total score
+     *
+     * @param totalScore Total score from 3 subjects
+     * @returns Scholarship percentage (0, 25, 50, or 100)
+     */
+    private calculateUEFScholarshipPercentage(totalScore: number): number {
+        // Check tiers
+        for (const tier of UEF_SCHOLARSHIP_TIERS) {
+            if (totalScore >= tier.minScore && totalScore < tier.maxScore) {
+                return tier.percentage;
+            }
+        }
+
+        // Perfect score edge case
+        if (totalScore === 30) {
+            return 100;
+        }
+
+        return 0;
     }
 
     private async validateStudentExists(
