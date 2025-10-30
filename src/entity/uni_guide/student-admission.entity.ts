@@ -7,6 +7,7 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn,
     Relation,
+    Unique,
     UpdateDateColumn,
 } from "typeorm";
 
@@ -19,6 +20,7 @@ import { StudentEntity } from "./student.entity.js";
 @Index("idx_student_admissions_composite", ["studentId", "admissionId"])
 @Index("idx_student_admissions_created_at", ["createdAt"])
 @Index("idx_student_admissions_updated_at", ["updatedAt"])
+@Unique("UQ_student_admission", ["studentId", "admissionId"])
 export class StudentAdmissionEntity {
     @JoinColumn({ name: "admission_id" })
     @ManyToOne("AdmissionEntity", "studentAdmissions", {
