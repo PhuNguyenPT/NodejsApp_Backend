@@ -1,7 +1,6 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 import { Logger } from "winston";
-import { z } from "zod";
 
 import {
     BatchScoreExtractionResult,
@@ -18,32 +17,15 @@ import { Role } from "@/type/enum/user.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 
-const SingleFileCreatedEventSchema = z.object({
-    fileId: z.string().uuid("Invalid file ID format"),
-    studentId: z.string().uuid("Invalid student ID format"),
-    userId: z.string().uuid("Invalid user ID format").optional(),
-});
-
-export type SingleFileCreatedEvent = z.infer<
-    typeof SingleFileCreatedEventSchema
->;
-
-const FilesCreatedEventSchema = z.object({
-    fileIds: z.array(z.string().uuid("Invalid file ID format")),
-    studentId: z.string().uuid("Invalid student ID format"),
-    userId: z.string().uuid("Invalid user ID format").optional(),
-});
-
-export type FilesCreatedEvent = z.infer<typeof FilesCreatedEventSchema>;
-
-// Union schema to validate against either event type
-const OcrEventSchema = z.union([
-    SingleFileCreatedEventSchema,
-    FilesCreatedEventSchema,
-]);
+import { IFileEventListener } from "../file-event-listener.interface.js";
+import {
+    FilesCreatedEvent,
+    OcrEventSchema,
+    SingleFileCreatedEvent,
+} from "../file.event.js";
 
 @injectable()
-export class FileEventListener {
+export class FileEventListener implements IFileEventListener {
     constructor(
         @inject(TYPES.IMistralService)
         private readonly mistralService: IMistralService,
