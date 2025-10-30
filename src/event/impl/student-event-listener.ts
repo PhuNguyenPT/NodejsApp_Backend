@@ -1,10 +1,11 @@
 import { inject, injectable } from "inversify";
 import { RedisClientType } from "redis";
-import { DataSource, EntityManager, In } from "typeorm";
+import { DataSource, EntityManager, In, IsNull } from "typeorm";
 import { Logger } from "winston";
 
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config.js";
 import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
+import { StudentInfoDTO } from "@/dto/student/student-dto.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
 import {
@@ -12,10 +13,15 @@ import {
     PredictionResultStatus,
 } from "@/entity/uni_guide/prediction-result.entity.js";
 import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { ExamScenario } from "@/service/impl/prediction-model.service.js";
 import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
+import { UniType } from "@/type/enum/uni-type.js";
 import { Role } from "@/type/enum/user.js";
+import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { CacheKeys } from "@/util/cache-key.js";
+import { validateAndTransformSync } from "@/util/validation.util.js";
 
 import { IStudentEventListener } from "../student-event-listener.interface.js";
 import {
@@ -63,6 +69,28 @@ export class StudentEventListener implements IStudentEventListener {
         }
     }
 
+    private filterAdmissionsByStudentInfoDTO(
+        admissions: AdmissionEntity[],
+        studentInfoDTO: StudentInfoDTO,
+    ): AdmissionEntity[] {
+        const examScenarios: ExamScenario[] =
+            this.predictionModelService.collectExamScenarios(studentInfoDTO);
+
+        const subject_combinations = new Set(
+            examScenarios.map((examScenario) => examScenario.to_hop_mon),
+        );
+
+        const filteredAdmissions: AdmissionEntity[] = admissions.filter(
+            (admission) =>
+                this.isFilteredOutAdmission(
+                    admission,
+                    studentInfoDTO,
+                    subject_combinations,
+                ),
+        );
+        return filteredAdmissions;
+    }
+
     /**
      * Invalidates admission field cache for a student
      * Called after linking new admissions to ensure fresh data
@@ -95,6 +123,42 @@ export class StudentEventListener implements IStudentEventListener {
         }
     }
 
+    private isFilteredOutAdmission(
+        admission: AdmissionEntity,
+        studentInfoDTO: StudentInfoDTO,
+        subject_combinations?: Set<string>,
+    ): boolean {
+        const studentUniType = studentInfoDTO.uniType;
+        const admissionUniType = admission.uniType.trim().toUpperCase();
+
+        let passesSubject = true;
+        if (subject_combinations) {
+            passesSubject = subject_combinations.has(
+                admission.subjectCombination,
+            );
+        }
+
+        const passesProvince = admission.province
+            .trim()
+            .toUpperCase()
+            .includes(studentInfoDTO.province.trim().toUpperCase());
+
+        let passesUniType = true;
+        if (studentUniType === UniType.PUBLIC) {
+            if (admissionUniType.includes(UniType.PRIVATE.toUpperCase())) {
+                passesUniType = false;
+            }
+        }
+
+        if (studentUniType === UniType.PRIVATE) {
+            if (admissionUniType.includes(UniType.PUBLIC.toUpperCase())) {
+                passesUniType = false;
+            }
+        }
+
+        return passesSubject && passesProvince && passesUniType;
+    }
+
     /**
      * Process admissions from prediction results and associate them with the student
      * Using EntityManager for transactional consistency
@@ -104,6 +168,7 @@ export class StudentEventListener implements IStudentEventListener {
         studentId: string,
         l1PredictionResults: L1PredictResult[],
         l2PredictionResults: L2PredictResult[],
+        userId?: string,
     ): Promise<void> {
         try {
             const admissionCodeMap = new Map<string, boolean>();
@@ -150,18 +215,17 @@ export class StudentEventListener implements IStudentEventListener {
             }
 
             // Step 2: Find all existing admission links for this student
-            const existingStudentAdmissions = await manager.findBy(
-                StudentAdmissionEntity,
-                { studentId },
-            );
+            const existingStudentAdmissions: StudentAdmissionEntity[] =
+                await manager.findBy(StudentAdmissionEntity, { studentId });
             const existingAdmissionIds = new Set(
                 existingStudentAdmissions.map((sa) => sa.admissionId),
             );
 
             // Step 3: Filter out admissions that are already associated with the student
-            const newAdmissionsToAdd = candidateAdmissions.filter(
-                (admission) => !existingAdmissionIds.has(admission.id),
-            );
+            let newAdmissionsToAdd: AdmissionEntity[] =
+                candidateAdmissions.filter(
+                    (admission) => !existingAdmissionIds.has(admission.id),
+                );
 
             if (newAdmissionsToAdd.length === 0) {
                 this.logger.info(
@@ -172,6 +236,29 @@ export class StudentEventListener implements IStudentEventListener {
                     },
                 );
                 return;
+            }
+
+            const studentEntity: null | StudentEntity = await manager.findOneBy(
+                StudentEntity,
+                { id: studentId, userId: userId ?? IsNull() },
+            );
+
+            if (!studentEntity) {
+                throw new EntityNotFoundException(
+                    `Student profile with id: ${studentId} not found`,
+                );
+            }
+
+            const studentInfoDTO: StudentInfoDTO = validateAndTransformSync(
+                StudentInfoDTO,
+                studentEntity,
+            );
+
+            if (studentInfoDTO.hasValidNationalExam()) {
+                newAdmissionsToAdd = this.filterAdmissionsByStudentInfoDTO(
+                    newAdmissionsToAdd,
+                    studentInfoDTO,
+                );
             }
 
             // Step 4: Create new StudentAdmissionEntity instances for the new links
@@ -317,6 +404,7 @@ export class StudentEventListener implements IStudentEventListener {
                         studentId,
                         l1PredictionResults,
                         l2PredictionResults,
+                        userId,
                     );
                 },
             );
