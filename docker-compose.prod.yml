@@ -1,7 +1,7 @@
 networks:
   app-network:
     driver: bridge
-  shared-network:
+  app-shared-network:
     external: true
     name: app-shared-network
 
@@ -22,7 +22,7 @@ services:
       - "${SERVER_PORT}:${SERVER_PORT}"
     networks:
       - app-network # Internal network for DB/Redis
-      - shared-network # External network for ML service
+      - app-shared-network # External network for ML service
     depends_on:
       postgres-prod:
         condition: service_healthy
@@ -64,7 +64,7 @@ services:
       - postgres_data_prod:/var/lib/postgresql
     networks:
       - app-network
-      - shared-network
+      - app-shared-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
