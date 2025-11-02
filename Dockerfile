@@ -16,7 +16,7 @@ RUN apt-get update && \
 COPY package*.json ./
 
 # Install all dependencies, including devDependencies needed for the build
-RUN npm install
+RUN npm ci
 
 # Copy the rest of your application's source code
 COPY . .
@@ -31,6 +31,11 @@ RUN npm run build
 # Start from the same clean, lightweight base image
 FROM node:22-trixie-slim
 
+# Install curl for health checks
+RUN apt-get update && \
+    apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # --- Security Best Practice: Create user early ---
@@ -42,7 +47,7 @@ RUN groupadd --system appgroup && \
 COPY --chown=appuser:appgroup package*.json ./
 
 # Install ONLY production dependencies, skipping devDependencies
-RUN HUSKY=0 npm install --omit=dev
+RUN HUSKY=0 npm ci --omit=dev
 
 # Copy the compiled code from the "builder" stage with proper ownership
 COPY --from=builder --chown=appuser:appgroup /app/dist ./dist
