@@ -1,7 +1,7 @@
 networks:
   app-network:
     driver: bridge
-  shared-network:
+  app-shared-network:
     external: true
     name: app-shared-network
 
@@ -22,7 +22,7 @@ services:
       - "${SERVER_PORT}:${SERVER_PORT}"
     networks:
       - app-network # Internal network for DB/Redis
-      - shared-network # External network for ML service
+      - app-shared-network # External network for ML service
     depends_on:
       postgres-prod:
         condition: service_healthy
@@ -32,12 +32,16 @@ services:
       - private_key
       - public_key
     volumes:
-      - app_logs:/app/logs
+      - app_logs_prod:/app/logs
     environment:
       - PRIVATE_KEY_PATH=/run/secrets/private_key
       - PUBLIC_KEY_PATH=/run/secrets/public_key
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail http://localhost:3000/health || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl --fail http://localhost:${SERVER_PORT}/health || exit 1",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -57,10 +61,10 @@ services:
       PGDATA: /var/lib/postgresql/${POSTGRES_VERSION}/docker
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - postgres_data_prod:/var/lib/postgresql
     networks:
       - app-network
-      - shared-network
+      - app-shared-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -81,7 +85,7 @@ services:
       --user ${REDIS_USERNAME} on '>${REDIS_USER_PASSWORD}' '~*' '&*' '+@all'
       "
     volumes:
-      - redis_data:/data
+      - redis_data_prod:/data
     networks:
       - app-network # Only on internal network
     healthcheck:
@@ -105,9 +109,9 @@ services:
       start_period: 20s
 
 volumes:
-  postgres_data:
+  postgres_data_prod:
     driver: local
-  redis_data:
+  redis_data_prod:
     driver: local
-  app_logs:
+  app_logs_prod:
     driver: local
