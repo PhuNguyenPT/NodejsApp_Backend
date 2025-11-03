@@ -1445,6 +1445,51 @@ export class PredictionModelService implements IPredictionModelService {
         ccnnCertifications: CertificationDTO[],
         majors: string[],
     ): UserInputL2[] {
+        // If no CCNN certifications, generate combinations with default values
+        if (ccnnCertifications.length === 0) {
+            this.logger.info(
+                "L2 Prediction: No CCNN certifications found, using default values",
+                {
+                    examScenariosCount: examScenarios.length,
+                    majorsCount: majors.length,
+                },
+            );
+
+            const combinations: UserInputL2[] = examScenarios.flatMap(
+                (scenario) =>
+                    majors
+                        .map((major) => {
+                            const majorCode = getCodeByVietnameseName(major);
+                            if (!majorCode) {
+                                this.logger.warn(
+                                    `L2 Prediction: Cannot find code for major: ${major}`,
+                                );
+                                return null;
+                            }
+                            return {
+                                ...baseTemplate,
+                                diem_ccta: "0", // Default value when no certification
+                                diem_chuan: scenario.diem_chuan,
+                                nhom_nganh: parseInt(majorCode, 10),
+                                ten_ccta: "0", // 0 indicates no certification
+                                to_hop_mon: scenario.to_hop_mon,
+                            } as UserInputL2;
+                        })
+                        .filter(
+                            (input): input is UserInputL2 => input !== null,
+                        ),
+            );
+
+            this.logger.info(
+                "L2 Prediction: Generated combinations without CCNN certifications",
+                {
+                    generatedCombinations: combinations.length,
+                },
+            );
+
+            return combinations;
+        }
+
         // Create a map to group certifications by their handling type
         const certificationMap = new Map<string, CertificationDTO[]>();
 
@@ -1506,9 +1551,16 @@ export class PredictionModelService implements IPredictionModelService {
             combinations.push(...typeCombinations);
         });
 
+        this.logger.info(
+            "L2 Prediction: Generated combinations with CCNN certifications",
+            {
+                certificationTypes: Array.from(certificationMap.keys()),
+                generatedCombinations: combinations.length,
+            },
+        );
+
         return combinations;
     }
-
     // Updated method to generate all user input combinations
     private generateUserInputL1Combinations(
         studentInfoDTO: StudentInfoDTO,
