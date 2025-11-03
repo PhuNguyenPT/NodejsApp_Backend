@@ -1,6 +1,7 @@
 networks:
   app-network:
     driver: bridge
+    name: app-network
   app-shared-network:
     external: true
     name: app-shared-network
