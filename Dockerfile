@@ -19,7 +19,8 @@ COPY package*.json ./
 RUN npm ci
 
 # Copy the rest of your application's source code
-COPY . .
+COPY src ./src
+COPY tsconfig.build.json tsconfig.json tsoa.json vitest.config.js .nvmrc ./
 
 # Run the build script defined in package.json
 # This will compile TypeScript to JavaScript in the /app/dist folder
