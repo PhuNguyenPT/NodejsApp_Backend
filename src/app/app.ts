@@ -24,7 +24,6 @@ import { PassportConfig } from "@/config/passport.config.js";
 import { initializeRedis, redisClient } from "@/config/redis.config.js";
 import swaggerDocs from "@/config/swagger.config.js";
 import { RegisterRoutes } from "@/generated/routes.js";
-import { TokenCleanupJob } from "@/job/token-cleanup-job.js";
 import ErrorMiddleware from "@/middleware/error-middleware.js";
 import { PredictionServiceClient } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
@@ -64,7 +63,6 @@ class App {
     public async initialize(): Promise<void> {
         await this.initializeDatabaseConnections();
         this.initializePassportStrategies();
-        this.initializeTokenCleanup();
         await this.initializePredictModelServer();
     }
 
@@ -109,16 +107,6 @@ class App {
                 });
             }
 
-            // Stop token cleanup job
-            try {
-                const tokenCleanupJob = iocContainer.get<TokenCleanupJob>(
-                    TYPES.TokenCleanupJob,
-                );
-                tokenCleanupJob.stop();
-                this.logger.info("✅ Token cleanup job stopped");
-            } catch (error: unknown) {
-                this.logger.warn("⚠️ Error stopping token cleanup job:", error);
-            }
             // Close database connections
             await this.closeDatabaseConnections();
 
@@ -362,18 +350,6 @@ class App {
                 timestamp: new Date().toISOString(),
             });
         });
-    }
-
-    private initializeTokenCleanup(): void {
-        try {
-            const tokenCleanupJob = iocContainer.get<TokenCleanupJob>(
-                TYPES.TokenCleanupJob,
-            );
-            tokenCleanupJob.startPeriodicCleanup(60); // Run every hour
-            this.logger.info("Token cleanup job initialized");
-        } catch (error) {
-            this.logger.error("Failed to initialize token cleanup job:", error);
-        }
     }
 
     private setupGracefulShutdown(): void {
