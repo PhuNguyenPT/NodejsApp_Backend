@@ -116,7 +116,10 @@ services:
 volumes:
   postgres_data_staging:
     driver: local
+    name: postgres_data_staging
   redis_data_staging:
     driver: local
+    name: redis_data_staging
   app_logs_staging:
     driver: local
+    name: app_logs_staging

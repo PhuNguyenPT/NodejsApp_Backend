@@ -116,7 +116,10 @@ services:
 volumes:
   postgres_data_prod:
     driver: local
+    name: postgres_data_prod
   redis_data_prod:
     driver: local
+    name: redis_data_prod
   app_logs_prod:
     driver: local
+    name: app_logs_prod
