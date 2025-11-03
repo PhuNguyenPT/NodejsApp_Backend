@@ -34,7 +34,6 @@ import { IFileEventListener } from "@/event/file-event-listener.interface.js";
 import { FileEventListener } from "@/event/impl/file-event-listener.js";
 import { StudentEventListener } from "@/event/impl/student-event-listener.js";
 import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
-import { TokenCleanupJob } from "@/job/token-cleanup-job.js";
 import { JwtTokenRepository } from "@/repository/impl/jwt-repository.js";
 import { UserRepository } from "@/repository/impl/user-repository.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
@@ -222,12 +221,6 @@ iocContainer
 iocContainer
     .bind<IStudentEventListener>(TYPES.IStudentEventListener)
     .to(StudentEventListener)
-    .inSingletonScope();
-
-// ############## --- Job Bindings --- ##############
-iocContainer
-    .bind<TokenCleanupJob>(TYPES.TokenCleanupJob)
-    .to(TokenCleanupJob)
     .inSingletonScope();
 
 // ############## --- Controller Bindings --- ##############
