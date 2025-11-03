@@ -1,7 +1,11 @@
 networks:
-  app-network:
+  frontend-network: # For frontend ↔ backend only
     driver: bridge
-  app-shared-network:
+    name: frontend-network
+  backend-network: # For backend ↔ DB ↔ Redis
+    driver: bridge
+    name: backend-network
+  app-shared-network: # For backend ↔ ML service
     external: true
     name: app-shared-network
 
@@ -21,8 +25,9 @@ services:
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     networks:
-      - app-network # Internal network for DB/Redis
-      - app-shared-network # External network for ML service
+      - frontend-network # Talk to frontend
+      - backend-network # Talk to DB/Redis
+      - app-shared-network # Talk to ML
     depends_on:
       postgres-prod:
         condition: service_healthy
@@ -63,7 +68,7 @@ services:
     volumes:
       - postgres_data_prod:/var/lib/postgresql
     networks:
-      - app-network
+      - backend-network
       - app-shared-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
@@ -87,7 +92,7 @@ services:
     volumes:
       - redis_data_prod:/data
     networks:
-      - app-network # Only on internal network
+      - backend-network # Only backend can reach
     healthcheck:
       test:
         [
