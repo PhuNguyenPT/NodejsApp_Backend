@@ -38,8 +38,9 @@ export class AuthService implements IAuthService {
         @inject(TYPES.Logger) private readonly logger: Logger,
     ) {}
 
-    async login(loginData: LoginRequest): Promise<AuthResponse> {
-        const { email, password } = loginData;
+    async login(loginRequest: LoginRequest): Promise<AuthResponse> {
+        const email = loginRequest.email.toLowerCase();
+        const password = loginRequest.password;
 
         try {
             // Find user by email - will throw EntityNotFoundException if not found
@@ -411,8 +412,9 @@ export class AuthService implements IAuthService {
         }
     }
 
-    async register(registerData: RegisterRequest): Promise<AuthResponse> {
-        const { email, password } = registerData;
+    async register(registerRequest: RegisterRequest): Promise<AuthResponse> {
+        const email = registerRequest.email.toLowerCase();
+        const password = registerRequest.password;
 
         try {
             const savedUser = await this.createAndSaveUser(email, password);
