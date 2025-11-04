@@ -1,12 +1,14 @@
 // src/app/ioc-container.ts
 import { AxiosInstance } from "axios";
 import { Container } from "inversify";
+import { Options } from "multer";
 import { RedisClientType } from "redis";
 import { DataSource, Repository } from "typeorm";
 import { Logger } from "winston";
 import { ZlibOptions } from "zlib";
 
 import { postgresDataSource } from "@/config/data-source.config.js";
+import { mutterOptions } from "@/config/file.config.js";
 import { logger } from "@/config/logger.config.js";
 import { PassportConfig } from "@/config/passport.config.js";
 import {
@@ -131,6 +133,7 @@ iocContainer
 iocContainer
     .bind<Set<string>>(TYPES.IncompressibleMimeTypes)
     .toConstantValue(INCOMPRESSIBLE_MIME_TYPES);
+iocContainer.bind<Options>(TYPES.MulterOptions).toConstantValue(mutterOptions);
 
 // --- Repository Bindings ---
 iocContainer

@@ -1,7 +1,7 @@
 import { bool, cleanEnv, makeValidator, num, port, str } from "envalid";
 
 // src/util/validate.env.ts
-import { Config } from "@/type/interface/config.js";
+import { Config } from "@/config/app.config.js";
 
 const commaSeparatedString = makeValidator((x) =>
     x.split(",").map((s) => s.trim()),
@@ -29,6 +29,9 @@ export const config: Config = cleanEnv(process.env, {
 
     // Logging settings
     ENABLE_FILE_LOGGING: bool({ default: false }),
+
+    FILE_SIZE: num({ default: 10485760 }),
+
     // JWT Configuration
     JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS: num({
         default: 3600, // 1 hour

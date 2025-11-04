@@ -1,6 +1,7 @@
 // src/handler/global.exception.handler.ts
 
 import jwt from "jsonwebtoken"; // Corrected import
+import { MulterError } from "multer";
 import { ValidateError } from "tsoa";
 import { EntityMetadataNotFoundError } from "typeorm";
 import {
@@ -71,7 +72,6 @@ class ExceptionHandlers {
 
         return { message, response, status };
     }
-
     @ExceptionHandler(BadCredentialsException)
     handleBadCredentialsException(
         exception: BadCredentialsException,
@@ -92,6 +92,7 @@ class ExceptionHandlers {
 
         return { message, response, status };
     }
+
     @ExceptionHandler(EntityExistsException)
     handleEntityExistsException(
         exception: EntityExistsException,
@@ -150,7 +151,6 @@ class ExceptionHandlers {
 
         return { message, response, status };
     }
-
     @ExceptionHandler(ExpiredJwtException)
     handleExpiredJwtException(exception: ExpiredJwtException): ErrorDetails {
         const status: number = exception.status;
@@ -278,6 +278,62 @@ class ExceptionHandlers {
             message,
             stack: exception.stack,
             status,
+        });
+
+        return { message, response, status };
+    }
+
+    @ExceptionHandler(MulterError)
+    handleMulterError(error: MulterError): ErrorDetails {
+        let status = HttpStatus.BAD_REQUEST;
+        // Use the default error message provided by Multer
+        const message = error.message;
+        const validationErrors: Record<string, string> = {};
+        // Use the field provided by Multer, defaulting to 'file' if undefined
+        const fieldKey = error.field ?? "file";
+
+        // Handle specific multer errors with appropriate HTTP status codes
+        switch (error.code) {
+            case "LIMIT_FIELD_COUNT":
+            case "LIMIT_FIELD_KEY":
+            case "LIMIT_FIELD_VALUE":
+            case "LIMIT_PART_COUNT":
+                // These errors usually indicate payload structure or overall size issues
+                status = HttpStatus.PAYLOAD_TOO_LARGE; // 413
+                break;
+            case "LIMIT_FILE_COUNT":
+                // File count limit is a business/configuration rule
+                status = HttpStatus.UNPROCESSABLE_ENTITY; // 422
+                break;
+            case "LIMIT_FILE_SIZE":
+                // Individual file size limit
+                status = HttpStatus.PAYLOAD_TOO_LARGE; // 413
+                break;
+            case "LIMIT_UNEXPECTED_FILE":
+            case "MISSING_FIELD_NAME":
+            default:
+                // Generic client errors or malformed requests
+                status = HttpStatus.BAD_REQUEST; // 400
+                break;
+        }
+
+        // Set the validation error using the appropriate field key and the Multer error message
+        validationErrors[fieldKey] = error.message;
+
+        const response: ValidationResponse = {
+            message,
+            status,
+            validationErrors,
+        };
+
+        logger.warn("MulterError", {
+            code: error.code,
+            field: error.field,
+            message,
+            originalError: error.name,
+            stack: error.stack,
+            status,
+            validationErrors,
         });
 
         return { message, response, status };
