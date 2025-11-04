@@ -2,7 +2,9 @@ import { responseFormatFromZodObject } from "@mistralai/mistralai/extra/structCh
 import { OCRResponse } from "@mistralai/mistralai/models/components/ocrresponse.js";
 import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
+import { promisify } from "util";
 import { Logger } from "winston";
+import { gunzip, ZlibOptions } from "zlib";
 
 import { mistralClient } from "@/config/mistralai.config.js";
 import {
@@ -19,6 +21,7 @@ import { TYPES } from "@/type/container/types.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 
+const gunzipAsync = promisify(gunzip);
 @injectable()
 export class MistralService implements IMistralService {
     constructor(
@@ -26,6 +29,8 @@ export class MistralService implements IMistralService {
         private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
+        @inject(TYPES.DecompressionOptions)
+        private readonly DECOMPRESSION_OPTIONS: ZlibOptions,
     ) {}
 
     /**
@@ -298,7 +303,31 @@ export class MistralService implements IMistralService {
         modelName: string,
     ): Promise<ScoreExtractionResult> {
         try {
-            const base64Image = fileEntity.fileContent.toString("base64");
+            // Decompress file content if it's compressed
+            let fileContent = fileEntity.fileContent;
+            if (fileEntity.metadata?.isCompressed) {
+                try {
+                    fileContent = await gunzipAsync(
+                        fileEntity.fileContent,
+                        this.DECOMPRESSION_OPTIONS,
+                    );
+                } catch (error) {
+                    this.logger.error(
+                        `Failed to decompress file ${fileEntity.id} for OCR processing`,
+                        { error },
+                    );
+                    return {
+                        error: "Failed to decompress file content",
+                        scores: [],
+                        success: false,
+                    };
+                }
+            }
+
+            // Now use the decompressed content
+            const base64Image = fileContent.toString("base64");
+
+            // Now use the decompressed content
             const imageDataUrl = `data:${fileEntity.mimeType};base64,${base64Image}`;
 
             const response: OCRResponse = await mistralClient.ocr.process({

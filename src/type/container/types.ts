@@ -53,6 +53,9 @@ export const RepositoryTypes = {
  */
 export const ConfigTypes = {
     ClientConfig: Symbol.for("ClientConfig"),
+    CompressionOptions: Symbol.for("CompressionOptions"),
+    DecompressionOptions: Symbol.for("DecompressionOptions"),
+    IncompressibleMimeTypes: Symbol.for("IncompressibleMimeTypes"),
     LoggerConfig: Symbol.for("LoggerConfig"),
     PassportConfig: Symbol.for("PassportConfig"),
     PredictionModelServiceConfig: Symbol.for("PredictionModelServiceConfig"),
@@ -72,13 +75,6 @@ export const InfrastructureTypes = {
     RedisSubscriber: Symbol.for("RedisSubscriber"),
 };
 
-/**
- * @description Symbols for scheduled jobs or background tasks.
- */
-export const JobTypes = {
-    TokenCleanupJob: Symbol.for("TokenCleanupJob"),
-};
-
 // --- All Types Combined ---
 
 /**
@@ -91,5 +87,4 @@ export const TYPES = {
     ...RepositoryTypes,
     ...ConfigTypes,
     ...InfrastructureTypes,
-    ...JobTypes,
 };
