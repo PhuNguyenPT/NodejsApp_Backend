@@ -4,6 +4,7 @@ import { Container } from "inversify";
 import { RedisClientType } from "redis";
 import { DataSource, Repository } from "typeorm";
 import { Logger } from "winston";
+import { ZlibOptions } from "zlib";
 
 import { postgresDataSource } from "@/config/data-source.config.js";
 import { logger } from "@/config/logger.config.js";
@@ -13,6 +14,11 @@ import {
     predictionServiceClientConfig,
 } from "@/config/prediction-model.config.js";
 import { redisClient, redisSubscriber } from "@/config/redis.config.js";
+import {
+    COMPRESSION_OPTIONS,
+    DECOMPRESSION_OPTIONS,
+    INCOMPRESSIBLE_MIME_TYPES,
+} from "@/config/zlib.config.js";
 import { AdmissionController } from "@/controller/admission.controller.js";
 import { AuthController } from "@/controller/auth.controller.js";
 import { FileController } from "@/controller/file.controller.js";
@@ -116,6 +122,15 @@ iocContainer
     .bind<PassportConfig>(TYPES.PassportConfig)
     .to(PassportConfig)
     .inSingletonScope();
+iocContainer
+    .bind<ZlibOptions>(TYPES.CompressionOptions)
+    .toConstantValue(COMPRESSION_OPTIONS);
+iocContainer
+    .bind<ZlibOptions>(TYPES.DecompressionOptions)
+    .toConstantValue(DECOMPRESSION_OPTIONS);
+iocContainer
+    .bind<Set<string>>(TYPES.IncompressibleMimeTypes)
+    .toConstantValue(INCOMPRESSIBLE_MIME_TYPES);
 
 // --- Repository Bindings ---
 iocContainer

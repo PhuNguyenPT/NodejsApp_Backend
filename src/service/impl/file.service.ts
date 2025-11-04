@@ -1,6 +1,9 @@
+import { instanceToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import { EntityManager, IsNull, Repository } from "typeorm";
+import { promisify } from "util";
 import { Logger } from "winston";
+import { gunzip, gzip, ZlibOptions } from "zlib";
 
 import { CreateFileDTO } from "@/dto/file/create-file.js";
 import { UpdateFileRequest } from "@/dto/file/update-file.js";
@@ -17,6 +20,20 @@ import { AccessDeniedException } from "@/type/exception/access-denied.exception.
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 
+const gzipAsync = promisify(gzip);
+const gunzipAsync = promisify(gunzip);
+
+interface CompressionResult {
+    [key: string]: unknown;
+    content: Buffer;
+    metadata: Metadata | undefined;
+}
+interface Metadata extends Partial<Record<string, unknown>> {
+    compressionRatio?: string | undefined;
+    isCompressed?: boolean | undefined;
+    originalSize?: number | undefined;
+}
+
 @injectable()
 export class FileService implements IFileService {
     constructor(
@@ -27,6 +44,12 @@ export class FileService implements IFileService {
         private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.IFileEventListener)
         private readonly fileEventListener: IFileEventListener,
+        @inject(TYPES.CompressionOptions)
+        private readonly COMPRESSION_OPTIONS: ZlibOptions,
+        @inject(TYPES.DecompressionOptions)
+        private readonly DECOMPRESSION_OPTIONS: ZlibOptions,
+        @inject(TYPES.IncompressibleMimeTypes)
+        private readonly INCOMPRESSIBLE_MIME_TYPES: Set<string>,
     ) {}
 
     /**
@@ -36,17 +59,25 @@ export class FileService implements IFileService {
         createFileDTO: CreateFileDTO,
         userId?: string,
     ): Promise<FileEntity> {
+        const { content, metadata } =
+            await this.compressFileIfBeneficial(createFileDTO);
+
+        const dtoWithCompression: CreateFileDTO =
+            instanceToInstance(createFileDTO);
+        dtoWithCompression.fileContent = content;
+        dtoWithCompression.fileSize = content.length;
+        dtoWithCompression.metadata = metadata;
+
         const savedFile = await this.studentRepository.manager.transaction(
             async (transactionalEntityManager) => {
-                // Use the refactored helper for all validation and locking
                 await this._getAndValidateStudentForUpload(
                     transactionalEntityManager,
-                    createFileDTO.studentId,
+                    dtoWithCompression.studentId,
                     1,
                     userId,
                 );
 
-                const newFile = this.fileRepository.create(createFileDTO);
+                const newFile = this.fileRepository.create(dtoWithCompression);
                 return await transactionalEntityManager.save(
                     FileEntity,
                     newFile,
@@ -85,18 +116,31 @@ export class FileService implements IFileService {
             }
         }
 
-        // Use transaction to handle pessimistic lock properly
+        // Process all files with conditional compression
+        const compressedDTOs = await Promise.all(
+            createFileDTOs.map(async (dto) => {
+                const { content, metadata } =
+                    await this.compressFileIfBeneficial(dto);
+
+                const clonedDto = instanceToInstance(dto);
+                clonedDto.fileContent = content;
+                clonedDto.fileSize = content.length; // Update to actual storage size
+                clonedDto.metadata = metadata;
+
+                return clonedDto;
+            }),
+        );
+
         const savedFiles = await this.studentRepository.manager.transaction(
             async (transactionalEntityManager) => {
-                // Use the helper for batch validation too.
                 await this._getAndValidateStudentForUpload(
                     transactionalEntityManager,
                     studentId,
-                    createFileDTOs.length, // Number of files being added
+                    compressedDTOs.length,
                     userId,
                 );
 
-                const newFiles = createFileDTOs.map((dto) =>
+                const newFiles = compressedDTOs.map((dto) =>
                     this.fileRepository.create(dto),
                 );
                 return await transactionalEntityManager.save(
@@ -125,6 +169,9 @@ export class FileService implements IFileService {
         this.logger.info(`File soft deleted with ID: ${fileId}`);
     }
 
+    /**
+     * Gets file by ID and decompresses content if needed
+     */
     public async getFileById(
         fileId: string,
         userId?: string,
@@ -144,9 +191,27 @@ export class FileService implements IFileService {
             );
         }
 
+        // Decompress file content if it's compressed
+        if (file.metadata?.isCompressed) {
+            try {
+                file.fileContent = await gunzipAsync(
+                    file.fileContent,
+                    this.DECOMPRESSION_OPTIONS,
+                );
+            } catch (error) {
+                this.logger.error(`Failed to decompress file ${fileId}`, {
+                    error,
+                });
+                throw new Error("Failed to decompress file content");
+            }
+        }
+
         return file;
     }
 
+    /**
+     * Gets files by student ID and decompresses content if needed
+     */
     public async getFilesByStudentId(
         studentId: string,
         userId?: string,
@@ -159,11 +224,32 @@ export class FileService implements IFileService {
                 userId: userId ?? IsNull(),
             },
         });
+
         if (files.length === 0) {
             throw new EntityNotFoundException(
                 `Files not found for student with ID: ${studentId}`,
             );
         }
+
+        // Decompress all files in parallel
+        await Promise.all(
+            files.map(async (file) => {
+                if (file.metadata?.isCompressed) {
+                    try {
+                        file.fileContent = await gunzipAsync(
+                            file.fileContent,
+                            this.DECOMPRESSION_OPTIONS,
+                        );
+                    } catch (error) {
+                        this.logger.error(
+                            `Failed to decompress file ${file.id}`,
+                            { error },
+                        );
+                    }
+                }
+            }),
+        );
+
         return files;
     }
 
@@ -203,7 +289,6 @@ export class FileService implements IFileService {
         filesToAdd: number,
         userId?: string,
     ): Promise<void> {
-        // 1. Lock the student row to prevent concurrent modifications.
         const student = await transactionalEntityManager.findOne(
             StudentEntity,
             {
@@ -218,12 +303,10 @@ export class FileService implements IFileService {
             );
         }
 
-        // 2. Perform access control check if a userId is provided.
         if (userId && student.userId !== userId) {
             throw new AccessDeniedException("Access denied");
         }
 
-        // 3. Efficiently count existing active files instead of loading them all.
         const currentActiveFiles = await transactionalEntityManager.count(
             FileEntity,
             {
@@ -231,7 +314,6 @@ export class FileService implements IFileService {
             },
         );
 
-        // 4. Validate the file limit.
         if (currentActiveFiles + filesToAdd > 6) {
             throw new ValidationException({
                 files:
@@ -329,5 +411,68 @@ export class FileService implements IFileService {
         }
 
         return hasChanges;
+    }
+
+    /**
+     * Compresses a file if it's beneficial (reduces size)
+     * Returns the content, updated metadata, and actual storage size
+     */
+    private async compressFileIfBeneficial(
+        dto: CreateFileDTO,
+    ): Promise<CompressionResult> {
+        if (!this.isCompressible(dto.mimeType)) {
+            this.logger.info(
+                `Compression skipped for ${dto.originalFileName}: format already compressed (${dto.mimeType})`,
+            );
+            return {
+                content: dto.fileContent,
+                metadata: dto.metadata,
+            };
+        }
+
+        const compressedContent = await gzipAsync(
+            dto.fileContent,
+            this.COMPRESSION_OPTIONS,
+        );
+
+        const originalSize = dto.fileSize;
+        const compressedSize = compressedContent.length;
+
+        // Only use compression if it actually reduces size
+        if (compressedSize >= originalSize) {
+            this.logger.info(
+                `Compression skipped for ${dto.originalFileName}: would increase size`,
+            );
+            return {
+                content: dto.fileContent,
+                metadata: dto.metadata,
+            };
+        }
+
+        const compressionRatio = (
+            (1 - compressedSize / originalSize) *
+            100
+        ).toFixed(2);
+
+        this.logger.info(
+            `File compressed: ${originalSize.toString()} bytes → ${compressedSize.toString()} bytes (${compressionRatio}% reduction)`,
+        );
+
+        return {
+            content: compressedContent,
+            metadata: {
+                ...(dto.metadata ?? {}),
+                compressionRatio,
+                isCompressed: true,
+                originalSize,
+            },
+        };
+    }
+
+    /**
+     * Determines if a file should be compressed based on its MIME type
+     */
+    private isCompressible(mimeType: string): boolean {
+        return !this.INCOMPRESSIBLE_MIME_TYPES.has(mimeType);
     }
 }
