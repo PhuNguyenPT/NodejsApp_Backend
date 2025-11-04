@@ -20,6 +20,8 @@ export interface Config {
 
     // Logging settings
     ENABLE_FILE_LOGGING: boolean;
+
+    FILE_SIZE: number;
     // JWT Configuration
     JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS: number;
     JWT_AUDIENCE: string;
@@ -34,12 +36,13 @@ export interface Config {
 
     // Environment config
     NODE_ENV: "development" | "production" | "staging";
+
     // Pagination Configuration (Spring Boot style)
     PAGINATION_DEFAULT_PAGE: number;
-
     PAGINATION_DEFAULT_SIZE: number;
     PAGINATION_MAX_SIZE: number;
     PAGINATION_MIN_SIZE: number;
+
     // Database config
     POSTGRES_DB: string;
     POSTGRES_HOST: string;

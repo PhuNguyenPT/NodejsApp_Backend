@@ -57,6 +57,7 @@ export const ConfigTypes = {
     DecompressionOptions: Symbol.for("DecompressionOptions"),
     IncompressibleMimeTypes: Symbol.for("IncompressibleMimeTypes"),
     LoggerConfig: Symbol.for("LoggerConfig"),
+    MulterOptions: Symbol.for("MulterOptions"),
     PassportConfig: Symbol.for("PassportConfig"),
     PredictionModelServiceConfig: Symbol.for("PredictionModelServiceConfig"),
 };

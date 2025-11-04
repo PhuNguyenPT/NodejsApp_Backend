@@ -4,10 +4,12 @@ import cors from "cors";
 import express, { Express, Router } from "express";
 import helmet from "helmet";
 import { Server } from "http";
+import multer from "multer";
 import passport from "passport";
 import { Logger } from "winston";
 
 import { iocContainer } from "@/app/ioc-container.js";
+import { Config } from "@/config/app.config.js";
 import { corsOptions } from "@/config/cors.config.js";
 import {
     initializePostgreSQL,
@@ -27,7 +29,6 @@ import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error-middleware.js";
 import { PredictionServiceClient } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
-import { Config } from "@/type/interface/config.js";
 class App {
     public readonly basePath: string;
     public readonly express: Express;
@@ -340,7 +341,10 @@ class App {
 
         apiRouter.use(helmet(helmetOptions));
 
-        RegisterRoutes(apiRouter);
+        const multerOptions = iocContainer.get<multer.Options>(
+            TYPES.MulterOptions,
+        );
+        RegisterRoutes(apiRouter, { multer: multer(multerOptions) });
 
         this.express.use(this.basePath, apiRouter);
 
