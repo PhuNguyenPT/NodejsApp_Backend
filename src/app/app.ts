@@ -2,8 +2,10 @@
 import compression from "compression";
 import cors from "cors";
 import express, { Express, Router } from "express";
+import fs from "fs";
 import helmet from "helmet";
 import { Server } from "http";
+import https from "https";
 import multer from "multer";
 import passport from "passport";
 import { Logger } from "winston";
@@ -29,21 +31,26 @@ import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error-middleware.js";
 import { PredictionServiceClient } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
+
 class App {
     public readonly basePath: string;
     public readonly express: Express;
     public readonly hostname: string;
     public readonly port: number;
+    public readonly tlsPort: number;
     private isShuttingDown = false;
     private readonly logger: Logger;
     private server: null | Server = null;
+    private tlsServer: https.Server | null = null;
 
     constructor(readonly config: Config) {
         this.express = express();
         this.port = config.SERVER_PORT;
+        this.tlsPort = config.SERVER_TLS_PORT;
         this.hostname = config.SERVER_HOSTNAME;
         this.basePath = config.SERVER_PATH;
         this.logger = logger;
+
         // Initialize synchronous components only
         this.initializeCors();
         this.initializeMiddleware();
@@ -68,11 +75,15 @@ class App {
     }
 
     public listen(): void {
+        // Start HTTP server (for health checks and internal communication)
         this.server = this.express.listen(this.port, this.hostname, () => {
             this.logger.info(
-                `App listening on ${this.hostname}:${this.port.toString()}${this.basePath}`,
+                `🔓 HTTP Server listening on ${this.hostname}:${this.port.toString()}${this.basePath}`,
             );
         });
+
+        // Start HTTPS server (for secure external communication)
+        this.startTLSServer();
     }
 
     public async shutdown(): Promise<void> {
@@ -421,6 +432,76 @@ class App {
                 })();
             },
         );
+    }
+
+    private startTLSServer(): void {
+        try {
+            // Check if TLS certificates exist
+            if (!fs.existsSync(this.config.TLS_KEY_PATH)) {
+                this.logger.warn(
+                    `⚠️ TLS key not found at ${this.config.TLS_KEY_PATH}. Skipping HTTPS server...`,
+                );
+                return;
+            }
+
+            if (!fs.existsSync(this.config.TLS_CERT_PATH)) {
+                this.logger.warn(
+                    `⚠️ TLS certificate not found at ${this.config.TLS_CERT_PATH}. Skipping HTTPS server...`,
+                );
+                return;
+            }
+
+            this.logger.info("🔐 Initializing HTTPS server with TLS...");
+
+            // Read TLS certificates
+            const tlsOptions: https.ServerOptions = {
+                ca: fs.readFileSync(this.config.TLS_CA_PATH),
+                cert: fs.readFileSync(this.config.TLS_CERT_PATH),
+
+                ciphers: [
+                    "ECDHE-ECDSA-AES128-GCM-SHA256",
+                    "ECDHE-RSA-AES128-GCM-SHA256",
+                    "ECDHE-ECDSA-AES256-GCM-SHA384",
+                    "ECDHE-RSA-AES256-GCM-SHA384",
+                    "ECDHE-ECDSA-CHACHA20-POLY1305",
+                    "ECDHE-RSA-CHACHA20-POLY1305",
+                ].join(":"),
+                honorCipherOrder: true,
+                key: fs.readFileSync(this.config.TLS_KEY_PATH),
+
+                maxVersion: "TLSv1.3" as const,
+                // TLS settings
+                minVersion: "TLSv1.2" as const,
+                rejectUnauthorized: false, // Set to true in production for strict mTLS
+                requestCert: true,
+            };
+
+            this.tlsServer = https.createServer(tlsOptions, this.express);
+
+            this.tlsServer.listen(this.tlsPort, this.hostname, () => {
+                this.logger.info(
+                    `🔒 HTTPS Server listening on ${this.hostname}:${this.tlsPort.toString()}${this.basePath}`,
+                );
+            });
+
+            this.tlsServer.on("error", (error) => {
+                this.logger.error("❌ HTTPS Server error:", error);
+            });
+
+            // Optional: Log TLS connections for debugging
+            if (this.config.NODE_ENV === "development") {
+                this.tlsServer.on("secureConnection", (tlsSocket) => {
+                    this.logger.debug("🔐 TLS Connection established:", {
+                        authorized: tlsSocket.authorized,
+                        cipher: tlsSocket.getCipher().name,
+                        protocol: tlsSocket.getProtocol(),
+                    });
+                });
+            }
+        } catch (error) {
+            this.logger.error("❌ Failed to start TLS server:", error);
+            this.logger.info("ℹ️ Continuing with HTTP only...");
+        }
     }
 }
 
