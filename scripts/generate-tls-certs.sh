@@ -2,6 +2,7 @@
 
 # Generate TLS certificates for backend-frontend communication
 # This creates self-signed certificates for internal Docker network use
+# Always generates mTLS (mutual TLS) client certificates
 
 set -e
 
@@ -24,6 +25,7 @@ EMAIL="admin@admission.edu.vn"
 
 echo -e "${GREEN}=== TLS Certificate Generation ===${NC}"
 echo "Creating certificates for internal Docker network communication"
+echo "Generating mTLS (mutual TLS) certificates"
 echo ""
 
 # Create TLS directory if it doesn't exist
@@ -106,18 +108,15 @@ openssl x509 -req -in "$TLS_DIR/backend.csr" \
 
 echo -e "${GREEN}✓ Backend certificate signed${NC}"
 
-# Optional: Generate client certificates for mTLS (mutual TLS)
+# Generate client certificates for mTLS (mutual TLS)
 echo ""
-read -p "Do you want to generate client certificates for mTLS? (y/N) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${GREEN}Step 6: Generating client certificates for mTLS...${NC}"
-    
-    # Generate Nginx client key
-    openssl genrsa -out "$TLS_DIR/nginx-client.key" 4096
-    
-    # Create client CSR with proper extensions
-    cat > "$TLS_DIR/client.cnf" << EOF
+echo -e "${GREEN}Step 6: Generating client certificates for mTLS...${NC}"
+
+# Generate Nginx client key
+openssl genrsa -out "$TLS_DIR/nginx-client.key" 4096
+
+# Create client CSR with proper extensions
+cat > "$TLS_DIR/client.cnf" << EOF
 [req]
 distinguished_name = req_distinguished_name
 req_extensions = v3_req
@@ -136,28 +135,24 @@ emailAddress = $EMAIL
 keyUsage = digitalSignature, keyEncipherment
 extendedKeyUsage = clientAuth
 EOF
-    
-    # Create client CSR
-    openssl req -new -key "$TLS_DIR/nginx-client.key" \
-        -out "$TLS_DIR/nginx-client.csr" \
-        -config "$TLS_DIR/client.cnf"
-    
-    # Sign client certificate
-    openssl x509 -req -in "$TLS_DIR/nginx-client.csr" \
-        -CA "$TLS_DIR/ca.crt" \
-        -CAkey "$TLS_DIR/ca.key" \
-        -CAcreateserial \
-        -out "$TLS_DIR/nginx-client.crt" \
-        -days $DAYS_VALID \
-        -sha256 \
-        -extensions v3_req \
-        -extfile "$TLS_DIR/client.cnf"
-    
-    echo -e "${GREEN}✓ Client certificates created for mTLS${NC}"
-    
-    # Clean up client config
-    rm -f "$TLS_DIR/client.cnf"
-fi
+
+# Create client CSR
+openssl req -new -key "$TLS_DIR/nginx-client.key" \
+    -out "$TLS_DIR/nginx-client.csr" \
+    -config "$TLS_DIR/client.cnf"
+
+# Sign client certificate
+openssl x509 -req -in "$TLS_DIR/nginx-client.csr" \
+    -CA "$TLS_DIR/ca.crt" \
+    -CAkey "$TLS_DIR/ca.key" \
+    -CAcreateserial \
+    -out "$TLS_DIR/nginx-client.crt" \
+    -days $DAYS_VALID \
+    -sha256 \
+    -extensions v3_req \
+    -extfile "$TLS_DIR/client.cnf"
+
+echo -e "${GREEN}✓ Client certificates created for mTLS${NC}"
 
 # Set proper permissions
 echo -e "${GREEN}Step 7: Setting file permissions...${NC}"
@@ -166,15 +161,13 @@ chmod 644 "$TLS_DIR"/*.crt
 echo -e "${GREEN}✓ Permissions set${NC}"
 
 # Clean up temporary files
-rm -f "$TLS_DIR"/*.csr "$TLS_DIR"/*.srl "$TLS_DIR/san.cnf"
+rm -f "$TLS_DIR"/*.csr "$TLS_DIR"/*.srl "$TLS_DIR/san.cnf" "$TLS_DIR/client.cnf"
 
 # Verify certificates
 echo ""
 echo -e "${GREEN}=== Verifying Certificates ===${NC}"
 openssl verify -CAfile "$TLS_DIR/ca.crt" "$TLS_DIR/backend.crt"
-if [ -f "$TLS_DIR/nginx-client.crt" ]; then
-    openssl verify -CAfile "$TLS_DIR/ca.crt" "$TLS_DIR/nginx-client.crt"
-fi
+openssl verify -CAfile "$TLS_DIR/ca.crt" "$TLS_DIR/nginx-client.crt"
 
 # Display certificate information
 echo ""
@@ -188,15 +181,13 @@ echo ""
 echo -e "${YELLOW}Validity:${NC}"
 openssl x509 -in "$TLS_DIR/backend.crt" -text -noout | grep -A 2 "Validity"
 
-if [ -f "$TLS_DIR/nginx-client.crt" ]; then
-    echo ""
-    echo -e "${GREEN}=== Client Certificate Information ===${NC}"
-    echo -e "${YELLOW}Subject:${NC}"
-    openssl x509 -in "$TLS_DIR/nginx-client.crt" -text -noout | grep -A 2 "Subject:"
-    echo ""
-    echo -e "${YELLOW}Extended Key Usage:${NC}"
-    openssl x509 -in "$TLS_DIR/nginx-client.crt" -text -noout | grep -A 2 "Extended Key Usage"
-fi
+echo ""
+echo -e "${GREEN}=== Client Certificate Information ===${NC}"
+echo -e "${YELLOW}Subject:${NC}"
+openssl x509 -in "$TLS_DIR/nginx-client.crt" -text -noout | grep -A 2 "Subject:"
+echo ""
+echo -e "${YELLOW}Extended Key Usage:${NC}"
+openssl x509 -in "$TLS_DIR/nginx-client.crt" -text -noout | grep -A 2 "Extended Key Usage"
 
 echo ""
 echo -e "${GREEN}=== Generated Files ===${NC}"
@@ -207,11 +198,8 @@ echo -e "${GREEN}=== Setup Complete! ===${NC}"
 echo -e "✓ CA Certificate: $TLS_DIR/ca.crt"
 echo -e "✓ Backend Certificate: $TLS_DIR/backend.crt"
 echo -e "✓ Backend Key: $TLS_DIR/backend.key"
-
-if [ -f "$TLS_DIR/nginx-client.crt" ]; then
-    echo -e "✓ Client Certificate: $TLS_DIR/nginx-client.crt"
-    echo -e "✓ Client Key: $TLS_DIR/nginx-client.key"
-fi
+echo -e "✓ Client Certificate: $TLS_DIR/nginx-client.crt"
+echo -e "✓ Client Key: $TLS_DIR/nginx-client.key"
 
 echo ""
 echo -e "${YELLOW}Supported Hostnames in Certificate:${NC}"
@@ -222,5 +210,12 @@ echo "  • backend-prod (production)"
 echo "  • backend_secure (nginx upstream name)"
 echo "  • localhost"
 
+echo ""
+echo -e "${GREEN}mTLS Configuration:${NC}"
+echo "  • Server certificate validates the backend"
+echo "  • Client certificate validates nginx/frontend"
+echo "  • Both authenticated by the same CA"
+
+echo ""
 echo -e "${RED}Important: These are self-signed certificates for internal use only!${NC}"
 echo -e "${RED}Do NOT use these for public-facing services.${NC}"
