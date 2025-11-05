@@ -69,6 +69,7 @@ export interface Config {
     SERVER_HOSTNAME: string;
     SERVER_PATH: string;
     SERVER_PORT: number;
+    SERVER_TLS_PORT: number;
 
     // Predict model service config
     SERVICE_BATCH_CONCURRENCY: number;
@@ -88,4 +89,8 @@ export interface Config {
     SERVICE_SERVER_PATH: string;
     SERVICE_SERVER_PORT: number;
     SERVICE_TIMEOUT_IN_MS: number;
+
+    TLS_CA_PATH: string;
+    TLS_CERT_PATH: string;
+    TLS_KEY_PATH: string;
 }

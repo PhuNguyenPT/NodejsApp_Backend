@@ -87,6 +87,7 @@ export const config: Config = cleanEnv(process.env, {
     SERVER_HOSTNAME: str({ default: "localhost" }),
     SERVER_PATH: str({ default: "/api" }),
     SERVER_PORT: port({ default: 3000 }),
+    SERVER_TLS_PORT: port({ default: 3443 }),
 
     // Predict model service config
     SERVICE_BATCH_CONCURRENCY: num({ default: 3 }),
@@ -106,6 +107,10 @@ export const config: Config = cleanEnv(process.env, {
     SERVICE_SERVER_PATH: str({ default: "" }),
     SERVICE_SERVER_PORT: port({ default: 8000 }),
     SERVICE_TIMEOUT_IN_MS: num({ default: 90000 }),
+
+    TLS_CA_PATH: str(),
+    TLS_CERT_PATH: str(),
+    TLS_KEY_PATH: str(),
 });
 
 // Function to create safe config object excluding sensitive password fields
