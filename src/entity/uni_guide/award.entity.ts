@@ -60,6 +60,7 @@ export class AwardEntity {
     @JoinColumn({ name: "studentId" })
     @ManyToOne("StudentEntity", "awards", {
         onDelete: "CASCADE",
+        orphanedRowAction: "delete",
     })
     student!: Relation<StudentEntity>;
 

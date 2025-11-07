@@ -28,10 +28,7 @@ export class IsValidExamLevelConstraint
 
         const errors = validateExamTypeScore(examType, level);
 
-        return (
-            errors.level ??
-            `The provided score for ${examType.value} is invalid.`
-        );
+        return errors.level ?? `The provided score for ${examType} is invalid.`;
     }
 
     /**

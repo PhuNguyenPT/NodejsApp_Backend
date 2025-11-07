@@ -12,7 +12,6 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { UserEntity } from "@/entity/security/user.entity.js";
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
@@ -66,7 +65,7 @@ export class FileEntity {
     @Column({ length: 500, nullable: true, type: "varchar" })
     description?: string;
 
-    @Column({ type: "bytea" }) // PostgreSQL binary data type
+    @Column({ select: false, type: "bytea" }) // PostgreSQL binary data type
     fileContent!: Buffer;
 
     @Column({ length: 255, type: "varchar" })
@@ -114,6 +113,7 @@ export class FileEntity {
     @ManyToOne("StudentEntity", "files", {
         eager: false,
         onDelete: "CASCADE",
+        orphanedRowAction: "delete",
     })
     student!: Relation<StudentEntity>;
 
@@ -138,17 +138,6 @@ export class FileEntity {
         update: true,
     })
     updatedBy?: string;
-
-    @JoinColumn({ name: "userId" })
-    @ManyToOne("UserEntity", "studentEntities", {
-        eager: false,
-        nullable: true,
-        onDelete: "SET NULL",
-    })
-    user?: Relation<UserEntity>;
-
-    @Column({ nullable: true, type: "uuid" })
-    userId?: string;
 
     constructor(file?: Partial<FileEntity>) {
         if (file) {

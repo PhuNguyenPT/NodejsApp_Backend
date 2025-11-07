@@ -44,7 +44,12 @@ export const RepositoryTypes = {
     PredictionResultEntityRepository: Symbol.for(
         "PredictionResultEntityRepository",
     ),
+    StudentAptitudeExamRepository: Symbol.for("StudentAptitudeExamRepository"),
+    StudentConductRepository: Symbol.for("StudentConductRepository"),
+    StudentNationalExamRepository: Symbol.for("StudentNationalExamRepository"),
     StudentRepository: Symbol.for("StudentRepository"),
+    StudentTalentExamRepository: Symbol.for("StudentTalentExamRepository"),
+    StudentVsatExamRepository: Symbol.for("StudentVsatExamRepository"),
     UserRepository: Symbol.for("UserRepository"),
 };
 

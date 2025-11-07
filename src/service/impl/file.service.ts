@@ -176,14 +176,20 @@ export class FileService implements IFileService {
         fileId: string,
         userId?: string,
     ): Promise<FileEntity> {
-        const file = await this.fileRepository.findOne({
-            relations: ["student"],
-            where: {
-                id: fileId,
-                status: FileStatus.ACTIVE,
-                userId: userId ?? IsNull(),
-            },
-        });
+        const query = this.fileRepository
+            .createQueryBuilder("files")
+            .leftJoinAndSelect("files.student", "student")
+            .addSelect("files.fileContent")
+            .where("files.id = :fileId", { fileId })
+            .andWhere("files.status = :status", { status: FileStatus.ACTIVE });
+
+        if (userId) {
+            query.andWhere("student.userId = :userId", { userId });
+        } else {
+            query.andWhere("student.userId IS NULL");
+        }
+
+        const file = await query.getOne();
 
         if (!file) {
             throw new EntityNotFoundException(
@@ -191,7 +197,6 @@ export class FileService implements IFileService {
             );
         }
 
-        // Decompress file content if it's compressed
         if (file.metadata?.isCompressed) {
             try {
                 file.fileContent = await gunzipAsync(
@@ -212,43 +217,32 @@ export class FileService implements IFileService {
     /**
      * Gets files by student ID and decompresses content if needed
      */
-    public async getFilesByStudentId(
+    public async getFilesMetadataByStudentId(
         studentId: string,
         userId?: string,
     ): Promise<FileEntity[]> {
-        const files: FileEntity[] = await this.fileRepository.find({
-            order: { createdAt: "DESC" },
-            where: {
-                status: FileStatus.ACTIVE,
-                studentId: studentId,
-                userId: userId ?? IsNull(),
-            },
-        });
+        const query = this.fileRepository
+            .createQueryBuilder("files")
+            .leftJoinAndSelect("files.student", "student")
+            .select(["files", "student.id", "student.userId"])
+            .where("files.status = :status", { status: FileStatus.ACTIVE })
+            .andWhere("files.studentId = :studentId", { studentId: studentId });
+
+        if (userId) {
+            query.andWhere("student.userId = :userId", { userId });
+        } else {
+            query.andWhere("student.userId IS NULL");
+        }
+
+        const files: FileEntity[] = await query
+            .orderBy("files.createdAt", "DESC")
+            .getMany();
 
         if (files.length === 0) {
             throw new EntityNotFoundException(
                 `Files not found for student with ID: ${studentId}`,
             );
         }
-
-        // Decompress all files in parallel
-        await Promise.all(
-            files.map(async (file) => {
-                if (file.metadata?.isCompressed) {
-                    try {
-                        file.fileContent = await gunzipAsync(
-                            file.fileContent,
-                            this.DECOMPRESSION_OPTIONS,
-                        );
-                    } catch (error) {
-                        this.logger.error(
-                            `Failed to decompress file ${file.id}`,
-                            { error },
-                        );
-                    }
-                }
-            }),
-        );
 
         return files;
     }

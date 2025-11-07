@@ -56,14 +56,14 @@ export class StudentRequest {
      * ]
      */
     @ArrayMaxSize(3, {
-        message: "Academic performance must contain exactly 3 records",
+        message: "Academic performances must contain exactly 3 records",
     })
     @ArrayMinSize(3, {
-        message: "Academic performance must contain exactly 3 records",
+        message: "Academic performances must contain exactly 3 records",
     })
     @Expose()
-    @IsArray({ message: "Academic performance must be an array" })
-    @IsNotEmpty({ message: "Academic performance is required" })
+    @IsArray({ message: "Academic performances must be an array" })
+    @IsNotEmpty({ message: "Academic performances is required" })
     @Type(() => AcademicPerformanceRequest)
     @ValidateNested({ each: true })
     academicPerformances!: AcademicPerformanceRequest[];
@@ -71,15 +71,31 @@ export class StudentRequest {
     /**
      * Aptitude test information including exam type and score
      * Contains the exam type (DGNL, CCNN, or CCQT) and the numeric score achieved
-     * @type {AptitudeTestRequest}
+     * @type {AptitudeTestRequest[]}
      * @optional
      * @see AptitudeTestRequest for detailed structure and validation rules
+     *
+     * @example
+     * [
+     *   {
+     *     "examType": "VNUHCM",
+     *     "score": "700"
+     *   },
+     *   {
+     *     "examType": "HSA",
+     *     "score": "90"
+     *   }
+     * ]
      */
+    @ArrayMaxSize(3, {
+        message: "Aptitude test scores must contain at most 3 awards",
+    })
     @Expose()
+    @IsArray({ message: "Aptitude test scores must be an array" })
     @IsOptional()
     @Type(() => AptitudeTestRequest)
-    @ValidateNested()
-    aptitudeTestScore?: AptitudeTestRequest;
+    @ValidateNested({ each: true })
+    aptitudeExams?: AptitudeTestRequest[];
 
     /**
      * List of awards and recognitions received by the student.
@@ -124,17 +140,11 @@ export class StudentRequest {
      * @example
      * [
      *   {
-     *     "examType": {
-     *       "type": "CCNN",
-     *       "value": "IELTS"
-     *     },
+     *     "examType": "IELTS",
      *     "level": "6.5"
      *   },
      *   {
-     *     "examType": {
-     *       "type": "CCQT",
-     *       "value": "SAT"
-     *     },
+     *     "examType": "SAT",
      *     "level": "1200"
      *   }
      * ]
@@ -311,13 +321,13 @@ export class StudentRequest {
     @IsUniqueSubject({ message: "Talent scores must have unique names" })
     @Type(() => TalentExam)
     @ValidateNested({ each: true })
-    talentScores?: TalentExam[];
+    talentExams?: TalentExam[];
 
     /**
-     * @example "Công lập"
-     * @description The type of university (public or private).
      * @type {UniType}
      * @see UniType For the list of possible university types.
+     * @example "Công lập"
+     * @description The type of university (public or private).
      */
     @Expose()
     @IsEnum(UniType)
@@ -348,5 +358,5 @@ export class StudentRequest {
     @IsUniqueSubject({ message: "VSAT scores must have unique names" })
     @Type(() => VsatExam)
     @ValidateNested({ each: true })
-    vsatScores?: VsatExam[];
+    vsatExams?: VsatExam[];
 }

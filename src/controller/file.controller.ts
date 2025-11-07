@@ -306,10 +306,11 @@ export class FileController extends Controller {
         @Request() request: AuthenticatedRequest,
     ): Promise<FileResponse[]> {
         const user: Express.User = request.user;
-        const files: FileEntity[] = await this.fileService.getFilesByStudentId(
-            studentId,
-            user.id,
-        );
+        const files: FileEntity[] =
+            await this.fileService.getFilesMetadataByStudentId(
+                studentId,
+                user.id,
+            );
         const fileResponses: FileResponse[] =
             FileMapper.toFileResponseList(files);
         const message = "File metadata retrieved successfully";
@@ -336,7 +337,7 @@ export class FileController extends Controller {
         @Path() studentId: string,
     ): Promise<FileResponse[]> {
         const files: FileEntity[] =
-            await this.fileService.getFilesByStudentId(studentId);
+            await this.fileService.getFilesMetadataByStudentId(studentId);
         const fileResponses: FileResponse[] =
             FileMapper.toFileResponseList(files);
         const message = "File metadata retrieved successfully";
@@ -618,7 +619,6 @@ export class FileController extends Controller {
             originalFileName: file.originalname,
             studentId: studentId,
             tags: tags,
-            userId: user.id,
         };
 
         const fileEntity: FileEntity = await this.fileService.createFile(

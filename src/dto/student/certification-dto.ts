@@ -16,10 +16,7 @@ import { IsValidCertificationExamTypeConstraint } from "@/validator/is-valid-exa
  * Data Transfer Object for Certification information
  * @example
  * {
- *   "examType": {
- *     "type": "CCNN",
- *     "value": "IELTS"
- *   },
+ *   "examType": "IELTS",
  *   "level": "6.5"
  * }
  */
@@ -30,7 +27,7 @@ export class CertificationDTO {
 
     /**
      * Type and category of the exam/certification
-     * @example { "type": "CCNN", "value": "IELTS" }
+     * @example "IELTS"
      */
     @Expose()
     @IsNotEmpty({ message: "Exam type is required" })

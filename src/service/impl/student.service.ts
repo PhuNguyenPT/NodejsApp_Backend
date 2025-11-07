@@ -4,15 +4,20 @@ import { Logger } from "winston";
 
 import { StudentRequest } from "@/dto/student/student-request.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
+import { AwardEntity } from "@/entity/uni_guide/award.entity.js";
+import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
+import { StudentAptitudeExamEntity } from "@/entity/uni_guide/student-aptitude-exam.entity.js";
+import { StudentConductEntity } from "@/entity/uni_guide/student-conduct.entity.js";
+import { StudentNationalExamEntity } from "@/entity/uni_guide/student-national-exam.enity.js";
+import { StudentTalentExamEntity } from "@/entity/uni_guide/student-talent-exam.entity.js";
+import { StudentVsatExamEntity } from "@/entity/uni_guide/student-vsat-exam.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
 import { StudentCreatedEvent } from "@/event/student.event.js";
-import { IAwardService } from "@/service/award-service.interface.js";
 import { ICertificationService } from "@/service/certification-service.interface.js";
 import { IMajorService } from "@/service/major-service.interface.js";
 import { IStudentService } from "@/service/student-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
-import { handleExamValidation } from "@/type/enum/exam.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -27,8 +32,20 @@ export class StudentService implements IStudentService {
         private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.UserRepository)
         private readonly userRepository: Repository<UserEntity>,
-        @inject(TYPES.IAwardService)
-        private readonly awardService: IAwardService,
+        @inject(TYPES.StudentAptitudeExamRepository)
+        private readonly studentAptitudeExamRepository: Repository<StudentAptitudeExamEntity>,
+        @inject(TYPES.AwardRepository)
+        private readonly awardRepository: Repository<AwardEntity>,
+        @inject(TYPES.FileRepository)
+        private readonly fileRepository: Repository<FileEntity>,
+        @inject(TYPES.StudentConductRepository)
+        private readonly studentConductRepository: Repository<StudentConductEntity>,
+        @inject(TYPES.StudentNationalExamRepository)
+        private readonly studentNationalExamRepository: Repository<StudentNationalExamEntity>,
+        @inject(TYPES.StudentTalentExamRepository)
+        private readonly studentTalentExamRepository: Repository<StudentTalentExamEntity>,
+        @inject(TYPES.StudentVsatExamRepository)
+        private readonly studentVsatExamRepository: Repository<StudentVsatExamEntity>,
         @inject(TYPES.ICertificationService)
         private readonly certificationService: ICertificationService,
         @inject(TYPES.IStudentEventListener)
@@ -80,24 +97,37 @@ export class StudentService implements IStudentService {
         pageable: Pageable,
     ): Promise<Page<StudentEntity>> {
         const queryBuilder = this.studentRepository
-            .createQueryBuilder("student")
-            .leftJoinAndSelect("student.awards", "awards")
-            .leftJoinAndSelect("student.certifications", "certifications")
-            .where("student.userId = :userId", { userId });
+            .createQueryBuilder("students")
+            .leftJoinAndSelect(
+                "students.academicPerformances",
+                "academicPerformances",
+            )
+            .leftJoinAndSelect("students.aptitudeExams", "aptitudeExams")
+            .leftJoinAndSelect("students.awards", "awards")
+            .leftJoinAndSelect("students.certifications", "certifications")
+            .leftJoinAndSelect("students.conducts", "conducts")
+            .leftJoinAndSelect(
+                "students.majorGroupsEntities",
+                "majorGroupsEntities",
+            )
+            .leftJoinAndSelect("students.nationalExams", "nationalExams")
+            .leftJoinAndSelect("students.talentExams", "talentExams")
+            .leftJoinAndSelect("students.vsatExams", "vsatExams")
+            .where("students.userId = :userId", { userId });
 
         // Apply sorting in a cleaner way
         const sortOrder = pageable.getSort().toTypeOrmOrder();
         const prefixedSortOrder: Record<string, "ASC" | "DESC"> = {};
         for (const [field, direction] of Object.entries(sortOrder)) {
             // Prefix field with alias to avoid ambiguity
-            prefixedSortOrder[`student.${field}`] = direction;
+            prefixedSortOrder[`students.${field}`] = direction;
         }
 
         // Apply sorting or default to createdAt DESC
         if (Object.keys(prefixedSortOrder).length > 0) {
             queryBuilder.orderBy(prefixedSortOrder);
         } else {
-            queryBuilder.orderBy("student.createdAt", "DESC");
+            queryBuilder.orderBy("students.createdAt", "DESC");
         }
 
         // Use getManyAndCount for efficiency
@@ -123,7 +153,17 @@ export class StudentService implements IStudentService {
     ): Promise<StudentEntity> {
         const studentEntity: null | StudentEntity =
             await this.studentRepository.findOne({
-                relations: ["awards", "certifications"],
+                relations: [
+                    "academicPerformances",
+                    "aptitudeExams",
+                    "awards",
+                    "certifications",
+                    "conducts",
+                    "majorGroupsEntities",
+                    "nationalExams",
+                    "talentExams",
+                    "vsatExams",
+                ],
                 where: {
                     id,
                     userId: userId ?? IsNull(),
@@ -151,38 +191,21 @@ export class StudentService implements IStudentService {
         studentId: string,
         userId?: string,
     ): Promise<StudentEntity> {
-        const queryBuilder = this.studentRepository
-            .createQueryBuilder("student")
-            .leftJoinAndSelect(
-                "student.files",
-                "files",
-                "files.status = :status",
-                { status: "active" },
-            )
-            .leftJoinAndSelect("student.awards", "awards")
-            .leftJoinAndSelect("student.certifications", "certifications")
-            .leftJoinAndSelect("student.user", "user")
-            .where("student.id = :studentId", { studentId });
+        // 1. Fetch the Student and all its standard relations (using the existing method)
+        const student = await this.getStudentEntityByIdAnUserId(
+            studentId,
+            userId,
+        );
 
-        // If a userId is provided, find a profile owned by that user.
-        if (userId) {
-            queryBuilder.andWhere("student.userId = :userId", { userId });
-        } else {
-            // Otherwise, find a guest (anonymous) profile.
-            queryBuilder
-                .andWhere("student.createdBy = :createdBy", {
-                    createdBy: Role.ANONYMOUS,
-                })
-                .andWhere("student.userId IS NULL");
-        }
+        // 2. Fetch ONLY the active files using a dedicated, fast query
+        const activeFilesMetadata = await this.fileRepository
+            .createQueryBuilder("files")
+            .where("files.studentId = :studentId", { studentId })
+            .andWhere("files.status = :status", { status: FileStatus.ACTIVE })
+            .getMany();
 
-        const student = await queryBuilder.getOne();
-
-        if (!student) {
-            throw new EntityNotFoundException(
-                `Student profile with ID ${studentId} not found`,
-            );
-        }
+        // 3. Attach the result
+        student.files = activeFilesMetadata;
 
         return student;
     }
@@ -197,8 +220,6 @@ export class StudentService implements IStudentService {
         studentRequest: StudentRequest,
         userEntity: null | UserEntity,
     ): Promise<StudentEntity> {
-        this.handleAptitudeTestScoreValidation(studentRequest);
-
         if (studentRequest.minBudget > studentRequest.maxBudget) {
             throw new ValidationException({
                 "budget.minBudget":
@@ -214,22 +235,39 @@ export class StudentService implements IStudentService {
             : Role.ANONYMOUS;
         studentEntity.userId = userEntity ? userEntity.id : undefined;
 
-        if (studentRequest.majors.length > 0) {
-            studentEntity.majorGroupsEntities =
-                await this.majorService.findMajorGroupEntitiesBy(
-                    studentRequest.majors,
-                );
+        if (
+            studentRequest.aptitudeExams &&
+            studentRequest.aptitudeExams.length > 0
+        ) {
+            studentEntity.aptitudeExams = studentRequest.aptitudeExams.map(
+                (aptitudeTestRequest) => {
+                    const studentAptitudeTestEntity: StudentAptitudeExamEntity =
+                        this.studentAptitudeExamRepository.create(
+                            aptitudeTestRequest,
+                        );
+                    studentAptitudeTestEntity.student = studentEntity;
+                    if (userEntity) {
+                        studentAptitudeTestEntity.createdBy = userEntity.email;
+                    } else {
+                        studentAptitudeTestEntity.createdBy ??= Role.ANONYMOUS;
+                    }
+                    return studentAptitudeTestEntity;
+                },
+            );
         }
 
         if (studentRequest.awards && studentRequest.awards.length > 0) {
-            studentEntity.awards = this.awardService.createAwardEntities(
-                studentRequest.awards,
-            );
-            if (userEntity) {
-                studentEntity.awards.forEach(
-                    (a) => (a.createdBy = userEntity.email),
-                );
-            }
+            studentEntity.awards = studentRequest.awards.map((awardRequest) => {
+                const awardEntity: AwardEntity =
+                    this.awardRepository.create(awardRequest);
+                awardEntity.student = studentEntity;
+                if (userEntity) {
+                    awardEntity.createdBy = userEntity.email;
+                } else {
+                    awardEntity.createdBy ??= Role.ANONYMOUS;
+                }
+                return awardEntity;
+            });
         }
 
         if (
@@ -245,6 +283,76 @@ export class StudentService implements IStudentService {
                     (c) => (c.createdBy = userEntity.email),
                 );
             }
+        }
+
+        if (studentRequest.conducts.length > 0) {
+            studentEntity.conducts = studentRequest.conducts.map(
+                (conductRequest) => {
+                    const studentConductEntity: StudentConductEntity =
+                        this.studentConductRepository.create(conductRequest);
+                    if (userEntity) {
+                        studentConductEntity.createdBy = userEntity.email;
+                    } else {
+                        studentConductEntity.createdBy ??= Role.ANONYMOUS;
+                    }
+                    return studentConductEntity;
+                },
+            );
+        }
+
+        if (studentRequest.majors.length > 0) {
+            studentEntity.majorGroupsEntities =
+                await this.majorService.findMajorGroupEntitiesBy(
+                    studentRequest.majors,
+                );
+        }
+
+        if (studentRequest.nationalExams.length > 0) {
+            studentEntity.nationalExams = studentRequest.nationalExams.map(
+                (nationalExam) => {
+                    const studentNationalExamEntity: StudentNationalExamEntity =
+                        this.studentNationalExamRepository.create(nationalExam);
+                    if (userEntity) {
+                        studentNationalExamEntity.createdBy = userEntity.email;
+                    } else {
+                        studentNationalExamEntity.createdBy ??= Role.ANONYMOUS;
+                    }
+                    return studentNationalExamEntity;
+                },
+            );
+        }
+
+        if (
+            studentRequest.talentExams &&
+            studentRequest.talentExams.length > 0
+        ) {
+            studentEntity.talentExams = studentRequest.talentExams.map(
+                (talentExam) => {
+                    const studentTalentExamEntity: StudentTalentExamEntity =
+                        this.studentTalentExamRepository.create(talentExam);
+                    if (userEntity) {
+                        studentTalentExamEntity.createdBy = userEntity.email;
+                    } else {
+                        studentTalentExamEntity.createdBy ??= Role.ANONYMOUS;
+                    }
+                    return studentTalentExamEntity;
+                },
+            );
+        }
+
+        if (studentRequest.vsatExams && studentRequest.vsatExams.length > 0) {
+            studentEntity.vsatExams = studentRequest.vsatExams.map(
+                (vsatExam) => {
+                    const studentVsatExamEntity: StudentVsatExamEntity =
+                        this.studentVsatExamRepository.create(vsatExam);
+                    if (userEntity) {
+                        studentVsatExamEntity.createdBy = userEntity.email;
+                    } else {
+                        studentVsatExamEntity.createdBy ??= Role.ANONYMOUS;
+                    }
+                    return studentVsatExamEntity;
+                },
+            );
         }
 
         const savedStudent = await this.studentRepository.save(studentEntity);
@@ -278,25 +386,6 @@ export class StudentService implements IStudentService {
         this.logger.info(
             `Triggered StudentCreatedEvent for studentId ${studentId}` +
                 (userId ? ` and userId ${userId}` : ""),
-        );
-    }
-
-    /**
-     * Handles the validation of the aptitude test score for a student request.
-     * Delegates to the shared `handleExamValidation` function for core logic.
-     * @param studentRequest - The DTO containing the student's information, including aptitudeTestScore.
-     * @throws ValidationException if the aptitude test score is invalid.
-     */
-    private handleAptitudeTestScoreValidation(
-        studentRequest: StudentRequest,
-    ): void {
-        if (!studentRequest.aptitudeTestScore) return;
-
-        // Use the common handleExamValidation function with a prefix for the error key
-        handleExamValidation(
-            studentRequest.aptitudeTestScore.examType,
-            studentRequest.aptitudeTestScore.score.toString(),
-            "aptitudeTestScore", // This prefix will result in error keys like 'aptitudeTestScore.level'
         );
     }
 }

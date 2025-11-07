@@ -29,10 +29,7 @@ export class IsValidAptitudeTestScoreConstraint
 
         const errors = validateExamTypeScore(examType, score.toString());
 
-        return (
-            errors.level ??
-            `The provided score for ${examType.value} is invalid.`
-        );
+        return errors.level ?? `The provided score for ${examType} is invalid.`;
     }
 
     /**

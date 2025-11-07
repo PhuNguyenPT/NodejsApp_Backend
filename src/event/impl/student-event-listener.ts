@@ -238,9 +238,22 @@ export class StudentEventListener implements IStudentEventListener {
                 return;
             }
 
-            const studentEntity: null | StudentEntity = await manager.findOneBy(
+            const studentEntity: null | StudentEntity = await manager.findOne(
                 StudentEntity,
-                { id: studentId, userId: userId ?? IsNull() },
+                {
+                    relations: [
+                        "academicPerformances",
+                        "aptitudeExams",
+                        "awards",
+                        "certifications",
+                        "conducts",
+                        "majorGroupsEntities",
+                        "nationalExams",
+                        "talentExams",
+                        "vsatExams",
+                    ],
+                    where: { id: studentId, userId: userId ?? IsNull() },
+                },
             );
 
             if (!studentEntity) {

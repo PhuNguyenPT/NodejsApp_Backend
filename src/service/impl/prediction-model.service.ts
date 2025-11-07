@@ -17,6 +17,7 @@ import {
     UserInputL2,
 } from "@/dto/predict/predict.js";
 import { AcademicPerformanceDTO } from "@/dto/student/academic-performance-dto.js";
+import { AptitudeTestDTO } from "@/dto/student/aptitude-test-dto.js";
 import { AwardDTO } from "@/dto/student/award-dto.js";
 import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
@@ -29,7 +30,7 @@ import {
     getRankByAcademicPerformance,
 } from "@/type/enum/academic-performance.js";
 import { Conduct, getRankByConduct } from "@/type/enum/conduct.js";
-import { CCNNType, CCQTType, DGNLType } from "@/type/enum/exam.js";
+import { ExamType } from "@/type/enum/exam.js";
 import { getCodeByVietnameseName } from "@/type/enum/major.js";
 import { NationalExcellentStudentExamSubject } from "@/type/enum/national-excellent-exam.js";
 import { Rank } from "@/type/enum/rank.js";
@@ -111,7 +112,17 @@ export class PredictionModelService implements IPredictionModelService {
         userId?: string,
     ): Promise<L1PredictResult[]> {
         const student = await this.studentRepository.findOne({
-            relations: ["awards", "certifications"],
+            relations: [
+                "academicPerformances",
+                "aptitudeExams",
+                "awards",
+                "certifications",
+                "conducts",
+                "majorGroupsEntities",
+                "nationalExams",
+                "talentExams",
+                "vsatExams",
+            ],
             where: {
                 id: studentId,
                 userId: userId ?? IsNull(),
@@ -160,7 +171,17 @@ export class PredictionModelService implements IPredictionModelService {
     ): Promise<L2PredictResult[]> {
         // Data retrieval and validation
         const student = await this.studentRepository.findOne({
-            relations: ["awards", "certifications"], // Add relations needed by StudentInfoDTO
+            relations: [
+                "academicPerformances",
+                "aptitudeExams",
+                "awards",
+                "certifications",
+                "conducts",
+                "majorGroupsEntities",
+                "nationalExams",
+                "talentExams",
+                "vsatExams",
+            ],
             where: {
                 id: studentId,
                 userId: userId ?? IsNull(), // Handle both authenticated and anonymous
@@ -255,19 +276,19 @@ export class PredictionModelService implements IPredictionModelService {
         if (studentInfoDTO.hasCertificationExamType("CCQT")) {
             const ccqtCerts =
                 studentInfoDTO.getCertificationsByExamType("CCQT");
+
             return ccqtCerts.reduce<ExamScenario[]>((acc, cert) => {
-                if (cert.examType.type === "CCQT") {
-                    const score = this.getAndValidateScoreByCCQT(
-                        cert.examType.value,
-                        cert.level,
-                    );
-                    if (score !== undefined) {
-                        acc.push({
-                            diem_chuan: score,
-                            to_hop_mon: cert.examType.value,
-                            type: "ccqt",
-                        });
-                    }
+                const score = this.getAndValidateScoreByCCQT(
+                    cert.examType,
+                    cert.level,
+                );
+
+                if (score !== undefined) {
+                    acc.push({
+                        diem_chuan: score,
+                        to_hop_mon: cert.examType,
+                        type: "ccqt",
+                    });
                 }
                 return acc;
             }, []);
@@ -278,25 +299,14 @@ export class PredictionModelService implements IPredictionModelService {
     private _createDgnlScenarios(
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
-        if (studentInfoDTO.hasAptitudeTestScore()) {
-            const examType = studentInfoDTO.aptitudeTestScore?.examType;
-            const aptitudeScore = studentInfoDTO.getAptitudeTestScore();
+        const dgnlTests: AptitudeTestDTO[] =
+            studentInfoDTO.getAptitudeTestScoresByExamType("ĐGNL");
 
-            if (
-                examType?.type === "DGNL" &&
-                examType.value in DGNLType &&
-                aptitudeScore !== undefined
-            ) {
-                return [
-                    {
-                        diem_chuan: aptitudeScore,
-                        to_hop_mon: examType.value,
-                        type: "dgnl",
-                    },
-                ];
-            }
-        }
-        return [];
+        return dgnlTests.map((test) => ({
+            diem_chuan: test.score,
+            to_hop_mon: test.examType,
+            type: "dgnl",
+        }));
     }
 
     private _createNationalScenarios(
@@ -334,8 +344,8 @@ export class PredictionModelService implements IPredictionModelService {
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
         if (
-            !studentInfoDTO.talentScores ||
-            studentInfoDTO.talentScores.length === 0
+            !studentInfoDTO.talentExams ||
+            studentInfoDTO.talentExams.length === 0
         ) {
             return [];
         }
@@ -344,7 +354,7 @@ export class PredictionModelService implements IPredictionModelService {
             this.calculateSubjectGroupScores(studentInfoDTO);
 
         const talentSubjects = new Set<VietnameseSubject>(
-            studentInfoDTO.talentScores.map((t) => t.name),
+            studentInfoDTO.talentExams.map((t) => t.name),
         );
 
         const talentScenarios = subjectGroupScores
@@ -377,13 +387,13 @@ export class PredictionModelService implements IPredictionModelService {
 
         // Create a map of VSAT subject scores for quick lookup
         const vsatScoreMap = new Map<VsatExamSubject, number>();
-        studentInfoDTO.vsatScores?.forEach((exam) => {
+        studentInfoDTO.vsatExams?.forEach((exam) => {
             vsatScoreMap.set(exam.name, exam.score);
         });
 
         // Get VSAT subjects and calculate possible subject groups from VSAT data
         const vsatSubjects: VietnameseSubject[] =
-            studentInfoDTO.vsatScores?.map((exam) => exam.name) ?? [];
+            studentInfoDTO.vsatExams?.map((exam) => exam.name) ?? [];
         const vsatPossibleGroups: SubjectGroupKey[] =
             getAllPossibleSubjectGroups(vsatSubjects);
 
@@ -952,7 +962,7 @@ export class PredictionModelService implements IPredictionModelService {
         });
 
         // Add talent scores (only if not already present from national exams)
-        studentInfoDTO.talentScores?.forEach((talent) => {
+        studentInfoDTO.talentExams?.forEach((talent) => {
             if (!subjectScoreMap.has(talent.name)) {
                 subjectScoreMap.set(talent.name, talent.score);
             }
@@ -1494,7 +1504,7 @@ export class PredictionModelService implements IPredictionModelService {
         const certificationMap = new Map<string, CertificationDTO[]>();
 
         ccnnCertifications.forEach((cert) => {
-            if (cert.examType.value === CCNNType.JLPT && cert.level) {
+            if (cert.examType === ExamType.JLPT && cert.level) {
                 // Group JLPT certifications
                 if (!certificationMap.has("JLPT")) {
                     certificationMap.set("JLPT", []);
@@ -1678,40 +1688,40 @@ export class PredictionModelService implements IPredictionModelService {
     }
 
     private getAndValidateScoreByCCQT(
-        type: CCQTType,
+        type: ExamType,
         validateScore: string,
     ): number | undefined {
-        const parsedScore = parseInt(validateScore, 10);
-        if (isNaN(parsedScore) && type !== CCQTType["A-Level"])
-            return undefined;
+        const parsedScore = parseInt(validateScore);
+
+        if (isNaN(parsedScore) && type !== ExamType.A_Level) return undefined;
 
         switch (type) {
-            case CCQTType.ACT:
-                return 1 <= parsedScore && parsedScore <= 36
-                    ? parsedScore
-                    : undefined;
-            case CCQTType.IB:
-                return 0 <= parsedScore && parsedScore <= 45
-                    ? parsedScore
-                    : undefined;
-            case CCQTType.OSSD:
-                return 0 <= parsedScore && parsedScore <= 100
-                    ? parsedScore
-                    : undefined;
-            case CCQTType.SAT:
-                return 400 <= parsedScore && parsedScore <= 1600
-                    ? parsedScore
-                    : undefined;
-            case CCQTType["A-Level"]:
+            case ExamType.A_Level:
                 return this.getAndValidateScoreByCCQT_Type_A_Level(
                     validateScore,
                 );
-            case CCQTType["Duolingo English Test"]:
+            case ExamType.ACT:
+                return 1 <= parsedScore && parsedScore <= 36
+                    ? parsedScore
+                    : undefined;
+            case ExamType.Duolingo_English_Test: // THIS IS THE FIX
                 return 10 <= parsedScore && parsedScore <= 160
                     ? parsedScore
                     : undefined;
-            case CCQTType["PTE Academic"]:
+            case ExamType.IB:
+                return 0 <= parsedScore && parsedScore <= 45
+                    ? parsedScore
+                    : undefined;
+            case ExamType.OSSD:
+                return 0 <= parsedScore && parsedScore <= 100
+                    ? parsedScore
+                    : undefined;
+            case ExamType.PTE_Academic: // THIS IS THE FIX
                 return 10 <= parsedScore && parsedScore <= 90
+                    ? parsedScore
+                    : undefined;
+            case ExamType.SAT:
+                return 400 <= parsedScore && parsedScore <= 1600
                     ? parsedScore
                     : undefined;
             default:

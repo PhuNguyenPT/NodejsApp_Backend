@@ -56,6 +56,7 @@ export class PredictionResultEntity {
     @JoinColumn({ name: "studentId" })
     @OneToOne("StudentEntity", "predictionResult", {
         onDelete: "CASCADE",
+        orphanedRowAction: "delete",
     })
     student!: Relation<StudentEntity>;
 

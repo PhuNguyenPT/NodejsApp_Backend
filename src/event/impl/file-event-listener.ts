@@ -248,7 +248,7 @@ export class FileEventListener implements IFileEventListener {
 
             const fileExtractionResult: FileScoreExtractionResult =
                 await this.mistralService.extractSubjectScores(
-                    file,
+                    file.id,
                     payload.userId,
                 );
 

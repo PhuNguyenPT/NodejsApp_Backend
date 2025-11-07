@@ -8,7 +8,12 @@ import {
 } from "@/entity/uni_guide/certification.entity.js";
 import { ICertificationService } from "@/service/certification-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
-import { CCNNType, ExamType, handleExamValidation } from "@/type/enum/exam.js";
+import {
+    CCNNType,
+    ExamType,
+    handleExamValidation,
+    isCCNNType,
+} from "@/type/enum/exam.js";
 import { Role } from "@/type/enum/user.js";
 
 @injectable()
@@ -56,8 +61,8 @@ export class CertificationService implements ICertificationService {
      * @returns CEFR level or undefined if not applicable
      */
     public getCEFRLevel(examType: ExamType, level: string): CEFR | undefined {
-        // For CCNN exams, level must be a number. For others, it might not apply.
-        if (examType.type !== "CCNN") {
+        // Check if examType is a CCNN type
+        if (!isCCNNType(examType)) {
             return undefined;
         }
 
@@ -67,16 +72,18 @@ export class CertificationService implements ICertificationService {
             return undefined;
         }
 
-        switch (examType.value) {
-            case CCNNType.IELTS:
+        switch (examType as CCNNType) {
+            case ExamType.IELTS:
                 return this.get_IELTS_CEFR_level(numberLevel);
-            case CCNNType.TOEFL_CBT:
+            case ExamType.JLPT:
+                return undefined; // JLPT doesn't map to CEFR
+            case ExamType.TOEFL_CBT:
                 return this.get_TOEFL_CBT_level(numberLevel);
-            case CCNNType.TOEFL_iBT:
+            case ExamType.TOEFL_iBT:
                 return this.get_TOEFL_iBT_level(numberLevel);
-            case CCNNType.TOEFL_Paper:
+            case ExamType.TOEFL_Paper:
                 return this.get_TOEFL_Paper_level(numberLevel);
-            case CCNNType.TOEIC:
+            case ExamType.TOEIC:
                 return this.get_TOEIC_level(numberLevel);
             default:
                 return undefined; // Unsupported CCNN type for CEFR mapping

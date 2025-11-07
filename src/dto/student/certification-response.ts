@@ -9,10 +9,7 @@ import { ExamType } from "@/type/enum/exam.js";
  * @example
  * {
  *   "id": "3b9fb604-f40f-4253-b188-b2fe8c78bc54",
- *   "examType": {
- *     "type": "CCNN",
- *     "value": "IELTS"
- *   },
+ *   "examType": "IELTS",
  *   "level": "6.5"
  * }
  */
@@ -22,7 +19,7 @@ export class CertificationResponse {
 
     /**
      * Type and category of the exam/certification
-     * @example { "type": "CCNN", "value": "IELTS" }
+     * @example "IELTS"
      */
     @Expose()
     examType!: ExamType;

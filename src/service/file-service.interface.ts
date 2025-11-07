@@ -14,7 +14,7 @@ export interface IFileService {
     ): Promise<FileEntity[]>;
     deleteFile(fileId: string, userId?: string): Promise<void>;
     getFileById(fileId: string, userId?: string): Promise<FileEntity>;
-    getFilesByStudentId(
+    getFilesMetadataByStudentId(
         studentId: string,
         userId?: string,
     ): Promise<FileEntity[]>;

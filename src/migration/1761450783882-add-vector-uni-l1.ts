@@ -1,19 +1,10 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class AddVectorUniL11761450783882 implements MigrationInterface {
-    /**
-     * IMPORTANT: This column is manually managed as vector(65) in PostgreSQL.
-     * The entity definition uses 'text' type to prevent TypeORM from
-     * auto-generating conflicting migrations.
-     *
-     * DO NOT auto-generate migrations for this table without reviewing!
-     */
-
+export class AddVectorColumn1762481000000 implements MigrationInterface {
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(
             `ALTER TABLE "machine_learning"."uni_l1" 
-             ALTER COLUMN "tfidf_content" TYPE text 
-             USING tfidf_content::text`,
+             DROP COLUMN IF EXISTS "tfidf_content"`,
         );
     }
 
@@ -22,8 +13,7 @@ export class AddVectorUniL11761450783882 implements MigrationInterface {
 
         await queryRunner.query(
             `ALTER TABLE "machine_learning"."uni_l1" 
-             ALTER COLUMN "tfidf_content" TYPE vector(65) 
-             USING NULL`,
+             ADD COLUMN IF NOT EXISTS "tfidf_content" vector(65)`,
         );
     }
 }

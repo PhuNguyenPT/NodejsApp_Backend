@@ -5,7 +5,7 @@ import { ExamType } from "@/type/enum/exam.js";
 export class AptitudeTestResponse {
     /**
      * Type of exam/aptitude test
-     * @example { "type": "DGNL", "value": "VNUHCM" }
+     * @example "VNUHCM"
      */
     @Expose()
     examType!: ExamType;
