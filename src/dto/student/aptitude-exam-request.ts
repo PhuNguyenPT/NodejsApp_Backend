@@ -2,7 +2,7 @@ import { Expose } from "class-transformer";
 import { IsNotEmpty, Validate } from "class-validator";
 
 import { ExamType } from "@/type/enum/exam.js";
-import { IsValidAptitudeTestScoreConstraint } from "@/validator/is-valid-aptitude-test-score.validator.js";
+import { IsValidAptitudeExamScoreConstraint } from "@/validator/is-valid-aptitude-exam-score.validator.js";
 import { IsValidDGNLExamTypeConstraint } from "@/validator/is-valid-exam-type.validator.js";
 
 /**
@@ -14,7 +14,7 @@ import { IsValidDGNLExamTypeConstraint } from "@/validator/is-valid-exam-type.va
  * }
  */
 
-export class AptitudeTestRequest {
+export class AptitudeExamRequest {
     /**
      * Type of exam/aptitude test
      * @example "VNUHCM"
@@ -30,6 +30,6 @@ export class AptitudeTestRequest {
      */
     @Expose()
     @IsNotEmpty({ message: "Aptitude test score is required" })
-    @Validate(IsValidAptitudeTestScoreConstraint)
+    @Validate(IsValidAptitudeExamScoreConstraint)
     score!: number;
 }

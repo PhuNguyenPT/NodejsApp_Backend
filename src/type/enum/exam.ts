@@ -85,15 +85,15 @@ export function handleExamValidation(
 }
 
 // Type guards for categorization
-export function isCCNNType(examType: ExamType): boolean {
+export function isCCNNType(examType: ExamType): examType is CCNNType {
     return (CCNNTypes as readonly ExamType[]).includes(examType);
 }
 
-export function isCCQTType(examType: ExamType): boolean {
+export function isCCQTType(examType: ExamType): examType is CCQTType {
     return (CCQTTypes as readonly ExamType[]).includes(examType);
 }
 
-export function isDGNLType(examType: ExamType): boolean {
+export function isDGNLType(examType: ExamType): examType is DGNLType {
     return (DGNLTypes as readonly ExamType[]).includes(examType);
 }
 
@@ -110,7 +110,6 @@ export function validateExamTypeScore(
         errors.level = message;
     };
 
-    // Handle A-Level separately as its level is a string grade, not a number
     if (examType === ExamType.A_Level) {
         const validGrades = ["A", "A*", "B", "C", "D", "E", "F", "N", "O", "U"];
         if (!validGrades.includes(level.toUpperCase())) {
@@ -119,6 +118,7 @@ export function validateExamTypeScore(
         return errors;
     }
 
+    // Handle JLPT separately
     if (examType === ExamType.JLPT) {
         const validJLPTGrades = ["N1", "N2", "N3"];
         if (!validJLPTGrades.includes(level.toUpperCase())) {
@@ -129,76 +129,148 @@ export function validateExamTypeScore(
         return errors;
     }
 
-    // For all other exams, the level must be a valid number
     const parsedLevel = parseFloat(level);
     if (isNaN(parsedLevel)) {
         setErrorMessage("Level must be a valid number.");
         return errors;
     }
 
+    if (isCCNNType(examType)) {
+        validateCCNNNumericScore(examType, parsedLevel, setErrorMessage);
+    } else if (isCCQTType(examType)) {
+        validateCCQTNumericScore(examType, parsedLevel, setErrorMessage);
+    } else if (isDGNLType(examType)) {
+        validateDGNLNumericScore(examType, parsedLevel, setErrorMessage);
+    }
+
+    return errors;
+}
+
+function getDecimalPlaces(num: number): number {
+    if (Number.isInteger(num)) return 0;
+    const decimalPart = num.toString().split(".")[1];
+    return decimalPart ? decimalPart.length : 0;
+}
+
+/**
+ * Validates numeric scores for CCNN exam types (excluding JLPT).
+ */
+function validateCCNNNumericScore(
+    examType: CCNNType,
+    parsedLevel: number,
+    setErrorMessage: (message: string) => void,
+): void {
     switch (examType) {
-        case ExamType.ACT:
-            if (parsedLevel < 1 || parsedLevel > 36)
-                setErrorMessage("Score must be between 1 and 36.");
-            break;
-        case ExamType.Duolingo_English_Test:
-            if (parsedLevel < 10 || parsedLevel > 160)
-                setErrorMessage("Score must be between 10 and 160.");
-            break;
-        case ExamType.HSA:
-            if (parsedLevel < 0 || parsedLevel > 150)
-                setErrorMessage("Score must be between 0 and 150.");
-            break;
-        case ExamType.IB:
-            if (parsedLevel < 0 || parsedLevel > 45)
-                setErrorMessage("Score must be between 0 and 45.");
-            break;
         case ExamType.IELTS:
             if (parsedLevel < 1 || parsedLevel > 9)
                 setErrorMessage("Score must be between 1 and 9.");
-            break;
-        case ExamType.OSSD:
-            if (parsedLevel < 0 || parsedLevel > 100)
-                setErrorMessage("Score must be between 0 and 100.");
-            break;
-        case ExamType.PTE_Academic:
-            if (parsedLevel < 10 || parsedLevel > 90)
-                setErrorMessage("Score must be between 10 and 90.");
-            break;
-        case ExamType.SAT:
-            if (parsedLevel < 400 || parsedLevel > 1600)
-                setErrorMessage("Score must be between 400 and 1600.");
+            else if ((parsedLevel * 2) % 1 !== 0)
+                setErrorMessage(
+                    "Score must be in 0.5 increments (e.g., 6.5, 7.0, 7.5).",
+                );
             break;
         case ExamType.TOEFL_CBT:
             if (parsedLevel < 33 || parsedLevel > 300)
                 setErrorMessage("Score must be between 33 and 300.");
+            else if (getDecimalPlaces(parsedLevel) > 0)
+                setErrorMessage("Score must be a whole number.");
             break;
         case ExamType.TOEFL_iBT:
             if (parsedLevel < 0 || parsedLevel > 120)
                 setErrorMessage("Score must be between 0 and 120.");
+            else if (getDecimalPlaces(parsedLevel) > 0)
+                setErrorMessage("Score must be a whole number.");
             break;
         case ExamType.TOEFL_Paper:
             if (parsedLevel < 310 || parsedLevel > 677)
                 setErrorMessage("Score must be between 310 and 677.");
+            else if (getDecimalPlaces(parsedLevel) > 0)
+                setErrorMessage("Score must be a whole number.");
             break;
-
         case ExamType.TOEIC:
             if (parsedLevel < 60 || parsedLevel > 990)
                 setErrorMessage("Score must be between 60 and 990.");
+            else if (parsedLevel % 5 !== 0)
+                setErrorMessage("Score must be a multiple of 5.");
+            break;
+        // JLPT is handled as a string score, so it's not in this numeric switch
+    }
+}
+
+/**
+ * Validates numeric scores for CCQT exam types (excluding A_Level).
+ */
+function validateCCQTNumericScore(
+    examType: CCQTType,
+    parsedLevel: number,
+    setErrorMessage: (message: string) => void,
+): void {
+    switch (examType) {
+        case ExamType.ACT:
+            if (parsedLevel < 1 || parsedLevel > 36)
+                setErrorMessage("Score must be between 1 and 36.");
+            else if (getDecimalPlaces(parsedLevel) > 0)
+                setErrorMessage("Score must be a whole number.");
+            break;
+        case ExamType.Duolingo_English_Test:
+            if (parsedLevel < 10 || parsedLevel > 160)
+                setErrorMessage("Score must be between 10 and 160.");
+            else if (parsedLevel % 5 !== 0)
+                setErrorMessage("Score must be a multiple of 5.");
+            break;
+        case ExamType.IB:
+            if (parsedLevel < 0 || parsedLevel > 45)
+                setErrorMessage("Score must be between 0 and 45.");
+            else if (getDecimalPlaces(parsedLevel) > 0)
+                setErrorMessage("Score must be a whole number.");
+            break;
+        case ExamType.OSSD:
+            if (parsedLevel < 0 || parsedLevel > 100)
+                setErrorMessage("Score must be between 0 and 100.");
+            else if (getDecimalPlaces(parsedLevel) > 0)
+                setErrorMessage("Score must be a whole number.");
+            break;
+        case ExamType.PTE_Academic:
+            if (parsedLevel < 10 || parsedLevel > 90)
+                setErrorMessage("Score must be between 10 and 90.");
+            else if (getDecimalPlaces(parsedLevel) > 0)
+                setErrorMessage("Score must be a whole number.");
+            break;
+        case ExamType.SAT:
+            if (parsedLevel < 400 || parsedLevel > 1600)
+                setErrorMessage("Score must be between 400 and 1600.");
+            else if (parsedLevel % 10 !== 0)
+                setErrorMessage("Score must be a multiple of 10.");
+            break;
+        // A_Level is handled as a string score, so it's not in this numeric switch
+    }
+}
+/**
+ * Validates numeric scores for DGNL exam types.
+ */
+function validateDGNLNumericScore(
+    examType: DGNLType,
+    parsedLevel: number,
+    setErrorMessage: (message: string) => void,
+): void {
+    switch (examType) {
+        case ExamType.HSA:
+            if (parsedLevel < 0 || parsedLevel > 150)
+                setErrorMessage("Score must be between 0 and 150.");
+            else if (getDecimalPlaces(parsedLevel) > 0)
+                setErrorMessage("Score must be a whole number.");
             break;
         case ExamType.TSA:
             if (parsedLevel < 0 || parsedLevel > 100)
                 setErrorMessage("Score must be between 0 and 100.");
+            else if (getDecimalPlaces(parsedLevel) > 0)
+                setErrorMessage("Score must be a whole number.");
             break;
         case ExamType.VNUHCM:
             if (parsedLevel < 0 || parsedLevel > 1200)
                 setErrorMessage("Score must be between 0 and 1200.");
-            break;
-
-        default:
-            setErrorMessage("Invalid exam type.");
+            else if (getDecimalPlaces(parsedLevel) > 0)
+                setErrorMessage("Score must be a whole number.");
             break;
     }
-
-    return errors;
 }

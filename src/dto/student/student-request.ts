@@ -13,15 +13,11 @@ import {
 } from "class-validator";
 
 import { AcademicPerformanceRequest } from "@/dto/student/academic-performance-request.js";
-import { AptitudeTestRequest } from "@/dto/student/aptitude-test-request.js";
+import { AptitudeExamRequest } from "@/dto/student/aptitude-exam-request.js";
 import { AwardRequest } from "@/dto/student/award-request.js";
 import { CertificationRequest } from "@/dto/student/certification-request.js";
 import { ConductRequest } from "@/dto/student/conduct-request.js";
-import {
-    NationalExam,
-    TalentExam,
-    VsatExam,
-} from "@/dto/student/exam-profile-dto.js";
+import { NationalExam, TalentExam, VsatExam } from "@/dto/student/exam.dto.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
 import { UniType } from "@/type/enum/uni-type.js";
@@ -71,9 +67,9 @@ export class StudentRequest {
     /**
      * Aptitude test information including exam type and score
      * Contains the exam type (DGNL, CCNN, or CCQT) and the numeric score achieved
-     * @type {AptitudeTestRequest[]}
+     * @type {AptitudeExamRequest[]}
      * @optional
-     * @see AptitudeTestRequest for detailed structure and validation rules
+     * @see AptitudeExamRequest for detailed structure and validation rules
      *
      * @example
      * [
@@ -93,9 +89,9 @@ export class StudentRequest {
     @Expose()
     @IsArray({ message: "Aptitude test scores must be an array" })
     @IsOptional()
-    @Type(() => AptitudeTestRequest)
+    @Type(() => AptitudeExamRequest)
     @ValidateNested({ each: true })
-    aptitudeExams?: AptitudeTestRequest[];
+    aptitudeExams?: AptitudeExamRequest[];
 
     /**
      * List of awards and recognitions received by the student.

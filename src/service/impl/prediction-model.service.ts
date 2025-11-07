@@ -17,7 +17,7 @@ import {
     UserInputL2,
 } from "@/dto/predict/predict.js";
 import { AcademicPerformanceDTO } from "@/dto/student/academic-performance-dto.js";
-import { AptitudeTestDTO } from "@/dto/student/aptitude-test-dto.js";
+import { AptitudeExamDTO } from "@/dto/student/aptitude-exam-dto.js";
 import { AwardDTO } from "@/dto/student/award-dto.js";
 import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
@@ -299,7 +299,7 @@ export class PredictionModelService implements IPredictionModelService {
     private _createDgnlScenarios(
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
-        const dgnlTests: AptitudeTestDTO[] =
+        const dgnlTests: AptitudeExamDTO[] =
             studentInfoDTO.getAptitudeTestScoresByExamType("ĐGNL");
 
         return dgnlTests.map((test) => ({

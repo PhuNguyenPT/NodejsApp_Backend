@@ -22,9 +22,9 @@ export class IsValidExamLevelConstraint
      * @returns The error message string.
      */
     defaultMessage(args: ValidationArguments): string {
-        const aptitudeTestRequest = args.object as Exam;
-        const examType = aptitudeTestRequest.examType;
-        const level = aptitudeTestRequest.level;
+        const aptitudeExamRequest = args.object as Exam;
+        const examType = aptitudeExamRequest.examType;
+        const level = aptitudeExamRequest.level;
 
         const errors = validateExamTypeScore(examType, level);
 
@@ -38,8 +38,8 @@ export class IsValidExamLevelConstraint
      * @returns True if the level is valid, false otherwise.
      */
     validate(level: string, args: ValidationArguments): boolean {
-        const aptitudeTestRequest = args.object as Exam;
-        const examType = aptitudeTestRequest.examType;
+        const aptitudeExamRequest = args.object as Exam;
+        const examType = aptitudeExamRequest.examType;
 
         const errors = validateExamTypeScore(examType, level);
 

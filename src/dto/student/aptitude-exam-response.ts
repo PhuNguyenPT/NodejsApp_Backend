@@ -2,7 +2,7 @@ import { Expose, Transform } from "class-transformer";
 
 import { ExamType } from "@/type/enum/exam.js";
 
-export class AptitudeTestResponse {
+export class AptitudeExamResponse {
     /**
      * Type of exam/aptitude test
      * @example "VNUHCM"

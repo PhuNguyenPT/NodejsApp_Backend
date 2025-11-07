@@ -4,16 +4,16 @@ import {
     ValidatorConstraintInterface,
 } from "class-validator";
 
-import { AptitudeTestRequest } from "@/dto/student/aptitude-test-request.js";
+import { AptitudeExamRequest } from "@/dto/student/aptitude-exam-request.js";
 import { validateExamTypeScore } from "@/type/enum/exam.js";
 
 /**
- * Custom validator constraint for AptitudeTestRequest score.
- * It uses the shared `validateExamTypeScore` logic to ensure the score
+ * Custom validator constraint for Aptitude Test scores.
+ * Uses the shared `validateExamTypeScore` logic to ensure the score
  * is valid for the specified exam type and falls within its expected range.
  */
 @ValidatorConstraint({ async: false, name: "isValidAptitudeTestScore" })
-export class IsValidAptitudeTestScoreConstraint
+export class IsValidAptitudeExamScoreConstraint
     implements ValidatorConstraintInterface
 {
     /**
@@ -23,11 +23,11 @@ export class IsValidAptitudeTestScoreConstraint
      * @returns The error message string.
      */
     defaultMessage(args: ValidationArguments): string {
-        const aptitudeTestRequest = args.object as AptitudeTestRequest;
-        const examType = aptitudeTestRequest.examType;
-        const score = aptitudeTestRequest.score;
+        const aptitudeExam = args.object as AptitudeExamRequest;
+        const examType = aptitudeExam.examType;
+        const score = String(aptitudeExam.score);
 
-        const errors = validateExamTypeScore(examType, score.toString());
+        const errors = validateExamTypeScore(examType, score);
 
         return errors.level ?? `The provided score for ${examType} is invalid.`;
     }
@@ -35,14 +35,14 @@ export class IsValidAptitudeTestScoreConstraint
     /**
      * Validates if the provided score is valid for the associated examType.
      * @param score - The score value being validated (can be number or string for A-Level).
-     * @param args - Validation arguments, including the object being validated (AptitudeTestRequest).
+     * @param args - Validation arguments, including the object being validated (AptitudeExamRequest).
      * @returns True if the score is valid, false otherwise.
      */
     validate(score: number, args: ValidationArguments): boolean {
-        const aptitudeTestRequest = args.object as AptitudeTestRequest;
-        const examType = aptitudeTestRequest.examType;
+        const aptitudeExam = args.object as AptitudeExamRequest;
+        const examType = aptitudeExam.examType;
 
-        const errors = validateExamTypeScore(examType, score.toString());
+        const errors = validateExamTypeScore(examType, String(score));
 
         return Object.keys(errors).length === 0 || errors.level === undefined;
     }
