@@ -4,7 +4,7 @@ import {
     ValidationOptions,
 } from "class-validator";
 
-import { ExamSubject } from "@/dto/student/exam-profile-dto.js";
+import { ExamSubject } from "@/dto/student/exam.dto.js";
 import {
     isTalentExamSubjects,
     TalentExamSubjects,

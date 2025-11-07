@@ -9,7 +9,6 @@ import {
 import { ICertificationService } from "@/service/certification-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import {
-    CCNNType,
     ExamType,
     handleExamValidation,
     isCCNNType,
@@ -72,7 +71,7 @@ export class CertificationService implements ICertificationService {
             return undefined;
         }
 
-        switch (examType as CCNNType) {
+        switch (examType) {
             case ExamType.IELTS:
                 return this.get_IELTS_CEFR_level(numberLevel);
             case ExamType.JLPT:

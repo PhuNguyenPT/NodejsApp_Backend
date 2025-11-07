@@ -13,15 +13,11 @@ import {
 } from "class-validator";
 
 import { AcademicPerformanceDTO } from "@/dto/student/academic-performance-dto.js";
-import { AptitudeTestDTO } from "@/dto/student/aptitude-test-dto.js";
+import { AptitudeExamDTO } from "@/dto/student/aptitude-exam-dto.js";
 import { AwardDTO } from "@/dto/student/award-dto.js";
 import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
-import {
-    NationalExam,
-    TalentExam,
-    VsatExam,
-} from "@/dto/student/exam-profile-dto.js";
+import { NationalExam, TalentExam, VsatExam } from "@/dto/student/exam.dto.js";
 import {
     ExamType,
     isCCNNType,
@@ -97,9 +93,9 @@ export class StudentInfoDTO {
     @Expose()
     @IsArray({ message: "Aptitude test scores must be an array" })
     @IsOptional()
-    @Type(() => AptitudeTestDTO)
+    @Type(() => AptitudeExamDTO)
     @ValidateNested({ each: true })
-    aptitudeExams?: AptitudeTestDTO[];
+    aptitudeExams?: AptitudeExamDTO[];
 
     /**
      * List of awards and recognitions received by the student.
@@ -376,7 +372,7 @@ export class StudentInfoDTO {
 
     getAptitudeTestScoresByExamType(
         type: "CCNN" | "CCQT" | "ĐGNL",
-    ): AptitudeTestDTO[] {
+    ): AptitudeExamDTO[] {
         if (!this.aptitudeExams) return [];
 
         return this.aptitudeExams.filter((apt) => {

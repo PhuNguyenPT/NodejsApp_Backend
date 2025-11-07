@@ -3,15 +3,11 @@ import { Expose, Transform, Type } from "class-transformer";
 
 import { FileResponse } from "@/dto/file/file-response.js";
 import { AcademicPerformanceResponse } from "@/dto/student/academic-performance-response.js";
-import { AptitudeTestResponse } from "@/dto/student/aptitude-test-response.js";
+import { AptitudeExamResponse } from "@/dto/student/aptitude-exam-response.js";
 import { AwardResponse } from "@/dto/student/award-response.js";
 import { CertificationResponse } from "@/dto/student/certification-response.js";
 import { ConductResponse } from "@/dto/student/conduct-response.js";
-import {
-    NationalExam,
-    TalentExam,
-    VsatExam,
-} from "@/dto/student/exam-profile-dto.js";
+import { NationalExam, TalentExam, VsatExam } from "@/dto/student/exam.dto.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
 import { UniType } from "@/type/enum/uni-type.js";
@@ -49,8 +45,8 @@ export class StudentProfileResponse {
      * Aptitude test information including exam type and score
      */
     @Expose()
-    @Type(() => AptitudeTestResponse)
-    aptitudeExams?: AptitudeTestResponse[];
+    @Type(() => AptitudeExamResponse)
+    aptitudeExams?: AptitudeExamResponse[];
     /**
      * List of awards and recognitions received by the student.
      * Optional field that can contain multiple award entries.

@@ -240,10 +240,10 @@ export class StudentService implements IStudentService {
             studentRequest.aptitudeExams.length > 0
         ) {
             studentEntity.aptitudeExams = studentRequest.aptitudeExams.map(
-                (aptitudeTestRequest) => {
+                (aptitudeExamRequest) => {
                     const studentAptitudeTestEntity: StudentAptitudeExamEntity =
                         this.studentAptitudeExamRepository.create(
-                            aptitudeTestRequest,
+                            aptitudeExamRequest,
                         );
                     studentAptitudeTestEntity.student = studentEntity;
                     if (userEntity) {
