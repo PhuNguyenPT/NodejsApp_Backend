@@ -9,18 +9,15 @@ import { IsValidDGNLExamTypeConstraint } from "@/validator/is-valid-exam-type.va
  * DTO for aptitude test information containing both type and score
  * @example
  * {
- *   "examType": {
- *     "type": "DGNL",
- *     "value": "VNUHCM"
- *   },
- *   "score": 700
+ *   "examType": "VNUHCM",
+ *   "score": "700"
  * }
  */
 
 export class AptitudeTestRequest {
     /**
      * Type of exam/aptitude test
-     * @example { "type": "DGNL", "value": "VNUHCM" }
+     * @example "VNUHCM"
      */
     @Expose()
     @IsNotEmpty({ message: "Exam type is required" })

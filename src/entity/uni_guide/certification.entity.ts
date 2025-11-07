@@ -52,7 +52,7 @@ export class CertificationEntity {
     })
     createdBy?: string;
 
-    @Column({ nullable: true, type: "jsonb" })
+    @Column({ enum: ExamType, nullable: true, type: "enum" })
     examType?: ExamType;
 
     @PrimaryGeneratedColumn("uuid")
@@ -64,6 +64,7 @@ export class CertificationEntity {
     @JoinColumn({ name: "studentId" })
     @ManyToOne("StudentEntity", "certifications", {
         onDelete: "CASCADE",
+        orphanedRowAction: "delete",
     })
     student!: Relation<StudentEntity>;
 

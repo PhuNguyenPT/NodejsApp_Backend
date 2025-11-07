@@ -22,6 +22,12 @@ import {
     TalentExam,
     VsatExam,
 } from "@/dto/student/exam-profile-dto.js";
+import {
+    ExamType,
+    isCCNNType,
+    isCCQTType,
+    isDGNLType,
+} from "@/type/enum/exam.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
@@ -72,13 +78,28 @@ export class StudentInfoDTO {
     /**
      * Aptitude test information including exam type and score
      * Contains the exam type (DGNL, CCNN, or CCQT) and the numeric score achieved
-     * @example { "examType": { "type": "DGNL", "value": "VNUHCM" }, "score": 700 }
+     *
+     * @example
+     * [
+     *   {
+     *     "examType": "VNUHCM",
+     *     "score": 700,
+     *   },
+     *   {
+     *     "examType": "HSA",
+     *     "score": 90,
+     *   }
+     * ]
      */
+    @ArrayMaxSize(3, {
+        message: "Aptitude test scores must contain at most 3 awards",
+    })
     @Expose()
+    @IsArray({ message: "Aptitude test scores must be an array" })
     @IsOptional()
     @Type(() => AptitudeTestDTO)
-    @ValidateNested()
-    aptitudeTestScore?: AptitudeTestDTO;
+    @ValidateNested({ each: true })
+    aptitudeExams?: AptitudeTestDTO[];
 
     /**
      * List of awards and recognitions received by the student.
@@ -117,9 +138,20 @@ export class StudentInfoDTO {
      * Optional field that can contain multiple certification entries.
      * Each certification includes details like name, issuing organization, and validity dates.
      *
-     * @type {CertificationDTO[]}
+     * @type {CertificationRequest[]}
      * @optional
-     * @see CertificationDTO for detailed structure and validation rules
+     * @see CertificationRequest for detailed structure and validation rules
+     * @example
+     * [
+     *   {
+     *     "examType": "IELTS",
+     *     "level": "6.5"
+     *   },
+     *   {
+     *     "examType": "SAT",
+     *     "level": "1200"
+     *   }
+     * ]
      */
     @ArrayMaxSize(3, {
         message: "Certifications must contain at most 3 certifications",
@@ -303,7 +335,7 @@ export class StudentInfoDTO {
     @IsUniqueSubject({ message: "Talent scores must have unique names" })
     @Type(() => TalentExam)
     @ValidateNested({ each: true })
-    talentScores?: TalentExam[];
+    talentExams?: TalentExam[];
 
     /**
      * @example "Công lập"
@@ -340,42 +372,46 @@ export class StudentInfoDTO {
     @IsUniqueSubject({ message: "VSAT scores must have unique names" })
     @Type(() => VsatExam)
     @ValidateNested({ each: true })
-    vsatScores?: VsatExam[];
+    vsatExams?: VsatExam[];
 
-    getAptitudeTestScore(): number | undefined {
-        if (
-            this.aptitudeTestScore &&
-            typeof this.aptitudeTestScore.score === "number" &&
-            this.aptitudeTestScore.score > 0
-        ) {
-            return this.aptitudeTestScore.score;
-        }
-        return undefined;
+    getAptitudeTestScoresByExamType(
+        type: "CCNN" | "CCQT" | "ĐGNL",
+    ): AptitudeTestDTO[] {
+        if (!this.aptitudeExams) return [];
+
+        return this.aptitudeExams.filter((apt) => {
+            return this.getExamCategory(apt.examType) === type;
+        });
     }
+
     getCertificationsByExamType(
         type: "CCNN" | "CCQT" | "ĐGNL",
     ): CertificationDTO[] {
         if (!this.certifications) return [];
-        return this.certifications.filter(
-            (cert) =>
-                typeof cert.examType === "object" &&
-                cert.examType.type === type,
-        );
+
+        return this.certifications.filter((cert) => {
+            return this.getExamCategory(cert.examType) === type;
+        });
+    }
+
+    getExamCategory(examType: ExamType): "CCNN" | "CCQT" | "ĐGNL" | null {
+        if (isCCNNType(examType)) {
+            return "CCNN";
+        }
+        if (isCCQTType(examType)) {
+            return "CCQT";
+        }
+        if (isDGNLType(examType)) {
+            return "ĐGNL";
+        }
+        return null;
     }
 
     getTotalVSATScore(): number {
-        if (!this.vsatScores || !Array.isArray(this.vsatScores)) return 0;
-        return this.vsatScores.reduce(
+        if (!this.vsatExams || !Array.isArray(this.vsatExams)) return 0;
+        return this.vsatExams.reduce(
             (sum, examSubject) => sum + examSubject.score,
             0,
-        );
-    }
-
-    hasAptitudeTestScore(): boolean {
-        return !!(
-            this.aptitudeTestScore &&
-            typeof this.aptitudeTestScore.score === "number" &&
-            this.aptitudeTestScore.score > 0
         );
     }
 
@@ -389,11 +425,11 @@ export class StudentInfoDTO {
 
     hasValidVSATScores(): boolean {
         return (
-            this.vsatScores !== undefined &&
-            Array.isArray(this.vsatScores) &&
-            this.vsatScores.length >= 3 &&
-            this.vsatScores.length <= 8 &&
-            this.vsatScores.every(
+            this.vsatExams !== undefined &&
+            Array.isArray(this.vsatExams) &&
+            this.vsatExams.length >= 3 &&
+            this.vsatExams.length <= 8 &&
+            this.vsatExams.every(
                 (examSubject) =>
                     typeof examSubject === "object" &&
                     Object.values(VietnameseSubject).includes(

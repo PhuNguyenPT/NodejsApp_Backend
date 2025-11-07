@@ -129,12 +129,4 @@ export class CreateFileDTO {
     @IsString()
     @MaxLength(255)
     tags?: string;
-
-    /**
-     * User identifier
-     * @description UUID of the user this file is associated with
-     * @example "123e4567-e89b-12d3-a456-426614174000"
-     */
-    @IsUUID(4, { message: "User ID must be a valid UUID" })
-    userId?: string;
 }

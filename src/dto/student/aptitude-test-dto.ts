@@ -1,16 +1,22 @@
 import { Expose } from "class-transformer";
-import { IsInt, IsNotEmpty, Max, Min, Validate } from "class-validator";
+import { IsNotEmpty, Validate } from "class-validator";
 
 import { ExamType } from "@/type/enum/exam.js";
+import { IsValidAptitudeTestScoreConstraint } from "@/validator/is-valid-aptitude-test-score.validator.js";
 import { IsValidDGNLExamTypeConstraint } from "@/validator/is-valid-exam-type.validator.js";
 
 /**
  * DTO for aptitude test information containing both type and score
+ * @example
+ * {
+ *   "examType": "VNUHCM",
+ *   "score": 700
+ * }
  */
 export class AptitudeTestDTO {
     /**
      * Type of exam/aptitude test
-     * @example { "type": "DGNL", "value": "VNUHCM" }
+     * @example "VNUHCM"
      */
     @Expose()
     @IsNotEmpty({ message: "Exam type is required" })
@@ -22,9 +28,7 @@ export class AptitudeTestDTO {
      * @example 700
      */
     @Expose()
-    @IsInt({ message: "Score must be an integer" })
     @IsNotEmpty({ message: "Aptitude test score is required" })
-    @Max(1200, { message: "Score cannot exceed 1200" })
-    @Min(0, { message: "Score must be at least 0" })
+    @Validate(IsValidAptitudeTestScoreConstraint)
     score!: number;
 }

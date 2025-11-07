@@ -1,8 +1,5 @@
 /**
  * @property {UniType} uniType - The type of university (public or private).
- */
-
-/**
  * @example "Công lập"
  * @enum
  * @readonly

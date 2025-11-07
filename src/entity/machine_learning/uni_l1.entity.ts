@@ -22,6 +22,7 @@ export class UniL1Entity {
     id!: string;
 
     @Column({
+        insert: false,
         name: "tfidf_content",
         nullable: true,
         transformer: {
@@ -33,6 +34,7 @@ export class UniL1Entity {
             },
         },
         type: "text",
+        update: false,
     })
     tfidfContent?: string;
 

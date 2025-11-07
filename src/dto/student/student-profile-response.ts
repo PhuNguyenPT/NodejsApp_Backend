@@ -47,11 +47,10 @@ export class StudentProfileResponse {
 
     /**
      * Aptitude test information including exam type and score
-     * Contains the exam type (DGNL, CCNN, or CCQT) and the numeric score achieved
      */
     @Expose()
     @Type(() => AptitudeTestResponse)
-    aptitudeTestScore?: AptitudeTestResponse;
+    aptitudeExams?: AptitudeTestResponse[];
     /**
      * List of awards and recognitions received by the student.
      * Optional field that can contain multiple award entries.
@@ -200,7 +199,7 @@ export class StudentProfileResponse {
      */
     @Expose()
     @Type(() => TalentExam)
-    talentScores?: TalentExam[];
+    talentExams?: TalentExam[];
 
     /**
      * @example "Công lập"
@@ -235,5 +234,5 @@ export class StudentProfileResponse {
      */
     @Expose()
     @Type(() => VsatExam) // Ensure correct type mapping
-    vsatScores?: VsatExam[];
+    vsatExams?: VsatExam[];
 }

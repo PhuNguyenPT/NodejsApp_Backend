@@ -1,7 +1,7 @@
 import { responseFormatFromZodObject } from "@mistralai/mistralai/extra/structChat.js";
 import { OCRResponse } from "@mistralai/mistralai/models/components/ocrresponse.js";
 import { inject, injectable } from "inversify";
-import { IsNull, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import { promisify } from "util";
 import { Logger } from "winston";
 import { gunzip, ZlibOptions } from "zlib";
@@ -27,6 +27,8 @@ export class MistralService implements IMistralService {
     constructor(
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
+        @inject(TYPES.FileRepository)
+        private readonly fileRepository: Repository<FileEntity>,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
         @inject(TYPES.DecompressionOptions)
@@ -43,14 +45,17 @@ export class MistralService implements IMistralService {
         userId?: string,
     ): Promise<FileScoreExtractionResult> {
         try {
-            // Get the student to check access and get expected subjects
-            const student = await this.studentRepository.findOne({
-                where: { id: file.studentId, userId: userId ?? IsNull() },
-            });
+            const fileEntity = await this.fileRepository
+                .createQueryBuilder("files")
+                .leftJoinAndSelect("files.student", "student")
+                .addSelect("files.fileContent")
+                .where("files.id = :fileId", { fileId: file.id })
+                .andWhere("files.status = :status", { status: "active" })
+                .getOne();
 
-            if (!student) {
+            if (!fileEntity) {
                 return {
-                    error: `Student not found for file ${file.id}`,
+                    error: `File ${file.id} not found or inactive.`,
                     fileId: file.id,
                     fileName: file.originalFileName,
                     scores: [],
@@ -58,7 +63,8 @@ export class MistralService implements IMistralService {
                 };
             }
 
-            // Only check access if userId is provided (not anonymous)
+            const student = fileEntity.student;
+
             if (
                 userId &&
                 student.userId !== undefined &&
@@ -121,34 +127,30 @@ export class MistralService implements IMistralService {
         userId?: string,
     ): Promise<BatchScoreExtractionResult> {
         try {
-            // Only check access if userId is provided (not anonymous)
+            const filesToProcess = await this.fileRepository
+                .createQueryBuilder("files")
+                .addSelect("files.fileContent") // <-- GUARANTEE fileContent is loaded
+                .where("files.studentId = :studentId", {
+                    studentId: student.id,
+                })
+                .andWhere("files.id IN (:...fileIds)", { fileIds })
+                .andWhere("files.status = :status", { status: "active" })
+                .getMany();
+
+            if (filesToProcess.length === 0) {
+                return {
+                    error: `No active files found for student ${student.id} among the requested IDs`,
+                    results: [],
+                    success: false,
+                };
+            }
+
             if (
                 userId &&
                 student.userId !== undefined &&
                 student.userId !== userId
             ) {
                 throw new AccessDeniedException("Access denied");
-            }
-
-            if (!student.files || student.files.length === 0) {
-                return {
-                    error: `No files found for student ${student.id}`,
-                    results: [],
-                    success: false,
-                };
-            }
-
-            // Filter to only the requested files
-            const filesToProcess = student.files.filter((file) =>
-                fileIds.includes(file.id),
-            );
-
-            if (filesToProcess.length === 0) {
-                return {
-                    error: `None of the requested files found for student ${student.id}`,
-                    results: [],
-                    success: false,
-                };
             }
 
             const model = "mistral-ocr-latest";
@@ -214,12 +216,18 @@ export class MistralService implements IMistralService {
         userId: string,
     ): Promise<BatchScoreExtractionResult> {
         try {
-            const student: null | StudentEntity =
-                await this.studentRepository.findOne({
-                    relations: ["files"],
-                    select: ["id", "nationalExams", "userId", "files"],
-                    where: { id: studentId },
-                });
+            const student: null | StudentEntity = await this.studentRepository
+                .createQueryBuilder("student")
+                .select([
+                    "student.id",
+                    "student.userId",
+                    "student.nationalExams",
+                    "files",
+                ])
+                .leftJoinAndSelect("student.files", "files")
+                .addSelect("files.fileContent")
+                .where("student.id = :studentId", { studentId })
+                .getOne();
 
             if (!student) {
                 return {

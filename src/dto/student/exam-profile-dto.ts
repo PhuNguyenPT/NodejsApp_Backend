@@ -1,4 +1,4 @@
-import { Expose } from "class-transformer";
+import { Expose, Transform } from "class-transformer";
 import { IsEnum, IsNotEmpty, IsNumber, Max, Min } from "class-validator";
 
 import {
@@ -36,6 +36,15 @@ export class ExamSubject {
     @IsNumber({ maxDecimalPlaces: 2 })
     @Max(10)
     @Min(0)
+    @Transform(({ value }: { value: unknown }) => {
+        if (value === null || value === undefined) return value;
+        if (typeof value === "number") return value;
+        if (typeof value === "string") {
+            const parsed = parseFloat(value);
+            return isNaN(parsed) ? value : parsed;
+        }
+        return value;
+    })
     public score: number;
 
     /**
@@ -77,6 +86,15 @@ export class NationalExam {
     @IsNumber({ maxDecimalPlaces: 2 })
     @Max(10)
     @Min(0)
+    @Transform(({ value }: { value: unknown }) => {
+        if (value === null || value === undefined) return value;
+        if (typeof value === "number") return value;
+        if (typeof value === "string") {
+            const parsed = parseFloat(value);
+            return isNaN(parsed) ? value : parsed;
+        }
+        return value;
+    })
     public score: number;
 
     /**
@@ -116,6 +134,15 @@ export class TalentExam {
     @IsNumber({ maxDecimalPlaces: 2 })
     @Max(10)
     @Min(0)
+    @Transform(({ value }: { value: unknown }) => {
+        if (value === null || value === undefined) return value;
+        if (typeof value === "number") return value;
+        if (typeof value === "string") {
+            const parsed = parseFloat(value);
+            return isNaN(parsed) ? value : parsed;
+        }
+        return value;
+    })
     public score: number;
 
     /**
@@ -133,14 +160,10 @@ export class TalentExam {
  * Represents a single VSAT exam subject and its score
  */
 export class VsatExam {
-    /**
-     * Subject name (e.g., "Toán", "Ngữ Văn", "Tiếng Anh", "Vật Lý")
-     * @example "Toán"
-     */
     @Expose()
     @IsEnum(VsatExamSubjects, {
         message:
-            "name must be one of the following talent subjects: " +
+            "name must be one of the following VSAT subjects: " +
             VsatExamSubjects.join(", "),
     })
     @IsNotEmpty()
@@ -154,6 +177,15 @@ export class VsatExam {
     @IsNumber({ maxDecimalPlaces: 2 })
     @Max(150)
     @Min(0)
+    @Transform(({ value }: { value: unknown }) => {
+        if (value === null || value === undefined) return value;
+        if (typeof value === "number") return value;
+        if (typeof value === "string") {
+            const parsed = parseFloat(value);
+            return isNaN(parsed) ? value : parsed;
+        }
+        return value;
+    })
     public score: number;
 
     /**
