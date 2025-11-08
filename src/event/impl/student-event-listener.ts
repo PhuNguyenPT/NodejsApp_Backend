@@ -14,13 +14,14 @@ import {
 } from "@/entity/uni_guide/prediction-result.entity.js";
 import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { ExamScenario } from "@/service/impl/prediction-model.service.js";
-import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
+import { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
+import { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { UniType } from "@/type/enum/uni-type.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { CacheKeys } from "@/util/cache-key.js";
+import { ExamScenario, PredictionUtil } from "@/util/prediction.util.js";
 import { validateAndTransformSync } from "@/util/validation.util.js";
 
 import { IStudentEventListener } from "../student-event-listener.interface.js";
@@ -34,10 +35,14 @@ export class StudentEventListener implements IStudentEventListener {
     constructor(
         @inject(TYPES.Logger) private readonly logger: Logger,
         @inject(TYPES.DataSource) private readonly dataSource: DataSource,
-        @inject(TYPES.IPredictionModelService)
-        private readonly predictionModelService: IPredictionModelService,
+        @inject(TYPES.IPredictionL1Service)
+        private readonly predictionL1Service: IPredictionL1Service,
+        @inject(TYPES.IPredictionL2Service)
+        private readonly predictionL2Service: IPredictionL2Service,
         @inject(TYPES.RedisPublisher)
         private readonly redisClient: RedisClientType,
+        @inject(TYPES.PredictionUtil)
+        private readonly predictionUtil: PredictionUtil,
     ) {}
 
     public async handleStudentCreatedEvent(
@@ -74,7 +79,7 @@ export class StudentEventListener implements IStudentEventListener {
         studentInfoDTO: StudentInfoDTO,
     ): AdmissionEntity[] {
         const examScenarios: ExamScenario[] =
-            this.predictionModelService.collectExamScenarios(studentInfoDTO);
+            this.predictionUtil.collectExamScenarios(studentInfoDTO);
 
         const subject_combinations = new Set(
             examScenarios.map((examScenario) => examScenario.to_hop_mon),
@@ -355,14 +360,8 @@ export class StudentEventListener implements IStudentEventListener {
             // Step 2: Get prediction results concurrently
             // This happens OUTSIDE any transaction - no locks held during slow API calls
             const [l2Result, l1Result] = await Promise.allSettled([
-                this.predictionModelService.getL2PredictResults(
-                    studentId,
-                    userId,
-                ),
-                this.predictionModelService.getL1PredictResults(
-                    studentId,
-                    userId,
-                ),
+                this.predictionL2Service.getL2PredictResults(studentId, userId),
+                this.predictionL1Service.getL1PredictResults(studentId, userId),
             ]);
 
             const l2PredictionResults: L2PredictResult[] =

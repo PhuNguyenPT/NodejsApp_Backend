@@ -1,6 +1,22 @@
-import { PredictionModelServiceConfig } from "@/service/impl/prediction-model.service.js";
 import { ClientConfig } from "@/type/class/prediction-service.client.js";
 import { config } from "@/util/validate-env.js";
+
+export interface PredictionModelServiceConfig {
+    SERVER_BATCH_CONCURRENCY: number;
+    SERVICE_BATCH_CONCURRENCY: number;
+    SERVICE_INPUTS_PER_WORKER: number;
+    SERVICE_L1_CHUNK_DELAY_MS: number;
+    SERVICE_L1_CHUNK_SIZE_INPUT_ARRAY: number;
+    SERVICE_L2_CHUNK_DELAY_MS: number;
+    SERVICE_L2_CHUNK_SIZE_INPUT_ARRAY: number;
+    SERVICE_MAX_RETRIES: number;
+    SERVICE_MIN_BATCH_CONCURRENCY: number;
+    SERVICE_NETWORK_LATENCY_MS: number;
+    SERVICE_PREDICTION_CONCURRENCY: number;
+    SERVICE_REQUEST_DELAY_MS: number;
+    SERVICE_RETRY_BASE_DELAY_MS: number;
+    SERVICE_RETRY_ITERATION_DELAY_MS: number;
+}
 
 export const predictionModelServiceConfig: PredictionModelServiceConfig = {
     SERVER_BATCH_CONCURRENCY: config.SERVER_BATCH_CONCURRENCY,

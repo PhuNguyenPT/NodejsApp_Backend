@@ -12,6 +12,7 @@ import { mutterOptions } from "@/config/file.config.js";
 import { logger } from "@/config/logger.config.js";
 import { PassportConfig } from "@/config/passport.config.js";
 import {
+    PredictionModelServiceConfig,
     predictionModelServiceConfig,
     predictionServiceClientConfig,
 } from "@/config/prediction-model.config.js";
@@ -65,10 +66,8 @@ import { JwtService } from "@/service/impl/jwt.service.js";
 import { MajorService } from "@/service/impl/major.service.js";
 import { MistralService } from "@/service/impl/mistral.service.js";
 import { OcrResultService } from "@/service/impl/ocr-result.service.js";
-import {
-    PredictionModelService,
-    PredictionModelServiceConfig,
-} from "@/service/impl/prediction-model.service.js";
+import { PredictionL1Service } from "@/service/impl/prediction-L1.service.js";
+import { PredictionL2Service } from "@/service/impl/prediction-L2.service.js";
 import { PredictionResultService } from "@/service/impl/prediction-result.service.js";
 import { StudentService } from "@/service/impl/student.service.js";
 import { UserService } from "@/service/impl/user.service.js";
@@ -76,7 +75,8 @@ import { IJwtService } from "@/service/jwt-service.interface.js";
 import { IMajorService } from "@/service/major-service.interface.js";
 import { IMistralService } from "@/service/mistral-service.interface.js";
 import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
-import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
+import { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
+import { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
 import { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
 import { IStudentService } from "@/service/student-service.interface.js";
 import { IUserService } from "@/service/user-service.interface.js";
@@ -86,6 +86,8 @@ import {
     PredictionServiceClient,
 } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
+import { ConcurrencyUtil } from "@/util/concurrency.util.js";
+import { PredictionUtil } from "@/util/prediction.util.js";
 
 const iocContainer = new Container();
 
@@ -249,16 +251,30 @@ iocContainer
     .to(OcrResultService)
     .inSingletonScope();
 iocContainer
-    .bind<IPredictionModelService>(TYPES.IPredictionModelService)
-    .to(PredictionModelService)
-    .inSingletonScope();
-iocContainer
     .bind<IPredictionResultService>(TYPES.IPredictionResultService)
     .to(PredictionResultService)
     .inSingletonScope();
 iocContainer
+    .bind<IPredictionL1Service>(TYPES.IPredictionL1Service)
+    .to(PredictionL1Service)
+    .inSingletonScope();
+iocContainer
+    .bind<IPredictionL2Service>(TYPES.IPredictionL2Service)
+    .to(PredictionL2Service)
+    .inSingletonScope();
+iocContainer
     .bind<IAdmissionService>(TYPES.IAdmissionService)
     .to(AdmissionService)
+    .inSingletonScope();
+
+// --- Utility Bindings ---
+iocContainer
+    .bind<PredictionUtil>(TYPES.PredictionUtil)
+    .to(PredictionUtil)
+    .inSingletonScope();
+iocContainer
+    .bind<ConcurrencyUtil>(TYPES.ConcurrencyUtil)
+    .to(ConcurrencyUtil)
     .inSingletonScope();
 
 // --- Event Listener Bindings ---
