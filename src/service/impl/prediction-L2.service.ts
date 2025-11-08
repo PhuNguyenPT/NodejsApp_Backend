@@ -7,6 +7,7 @@ import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
 import { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
+import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
 import {
     L2BatchRequest,
     L2PredictResult,
@@ -29,7 +30,6 @@ import { EntityNotFoundException } from "@/type/exception/entity-not-found.excep
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 import { ConcurrencyUtil } from "@/util/concurrency.util.js";
 import { PredictionUtil } from "@/util/prediction.util.js";
-import { validateAndTransformSync } from "@/util/validation.util.js";
 
 import { IPredictionL2Service } from "../prediction-l2-service.interface.js";
 
@@ -355,10 +355,12 @@ export class PredictionL2Service implements IPredictionL2Service {
             );
         }
 
-        const studentInfoDTO = validateAndTransformSync(
+        const studentInfoDTO: StudentInfoDTO = plainToInstance(
             StudentInfoDTO,
             student,
+            { excludeExtraneousValues: true },
         );
+        await validate(studentInfoDTO, DEFAULT_VALIDATOR_OPTIONS);
 
         // Generate user inputs for all combinations
         const userInputs = this.generateL2UserInputCombinations(studentInfoDTO);
@@ -371,6 +373,8 @@ export class PredictionL2Service implements IPredictionL2Service {
                 "No valid user inputs could be generated for prediction",
             );
         }
+
+        await validate(userInputs, DEFAULT_VALIDATOR_OPTIONS);
 
         // Execute predictions with improved error handling and retry logic
         const results = await this.executeL2PredictionsWithRetry(
