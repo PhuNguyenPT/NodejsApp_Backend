@@ -26,7 +26,8 @@ import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.ent
 import { PredictionResultMapper } from "@/mapper/prediction-result-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { IPredictionModelService } from "@/service/prediction-model-service.interface.js";
+import { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
+import { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
 import { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
@@ -53,8 +54,10 @@ export class PredictionController extends Controller {
      * @param {PredictionResultService} predictionResultService - Service for managing prediction results
      */
     constructor(
-        @inject(TYPES.IPredictionModelService)
-        private readonly predictionModelService: IPredictionModelService,
+        @inject(TYPES.IPredictionL1Service)
+        private readonly predictionL1Service: IPredictionL1Service,
+        @inject(TYPES.IPredictionL2Service)
+        private readonly predictionL2Service: IPredictionL2Service,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
         @inject(TYPES.IPredictionResultService)
@@ -86,7 +89,7 @@ export class PredictionController extends Controller {
     ): Promise<L1PredictResult[]> {
         const user: Express.User = request.user;
         const predictResults: L1PredictResult[] =
-            await this.predictionModelService.getL1PredictResults(
+            await this.predictionL1Service.getL1PredictResults(
                 studentId,
                 user.id,
             );
@@ -118,7 +121,7 @@ export class PredictionController extends Controller {
     ): Promise<L2PredictResult[]> {
         const user: Express.User = request.user;
         const predictResults: L2PredictResult[] =
-            await this.predictionModelService.getL2PredictResults(
+            await this.predictionL2Service.getL2PredictResults(
                 studentId,
                 user.id,
             );
@@ -153,7 +156,7 @@ export class PredictionController extends Controller {
     ): Promise<L2PredictResult[]> {
         const user: Express.User = request.user;
         const predictResults: L2PredictResult[] =
-            await this.predictionModelService.predictMajorsByStudentIdAndUserId(
+            await this.predictionL2Service.predictMajorsByStudentIdAndUserId(
                 userInput,
                 studentId,
                 user.id,

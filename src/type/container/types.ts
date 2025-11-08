@@ -22,6 +22,8 @@ export const ServiceTypes = {
     IMajorService: Symbol.for("IMajorService"),
     IMistralService: Symbol.for("IMistralService"),
     IOcrResultService: Symbol.for("IOcrResultService"),
+    IPredictionL1Service: Symbol.for("IPredictionL1Service"),
+    IPredictionL2Service: Symbol.for("IPredictionL2Service"),
     IPredictionModelService: Symbol.for("IPredictionModelService"),
     IPredictionResultService: Symbol.for("IPredictionResultService"),
     IStudentService: Symbol.for("IStudentService"),
@@ -81,6 +83,13 @@ export const InfrastructureTypes = {
     RedisSubscriber: Symbol.for("RedisSubscriber"),
 };
 
+/**
+ * @description Symbols for utility.
+ */
+export const UtilityTypes = {
+    ConcurrencyUtil: Symbol.for("ConcurrencyUtil"),
+    PredictionUtil: Symbol.for("PredictionUtil"),
+};
 // --- All Types Combined ---
 
 /**
@@ -92,5 +101,6 @@ export const TYPES = {
     ...ServiceTypes,
     ...RepositoryTypes,
     ...ConfigTypes,
+    ...UtilityTypes,
     ...InfrastructureTypes,
 };
