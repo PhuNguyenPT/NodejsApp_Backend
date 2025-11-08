@@ -1,3 +1,4 @@
+import { Expose } from "class-transformer";
 import {
     ArrayMinSize,
     IsArray,
@@ -22,14 +23,17 @@ import { Role } from "@/type/enum/user.js";
  * }
  */
 export class CreateUserDto {
+    @Expose()
     @IsEmail({}, { message: "Must be a valid email address" })
     email!: string;
 
+    @Expose()
     @IsOptional()
     @IsString({ message: "Name must be a string" })
     @Length(1, 255, { message: "Name must be between 1 and 255 characters" })
     name?: string;
 
+    @Expose()
     @IsString({ message: "Password must be a string" })
     @Length(8, 128, {
         message: "Password must be between 8 and 128 characters",
@@ -44,6 +48,7 @@ export class CreateUserDto {
     password!: string;
 
     @ArrayMinSize(1, { message: "At least one phone number is required" })
+    @Expose()
     @IsArray({ message: "Phone numbers must be an array" })
     @IsOptional()
     @IsString({ each: true, message: "Each phone number must be a string" })
@@ -66,6 +71,7 @@ export class CreateUserDto {
  * }
  */
 export class CreateUserAdminDTO extends CreateUserDto {
+    @Expose()
     @IsEnum(Role, {
         message: `Role must be one of: ${Object.values(Role).join(", ")}`,
     })

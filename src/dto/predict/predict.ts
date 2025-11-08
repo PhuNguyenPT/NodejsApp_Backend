@@ -166,7 +166,7 @@ export class UserInputL1 {
      * Expected tuition fee for the program (VND per year)
      * @example 10000000 (10 million VND)
      */
-    @IsNumber()
+    @IsInt()
     @Min(0)
     hoc_phi!: number;
 
@@ -304,7 +304,7 @@ export class UserInputL2 {
      * Expected tuition fee for the program (VND per year)
      * @example 10000000 (10 million VND)
      */
-    @IsNumber()
+    @IsInt()
     @Min(0)
     hoc_phi!: number;
 
@@ -339,6 +339,20 @@ export class UserInputL2 {
     @IsString()
     to_hop_mon!: string;
 }
+
+// export class UserInputL3 {
+//     @IsIn([0, 1])
+//     @IsNotEmpty()
+//     cong_lap!: number;
+
+//     @IsInt()
+//     @Min(0)
+//     hoc_phi!: number;
+
+//     @IsNotEmpty()
+//     @IsString()
+//     tinh_tp!: string;
+// }
 
 /**
  * Represents a single validation error from the API.

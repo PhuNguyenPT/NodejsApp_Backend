@@ -3,6 +3,7 @@ import { ClassConstructor, plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
 import { NextFunction, Request, Response } from "express";
 
+import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 
 /**
@@ -40,19 +41,14 @@ function validateDTO<T extends object>(type: ClassConstructor<T>) {
             try {
                 // Transform the plain request body to an instance of the DTO class
                 const dto = plainToInstance(type, req.body, {
-                    enableImplicitConversion: true,
                     excludeExtraneousValues: false,
                 });
 
                 // Validate the DTO instance with strict settings
-                const errors: ValidationError[] = await validate(dto, {
-                    forbidNonWhitelisted: true,
-                    skipMissingProperties: false,
-                    skipNullProperties: false,
-                    skipUndefinedProperties: false,
-                    stopAtFirstError: false,
-                    whitelist: true,
-                });
+                const errors: ValidationError[] = await validate(
+                    dto,
+                    DEFAULT_VALIDATOR_OPTIONS,
+                );
 
                 if (errors.length > 0) {
                     const formattedErrors = formatValidationErrors(errors);

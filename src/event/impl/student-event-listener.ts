@@ -1,9 +1,12 @@
+import { plainToInstance } from "class-transformer";
+import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
 import { RedisClientType } from "redis";
 import { DataSource, EntityManager, In, IsNull } from "typeorm";
 import { Logger } from "winston";
 
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config.js";
+import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
 import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
 import { StudentInfoDTO } from "@/dto/student/student-dto.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
@@ -22,7 +25,6 @@ import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { CacheKeys } from "@/util/cache-key.js";
 import { ExamScenario, PredictionUtil } from "@/util/prediction.util.js";
-import { validateAndTransformSync } from "@/util/validation.util.js";
 
 import { IStudentEventListener } from "../student-event-listener.interface.js";
 import {
@@ -267,10 +269,12 @@ export class StudentEventListener implements IStudentEventListener {
                 );
             }
 
-            const studentInfoDTO: StudentInfoDTO = validateAndTransformSync(
+            const studentInfoDTO: StudentInfoDTO = plainToInstance(
                 StudentInfoDTO,
                 studentEntity,
+                { excludeExtraneousValues: true },
             );
+            await validate(studentInfoDTO, DEFAULT_VALIDATOR_OPTIONS);
 
             if (studentInfoDTO.hasValidNationalExam()) {
                 newAdmissionsToAdd = this.filterAdmissionsByStudentInfoDTO(
