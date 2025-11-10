@@ -47,25 +47,4 @@ export class PredictionResultService implements IPredictionResultService {
         }
         return predictionResultEntity;
     }
-
-    public async getPredictionResultEntityByStudentIdAndUserId(
-        studentId: string,
-        userId?: string,
-    ): Promise<PredictionResultEntity> {
-        this.logger.info("Fetching Prediction Result...", {
-            studentId,
-            userId,
-        });
-
-        const predictionResultEntity: PredictionResultEntity =
-            await this.findByStudentIdAndUserId(studentId, userId);
-
-        this.logger.info("Prediction result found successfully", {
-            resultId: predictionResultEntity.id,
-            studentId,
-            userId,
-        });
-
-        return predictionResultEntity;
-    }
 }
