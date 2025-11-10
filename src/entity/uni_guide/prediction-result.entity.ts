@@ -73,7 +73,4 @@ export class PredictionResultEntity {
 
     @Column({ insert: false, nullable: true, type: "varchar", update: true })
     updatedBy!: string;
-
-    @Column({ nullable: true, type: "uuid" })
-    userId?: string;
 }

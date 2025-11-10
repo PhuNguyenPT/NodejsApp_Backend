@@ -5,8 +5,4 @@ export interface IPredictionResultService {
         studentId: string,
         userId?: string,
     ): Promise<PredictionResultEntity>;
-    getPredictionResultEntityByStudentIdAndUserId(
-        studentId: string,
-        userId?: string,
-    ): Promise<PredictionResultEntity>;
 }

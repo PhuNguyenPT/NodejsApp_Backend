@@ -192,7 +192,7 @@ export class PredictionController extends Controller {
         const user: Express.User = request.user;
 
         const predictionResultEntity: PredictionResultEntity =
-            await this.predictionResultService.getPredictionResultEntityByStudentIdAndUserId(
+            await this.predictionResultService.findByStudentIdAndUserId(
                 studentId,
                 user.id,
             );
@@ -222,7 +222,7 @@ export class PredictionController extends Controller {
         @Path() studentId: string,
     ): Promise<PredictionResultResponse> {
         const predictionResultEntity: PredictionResultEntity =
-            await this.predictionResultService.getPredictionResultEntityByStudentIdAndUserId(
+            await this.predictionResultService.findByStudentIdAndUserId(
                 studentId,
             );
 
