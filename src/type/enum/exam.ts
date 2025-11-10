@@ -120,7 +120,7 @@ export function validateExamTypeScore(
 
     // Handle JLPT separately
     if (examType === ExamType.JLPT) {
-        const validJLPTGrades = ["N1", "N2", "N3"];
+        const validJLPTGrades = ["N1", "N2", "N3", "N4", "N5"];
         if (!validJLPTGrades.includes(level.toUpperCase())) {
             setErrorMessage(
                 `Level must be one of: ${validJLPTGrades.join(", ")}`,
