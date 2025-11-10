@@ -234,7 +234,7 @@ export class PredictionL2Service implements IPredictionL2Service {
                                 ...baseTemplate,
                                 diem_ccta: "0", // Default value when no certification
                                 diem_chuan: scenario.diem_chuan,
-                                nhom_nganh: parseInt(majorCode, 10),
+                                nhom_nganh: majorCode,
                                 ten_ccta: "0", // 0 indicates no certification
                                 to_hop_mon: scenario.to_hop_mon,
                             } as UserInputL2;
@@ -301,7 +301,7 @@ export class PredictionL2Service implements IPredictionL2Service {
                                 ...baseTemplate,
                                 diem_ccta: cert[config.scoreField], // Dynamic field access
                                 diem_chuan: scenario.diem_chuan,
-                                nhom_nganh: parseInt(majorCode, 10),
+                                nhom_nganh: majorCode,
                                 ten_ccta: config.certName,
                                 to_hop_mon: scenario.to_hop_mon,
                             } as UserInputL2;

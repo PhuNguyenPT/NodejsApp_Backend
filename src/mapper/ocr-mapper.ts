@@ -1,6 +1,6 @@
 import { plainToInstance } from "class-transformer";
 
-import { OcrResultResponse } from "@/dto/predict/ocr.js";
+import { OcrResultResponse } from "@/dto/ocr/ocr.js";
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 
 export const OcrResultMapper = {

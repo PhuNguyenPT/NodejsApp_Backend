@@ -1,4 +1,4 @@
-import { Expose, Type } from "class-transformer";
+import { Expose, Transform, Type } from "class-transformer";
 import {
     IsArray,
     IsEnum,
@@ -29,10 +29,12 @@ export enum HsgSubject {
     TOAN = "Toán",
     VAN = "Văn",
 }
+
 /**
  * HTTP validation error that wraps multiple validation issues.
  */
 export class HTTPValidationError {
+    @Expose()
     @IsArray()
     @Type(() => ValidationError)
     @ValidateNested({ each: true })
@@ -43,7 +45,9 @@ export class HTTPValidationError {
  * Batch request for L1 predictions - contains multiple User Inputs L1 for initial prioritization.
  */
 export class L1BatchRequest {
+    @Expose()
     @IsArray()
+    @IsNotEmpty()
     @Type(() => UserInputL1)
     @ValidateNested({ each: true })
     items!: UserInputL1[];
@@ -89,6 +93,7 @@ export class L1PredictResult {
  */
 export class L2BatchRequest {
     @IsArray()
+    @IsNotEmpty()
     @Type(() => UserInputL2)
     @ValidateNested({ each: true })
     items!: UserInputL2[];
@@ -135,13 +140,23 @@ export class UserInputL1 {
      * Hero of the People's Armed Forces (Anh hùng LLVT)
      * 1: Yes, 0: No
      */
+    @Expose()
     @IsIn([0, 1])
     @IsInt()
-    ahld?: number = 0;
+    @Transform(({ value }) => {
+        if (typeof value === "number") return value;
+        if (typeof value === "string") {
+            const parsed = parseInt(value);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+        return 0;
+    })
+    ahld!: number;
 
     /**
      * University type: 1 for public (Công lập), 0 for private (Tư thục)
      */
+    @Expose()
     @IsIn([0, 1])
     @IsInt()
     cong_lap!: number;
@@ -150,22 +165,41 @@ export class UserInputL1 {
      * Ethnic minority (Dân tộc thiểu số)
      * 1: Yes, 0: No
      */
+    @Expose()
     @IsIn([0, 1])
     @IsInt()
-    dan_toc_thieu_so?: number = 0;
+    @Transform(({ value }) => {
+        if (typeof value === "number") return value;
+        if (typeof value === "string") {
+            const parsed = parseInt(value);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+        return 0;
+    })
+    dan_toc_thieu_so!: number;
 
     /**
      * From one of the 50 poor districts (50 huyện nghèo/TNB)
      * 1: Yes, 0: No
      */
+    @Expose()
     @IsIn([0, 1])
     @IsInt()
-    haimuoi_huyen_ngheo_tnb?: number = 0;
+    @Transform(({ value }) => {
+        if (typeof value === "number") return value;
+        if (typeof value === "string") {
+            const parsed = parseInt(value);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+        return 0;
+    })
+    haimuoi_huyen_ngheo_tnb!: number;
 
     /**
      * Expected tuition fee for the program (VND per year)
      * @example 10000000 (10 million VND)
      */
+    @Expose()
     @IsInt()
     @Min(0)
     hoc_phi!: number;
@@ -174,6 +208,7 @@ export class UserInputL1 {
      * National Excellent Student Award - First Prize Subject
      * @example "Toán"
      */
+    @Expose()
     @IsEnum(HsgSubject)
     @IsOptional()
     @IsString()
@@ -183,6 +218,7 @@ export class UserInputL1 {
      * National Excellent Student Award - Second Prize Subject
      * @example "Lý"
      */
+    @Expose()
     @IsEnum(HsgSubject)
     @IsOptional()
     @IsString()
@@ -192,6 +228,7 @@ export class UserInputL1 {
      * National Excellent Student Award - Third Prize Subject
      * @example "Tin"
      */
+    @Expose()
     @IsEnum(HsgSubject)
     @IsOptional()
     @IsString()
@@ -201,6 +238,7 @@ export class UserInputL1 {
      * Major group code
      * @example 714, 732
      */
+    @Expose()
     @IsInt()
     nhom_nganh!: number;
 
@@ -208,7 +246,7 @@ export class UserInputL1 {
      * Province/City name
      * @example "TP. Hồ Chí Minh", "Hà Nội"
      */
-    @IsNotEmpty()
+    @Expose()
     @IsString()
     tinh_tp!: string;
 }
@@ -239,6 +277,7 @@ export class UserInputL2 {
     /**
      * University type: 1 for public (Công lập), 0 for private (Tư thục)
      */
+    @Expose()
     @IsIn([0, 1])
     @IsInt()
     cong_lap!: number;
@@ -247,6 +286,7 @@ export class UserInputL2 {
      * English certificate score/level (optional)
      * @example "B2", "6.5", "750"
      */
+    @Expose()
     @IsOptional()
     @IsString()
     diem_ccta?: string;
@@ -254,6 +294,7 @@ export class UserInputL2 {
     /**
      * Actual test score or benchmark score achieved by the student
      */
+    @Expose()
     @IsNumber()
     @Min(0)
     diem_chuan!: number;
@@ -261,6 +302,7 @@ export class UserInputL2 {
     /**
      * Average Conduct for grade 10: 1=GOOD (Tốt), 2=SATISFACTORY (Khá), 3=PASSED (Đạt), 4=NOT_PASSED (Chưa đạt)
      */
+    @Expose()
     @IsIn([1, 2, 3, 4])
     @IsInt()
     hk10!: number;
@@ -268,6 +310,7 @@ export class UserInputL2 {
     /**
      * Average Conduct for grade 11: 1=GOOD (Tốt), 2=SATISFACTORY (Khá), 3=PASSED (Đạt), 4=NOT_PASSED (Chưa đạt)
      */
+    @Expose()
     @IsIn([1, 2, 3, 4])
     @IsInt()
     hk11!: number;
@@ -275,6 +318,7 @@ export class UserInputL2 {
     /**
      * Average Conduct for grade 12: 1=GOOD (Tốt), 2=SATISFACTORY (Khá), 3=PASSED (Đạt), 4=NOT_PASSED (Chưa đạt)
      */
+    @Expose()
     @IsIn([1, 2, 3, 4])
     @IsInt()
     hk12!: number;
@@ -282,6 +326,7 @@ export class UserInputL2 {
     /**
      * Academic performance grade 10: 1=GOOD (Giỏi), 2=SATISFACTORY (Khá), 3=PASSED (Đạt), 4=NOT_PASSED (Chưa Đạt)
      */
+    @Expose()
     @IsIn([1, 2, 3, 4])
     @IsInt()
     hl10!: number;
@@ -289,6 +334,7 @@ export class UserInputL2 {
     /**
      * Academic performance grade 11: 1=GOOD (Giỏi), 2=SATISFACTORY (Khá), 3=PASSED (Đạt), 4=NOT_PASSED (Chưa Đạt)
      */
+    @Expose()
     @IsIn([1, 2, 3, 4])
     @IsInt()
     hl11!: number;
@@ -296,6 +342,7 @@ export class UserInputL2 {
     /**
      * Academic performance grade 12: 1=GOOD (Giỏi), 2=SATISFACTORY (Khá), 3=PASSED (Đạt), 4=NOT_PASSED (Chưa Đạt)
      */
+    @Expose()
     @IsIn([1, 2, 3, 4])
     @IsInt()
     hl12!: number;
@@ -304,6 +351,7 @@ export class UserInputL2 {
      * Expected tuition fee for the program (VND per year)
      * @example 10000000 (10 million VND)
      */
+    @Expose()
     @IsInt()
     @Min(0)
     hoc_phi!: number;
@@ -312,6 +360,7 @@ export class UserInputL2 {
      * Major group code
      * @example 714, 732
      */
+    @Expose()
     @IsInt()
     nhom_nganh!: number;
 
@@ -319,6 +368,7 @@ export class UserInputL2 {
      * Name of English certificate (optional)
      * @example "IELTS", "TOEFL", "TOEIC"
      */
+    @Expose()
     @IsOptional()
     @IsString()
     ten_ccta?: string;
@@ -327,6 +377,7 @@ export class UserInputL2 {
      * Province/City name
      * @example "TP. Hồ Chí Minh", "Hà Nội"
      */
+    @Expose()
     @IsNotEmpty()
     @IsString()
     tinh_tp!: string;
@@ -335,24 +386,11 @@ export class UserInputL2 {
      * Subject combination code
      * @example "D01", "A00", "VNUHCM"
      */
+    @Expose()
     @IsNotEmpty()
     @IsString()
     to_hop_mon!: string;
 }
-
-// export class UserInputL3 {
-//     @IsIn([0, 1])
-//     @IsNotEmpty()
-//     cong_lap!: number;
-
-//     @IsInt()
-//     @Min(0)
-//     hoc_phi!: number;
-
-//     @IsNotEmpty()
-//     @IsString()
-//     tinh_tp!: string;
-// }
 
 /**
  * Represents a single validation error from the API.
@@ -362,12 +400,14 @@ export class ValidationError {
      * Location path of the validation error in the request
      * @example ["body", "fieldName"] or ["query", 0]
      */
+    @Expose()
     @IsArray()
     loc!: (number | string)[];
 
     /**
      * Human-readable error message describing the validation issue
      */
+    @Expose()
     @IsString()
     msg!: string;
 
@@ -375,6 +415,7 @@ export class ValidationError {
      * Type/category of the validation error
      * @example "value_error", "type_error", "missing"
      */
+    @Expose()
     @IsString()
     type!: string;
 }

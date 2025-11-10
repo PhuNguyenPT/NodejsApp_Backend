@@ -13,7 +13,7 @@ import {
     ISubjectScore,
     ScoreExtractionResult,
     TranscriptSchema,
-} from "@/dto/predict/ocr.js";
+} from "@/dto/ocr/ocr.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { IMistralService } from "@/service/mistral-service.interface.js";

@@ -239,7 +239,7 @@ export class PredictionL1Service implements IPredictionL1Service {
                     // 3. Create the final input object with the numeric major code
                     allCombinations.push({
                         ...awardInput,
-                        nhom_nganh: parseInt(majorCode, 10),
+                        nhom_nganh: majorCode,
                     });
                 } else {
                     // Optional: Log a warning if a major cannot be mapped

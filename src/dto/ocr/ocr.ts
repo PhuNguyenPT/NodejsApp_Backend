@@ -9,9 +9,6 @@ export interface ISubjectScore {
     score: number;
 }
 
-export interface ITranscript {
-    subjects: ISubjectScore[];
-}
 export class SubjectScore implements ISubjectScore {
     @Expose()
     @IsEnum(TranscriptSubject)

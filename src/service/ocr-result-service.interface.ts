@@ -1,5 +1,5 @@
 import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.js";
-import { BatchScoreExtractionResult } from "@/dto/predict/ocr.js";
+import { BatchScoreExtractionResult } from "@/dto/ocr/ocr.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 export interface IOcrResultService {
