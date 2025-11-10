@@ -8,7 +8,7 @@ import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
     ISubjectScore,
-} from "@/dto/predict/ocr.js";
+} from "@/dto/ocr/ocr.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import {
     OcrMetadata,

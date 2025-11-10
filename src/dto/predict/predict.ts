@@ -362,12 +362,14 @@ export class ValidationError {
      * Location path of the validation error in the request
      * @example ["body", "fieldName"] or ["query", 0]
      */
+    @Expose()
     @IsArray()
     loc!: (number | string)[];
 
     /**
      * Human-readable error message describing the validation issue
      */
+    @Expose()
     @IsString()
     msg!: string;
 
@@ -375,6 +377,7 @@ export class ValidationError {
      * Type/category of the validation error
      * @example "value_error", "type_error", "missing"
      */
+    @Expose()
     @IsString()
     type!: string;
 }
