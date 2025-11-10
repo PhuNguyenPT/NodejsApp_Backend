@@ -98,21 +98,6 @@ export class StudentService implements IStudentService {
     ): Promise<Page<StudentEntity>> {
         const queryBuilder = this.studentRepository
             .createQueryBuilder("students")
-            .leftJoinAndSelect(
-                "students.academicPerformances",
-                "academicPerformances",
-            )
-            .leftJoinAndSelect("students.aptitudeExams", "aptitudeExams")
-            .leftJoinAndSelect("students.awards", "awards")
-            .leftJoinAndSelect("students.certifications", "certifications")
-            .leftJoinAndSelect("students.conducts", "conducts")
-            .leftJoinAndSelect(
-                "students.majorGroupsEntities",
-                "majorGroupsEntities",
-            )
-            .leftJoinAndSelect("students.nationalExams", "nationalExams")
-            .leftJoinAndSelect("students.talentExams", "talentExams")
-            .leftJoinAndSelect("students.vsatExams", "vsatExams")
             .where("students.userId = :userId", { userId });
 
         // Apply sorting in a cleaner way
