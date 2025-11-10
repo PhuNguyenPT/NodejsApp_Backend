@@ -29,30 +29,30 @@ export enum MajorGroup {
 export type MajorGroupKey = keyof typeof MajorGroup;
 
 export const MajorGroupCode = {
-    "714": "Khoa học giáo dục và đào tạo giáo viên",
-    "721": "Nghệ thuật",
-    "722": "Nhân văn",
-    "731": "Khoa học xã hội và hành vi",
-    "732": "Báo chí và thông tin",
-    "734": "Kinh doanh và quản lý",
-    "738": "Pháp luật",
-    "742": "Khoa học sự sống",
-    "744": "Khoa học tự nhiên",
-    "746": "Toán và thống kê",
-    "748": "Máy tính và công nghệ thông tin",
-    "751": "Công nghệ kỹ thuật",
-    "752": "Kỹ thuật",
-    "754": "Sản xuất và chế biến",
-    "758": "Kiến trúc và xây dựng",
-    "762": "Nông, lâm nghiệp và thủy sản",
-    "764": "Thú y",
-    "772": "Sức khỏe",
-    "776": "Dịch vụ xã hội",
-    "781": "Du lịch, khách sạn, thể thao và dịch vụ cá nhân",
-    "784": "Dịch vụ vận tải",
-    "785": "Môi trường và bảo vệ môi trường",
-    "786": "An ninh, Quốc phòng",
-    "790": "Khác",
+    714: "Khoa học giáo dục và đào tạo giáo viên",
+    721: "Nghệ thuật",
+    722: "Nhân văn",
+    731: "Khoa học xã hội và hành vi",
+    732: "Báo chí và thông tin",
+    734: "Kinh doanh và quản lý",
+    738: "Pháp luật",
+    742: "Khoa học sự sống",
+    744: "Khoa học tự nhiên",
+    746: "Toán và thống kê",
+    748: "Máy tính và công nghệ thông tin",
+    751: "Công nghệ kỹ thuật",
+    752: "Kỹ thuật",
+    754: "Sản xuất và chế biến",
+    758: "Kiến trúc và xây dựng",
+    762: "Nông, lâm nghiệp và thủy sản",
+    764: "Thú y",
+    772: "Sức khỏe",
+    776: "Dịch vụ xã hội",
+    781: "Du lịch, khách sạn, thể thao và dịch vụ cá nhân",
+    784: "Dịch vụ vận tải",
+    785: "Môi trường và bảo vệ môi trường",
+    786: "An ninh, Quốc phòng",
+    790: "Khác",
 } as const;
 
 // Type for major group codes
@@ -61,25 +61,30 @@ export type MajorGroupCodeKey = keyof typeof MajorGroupCode;
 // Helper function to get code by English key
 export function getCodeByEnglishKey(
     englishKey: MajorGroupKey,
-): string | undefined {
+): MajorGroupCodeKey | undefined {
     const vietnameseName = MajorGroup[englishKey];
-    return Object.keys(MajorGroupCode).find(
-        (key) => MajorGroupCode[key as MajorGroupCodeKey] === vietnameseName,
+    const foundKey = Object.keys(MajorGroupCode).find(
+        (key) =>
+            MajorGroupCode[Number(key) as MajorGroupCodeKey] === vietnameseName,
     );
+    return foundKey ? (Number(foundKey) as MajorGroupCodeKey) : undefined;
 }
 
 // Helper function to get code by Vietnamese name
 export function getCodeByVietnameseName(
     vietnameseName: string,
-): string | undefined {
-    return Object.keys(MajorGroupCode).find(
-        (key) => MajorGroupCode[key as MajorGroupCodeKey] === vietnameseName,
+): MajorGroupCodeKey | undefined {
+    const foundKey = Object.keys(MajorGroupCode).find(
+        (key) =>
+            MajorGroupCode[Number(key) as MajorGroupCodeKey] === vietnameseName,
     );
+    return foundKey ? (Number(foundKey) as MajorGroupCodeKey) : undefined;
 }
 
-// Helper function to get English key by code
-export function getEnglishKeyByCode(code: string): MajorGroupKey | undefined {
-    const vietnameseName = MajorGroupCode[code as MajorGroupCodeKey];
+export function getEnglishKeyByCode(
+    code: MajorGroupCodeKey,
+): MajorGroupKey | undefined {
+    const vietnameseName = MajorGroupCode[code];
     return Object.keys(MajorGroup).find(
         (key) => MajorGroup[key as MajorGroupKey] === vietnameseName,
     ) as MajorGroupKey | undefined;
@@ -94,9 +99,10 @@ export function getEnglishKeyByVietnameseName(
     return found?.[0];
 }
 
-// Helper function to get major group name by code
-export function getMajorGroupByCode(code: string): string | undefined {
-    return MajorGroupCode[code as MajorGroupCodeKey];
+export function getMajorGroupByCode(
+    code: MajorGroupCodeKey,
+): string | undefined {
+    return MajorGroupCode[code];
 }
 
 // Helper function to get all major group keys (equivalent to Object.keys but typed)
