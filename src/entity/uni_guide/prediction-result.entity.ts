@@ -10,7 +10,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
+import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
+import { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
 export enum PredictionResultStatus {

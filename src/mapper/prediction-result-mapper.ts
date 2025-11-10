@@ -1,6 +1,6 @@
 import { plainToInstance } from "class-transformer";
 
-import { PredictionResultResponse } from "@/dto/predict/prediciton-result-response.js";
+import { PredictionResultResponse } from "@/dto/prediction/prediciton-result-response.dto.js";
 import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
 
 export const PredictionResultMapper = {

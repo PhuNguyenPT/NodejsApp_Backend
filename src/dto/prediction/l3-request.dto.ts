@@ -11,6 +11,8 @@ import {
     ValidateNested,
 } from "class-validator";
 
+import { MajorGroupCodes } from "@/type/enum/major.js";
+
 const ToTwoDecimals = () =>
     Transform(({ value }: { value: unknown }) => {
         if (value === null || value === undefined) return value;
@@ -398,9 +400,9 @@ export class UserInputL3 {
     nang_khieu?: NangKhieuScore;
 
     @Expose()
-    @IsNotEmpty()
-    @IsString()
-    nhom_nganh!: string;
+    @IsIn(MajorGroupCodes)
+    @IsInt()
+    nhom_nganh!: number;
 
     @Expose()
     @IsIn([0, 1, 2])

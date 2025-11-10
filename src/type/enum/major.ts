@@ -57,6 +57,7 @@ export const MajorGroupCode = {
 
 // Type for major group codes
 export type MajorGroupCodeKey = keyof typeof MajorGroupCode;
+export const MajorGroupCodes = Object.keys(MajorGroupCode).map(Number);
 
 // Helper function to get code by English key
 export function getCodeByEnglishKey(

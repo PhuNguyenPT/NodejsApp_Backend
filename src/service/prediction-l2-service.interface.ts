@@ -1,4 +1,5 @@
-import { L2PredictResult, UserInputL2 } from "@/dto/predict/predict.js";
+import { UserInputL2 } from "@/dto/prediction/l2-request.dto.js";
+import { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
 import { StudentInfoDTO } from "@/dto/student/student-dto.js";
 
 export interface IPredictionL2Service {

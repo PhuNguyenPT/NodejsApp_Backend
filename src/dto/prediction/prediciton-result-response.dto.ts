@@ -1,7 +1,9 @@
 import { Expose, Type } from "class-transformer";
 
-import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
 import { PredictionResultStatus } from "@/entity/uni_guide/prediction-result.entity.js";
+
+import { L1PredictResult } from "./l1-response.dto.js";
+import { L2PredictResult } from "./l2-response.dto.js";
 
 export class PredictionResultResponse {
     @Expose()
