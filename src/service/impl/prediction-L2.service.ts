@@ -10,9 +10,9 @@ import { PredictionModelServiceConfig } from "@/config/prediction-model.config.j
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
 import {
     L2BatchRequest,
-    L2PredictResult,
     UserInputL2,
-} from "@/dto/predict/predict.js";
+} from "@/dto/prediction/l2-request.dto.js";
+import { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
 import { AcademicPerformanceDTO } from "@/dto/student/academic-performance-dto.js";
 import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";

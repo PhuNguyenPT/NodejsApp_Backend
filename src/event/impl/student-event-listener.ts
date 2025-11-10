@@ -7,7 +7,8 @@ import { Logger } from "winston";
 
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config.js";
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
-import { L1PredictResult, L2PredictResult } from "@/dto/predict/predict.js";
+import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
+import { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
 import { StudentInfoDTO } from "@/dto/student/student-dto.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";

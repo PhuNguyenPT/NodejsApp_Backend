@@ -8,12 +8,12 @@ import { Logger } from "winston";
 
 import { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
+import { HsgSubject } from "@/dto/prediction/hsg-subject.enum.js";
 import {
-    HsgSubject,
     L1BatchRequest,
-    L1PredictResult,
     UserInputL1,
-} from "@/dto/predict/predict.js";
+} from "@/dto/prediction/l1-request.dto.js";
+import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
 import { AwardDTO } from "@/dto/student/award-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student-dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";

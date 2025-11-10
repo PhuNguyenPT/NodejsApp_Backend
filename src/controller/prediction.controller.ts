@@ -16,12 +16,10 @@ import {
 } from "tsoa";
 import { Logger } from "winston";
 
-import { PredictionResultResponse } from "@/dto/predict/prediciton-result-response.js";
-import {
-    L1PredictResult,
-    L2PredictResult,
-    UserInputL2,
-} from "@/dto/predict/predict.js";
+import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
+import { UserInputL2 } from "@/dto/prediction/l2-request.dto.js";
+import { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
+import { PredictionResultResponse } from "@/dto/prediction/prediciton-result-response.dto.js";
 import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
 import { PredictionResultMapper } from "@/mapper/prediction-result-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";

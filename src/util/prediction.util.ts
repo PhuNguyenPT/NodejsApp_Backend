@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 
-import { HTTPValidationError } from "@/dto/predict/predict.js";
+import { HTTPValidationError } from "@/dto/prediction/validation-error.dto.js";
 import { AptitudeExamDTO } from "@/dto/student/aptitude-exam-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student-dto.js";
 import { ExamType } from "@/type/enum/exam.js";
