@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { IsNull, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import { Logger } from "winston";
 
 import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
@@ -22,15 +22,27 @@ export class PredictionResultService implements IPredictionResultService {
     ): Promise<PredictionResultEntity> {
         const predictionResultEntity: null | PredictionResultEntity =
             await this.predictionResultEntityRepository.findOne({
+                relations: ["student"],
                 where: {
                     studentId: studentId,
-                    userId: userId ?? IsNull(),
                 },
             });
 
         if (!predictionResultEntity) {
             throw new EntityNotFoundException(
                 `Prediction Result not found for Student Profile id ${studentId}`,
+            );
+        }
+
+        const studentOwnerId = predictionResultEntity.student.userId;
+
+        if (
+            // Access is unauthorized if:
+            (userId && studentOwnerId !== userId) || // 1. Authenticated user doesn't own the profile
+            (!userId && studentOwnerId) // 2. Guest user tries to access an owned profile
+        ) {
+            throw new EntityNotFoundException(
+                `Prediction Result not found for student id ${studentId}`,
             );
         }
         return predictionResultEntity;
