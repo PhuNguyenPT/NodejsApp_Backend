@@ -15,7 +15,10 @@ import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.ent
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { IAdmissionService } from "@/service/admission-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
-import { isValidSubjectGroupKey, SUBJECT_GROUPS } from "@/type/enum/subject.js";
+import {
+    getGroupSubjects,
+    isValidSubjectGroupKey,
+} from "@/type/enum/subject.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { PageImpl } from "@/type/pagination/page-impl.js";
 import { PageRequest } from "@/type/pagination/page-request.js";
@@ -542,7 +545,13 @@ export class AdmissionService implements IAdmissionService {
             return null;
         }
 
-        const requiredSubjects = SUBJECT_GROUPS[subjectCombination];
+        // Get subjects for this group (works for both standard and user-defined groups)
+        const requiredSubjects = getGroupSubjects(subjectCombination);
+
+        // Safety check (should never happen if isValidSubjectGroupKey returned true)
+        if (!requiredSubjects) {
+            return null;
+        }
 
         // Calculate total
         let totalScore = 0;

@@ -115,7 +115,7 @@ export class NationalExam {
 export class TalentExam {
     /**
      * Talent subject name - restricted to talent subjects only
-     * @example "Đọc kể diễn cảm"
+     * @example "Đọc diễn cảm"
      */
     @Expose()
     @IsEnum(TalentExamSubjects, {
