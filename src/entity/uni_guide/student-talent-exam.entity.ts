@@ -13,7 +13,7 @@ import {
 import {
     TalentExamSubject,
     TalentExamSubjects,
-} from "@/type/enum/talent-exam.js";
+} from "@/type/enum/talent-exam-subject.js";
 
 import { StudentEntity } from "./student.entity.js";
 

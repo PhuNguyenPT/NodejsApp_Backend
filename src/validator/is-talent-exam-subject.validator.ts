@@ -8,7 +8,7 @@ import { ExamSubject } from "@/dto/student/exam.dto.js";
 import {
     isTalentExamSubjects,
     TalentExamSubjects,
-} from "@/type/enum/talent-exam.js";
+} from "@/type/enum/talent-exam-subject.js";
 
 export function IsTalentSubject(validationOptions?: ValidationOptions) {
     return function (object: object, propertyName: string) {
