@@ -3,7 +3,7 @@ import {
     CEFR,
     CertificationEntity,
 } from "@/entity/uni_guide/certification.entity.js";
-import { ExamType } from "@/type/enum/exam.js";
+import { ExamType } from "@/type/enum/exam-type.js";
 
 export interface ICertificationService {
     createCertificationEntities(

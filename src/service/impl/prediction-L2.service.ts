@@ -24,7 +24,7 @@ import {
     getRankByAcademicPerformance,
 } from "@/type/enum/academic-performance.js";
 import { Conduct, getRankByConduct } from "@/type/enum/conduct.js";
-import { ExamType } from "@/type/enum/exam.js";
+import { ExamType } from "@/type/enum/exam-type.js";
 import { getCodeByVietnameseName } from "@/type/enum/major.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";

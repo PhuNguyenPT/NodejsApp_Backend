@@ -5,7 +5,7 @@ import {
 } from "class-validator";
 
 import { AptitudeExamRequest } from "@/dto/student/aptitude-exam-request.js";
-import { validateExamTypeScore } from "@/type/enum/exam.js";
+import { validateExamTypeScore } from "@/type/enum/exam-type.js";
 
 /**
  * Custom validator constraint for Aptitude Test scores.

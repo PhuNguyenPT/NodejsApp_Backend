@@ -12,7 +12,7 @@ import {
     ExamType,
     handleExamValidation,
     isCCNNType,
-} from "@/type/enum/exam.js";
+} from "@/type/enum/exam-type.js";
 import { Role } from "@/type/enum/user.js";
 
 @injectable()

@@ -10,7 +10,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { ExamType } from "@/type/enum/exam.js";
+import { ExamType } from "@/type/enum/exam-type.js";
 
 import { StudentEntity } from "./student.entity.js";
 

@@ -9,7 +9,7 @@ import {
 } from "class-validator";
 
 import { CEFR } from "@/entity/uni_guide/certification.entity.js";
-import { ExamType } from "@/type/enum/exam.js";
+import { ExamType } from "@/type/enum/exam-type.js";
 import { IsValidCertificationExamTypeConstraint } from "@/validator/is-valid-exam-type.validator.js";
 
 /**
