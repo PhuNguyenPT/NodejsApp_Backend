@@ -7,7 +7,7 @@ import {
     Validate,
 } from "class-validator";
 
-import { ExamType } from "@/type/enum/exam.js";
+import { ExamType } from "@/type/enum/exam-type.js";
 import { IsValidExamLevelConstraint } from "@/validator/is-valid-exam-level.validator.js";
 import { IsValidCertificationExamTypeConstraint } from "@/validator/is-valid-exam-type.validator.js";
 

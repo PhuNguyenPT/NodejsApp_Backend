@@ -12,7 +12,7 @@ import {
 
 import {
     NationalExamSubject,
-    NationalExamSubjectEnum,
+    NationalExamSubjects,
 } from "@/type/enum/national-exam-subject.js";
 
 import { StudentEntity } from "./student.entity.js";
@@ -43,7 +43,7 @@ export class StudentNationalExamEntity {
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: string;
 
-    @Column({ enum: NationalExamSubjectEnum, name: "name", type: "enum" })
+    @Column({ enum: NationalExamSubjects, name: "name", type: "varchar" })
     @Expose()
     name!: NationalExamSubject;
 

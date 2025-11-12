@@ -10,7 +10,10 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { VietnameseSubject } from "@/type/enum/subject.js";
+import {
+    VsatExamSubject,
+    VsatExamSubjects,
+} from "@/type/enum/vsat-exam-subject.js";
 
 import { StudentEntity } from "./student.entity.js";
 
@@ -40,9 +43,9 @@ export class StudentVsatExamEntity {
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: string;
 
-    @Column({ enum: VietnameseSubject, name: "name", type: "enum" })
+    @Column({ enum: VsatExamSubjects, name: "name", type: "varchar" })
     @Expose()
-    name!: VietnameseSubject;
+    name!: VsatExamSubject;
 
     @Column({ name: "score", type: "decimal" })
     @Expose()

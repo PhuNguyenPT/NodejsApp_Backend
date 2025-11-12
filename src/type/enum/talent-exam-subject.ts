@@ -50,10 +50,6 @@ export const TalentExamSubjects = TalentExamSubjectsArray;
 // Export the type for TypeScript type checking
 export type TalentExamSubject = (typeof TalentExamSubjectsArray)[number];
 
-export const TalentExamSubjectEnum = Object.fromEntries(
-    TalentExamSubjectsArray.map((subject) => [subject, subject]),
-);
-
 /**
  * Check if a subject is a talent exam subject
  */

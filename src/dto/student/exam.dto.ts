@@ -9,7 +9,7 @@ import { VietnameseSubject } from "@/type/enum/subject.js"; // Import Vietnamese
 import {
     TalentExamSubject,
     TalentExamSubjects,
-} from "@/type/enum/talent-exam.js";
+} from "@/type/enum/talent-exam-subject.js";
 import {
     VsatExamSubject,
     VsatExamSubjects,

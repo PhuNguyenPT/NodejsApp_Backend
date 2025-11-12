@@ -12,8 +12,8 @@ import {
 
 import {
     TalentExamSubject,
-    TalentExamSubjectEnum,
-} from "@/type/enum/talent-exam.js";
+    TalentExamSubjects,
+} from "@/type/enum/talent-exam-subject.js";
 
 import { StudentEntity } from "./student.entity.js";
 
@@ -43,7 +43,7 @@ export class StudentTalentExamEntity {
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: string;
 
-    @Column({ enum: TalentExamSubjectEnum, name: "name", type: "enum" })
+    @Column({ enum: TalentExamSubjects, name: "name", type: "varchar" })
     @Expose()
     name!: TalentExamSubject;
 

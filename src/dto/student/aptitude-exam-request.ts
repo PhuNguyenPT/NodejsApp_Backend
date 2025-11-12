@@ -1,7 +1,7 @@
 import { Expose } from "class-transformer";
 import { IsNotEmpty, Validate } from "class-validator";
 
-import { ExamType } from "@/type/enum/exam.js";
+import { ExamType } from "@/type/enum/exam-type.js";
 import { IsValidAptitudeExamScoreConstraint } from "@/validator/is-valid-aptitude-exam-score.validator.js";
 import { IsValidDGNLExamTypeConstraint } from "@/validator/is-valid-exam-type.validator.js";
 

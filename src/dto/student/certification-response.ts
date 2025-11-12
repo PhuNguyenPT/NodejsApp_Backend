@@ -2,7 +2,7 @@ import { Expose } from "class-transformer";
 import { IsNotEmpty, IsOptional } from "class-validator";
 
 import { CEFR } from "@/entity/uni_guide/certification.entity.js";
-import { ExamType } from "@/type/enum/exam.js";
+import { ExamType } from "@/type/enum/exam-type.js";
 
 /**
  * Data Transfer Object for Certification response information

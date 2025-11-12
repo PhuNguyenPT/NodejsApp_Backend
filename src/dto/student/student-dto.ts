@@ -23,7 +23,7 @@ import {
     isCCNNType,
     isCCQTType,
     isDGNLType,
-} from "@/type/enum/exam.js";
+} from "@/type/enum/exam-type.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
