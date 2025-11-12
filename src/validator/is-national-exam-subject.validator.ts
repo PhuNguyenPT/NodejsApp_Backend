@@ -72,6 +72,26 @@ export function IsValidNationalExamSubjects(
                         return `${args.property} must have unique subject names`;
                     }
 
+                    // Check for invalid technology combination
+                    const electives = subjectNames.filter(
+                        (s) =>
+                            (s as VietnameseSubject) !==
+                                VietnameseSubject.TOAN &&
+                            (s as VietnameseSubject) !==
+                                VietnameseSubject.NGU_VAN,
+                    );
+
+                    if (
+                        electives.includes(
+                            VietnameseSubject.CONG_NGHE_CONG_NGHIEP,
+                        ) &&
+                        electives.includes(
+                            VietnameseSubject.CONG_NGHE_NONG_NGHIEP,
+                        )
+                    ) {
+                        return `${args.property} cannot contain both ${VietnameseSubject.CONG_NGHE_CONG_NGHIEP} and ${VietnameseSubject.CONG_NGHE_NONG_NGHIEP} as electives`;
+                    }
+
                     // Check if combination is valid
                     if (
                         !isValidCombination(subjectNames as VietnameseSubject[])
@@ -146,9 +166,21 @@ function isValidCombination(subjects: VietnameseSubject[]): boolean {
     );
 
     // Must have exactly 2 electives, both valid, and different from each other
-    return (
-        electives.length === 2 &&
-        electives[0] !== electives[1] &&
-        electives.every((s) => isNationalExamSubjects(s))
-    );
+    if (
+        electives.length !== 2 ||
+        electives[0] === electives[1] ||
+        !electives.every((s) => isNationalExamSubjects(s))
+    ) {
+        return false;
+    }
+
+    // Check that both technology subjects are not selected together
+    if (
+        electives.includes(VietnameseSubject.CONG_NGHE_CONG_NGHIEP) &&
+        electives.includes(VietnameseSubject.CONG_NGHE_NONG_NGHIEP)
+    ) {
+        return false;
+    }
+
+    return true;
 }
