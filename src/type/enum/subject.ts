@@ -5,6 +5,7 @@
 export enum VietnameseSubject {
     BIEU_DIEN_NGHE_THUAT = "Biểu diễn nghệ thuật",
     CHI_HUY_TAI_CHO = "Chỉ huy tại chỗ",
+    CHUNG_CHI_QUY_DOI_TIENG_ANH = "Chứng chỉ tiếng Anh (đã quy đổi điểm)",
     CHUYEN_MON_AM_NHAC = "Chuyên môn âm nhạc",
     CHUYEN_MON_AM_NHAC_1 = "Chuyên môn âm nhạc 1",
     CHUYEN_MON_AM_NHAC_2 = "Chuyên môn âm nhạc ",
@@ -31,10 +32,14 @@ export enum VietnameseSubject {
     NANG_KHIEU_2 = "Năng khiếu 2",
     NANG_KHIEU_AM_NHAC_1 = "Năng khiếu Âm nhạc 1 (Hát, xướng âm)",
     NANG_KHIEU_AM_NHAC_2 = "Năng khiếu Âm nhạc 2 (Thẩm âm, tiết tất)",
+    NANG_KHIEU_ANH_BAO_CHI = "Năng khiếu ảnh báo chí",
     NANG_KHIEU_BAO_CHI = "Năng khiếu báo chí",
+    NANG_KHIEU_BIEU_DIEN_NGHE_THUAT = "Năng khiếu Biểu diễn nghệ thuật",
+    NANG_KHIEU_KIEN_THUC_VAN_HOA_XA_HOI_NGHE_THUAT = "Năng khiếu Kiến thức văn hóa - xã hội - nghệ thuật",
     NANG_KHIEU_MAM_NON = "Năng khiếu Mầm non",
     NANG_KHIEU_MAM_NON_1 = "Năng khiếu Mầm non 1(Kể chuyện, đọc, diễn cảm)",
     NANG_KHIEU_MAM_NON_2 = "Năng khiếu Mầm non 2 (Hát)",
+    NANG_KHIEU_QUAY_PHIM_TRUYEN_HINH = "Năng khiếu quay phim truyền hình",
     NANG_KHIEU_SKDA_1 = "Năng khiếu SKĐA 1",
     NANG_KHIEU_SKDA_2 = "Năng khiếu SKĐA 2",
     NANG_KHIEU_TDTT = "Năng khiếu TDTT",
@@ -947,6 +952,133 @@ export const SUBJECT_GROUPS = {
         VietnameseSubject.NGU_VAN,
         VietnameseSubject.HOA_THANH,
         VietnameseSubject.CHI_HUY_TAI_CHO,
+    ],
+
+    // Khối R
+    R00: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.NANG_KHIEU_BAO_CHI,
+    ],
+    R01: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.DIA_LY,
+        VietnameseSubject.NANG_KHIEU_BIEU_DIEN_NGHE_THUAT,
+    ],
+    R02: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.NANG_KHIEU_BIEU_DIEN_NGHE_THUAT,
+    ],
+    R03: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.TIENG_ANH,
+        VietnameseSubject.NANG_KHIEU_BIEU_DIEN_NGHE_THUAT,
+    ],
+    R04: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.NANG_KHIEU_BIEU_DIEN_NGHE_THUAT,
+        VietnameseSubject.NANG_KHIEU_KIEN_THUC_VAN_HOA_XA_HOI_NGHE_THUAT,
+    ],
+    R05: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.TIENG_ANH,
+        VietnameseSubject.NANG_KHIEU_BAO_CHI,
+    ],
+    R06: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.KHOA_HOC_TU_NHIEN,
+        VietnameseSubject.NANG_KHIEU_BAO_CHI,
+    ],
+    R07: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.NANG_KHIEU_ANH_BAO_CHI,
+    ],
+    R08: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.TIENG_ANH,
+        VietnameseSubject.NANG_KHIEU_ANH_BAO_CHI,
+    ],
+    R09: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.KHOA_HOC_TU_NHIEN,
+        VietnameseSubject.NANG_KHIEU_ANH_BAO_CHI,
+    ],
+    R11: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.NANG_KHIEU_QUAY_PHIM_TRUYEN_HINH,
+    ],
+    R12: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.TIENG_ANH,
+        VietnameseSubject.NANG_KHIEU_QUAY_PHIM_TRUYEN_HINH,
+    ],
+    R13: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.KHOA_HOC_TU_NHIEN,
+        VietnameseSubject.NANG_KHIEU_QUAY_PHIM_TRUYEN_HINH,
+    ],
+    R15: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.NANG_KHIEU_BAO_CHI,
+    ],
+    R16: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.KHOA_HOC_XA_HOI,
+        VietnameseSubject.NANG_KHIEU_BAO_CHI,
+    ],
+    R17: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.KHOA_HOC_XA_HOI,
+        VietnameseSubject.NANG_KHIEU_ANH_BAO_CHI,
+    ],
+    R18: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.KHOA_HOC_XA_HOI,
+        VietnameseSubject.NANG_KHIEU_QUAY_PHIM_TRUYEN_HINH,
+    ],
+    R19: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.CHUNG_CHI_QUY_DOI_TIENG_ANH,
+        VietnameseSubject.NANG_KHIEU_BAO_CHI,
+    ],
+    R20: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.CHUNG_CHI_QUY_DOI_TIENG_ANH,
+        VietnameseSubject.NANG_KHIEU_ANH_BAO_CHI,
+    ],
+    R21: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.CHUNG_CHI_QUY_DOI_TIENG_ANH,
+        VietnameseSubject.NANG_KHIEU_QUAY_PHIM_TRUYEN_HINH,
+    ],
+    R22: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.CHUNG_CHI_QUY_DOI_TIENG_ANH,
+    ],
+    R23: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.LICH_SU,
+        VietnameseSubject.CHUNG_CHI_QUY_DOI_TIENG_ANH,
+    ],
+    R24: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.CHUNG_CHI_QUY_DOI_TIENG_ANH,
+    ],
+    R25: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.KHOA_HOC_TU_NHIEN,
+        VietnameseSubject.CHUNG_CHI_QUY_DOI_TIENG_ANH,
+    ],
+    R26: [
+        VietnameseSubject.NGU_VAN,
+        VietnameseSubject.KHOA_HOC_XA_HOI,
+        VietnameseSubject.CHUNG_CHI_QUY_DOI_TIENG_ANH,
     ],
 
     // Khối S
