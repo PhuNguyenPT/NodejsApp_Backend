@@ -5,11 +5,8 @@ import {
 } from "class-validator";
 
 import {
-    FOREIGN_LANGUAGES,
     isNationalExamSubjects,
     NationalExamSubjects,
-    NGOAI_NGU,
-    VALID_EXAM_COMBINATIONS,
 } from "@/type/enum/national-exam-subject.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
 
@@ -79,7 +76,7 @@ export function IsValidNationalExamSubjects(
                     if (
                         !isValidCombination(subjectNames as VietnameseSubject[])
                     ) {
-                        return `${args.property} is not a valid combination for Vietnamese high school graduation. The combination [${subjectNames.join(", ")}] is not among the ${VALID_EXAM_COMBINATIONS.length.toString()} approved combinations`;
+                        return `${args.property} is not a valid combination for Vietnamese high school graduation. Must include ${VietnameseSubject.TOAN} and ${VietnameseSubject.NGU_VAN}, plus 2 different valid elective subjects.`;
                     }
 
                     return `${args.property} validation failed`;
@@ -135,7 +132,7 @@ function hasNameProperty(obj: unknown): obj is { name: string } {
 function isValidCombination(subjects: VietnameseSubject[]): boolean {
     if (subjects.length !== 4) return false;
 
-    // Always ensure Toán and Ngữ Văn are present
+    // Check mandatory subjects
     if (
         !subjects.includes(VietnameseSubject.TOAN) ||
         !subjects.includes(VietnameseSubject.NGU_VAN)
@@ -143,26 +140,15 @@ function isValidCombination(subjects: VietnameseSubject[]): boolean {
         return false;
     }
 
-    // Normalize foreign languages in the input and sort for comparison
-    const normalizedSubjects = subjects.map(normalizeForeignLanguage).sort();
+    // Get the 2 elective subjects
+    const electives = subjects.filter(
+        (s) => s !== VietnameseSubject.TOAN && s !== VietnameseSubject.NGU_VAN,
+    );
 
-    // Check against all valid combinations
-    return VALID_EXAM_COMBINATIONS.some((validCombo) => {
-        const normalizedValidCombo = validCombo
-            .map((subject) => (subject === NGOAI_NGU ? NGOAI_NGU : subject))
-            .sort();
-        return (
-            JSON.stringify(normalizedSubjects) ===
-            JSON.stringify(normalizedValidCombo)
-        );
-    });
-}
-
-// Helper function to normalize foreign language subjects for comparison
-function normalizeForeignLanguage(
-    subject: VietnameseSubject,
-): typeof NGOAI_NGU | VietnameseSubject {
-    return (FOREIGN_LANGUAGES as readonly VietnameseSubject[]).includes(subject)
-        ? NGOAI_NGU
-        : subject;
+    // Must have exactly 2 electives, both valid, and different from each other
+    return (
+        electives.length === 2 &&
+        electives[0] !== electives[1] &&
+        electives.every((s) => isNationalExamSubjects(s))
+    );
 }

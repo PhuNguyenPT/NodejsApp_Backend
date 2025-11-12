@@ -309,7 +309,7 @@ export class StudentRequest {
      * Talent score representing the student's aptitude or potential
      * Optional field that can be used to indicate the student's talent level
      * Only accepts subjects that are valid talent exam subjects
-     * @example [{ "name": "Đọc kể diễn cảm", "score": 8.0 }, { "name": "Hát", "score": 7.0 }]
+     * @example [{ "name": "Đọc diễn cảm", "score": 8.0 }, { "name": "Hát", "score": 7.0 }]
      */
     @Expose()
     @IsArray()

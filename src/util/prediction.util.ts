@@ -6,8 +6,7 @@ import { StudentInfoDTO } from "@/dto/student/student-dto.js";
 import { ExamType } from "@/type/enum/exam.js";
 import {
     getAllPossibleSubjectGroups,
-    SUBJECT_GROUPS,
-    SubjectGroupKey,
+    getGroupSubjects,
     VietnameseSubject,
 } from "@/type/enum/subject.js";
 import { UniType } from "@/type/enum/uni-type.js";
@@ -178,32 +177,38 @@ export class PredictionUtil {
         // Get VSAT subjects and calculate possible subject groups from VSAT data
         const vsatSubjects: VietnameseSubject[] =
             studentInfoDTO.vsatExams?.map((exam) => exam.name) ?? [];
-        const vsatPossibleGroups: SubjectGroupKey[] =
+        const vsatPossibleGroups: string[] =
             getAllPossibleSubjectGroups(vsatSubjects);
 
-        // Filter to only the specified groups
-        const allowedVsatGroups: SubjectGroupKey[] = [
+        // Filter to only the specified groups (using Set for better type handling)
+        const allowedVsatGroups = new Set([
             "A00",
             "A01",
+            "C01",
             "D01",
             "D07",
-            "C01",
             "D10",
-        ];
+        ]);
 
         for (const subjectGroup of vsatPossibleGroups) {
-            if (!allowedVsatGroups.includes(subjectGroup)) {
+            if (!allowedVsatGroups.has(subjectGroup)) {
                 continue;
             }
 
-            const groupSubjects = SUBJECT_GROUPS[subjectGroup];
+            // Use getGroupSubjects which works for both standard and user-defined groups
+            const groupSubjects = getGroupSubjects(subjectGroup);
+
+            // Skip if group doesn't exist
+            if (!groupSubjects) {
+                continue;
+            }
 
             // Calculate the sum of scores for the 3 subjects in this group
             let totalScore = 0;
             let hasAllSubjects = true;
 
             for (const subject of groupSubjects) {
-                const score = vsatScoreMap.get(subject as VsatExamSubject);
+                const score = vsatScoreMap.get(subject);
                 if (score === undefined) {
                     hasAllSubjects = false;
                     break;
@@ -249,7 +254,13 @@ export class PredictionUtil {
         const subjectGroupScores: SubjectGroupScore[] = [];
 
         for (const groupName of possibleSubjectGroups) {
-            const groupSubjects = SUBJECT_GROUPS[groupName];
+            // Use getGroupSubjects which works for both standard and user-defined groups
+            const groupSubjects = getGroupSubjects(groupName);
+
+            // Skip if group doesn't exist
+            if (!groupSubjects) {
+                continue;
+            }
 
             const scoreBreakdown: {
                 score: number;
@@ -272,7 +283,7 @@ export class PredictionUtil {
                 subjectGroupScores.push({
                     groupName,
                     scoreBreakdown,
-                    subjects: [...groupSubjects],
+                    subjects: Array.from(groupSubjects), // Convert readonly array to mutable array
                     totalScore,
                 });
             }
