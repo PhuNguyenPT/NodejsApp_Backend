@@ -12,12 +12,14 @@ import { StudentNationalExamEntity } from "@/entity/uni_guide/student-national-e
 import { StudentTalentExamEntity } from "@/entity/uni_guide/student-talent-exam.entity.js";
 import { StudentVsatExamEntity } from "@/entity/uni_guide/student-vsat-exam.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-component.entity.js";
 import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
 import { StudentCreatedEvent } from "@/event/student.event.js";
 import { ICertificationService } from "@/service/certification-service.interface.js";
 import { IMajorService } from "@/service/major-service.interface.js";
 import { IStudentService } from "@/service/student-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
+import { ExamType } from "@/type/enum/exam-type.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -34,6 +36,8 @@ export class StudentService implements IStudentService {
         private readonly userRepository: Repository<UserEntity>,
         @inject(TYPES.StudentAptitudeExamRepository)
         private readonly studentAptitudeExamRepository: Repository<StudentAptitudeExamEntity>,
+        @inject(TYPES.VnuhcmScoreComponentRepository)
+        private readonly vnuhcmScoreComponentRepository: Repository<VnuhcmScoreComponentEntity>,
         @inject(TYPES.AwardRepository)
         private readonly awardRepository: Repository<AwardEntity>,
         @inject(TYPES.FileRepository)
@@ -235,6 +239,33 @@ export class StudentService implements IStudentService {
                         studentAptitudeTestEntity.createdBy = userEntity.email;
                     } else {
                         studentAptitudeTestEntity.createdBy ??= Role.ANONYMOUS;
+                    }
+
+                    if (
+                        aptitudeExamRequest.examType === ExamType.VNUHCM &&
+                        aptitudeExamRequest.languageScore &&
+                        aptitudeExamRequest.mathScore &&
+                        aptitudeExamRequest.scienceLogic &&
+                        aptitudeExamRequest.score ===
+                            aptitudeExamRequest.languageScore +
+                                aptitudeExamRequest.mathScore +
+                                aptitudeExamRequest.scienceLogic
+                    ) {
+                        const vnuhcmComponents: VnuhcmScoreComponentEntity =
+                            this.vnuhcmScoreComponentRepository.create({
+                                languageScore:
+                                    aptitudeExamRequest.languageScore,
+                                mathScore: aptitudeExamRequest.mathScore,
+                                scienceLogic: aptitudeExamRequest.scienceLogic,
+                            });
+
+                        if (userEntity) {
+                            vnuhcmComponents.createdBy = userEntity.email;
+                        } else {
+                            vnuhcmComponents.createdBy ??= Role.ANONYMOUS;
+                        }
+                        studentAptitudeTestEntity.vnuhcmScoreComponents =
+                            vnuhcmComponents;
                     }
                     return studentAptitudeTestEntity;
                 },

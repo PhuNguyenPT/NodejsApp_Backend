@@ -75,11 +75,14 @@ export class StudentRequest {
      * [
      *   {
      *     "examType": "VNUHCM",
-     *     "score": "700"
+     *     "score": 700,
+     *     "languageScore": 350,
+     *     "mathScore": 200,
+     *     "scienceLogic": 150
      *   },
      *   {
      *     "examType": "HSA",
-     *     "score": "90"
+     *     "score": 90
      *   }
      * ]
      */
@@ -271,7 +274,7 @@ export class StudentRequest {
      */
     @Expose()
     @IsValidNationalExamSubjects()
-    @Type(() => NationalExam) // Changed from ExamSubject to NationalExam
+    @Type(() => NationalExam)
     @ValidateNested({ each: true })
     nationalExams!: NationalExam[];
 
