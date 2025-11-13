@@ -222,7 +222,7 @@ export class StudentService implements IStudentService {
         studentEntity.createdBy = userEntity
             ? userEntity.email
             : Role.ANONYMOUS;
-        studentEntity.userId = userEntity ? userEntity.id : undefined;
+        studentEntity.user = userEntity ?? undefined;
 
         if (
             studentRequest.aptitudeExams &&
@@ -234,7 +234,6 @@ export class StudentService implements IStudentService {
                         this.studentAptitudeExamRepository.create(
                             aptitudeExamRequest,
                         );
-                    studentAptitudeTestEntity.student = studentEntity;
                     if (userEntity) {
                         studentAptitudeTestEntity.createdBy = userEntity.email;
                     } else {
@@ -252,12 +251,9 @@ export class StudentService implements IStudentService {
                                 aptitudeExamRequest.scienceLogic
                     ) {
                         const vnuhcmComponents: VnuhcmScoreComponentEntity =
-                            this.vnuhcmScoreComponentRepository.create({
-                                languageScore:
-                                    aptitudeExamRequest.languageScore,
-                                mathScore: aptitudeExamRequest.mathScore,
-                                scienceLogic: aptitudeExamRequest.scienceLogic,
-                            });
+                            this.vnuhcmScoreComponentRepository.create(
+                                aptitudeExamRequest,
+                            );
 
                         if (userEntity) {
                             vnuhcmComponents.createdBy = userEntity.email;
@@ -276,7 +272,6 @@ export class StudentService implements IStudentService {
             studentEntity.awards = studentRequest.awards.map((awardRequest) => {
                 const awardEntity: AwardEntity =
                     this.awardRepository.create(awardRequest);
-                awardEntity.student = studentEntity;
                 if (userEntity) {
                     awardEntity.createdBy = userEntity.email;
                 } else {
