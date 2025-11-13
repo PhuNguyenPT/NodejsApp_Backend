@@ -24,7 +24,6 @@ import { UniType } from "@/type/enum/uni-type.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese-provinces.js";
 import { IsArrayUnique } from "@/validator/is-array-unique.validator.js";
 import { IsValidNationalExamSubjects } from "@/validator/is-national-exam-subject.validator.js";
-import { IsUniqueSubject } from "@/validator/is-unique-name.validator.js";
 
 export class StudentRequest {
     /**
@@ -51,15 +50,12 @@ export class StudentRequest {
      *   }
      * ]
      */
-    @ArrayMaxSize(3, {
-        message: "Academic performances must contain exactly 3 records",
-    })
-    @ArrayMinSize(3, {
-        message: "Academic performances must contain exactly 3 records",
-    })
+    @ArrayMaxSize(3)
+    @ArrayMinSize(3)
     @Expose()
-    @IsArray({ message: "Academic performances must be an array" })
-    @IsNotEmpty({ message: "Academic performances is required" })
+    @IsArray()
+    @IsArrayUnique("grade")
+    @IsNotEmpty()
     @Type(() => AcademicPerformanceRequest)
     @ValidateNested({ each: true })
     academicPerformances!: AcademicPerformanceRequest[];
@@ -86,11 +82,10 @@ export class StudentRequest {
      *   }
      * ]
      */
-    @ArrayMaxSize(3, {
-        message: "Aptitude test scores must contain at most 3 awards",
-    })
+    @ArrayMaxSize(3)
     @Expose()
-    @IsArray({ message: "Aptitude test scores must be an array" })
+    @IsArray()
+    @IsArrayUnique("examType")
     @IsOptional()
     @Type(() => AptitudeExamRequest)
     @ValidateNested({ each: true })
@@ -118,11 +113,10 @@ export class StudentRequest {
      *   }
      * ]
      */
-    @ArrayMaxSize(3, {
-        message: "Awards must contain at most 3 awards",
-    })
+    @ArrayMaxSize(3)
     @Expose()
-    @IsArray({ message: "Awards must be an array" })
+    @IsArray()
+    @IsArrayUnique()
     @IsOptional()
     @Type(() => AwardRequest)
     @ValidateNested({ each: true })
@@ -148,11 +142,10 @@ export class StudentRequest {
      *   }
      * ]
      */
-    @ArrayMaxSize(3, {
-        message: "Certifications must contain at most 3 certifications",
-    })
+    @ArrayMaxSize(3)
     @Expose()
-    @IsArray({ message: "Certifications must be an array" })
+    @IsArray()
+    @IsArrayUnique("examType")
     @IsOptional()
     @Type(() => CertificationRequest)
     @ValidateNested({ each: true })
@@ -187,15 +180,12 @@ export class StudentRequest {
      * - Each ConductDTO must have valid conduct enum value and grade (1-12)
      * - Array cannot be empty
      */
-    @ArrayMaxSize(3, {
-        message: "Conduct must contain exactly 3 records",
-    })
-    @ArrayMinSize(3, {
-        message: "Conduct must contain exactly 3 records",
-    })
+    @ArrayMaxSize(3)
+    @ArrayMinSize(3)
     @Expose()
-    @IsArray({ message: "Conduct must be an array" })
-    @IsNotEmpty({ message: "Conduct is required" })
+    @IsArray()
+    @IsArrayUnique("grade")
+    @IsNotEmpty()
     @Type(() => ConductRequest)
     @ValidateNested({ each: true })
     conducts!: ConductRequest[];
@@ -217,15 +207,15 @@ export class StudentRequest {
      * - Maximum 3 major groups allowed
      * - Minimum 1 major group required
      */
-    @ArrayMaxSize(3, { message: "Major groups must contain at most 3 records" })
-    @ArrayMinSize(1, { message: "Major groups must contain at least 1 record" })
+    @ArrayMaxSize(3)
+    @ArrayMinSize(1)
     @Expose()
-    @IsArray({ message: "Major groups must be an array" })
-    @IsArrayUnique({ message: "Major groups must be unique" })
+    @IsArray()
+    @IsArrayUnique()
     @IsEnum(MajorGroup, {
         each: true,
     })
-    @IsNotEmpty({ message: "Major groups are required" })
+    @IsNotEmpty()
     majors!: MajorGroup[];
 
     /**
@@ -242,9 +232,9 @@ export class StudentRequest {
      * - Must be greater than 0
      */
     @Expose()
-    @IsNotEmpty({ message: "Max budget is required" })
-    @IsNumber({}, { message: "Max budget must be a number" })
-    @Min(1, { message: "Max budget must be greater than 0" })
+    @IsNotEmpty()
+    @IsNumber()
+    @Min(1)
     maxBudget!: number;
 
     /**
@@ -263,9 +253,9 @@ export class StudentRequest {
      * Note: The relationship validation (minBudget <= maxBudget) is handled in the service layer
      */
     @Expose()
-    @IsNotEmpty({ message: "Min budget is required" })
-    @IsNumber({}, { message: "Min budget must be greater than 0" })
-    @Min(1, { message: "Min budget must be greater than 0" })
+    @IsNotEmpty()
+    @IsNumber()
+    @Min(1)
     minBudget!: number;
 
     /**
@@ -273,6 +263,7 @@ export class StudentRequest {
      * @example [{ "name": "Toán", "score": 8.0 }, { "name": "Ngữ Văn", "score": 7.0 }, { "name": "Tiếng Anh", "score": 9.5 }, { "name": "Vật Lý", "score": 8.75 }]
      */
     @Expose()
+    @IsArrayUnique("name")
     @IsValidNationalExamSubjects()
     @Type(() => NationalExam)
     @ValidateNested({ each: true })
@@ -300,8 +291,8 @@ export class StudentRequest {
      * @example ["Học sinh thuộc huyện nghèo, vùng đặc biệt khó khăn", "Dân tộc thiểu số rất ít người (Mông, La Ha,...)"]
      */
     @Expose()
-    @IsArray({ message: "Special student cases must be an array" })
-    @IsArrayUnique({ message: "Special student cases must be unique" })
+    @IsArray()
+    @IsArrayUnique()
     @IsEnum(SpecialStudentCase, {
         each: true,
     })
@@ -312,12 +303,16 @@ export class StudentRequest {
      * Talent score representing the student's aptitude or potential
      * Optional field that can be used to indicate the student's talent level
      * Only accepts subjects that are valid talent exam subjects
+     *
+     * @type {TalentExam[]}
+     * @optional
+     * @see TalentExam
      * @example [{ "name": "Đọc diễn cảm", "score": 8.0 }, { "name": "Hát", "score": 7.0 }]
      */
     @Expose()
     @IsArray()
+    @IsArrayUnique("name")
     @IsOptional()
-    @IsUniqueSubject({ message: "Talent scores must have unique names" })
     @Type(() => TalentExam)
     @ValidateNested({ each: true })
     talentExams?: TalentExam[];
@@ -330,7 +325,7 @@ export class StudentRequest {
      */
     @Expose()
     @IsEnum(UniType)
-    @IsNotEmpty({ message: "University Type is required" })
+    @IsNotEmpty()
     uniType!: UniType;
 
     /**
@@ -352,9 +347,9 @@ export class StudentRequest {
     @ArrayMaxSize(8)
     @ArrayMinSize(3)
     @Expose()
-    @IsArray({ message: "VSAT scores must be an array" })
+    @IsArray()
+    @IsArrayUnique("name")
     @IsOptional()
-    @IsUniqueSubject({ message: "VSAT scores must have unique names" })
     @Type(() => VsatExam)
     @ValidateNested({ each: true })
     vsatExams?: VsatExam[];

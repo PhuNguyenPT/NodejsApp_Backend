@@ -25,7 +25,7 @@ import {
 } from "@/type/enum/academic-performance.js";
 import { Conduct, getRankByConduct } from "@/type/enum/conduct.js";
 import { ExamType } from "@/type/enum/exam-type.js";
-import { getCodeByVietnameseName } from "@/type/enum/major.js";
+import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 import { ConcurrencyUtil } from "@/util/concurrency.util.js";
@@ -207,7 +207,7 @@ export class PredictionL2Service implements IPredictionL2Service {
                 .length,
         });
 
-        const majors = studentInfoDTO.majors;
+        const majors: MajorGroup[] = studentInfoDTO.majors;
 
         // If no CCNN certifications, generate combinations with default values
         if (ccnnCertifications.length === 0) {
