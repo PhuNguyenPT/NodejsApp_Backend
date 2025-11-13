@@ -44,6 +44,7 @@ import { StudentNationalExamEntity } from "@/entity/uni_guide/student-national-e
 import { StudentTalentExamEntity } from "@/entity/uni_guide/student-talent-exam.entity.js";
 import { StudentVsatExamEntity } from "@/entity/uni_guide/student-vsat-exam.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-component.entity.js";
 import { IFileEventListener } from "@/event/file-event-listener.interface.js";
 import { FileEventListener } from "@/event/impl/file-event-listener.js";
 import { StudentEventListener } from "@/event/impl/student-event-listener.js";
@@ -163,6 +164,13 @@ iocContainer
     >(TYPES.StudentAptitudeExamRepository)
     .toConstantValue(
         postgresDataSource.getRepository(StudentAptitudeExamEntity),
+    );
+iocContainer
+    .bind<
+        Repository<VnuhcmScoreComponentEntity>
+    >(TYPES.VnuhcmScoreComponentRepository)
+    .toConstantValue(
+        postgresDataSource.getRepository(VnuhcmScoreComponentEntity),
     );
 iocContainer
     .bind<Repository<AwardEntity>>(TYPES.AwardRepository)

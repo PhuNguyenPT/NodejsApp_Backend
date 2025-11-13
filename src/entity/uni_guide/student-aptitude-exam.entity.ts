@@ -1,3 +1,4 @@
+// student-aptitude-exam.entity.ts
 import { Expose, Transform } from "class-transformer";
 import {
     Column,
@@ -5,6 +6,7 @@ import {
     Entity,
     JoinColumn,
     ManyToOne,
+    OneToOne,
     PrimaryGeneratedColumn,
     Relation,
     UpdateDateColumn,
@@ -13,6 +15,7 @@ import {
 import { ExamType } from "@/type/enum/exam-type.js";
 
 import { StudentEntity } from "./student.entity.js";
+import { VnuhcmScoreComponentEntity } from "./vnuhcm-score-component.entity.js";
 
 @Entity({ name: "student_aptitude_exams", schema: "uni_guide" })
 export class StudentAptitudeExamEntity {
@@ -84,4 +87,16 @@ export class StudentAptitudeExamEntity {
     })
     @Expose()
     updatedBy?: string;
+
+    /**
+     * One-to-one relationship with VNUHCM score components
+     * Only populated when examType is VNUHCM
+     */
+    @Expose()
+    @OneToOne("VnuhcmScoreComponentEntity", "aptitudeExam", {
+        cascade: true,
+        eager: true,
+        nullable: true,
+    })
+    vnuhcmScoreComponents?: Relation<VnuhcmScoreComponentEntity>;
 }

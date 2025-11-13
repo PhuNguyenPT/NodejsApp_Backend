@@ -43,6 +43,21 @@ export class StudentProfileResponse {
 
     /**
      * Aptitude test information including exam type and score
+     *
+     * @example
+     * [
+     *   {
+     *     "examType": "VNUHCM",
+     *     "score": 700,
+     *     "languageScore": 350,
+     *     "mathScore": 200,
+     *     "scienceLogic": 150
+     *   },
+     *   {
+     *     "examType": "HSA",
+     *     "score": 90
+     *   }
+     * ]
      */
     @Expose()
     @Type(() => AptitudeExamResponse)
@@ -81,6 +96,18 @@ export class StudentProfileResponse {
      * @type {CertificationResponse[]}
      * @optional
      * @see CertificationResponse for detailed structure and validation rules
+     * @example [
+     *   {
+     *     "id": "3b9fb604-f40f-4253-b188-b2fe8c78bc54",
+     *      "examType": "IELTS",
+     *      "level": "6.5"
+     *   },
+     *   {
+     *     "id": "4b9fb504-m40f-4293-b188-b3fe8c78bc59",
+     *      "examType": "sAT",
+     *      "level": "1200"
+     *   }
+     * ]
      */
     @Expose()
     @Type(() => CertificationResponse)

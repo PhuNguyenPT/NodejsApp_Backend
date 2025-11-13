@@ -7,13 +7,30 @@ import { FileMapper } from "@/mapper/file-mapper.js";
 import { PageResponse } from "@/type/pagination/page-response.js";
 import { Page } from "@/type/pagination/page.interface.js";
 
+import { StudentAptitudeExamMapper } from "./student-aptitude-exam.mapper.js";
+
 export const StudentMapper = {
     toStudentProfileResponse(
         studentEntity: StudentEntity,
     ): StudentProfileResponse {
-        return plainToInstance(StudentProfileResponse, studentEntity, {
-            excludeExtraneousValues: true,
-        });
+        const studentProfileResponse: StudentProfileResponse = plainToInstance(
+            StudentProfileResponse,
+            studentEntity,
+            {
+                excludeExtraneousValues: true,
+            },
+        );
+
+        if (
+            studentEntity.aptitudeExams &&
+            studentEntity.aptitudeExams.length > 0
+        ) {
+            studentProfileResponse.aptitudeExams =
+                StudentAptitudeExamMapper.toStudentAptitudeExamResponses(
+                    studentEntity.aptitudeExams,
+                );
+        }
+        return studentProfileResponse;
     },
 
     toStudentProfileResponseList(

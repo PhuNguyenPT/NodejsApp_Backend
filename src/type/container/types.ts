@@ -53,6 +53,9 @@ export const RepositoryTypes = {
     StudentTalentExamRepository: Symbol.for("StudentTalentExamRepository"),
     StudentVsatExamRepository: Symbol.for("StudentVsatExamRepository"),
     UserRepository: Symbol.for("UserRepository"),
+    VnuhcmScoreComponentRepository: Symbol.for(
+        "VnuhcmScoreComponentRepository",
+    ),
 };
 
 /**

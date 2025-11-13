@@ -80,10 +80,13 @@ export class StudentInfoDTO {
      *   {
      *     "examType": "VNUHCM",
      *     "score": 700,
+     *     "languageScore": 350,
+     *     "mathScore": 200,
+     *     "scienceLogic": 150
      *   },
      *   {
      *     "examType": "HSA",
-     *     "score": 90,
+     *     "score": 90
      *   }
      * ]
      */
