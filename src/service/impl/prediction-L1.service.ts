@@ -15,7 +15,7 @@ import {
 } from "@/dto/prediction/l1-request.dto.js";
 import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
 import { AwardDTO } from "@/dto/student/award-dto.js";
-import { StudentInfoDTO } from "@/dto/student/student-dto.js";
+import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import { getCodeByVietnameseName } from "@/type/enum/major.js";
@@ -264,7 +264,7 @@ export class PredictionL1Service implements IPredictionL1Service {
                 "awards",
                 "certifications",
                 "conducts",
-                "majorGroupsEntities",
+                "majorGroups",
                 "nationalExams",
                 "talentExams",
                 "vsatExams",

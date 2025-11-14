@@ -148,7 +148,7 @@ export class StudentService implements IStudentService {
                     "awards",
                     "certifications",
                     "conducts",
-                    "majorGroupsEntities",
+                    "majorGroups",
                     "nationalExams",
                     "talentExams",
                     "vsatExams",
@@ -312,7 +312,7 @@ export class StudentService implements IStudentService {
         }
 
         if (studentRequest.majors.length > 0) {
-            studentEntity.majorGroupsEntities =
+            studentEntity.majorGroups =
                 await this.majorService.findMajorGroupEntitiesBy(
                     studentRequest.majors,
                 );

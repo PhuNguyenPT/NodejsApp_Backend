@@ -9,7 +9,7 @@ import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
 import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
 import { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
-import { StudentInfoDTO } from "@/dto/student/student-dto.js";
+import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
 import {
@@ -88,14 +88,37 @@ export class StudentEventListener implements IStudentEventListener {
             examScenarios.map((examScenario) => examScenario.to_hop_mon),
         );
 
+        const filteredOutAdmissionCodes = new Set<string>();
+
         const filteredAdmissions: AdmissionEntity[] = admissions.filter(
-            (admission) =>
-                this.isFilteredOutAdmission(
+            (admission) => {
+                const passes = this.isFilteredOutAdmission(
                     admission,
                     studentInfoDTO,
                     subject_combinations,
-                ),
+                );
+
+                if (!passes) {
+                    filteredOutAdmissionCodes.add(admission.admissionCode);
+                }
+
+                return passes;
+            },
         );
+
+        if (filteredOutAdmissionCodes.size > 0) {
+            this.logger.info("Filtered out admissions", {
+                filteredOutAdmissionCodes: Array.from(
+                    filteredOutAdmissionCodes,
+                ),
+                filteredOutCount: filteredOutAdmissionCodes.size,
+                keptAdmissions: filteredAdmissions.length,
+                studentProvince: studentInfoDTO.province,
+                studentUniType: studentInfoDTO.uniType,
+                totalAdmissions: admissions.length,
+            });
+        }
+
         return filteredAdmissions;
     }
 
@@ -164,7 +187,20 @@ export class StudentEventListener implements IStudentEventListener {
             }
         }
 
-        return passesSubject && passesProvince && passesUniType;
+        let passesMajorGroup = true;
+        if (
+            studentInfoDTO.majorGroups &&
+            studentInfoDTO.majorGroups.length > 0
+        ) {
+            const studentMajorGroupCodes = studentInfoDTO.getMajorGroupCodes();
+
+            passesMajorGroup = Array.from(studentMajorGroupCodes).some((code) =>
+                admission.admissionCode.includes(code),
+            );
+        }
+        return (
+            passesSubject && passesProvince && passesUniType && passesMajorGroup
+        );
     }
 
     /**
@@ -255,7 +291,7 @@ export class StudentEventListener implements IStudentEventListener {
                         "awards",
                         "certifications",
                         "conducts",
-                        "majorGroupsEntities",
+                        "majorGroups",
                         "nationalExams",
                         "talentExams",
                         "vsatExams",

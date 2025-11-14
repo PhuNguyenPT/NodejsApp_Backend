@@ -32,6 +32,8 @@ import { VietnamSouthernProvinces } from "@/type/enum/vietnamese-provinces.js";
 import { IsArrayUnique } from "@/validator/is-array-unique.validator.js";
 import { IsValidNationalExamSubjects } from "@/validator/is-national-exam-subject.validator.js";
 
+import { MajorGroupDTO } from "./major-group.dto.js";
+
 export class StudentInfoDTO {
     /**
      * Student academic performance assessment
@@ -193,6 +195,24 @@ export class StudentInfoDTO {
     @Type(() => ConductDTO)
     @ValidateNested({ each: true })
     conducts!: ConductDTO[];
+
+    /**
+     * Major group entities with codes for filtering admissions
+     * These represent the detailed major group classifications with their 3-digit codes
+     *
+     * @type {MajorGroupDTO[]}
+     * @optional
+     * @example [
+     *   { "code": "714", "name": "Khoa học giáo dục và đào tạo giáo viên" },
+     *   { "code": "748", "name": "Máy tính và công nghệ thông tin" }
+     * ]
+     */
+    @Expose()
+    @IsArray()
+    @IsOptional()
+    @Type(() => MajorGroupDTO)
+    @ValidateNested({ each: true })
+    majorGroups?: MajorGroupDTO[];
 
     /**
      * Student's major group classifications using standardized Vietnamese categories.
@@ -399,6 +419,14 @@ export class StudentInfoDTO {
             return "ĐGNL";
         }
         return null;
+    }
+
+    /**
+     * Get all major group codes as a Set for efficient filtering
+     */
+    getMajorGroupCodes(): Set<string> {
+        if (!this.majorGroups) return new Set();
+        return new Set(this.majorGroups.map((mg) => mg.code));
     }
 
     getTotalVSATScore(): number {

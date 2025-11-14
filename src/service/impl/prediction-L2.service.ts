@@ -16,7 +16,7 @@ import { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
 import { AcademicPerformanceDTO } from "@/dto/student/academic-performance-dto.js";
 import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
-import { StudentInfoDTO } from "@/dto/student/student-dto.js";
+import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import {
@@ -338,7 +338,7 @@ export class PredictionL2Service implements IPredictionL2Service {
                 "awards",
                 "certifications",
                 "conducts",
-                "majorGroupsEntities",
+                "majorGroups",
                 "nationalExams",
                 "talentExams",
                 "vsatExams",
