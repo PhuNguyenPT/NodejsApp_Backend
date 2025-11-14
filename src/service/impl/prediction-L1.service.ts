@@ -264,7 +264,7 @@ export class PredictionL1Service implements IPredictionL1Service {
                 "awards",
                 "certifications",
                 "conducts",
-                "majorGroups",
+                "studentMajorGroups.majorGroup",
                 "nationalExams",
                 "talentExams",
                 "vsatExams",

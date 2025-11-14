@@ -3,7 +3,6 @@ import {
     CreateDateColumn,
     Entity,
     Index,
-    ManyToMany,
     OneToMany,
     PrimaryGeneratedColumn,
     Relation,
@@ -11,7 +10,6 @@ import {
 } from "typeorm";
 
 import { MajorEntity } from "@/entity/uni_guide/major.entity.js";
-import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { MajorGroup, MajorGroupKey } from "@/type/enum/major.js";
 
 /**
@@ -53,15 +51,13 @@ export class MajorGroupEntity {
     @Column({ enum: MajorGroup, nullable: false, type: "enum" })
     name!: MajorGroup; // The Vietnamese name, e.g., "Khoa học giáo dục và đào tạo giáo viên"
 
-    @ManyToMany("StudentEntity", "majorGroups")
-    students?: Relation<StudentEntity[]>;
-
     @UpdateDateColumn({
         insert: false,
         type: "timestamp with time zone",
         update: true,
     })
     updatedAt!: Date;
+
     constructor(majorGroup?: Partial<MajorGroupEntity>) {
         if (majorGroup) {
             Object.assign(this, majorGroup);
