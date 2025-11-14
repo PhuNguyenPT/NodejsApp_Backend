@@ -2,16 +2,17 @@ import { VietnameseSubject } from "./subject.js";
 
 const TalentExamSubjectsArray: VietnameseSubject[] = [
     VietnameseSubject.BIEU_DIEN_NGHE_THUAT,
-    VietnameseSubject.CHUYEN_MON_AM_NHAC,
     VietnameseSubject.CHI_HUY_TAI_CHO,
+    VietnameseSubject.CHUYEN_MON_AM_NHAC,
     VietnameseSubject.CHUYEN_MON_AM_NHAC_1,
     VietnameseSubject.CHUYEN_MON_AM_NHAC_2,
-    VietnameseSubject.DOC_HIEU,
     VietnameseSubject.DOC_DIEN_CAM,
+    VietnameseSubject.DOC_HIEU,
     VietnameseSubject.GHI_AM_XUONG_AM,
     VietnameseSubject.HAT,
     VietnameseSubject.HAT_BIEU_DIEN_NHAC_CU,
     VietnameseSubject.HAT_MUA,
+    VietnameseSubject.HAT_XUONG_AM,
     VietnameseSubject.HOA_THANH,
     VietnameseSubject.KY_XUONG_AM,
     VietnameseSubject.NANG_KHIEU,
@@ -23,6 +24,7 @@ const TalentExamSubjectsArray: VietnameseSubject[] = [
     VietnameseSubject.NANG_KHIEU_BAO_CHI,
     VietnameseSubject.NANG_KHIEU_BIEU_DIEN_NGHE_THUAT,
     VietnameseSubject.NANG_KHIEU_KIEN_THUC_VAN_HOA_XA_HOI_NGHE_THUAT,
+    VietnameseSubject.NANG_KHIEU_MAM_NON,
     VietnameseSubject.NANG_KHIEU_MAM_NON_1,
     VietnameseSubject.NANG_KHIEU_MAM_NON_2,
     VietnameseSubject.NANG_KHIEU_QUAY_PHIM_TRUYEN_HINH,
@@ -37,11 +39,10 @@ const TalentExamSubjectsArray: VietnameseSubject[] = [
     VietnameseSubject.VE_HINH_HOA,
     VietnameseSubject.VE_HINH_HOA_MY_THUAT,
     VietnameseSubject.VE_MY_THUAT,
+    VietnameseSubject.VE_NANG_KHIEU,
     VietnameseSubject.VE_TRANG_TRI,
     VietnameseSubject.VE_TRANG_TRI_MAU,
-    VietnameseSubject.VE_NANG_KHIEU,
     VietnameseSubject.XAY_DUNG_KICH_BAN_SU_KIEN,
-    VietnameseSubject.HAT_XUONG_AM,
 ] as const;
 
 // Export the array for use in validation messages and loops

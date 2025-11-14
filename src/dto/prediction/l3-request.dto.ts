@@ -1,5 +1,6 @@
 import { Expose, Transform, Type } from "class-transformer";
 import {
+    IsEnum,
     IsIn,
     IsInt,
     IsNotEmpty,
@@ -12,6 +13,8 @@ import {
 } from "class-validator";
 
 import { MajorGroupCodes } from "@/type/enum/major.js";
+
+import { L3NationalSubject } from "./l3-national-subject.enum.js";
 
 const ToTwoDecimals = () =>
     Transform(({ value }: { value: unknown }) => {
@@ -222,9 +225,8 @@ export class THPTSubjectScore {
     score!: number;
 
     @Expose()
-    @IsNotEmpty()
-    @IsString()
-    subject_name!: string;
+    @IsEnum(L3NationalSubject)
+    subject_name!: L3NationalSubject;
 }
 
 export class TNTHPTScores {
