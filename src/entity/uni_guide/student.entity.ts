@@ -117,7 +117,7 @@ export class StudentEntity {
     @ManyToMany("MajorGroupEntity", "students", {
         nullable: true,
     })
-    majorGroupsEntities?: Relation<MajorGroupEntity[]>;
+    majorGroups?: Relation<MajorGroupEntity[]>;
 
     @Column({ nullable: true, type: "jsonb" })
     majors?: MajorGroup[];

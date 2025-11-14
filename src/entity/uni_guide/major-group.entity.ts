@@ -53,7 +53,7 @@ export class MajorGroupEntity {
     @Column({ enum: MajorGroup, nullable: false, type: "enum" })
     name!: MajorGroup; // The Vietnamese name, e.g., "Khoa học giáo dục và đào tạo giáo viên"
 
-    @ManyToMany("StudentEntity", "majorGroupsEntities")
+    @ManyToMany("StudentEntity", "majorGroups")
     students?: Relation<StudentEntity[]>;
 
     @UpdateDateColumn({
