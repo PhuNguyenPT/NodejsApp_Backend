@@ -8,7 +8,7 @@ export enum VietnameseSubject {
     CHUNG_CHI_QUY_DOI_TIENG_ANH = "Chứng chỉ tiếng Anh (đã quy đổi điểm)",
     CHUYEN_MON_AM_NHAC = "Chuyên môn âm nhạc",
     CHUYEN_MON_AM_NHAC_1 = "Chuyên môn âm nhạc 1",
-    CHUYEN_MON_AM_NHAC_2 = "Chuyên môn âm nhạc ",
+    CHUYEN_MON_AM_NHAC_2 = "Chuyên môn âm nhạc 2",
     CONG_NGHE = "Công Nghệ",
     CONG_NGHE_CONG_NGHIEP = "Công nghệ Công nghiệp",
     CONG_NGHE_NONG_NGHIEP = "Công nghệ Nông nghiệp",
