@@ -44,7 +44,7 @@ export interface OcrMetadata {
 @Index("idx_ocr_status", ["status"])
 @Index("idx_ocr_created_at", ["createdAt"])
 @Index("idx_ocr_updated_at", ["updatedAt"])
-@Unique("UQ_ocr_student_file", ["studentId", "fileId"])
+@Unique("uq_ocr_student_file", ["studentId", "fileId"])
 export class OcrResultEntity {
     @CreateDateColumn({
         insert: true,

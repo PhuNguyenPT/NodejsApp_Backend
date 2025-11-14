@@ -48,6 +48,7 @@ export const RepositoryTypes = {
     ),
     StudentAptitudeExamRepository: Symbol.for("StudentAptitudeExamRepository"),
     StudentConductRepository: Symbol.for("StudentConductRepository"),
+    StudentMajorGroupRepository: Symbol.for("StudentMajorGroupRepository"),
     StudentNationalExamRepository: Symbol.for("StudentNationalExamRepository"),
     StudentRepository: Symbol.for("StudentRepository"),
     StudentTalentExamRepository: Symbol.for("StudentTalentExamRepository"),

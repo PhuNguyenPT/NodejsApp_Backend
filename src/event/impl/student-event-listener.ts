@@ -291,7 +291,7 @@ export class StudentEventListener implements IStudentEventListener {
                         "awards",
                         "certifications",
                         "conducts",
-                        "majorGroups",
+                        "studentMajorGroups.majorGroup",
                         "nationalExams",
                         "talentExams",
                         "vsatExams",

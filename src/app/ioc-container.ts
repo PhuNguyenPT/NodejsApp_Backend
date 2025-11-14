@@ -40,6 +40,7 @@ import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
 import { StudentAptitudeExamEntity } from "@/entity/uni_guide/student-aptitude-exam.entity.js";
 import { StudentConductEntity } from "@/entity/uni_guide/student-conduct.entity.js";
+import { StudentMajorGroupEntity } from "@/entity/uni_guide/student-major-group.entity.js";
 import { StudentNationalExamEntity } from "@/entity/uni_guide/student-national-exam.enity.js";
 import { StudentTalentExamEntity } from "@/entity/uni_guide/student-talent-exam.entity.js";
 import { StudentVsatExamEntity } from "@/entity/uni_guide/student-vsat-exam.entity.js";
@@ -187,6 +188,11 @@ iocContainer
 iocContainer
     .bind<Repository<MajorGroupEntity>>(TYPES.MajorGroupRepository)
     .toConstantValue(postgresDataSource.getRepository(MajorGroupEntity));
+iocContainer
+    .bind<
+        Repository<StudentMajorGroupEntity>
+    >(TYPES.StudentMajorGroupRepository)
+    .toConstantValue(postgresDataSource.getRepository(StudentMajorGroupEntity));
 iocContainer
     .bind<Repository<MajorEntity>>(TYPES.MajorRepository)
     .toConstantValue(postgresDataSource.getRepository(MajorEntity));

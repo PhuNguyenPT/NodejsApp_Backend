@@ -4,8 +4,6 @@ import {
     Entity,
     Index,
     JoinColumn,
-    JoinTable,
-    ManyToMany,
     ManyToOne,
     OneToMany,
     OneToOne,
@@ -18,7 +16,6 @@ import { UserEntity } from "@/entity/security/user.entity.js";
 import { AwardEntity } from "@/entity/uni_guide/award.entity.js";
 import { CertificationEntity } from "@/entity/uni_guide/certification.entity.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
-import { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
 import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
@@ -29,6 +26,7 @@ import { StudentAcademicPerformanceEntity } from "./student-academic-performance
 import { StudentAdmissionEntity } from "./student-admission.entity.js";
 import { StudentAptitudeExamEntity } from "./student-aptitude-exam.entity.js";
 import { StudentConductEntity } from "./student-conduct.entity.js";
+import { StudentMajorGroupEntity } from "./student-major-group.entity.js";
 import { StudentNationalExamEntity } from "./student-national-exam.enity.js";
 import { StudentTalentExamEntity } from "./student-talent-exam.entity.js";
 import { StudentVsatExamEntity } from "./student-vsat-exam.entity.js";
@@ -103,22 +101,6 @@ export class StudentEntity {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @JoinTable({
-        inverseJoinColumn: {
-            name: "major_group_id",
-            referencedColumnName: "id",
-        },
-        joinColumn: {
-            name: "student_id",
-            referencedColumnName: "id",
-        },
-        name: "student_major_groups",
-    })
-    @ManyToMany("MajorGroupEntity", "students", {
-        nullable: true,
-    })
-    majorGroups?: Relation<MajorGroupEntity[]>;
-
     @Column({ nullable: true, type: "jsonb" })
     majors?: MajorGroup[];
 
@@ -161,6 +143,13 @@ export class StudentEntity {
         nullable: true,
     })
     studentAdmissions?: Relation<StudentAdmissionEntity[]>;
+
+    @OneToMany("StudentMajorGroupEntity", "student", {
+        cascade: true,
+        eager: false,
+        nullable: true,
+    })
+    studentMajorGroups?: Relation<StudentMajorGroupEntity[]>;
 
     @OneToMany("StudentTalentExamEntity", "student", {
         cascade: true,

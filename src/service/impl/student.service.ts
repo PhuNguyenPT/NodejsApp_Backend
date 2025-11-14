@@ -8,6 +8,7 @@ import { AwardEntity } from "@/entity/uni_guide/award.entity.js";
 import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
 import { StudentAptitudeExamEntity } from "@/entity/uni_guide/student-aptitude-exam.entity.js";
 import { StudentConductEntity } from "@/entity/uni_guide/student-conduct.entity.js";
+import { StudentMajorGroupEntity } from "@/entity/uni_guide/student-major-group.entity.js";
 import { StudentNationalExamEntity } from "@/entity/uni_guide/student-national-exam.enity.js";
 import { StudentTalentExamEntity } from "@/entity/uni_guide/student-talent-exam.entity.js";
 import { StudentVsatExamEntity } from "@/entity/uni_guide/student-vsat-exam.entity.js";
@@ -36,6 +37,8 @@ export class StudentService implements IStudentService {
         private readonly userRepository: Repository<UserEntity>,
         @inject(TYPES.StudentAptitudeExamRepository)
         private readonly studentAptitudeExamRepository: Repository<StudentAptitudeExamEntity>,
+        @inject(TYPES.StudentMajorGroupRepository)
+        private readonly studentMajorGroupRepository: Repository<StudentMajorGroupEntity>,
         @inject(TYPES.VnuhcmScoreComponentRepository)
         private readonly vnuhcmScoreComponentRepository: Repository<VnuhcmScoreComponentEntity>,
         @inject(TYPES.AwardRepository)
@@ -148,7 +151,7 @@ export class StudentService implements IStudentService {
                     "awards",
                     "certifications",
                     "conducts",
-                    "majorGroups",
+                    "studentMajorGroups.majorGroup",
                     "nationalExams",
                     "talentExams",
                     "vsatExams",
@@ -312,10 +315,25 @@ export class StudentService implements IStudentService {
         }
 
         if (studentRequest.majors.length > 0) {
-            studentEntity.majorGroups =
+            const majorGroupEntities =
                 await this.majorService.findMajorGroupEntitiesBy(
                     studentRequest.majors,
                 );
+
+            studentEntity.studentMajorGroups = majorGroupEntities.map(
+                (majorGroup) => {
+                    const studentMajorGroup: StudentMajorGroupEntity =
+                        this.studentMajorGroupRepository.create({
+                            majorGroup: majorGroup,
+                        });
+                    if (userEntity) {
+                        studentMajorGroup.createdBy = userEntity.email;
+                    } else {
+                        studentMajorGroup.createdBy ??= Role.ANONYMOUS;
+                    }
+                    return studentMajorGroup;
+                },
+            );
         }
 
         if (studentRequest.nationalExams.length > 0) {
