@@ -320,7 +320,6 @@ export class PredictionL2Service implements IPredictionL2Service {
             relations: [
                 "academicPerformances",
                 "aptitudeExams",
-                "awards",
                 "certifications",
                 "conducts",
                 "studentMajorGroups.majorGroup",

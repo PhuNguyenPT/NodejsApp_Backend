@@ -243,17 +243,7 @@ export class PredictionL1Service implements IPredictionL1Service {
         userId?: string,
     ): Promise<L1PredictResult[]> {
         const student = await this.studentRepository.findOne({
-            relations: [
-                "academicPerformances",
-                "aptitudeExams",
-                "awards",
-                "certifications",
-                "conducts",
-                "studentMajorGroups.majorGroup",
-                "nationalExams",
-                "talentExams",
-                "vsatExams",
-            ],
+            relations: ["awards", "studentMajorGroups.majorGroup"],
             where: {
                 id: studentId,
                 userId: userId ?? IsNull(),

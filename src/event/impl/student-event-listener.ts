@@ -108,8 +108,10 @@ export class StudentEventListener implements IStudentEventListener {
 
         if (filteredOutAdmissionCodes.size > 0) {
             this.logger.info("Filtered out admissions", {
-                filteredOutCount: filteredOutAdmissionCodes.size,
                 keptAdmissions: filteredAdmissions.length,
+                removedAdmissionsCount:
+                    admissions.length - filteredAdmissions.length,
+                removedUniqueCodesCount: filteredOutAdmissionCodes.size,
                 studentProvince: studentInfoDTO.province,
                 studentUniType: studentInfoDTO.uniType,
                 totalAdmissions: admissions.length,
@@ -286,11 +288,8 @@ export class StudentEventListener implements IStudentEventListener {
                 StudentEntity,
                 {
                     relations: [
-                        "academicPerformances",
                         "aptitudeExams",
-                        "awards",
                         "certifications",
-                        "conducts",
                         "studentMajorGroups.majorGroup",
                         "nationalExams",
                         "talentExams",
