@@ -45,6 +45,8 @@ class App {
 
     constructor(readonly config: Config) {
         this.express = express();
+        this.express.set("trust proxy", 1);
+
         this.port = config.SERVER_PORT;
         this.tlsPort = config.SERVER_TLS_PORT;
         this.hostname = config.SERVER_HOSTNAME;

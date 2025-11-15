@@ -132,7 +132,7 @@ export const getMorganConfig = (): RequestHandler[] => {
         case "production":
             // Only log errors and warnings in production console
             middlewares.push(
-                morgan("combined", {
+                morgan(detailedFormat, {
                     skip: (req: Request, res: Response) => {
                         return res.statusCode < 400 || skipHealthChecks(req);
                     },
@@ -170,7 +170,7 @@ export const getMorganConfig = (): RequestHandler[] => {
         case "staging":
             // Combined format for staging
             middlewares.push(
-                morgan("combined", {
+                morgan(detailedFormat, {
                     skip: skipHealthChecks,
                     stream: {
                         write: (message: string) => {
