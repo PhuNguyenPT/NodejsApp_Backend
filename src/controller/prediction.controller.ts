@@ -156,8 +156,6 @@ export class PredictionController extends Controller {
         const predictResults: L2PredictResult[] =
             await this.predictionL2Service.predictMajorsByStudentIdAndUserId(
                 userInput,
-                studentId,
-                user.id,
             );
         this.logger.info("Predict major successfully for user", {
             id: user.id,
