@@ -108,9 +108,6 @@ export class StudentEventListener implements IStudentEventListener {
 
         if (filteredOutAdmissionCodes.size > 0) {
             this.logger.info("Filtered out admissions", {
-                filteredOutAdmissionCodes: Array.from(
-                    filteredOutAdmissionCodes,
-                ),
                 filteredOutCount: filteredOutAdmissionCodes.size,
                 keptAdmissions: filteredAdmissions.length,
                 studentProvince: studentInfoDTO.province,
@@ -189,13 +186,16 @@ export class StudentEventListener implements IStudentEventListener {
 
         let passesMajorGroup = true;
         if (
-            studentInfoDTO.majorGroups &&
-            studentInfoDTO.majorGroups.length > 0
+            studentInfoDTO.studentMajorGroups &&
+            studentInfoDTO.studentMajorGroups.length > 0
         ) {
             const studentMajorGroupCodes = studentInfoDTO.getMajorGroupCodes();
+            const admissionMajorGroupCode = String(
+                admission.majorCode,
+            ).substring(0, 3);
 
-            passesMajorGroup = Array.from(studentMajorGroupCodes).some((code) =>
-                admission.admissionCode.includes(code),
+            passesMajorGroup = studentMajorGroupCodes.has(
+                admissionMajorGroupCode,
             );
         }
         return (
@@ -312,6 +312,11 @@ export class StudentEventListener implements IStudentEventListener {
                 { excludeExtraneousValues: true },
             );
             await validate(studentInfoDTO, DEFAULT_VALIDATOR_OPTIONS);
+            studentInfoDTO.studentMajorGroups =
+                studentEntity.studentMajorGroups?.map((smg) => ({
+                    code: smg.majorGroup.code,
+                    name: smg.majorGroup.name,
+                }));
 
             if (studentInfoDTO.hasValidNationalExam()) {
                 newAdmissionsToAdd = this.filterAdmissionsByStudentInfoDTO(

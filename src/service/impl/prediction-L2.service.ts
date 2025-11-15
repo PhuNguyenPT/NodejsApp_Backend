@@ -79,11 +79,6 @@ export class PredictionL2Service implements IPredictionL2Service {
             },
         );
 
-        this.logger.info("L2 Prediction: Calculated optimal chunk size", {
-            optimalChunkSize,
-            totalInputs: userInputs.length,
-        });
-
         this.logger.debug("L2 Prediction: Input summary details", {
             ...this.summarizeL2Inputs(userInputs),
         });
@@ -119,16 +114,6 @@ export class PredictionL2Service implements IPredictionL2Service {
 
         // Create concurrency limiter for chunks
         const batchLimit = pLimit(this.config.SERVER_BATCH_CONCURRENCY);
-
-        this.logger.info(
-            "L2 Prediction: Starting concurrent processing with chunking",
-            {
-                optimalChunkSize,
-                originalInputCount: userInputs.length,
-                totalChunks: chunkedGroups.length,
-                totalSubjectGroups: groupedInputs.size,
-            },
-        );
 
         // Process chunks with limited concurrency
         const results = await Promise.allSettled(
@@ -409,12 +394,6 @@ export class PredictionL2Service implements IPredictionL2Service {
                     this.config.SERVICE_MIN_BATCH_CONCURRENCY, // Min concurrency
                 );
 
-            this.logger.info("L2 Prediction: Starting batch prediction", {
-                calculatedConcurrency: batchConcurrency,
-                configuredMaxConcurrency: this.config.SERVICE_BATCH_CONCURRENCY,
-                inputCount: userInputs.length,
-            });
-
             const batchRequest: L2BatchRequest = {
                 items: userInputs,
             };
@@ -483,13 +462,7 @@ export class PredictionL2Service implements IPredictionL2Service {
 
     public async predictMajorsByStudentIdAndUserId(
         userInput: UserInputL2,
-        studentId: string,
-        userId: string,
     ): Promise<L2PredictResult[]> {
-        this.logger.info("Performing prediction majors for student ", {
-            studentId: studentId,
-            userId: userId,
-        });
         return await this.predictMajorsL2(userInput);
     }
 
@@ -595,15 +568,6 @@ export class PredictionL2Service implements IPredictionL2Service {
                     this.config.SERVICE_MIN_BATCH_CONCURRENCY, // Min concurrency
                 );
 
-            this.logger.info(
-                `L2 Prediction: Attempting batch prediction for group ${subjectGroup}`,
-                {
-                    calculatedConcurrency: dynamicConcurrency,
-                    configMaxConcurrency: this.config.SERVICE_BATCH_CONCURRENCY,
-                    inputCount: inputsForGroup.length,
-                },
-            );
-
             // Use dynamic concurrency in the batch call
             const batchResults = await this.predictL2MajorsBatch(
                 inputsForGroup,
@@ -693,13 +657,6 @@ export class PredictionL2Service implements IPredictionL2Service {
         failedInputs: UserInputL2[],
         subjectGroup: string,
     ): Promise<L2PredictResult[]> {
-        this.logger.info(
-            `L2 Prediction: Starting sequential retry for failed predictions in group: ${subjectGroup}`,
-            {
-                failedCount: failedInputs.length,
-            },
-        );
-
         const successfulRetryResults: L2PredictResult[] = [];
         let retrySuccessCount = 0;
 
@@ -787,18 +744,6 @@ export class PredictionL2Service implements IPredictionL2Service {
                 setTimeout(resolve, this.config.SERVICE_L2_CHUNK_DELAY_MS),
             ); // delay between groups
         }
-
-        this.logger.info(
-            `L2 Prediction: Starting batch processing for subject group: ${subjectGroup} (${(groupIndex + 1).toString()})`,
-            {
-                SERVICE_BATCH_CONCURRENCY:
-                    this.config.SERVICE_PREDICTION_CONCURRENCY,
-                SERVICE_PREDICTION_CONCURRENCY:
-                    this.config.SERVICE_PREDICTION_CONCURRENCY,
-                timestamp: new Date().toISOString(),
-                totalInputs: inputsForGroup.length,
-            },
-        );
 
         const { failedInputs, successfulResults } =
             await this._performL2BatchPrediction(inputsForGroup, subjectGroup);

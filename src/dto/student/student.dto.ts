@@ -197,24 +197,6 @@ export class StudentInfoDTO {
     conducts!: ConductDTO[];
 
     /**
-     * Major group entities with codes for filtering admissions
-     * These represent the detailed major group classifications with their 3-digit codes
-     *
-     * @type {MajorGroupDTO[]}
-     * @optional
-     * @example [
-     *   { "code": "714", "name": "Khoa học giáo dục và đào tạo giáo viên" },
-     *   { "code": "748", "name": "Máy tính và công nghệ thông tin" }
-     * ]
-     */
-    @Expose()
-    @IsArray()
-    @IsOptional()
-    @Type(() => MajorGroupDTO)
-    @ValidateNested({ each: true })
-    majorGroups?: MajorGroupDTO[];
-
-    /**
      * Student's major group classifications using standardized Vietnamese categories.
      * Array of major group values that the student is interested in pursuing.
      * Must contain at least 1 and at most 3 valid MajorGroup values.
@@ -334,6 +316,24 @@ export class StudentInfoDTO {
     specialStudentCases?: SpecialStudentCase[];
 
     /**
+     * Major group entities with codes for filtering admissions
+     * These represent the detailed major group classifications with their 3-digit codes
+     *
+     * @type {MajorGroupDTO[]}
+     * @optional
+     * @example [
+     *   { "code": "714", "name": "Khoa học giáo dục và đào tạo giáo viên" },
+     *   { "code": "748", "name": "Máy tính và công nghệ thông tin" }
+     * ]
+     */
+    @Expose()
+    @IsArray()
+    @IsOptional()
+    @Type(() => MajorGroupDTO)
+    @ValidateNested({ each: true })
+    studentMajorGroups?: MajorGroupDTO[];
+
+    /**
      * Talent score representing the student's aptitude or potential
      * Optional field that can be used to indicate the student's talent level
      * Only accepts subjects that are valid talent exam subjects
@@ -425,8 +425,8 @@ export class StudentInfoDTO {
      * Get all major group codes as a Set for efficient filtering
      */
     getMajorGroupCodes(): Set<string> {
-        if (!this.majorGroups) return new Set();
-        return new Set(this.majorGroups.map((mg) => mg.code));
+        if (!this.studentMajorGroups) return new Set();
+        return new Set(this.studentMajorGroups.map((mg) => mg.code));
     }
 
     getTotalVSATScore(): number {

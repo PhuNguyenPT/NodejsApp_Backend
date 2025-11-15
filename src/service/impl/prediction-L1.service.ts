@@ -115,11 +115,6 @@ export class PredictionL1Service implements IPredictionL1Service {
             },
         );
 
-        this.logger.info("L1 Prediction: Calculated optimal chunk size", {
-            optimalChunkSize,
-            totalInputs: userInputs.length,
-        });
-
         this.logger.debug("L1 Prediction: Input distribution", {
             ...this.summarizeL1Inputs(userInputs),
         });
@@ -154,16 +149,6 @@ export class PredictionL1Service implements IPredictionL1Service {
 
         // Create a concurrency limiter for processing chunks
         const batchLimit = pLimit(this.config.SERVER_BATCH_CONCURRENCY);
-
-        this.logger.info(
-            "L1 Prediction: Starting concurrent processing with chunking",
-            {
-                optimalChunkSize,
-                originalInputCount: userInputs.length,
-                totalChunks: chunkedGroups.length,
-                totalGroups: groupedInputs.size,
-            },
-        );
 
         // Process chunks with limited concurrency
         const results = await Promise.allSettled(
@@ -409,12 +394,6 @@ export class PredictionL1Service implements IPredictionL1Service {
                     this.config.SERVICE_MIN_BATCH_CONCURRENCY, // Min concurrency
                 );
 
-            this.logger.info("L1 Prediction: Starting batch prediction", {
-                calculatedConcurrency: batchConcurrency,
-                configuredMaxConcurrency: this.config.SERVICE_BATCH_CONCURRENCY,
-                inputCount: userInputs.length,
-            });
-
             const batchRequest: L1BatchRequest = {
                 items: userInputs,
             };
@@ -500,15 +479,6 @@ export class PredictionL1Service implements IPredictionL1Service {
                     this.config.SERVICE_BATCH_CONCURRENCY, // Max limit from config
                     this.config.SERVICE_MIN_BATCH_CONCURRENCY, // Min concurrency
                 );
-
-            this.logger.info(
-                `L1 Prediction: Attempting batch prediction for group ${groupName}`,
-                {
-                    calculatedConcurrency: dynamicConcurrency,
-                    configMaxConcurrency: this.config.SERVICE_BATCH_CONCURRENCY,
-                    inputCount: inputsForGroup.length,
-                },
-            );
 
             // Use dynamic concurrency in the batch call
             const batchResults = await this.predictMajorsL1Batch(
@@ -599,13 +569,6 @@ export class PredictionL1Service implements IPredictionL1Service {
         failedInputs: UserInputL1[],
         subjectGroup: string,
     ): Promise<L1PredictResult[]> {
-        this.logger.info(
-            `L1 Prediction: Starting sequential retry for failed predictions in group: ${subjectGroup}`,
-            {
-                failedCount: failedInputs.length,
-            },
-        );
-
         const successfulRetryResults: L1PredictResult[] = [];
         let retrySuccessCount = 0;
 
@@ -693,18 +656,6 @@ export class PredictionL1Service implements IPredictionL1Service {
                 setTimeout(resolve, this.config.SERVICE_L1_CHUNK_DELAY_MS),
             );
         }
-
-        this.logger.info(
-            `L1 Prediction: Starting batch processing for subject group: ${subjectGroup} (${(groupIndex + 1).toString()})`,
-            {
-                SERVICE_BATCH_CONCURRENCY:
-                    this.config.SERVICE_PREDICTION_CONCURRENCY,
-                SERVICE_PREDICTION_CONCURRENCY:
-                    this.config.SERVICE_PREDICTION_CONCURRENCY,
-                timestamp: new Date().toISOString(),
-                totalInputs: inputsForGroup.length,
-            },
-        );
 
         const { failedInputs, successfulResults } =
             await this._performL1BatchPrediction(inputsForGroup, subjectGroup);
