@@ -26,6 +26,11 @@ morgan.token("real-ip", (req: Request) => {
     );
 });
 
+morgan.token(
+    "request-id",
+    (req: ExtendedRequest) => req.requestId ?? "unknown",
+);
+
 // Custom token for response time with color coding
 morgan.token("response-time-colored", (req: Request, res: Response) => {
     const responseTimeToken = (
@@ -208,12 +213,6 @@ export const setupRequestTracking = (): RequestHandler => {
 
         // Add request ID to response headers
         res.setHeader("X-Request-ID", req.requestId);
-
-        // Add request ID token for morgan
-        morgan.token(
-            "request-id",
-            (request: ExtendedRequest) => request.requestId ?? "unknown",
-        );
 
         next();
     };
