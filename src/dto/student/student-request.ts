@@ -142,7 +142,7 @@ export class StudentRequest {
      *   }
      * ]
      */
-    @ArrayMaxSize(3)
+    @ArrayMaxSize(6)
     @Expose()
     @IsArray()
     @IsArrayUnique("examType")
