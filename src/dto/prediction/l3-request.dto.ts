@@ -14,6 +14,7 @@ import {
 
 import { MajorGroupCodes } from "@/type/enum/major.js";
 
+import { HsgSubject } from "./hsg-subject.enum.js";
 import { L3NationalSubject } from "./l3-national-subject.enum.js";
 
 const ToTwoDecimals = () =>
@@ -36,7 +37,7 @@ export class AwardQG {
     @Expose()
     @IsNotEmpty()
     @IsString()
-    subject!: string;
+    subject!: HsgSubject;
 }
 
 export class DGNL {
@@ -71,149 +72,342 @@ export class InterCer {
     score!: number;
 }
 
-export class NangKhieuKhoiM {
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    doc_dien_cam?: number;
-
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    hat?: number;
-}
-
-export class NangKhieuKhoiN {
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    hat_hoac_bieu_dien_nhac_cu?: number;
-
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    ky_xuong_am?: number;
-
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    nang_khieu_am_nhac_1?: number;
-
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    nang_khieu_am_nhac_2?: number;
-
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    nang_khieu_chung?: number;
-
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    xay_dung_kich_ban_su_kien?: number;
-
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    xuong_am?: number;
-}
-
-export class NangKhieuKhoiT {
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    tdtt?: number;
-}
-
 export class NangKhieuScore {
     @Expose()
     @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    doc_dien_cam?: number;
-
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    hat?: number;
-
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    hat_mua?: number;
-
-    @Expose()
-    @IsNumber()
-    @Max(10)
-    @Min(0)
-    @ToTwoDecimals()
-    nang_khieu_bao_chi?: number;
-
-    @Expose()
     @IsOptional()
-    @Type(() => NangKhieuKhoiM)
-    @ValidateNested()
-    nang_khieu_M?: NangKhieuKhoiM;
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    BIEU_DIEN_NGHE_THUAT?: number;
 
     @Expose()
+    @IsNumber()
     @IsOptional()
-    @Type(() => NangKhieuKhoiN)
-    @ValidateNested()
-    nang_khieu_N?: NangKhieuKhoiN;
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    CHI_HUY_TAI_CHO?: number;
 
     @Expose()
+    @IsNumber()
     @IsOptional()
-    @Type(() => NangKhieuKhoiT)
-    @ValidateNested()
-    nang_khieu_T?: NangKhieuKhoiT;
-
-    @Expose()
-    @IsNumber()
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    ve_dt?: number;
+    CHUYEN_MON_AM_NHAC?: number;
 
     @Expose()
     @IsNumber()
+    @IsOptional()
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    ve_nk?: number;
+    CHUYEN_MON_AM_NHAC_1?: number;
 
     @Expose()
     @IsNumber()
+    @IsOptional()
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    ve_tt?: number;
+    CHUYEN_MON_AM_NHAC_2?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    DOC_DIEN_CAM?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    DOC_HIEU?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    GHI_AM_XUONG_AM?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    HAT?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    HAT_BIEU_DIEN_NHAC_CU?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    HAT_MUA?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    HAT_XUONG_AM?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    HOA_THANH?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    KY_XUONG_AM?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_1?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_2?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_AM_NHAC_1?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_AM_NHAC_2?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_ANH_BAO_CHI?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_BAO_CHI?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_BIEU_DIEN_NGHE_THUAT?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_KIEN_THUC_VAN_HOA_XA_HOI_NGHE_THUAT?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_MAM_NON?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_MAM_NON_1?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_MAM_NON_2?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_QUAY_PHIM_TRUYEN_HINH?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_SKDA_1?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_SKDA_2?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_TDTT?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_THUYET_TRINH?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_VE_1?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    NANG_KHIEU_VE_2?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    PHAT_TRIEN_CHU_DE_PHO_THO?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    TU_DUY_GIAI_QUYET_NGU_VAN_DE?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    VE_HINH_HOA?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    VE_HINH_HOA_MY_THUAT?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    VE_MY_THUAT?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    VE_NANG_KHIEU?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    VE_TRANG_TRI?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    VE_TRANG_TRI_MAU?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    XAY_DUNG_KICH_BAN_SU_KIEN?: number;
 }
 
 export class THPTSubjectScore {
@@ -288,7 +482,7 @@ export class TranscriptSubjectScoreL3 {
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    cong_nghe_cong_nghiep!: number;
+    cong_nghe!: number;
 
     @Expose()
     @IsNumber()
