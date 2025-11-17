@@ -343,6 +343,7 @@ export class StudentInfoDTO {
      * @see TalentExam
      * @example [{ "name": "Đọc diễn cảm", "score": 8.0 }, { "name": "Hát", "score": 7.0 }]
      */
+    @ArrayMaxSize(12)
     @Expose()
     @IsArray()
     @IsArrayUnique("name")
