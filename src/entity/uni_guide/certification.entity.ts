@@ -31,6 +31,7 @@ export enum CEFR {
 export class CertificationEntity {
     @Column({
         enum: CEFR,
+        name: "cefr",
         nullable: true,
         type: "enum",
     })
@@ -38,6 +39,7 @@ export class CertificationEntity {
 
     @CreateDateColumn({
         insert: true,
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })
@@ -46,33 +48,35 @@ export class CertificationEntity {
     @Column({
         insert: true,
         length: 255,
+        name: "created_by",
         nullable: true,
         type: "varchar",
         update: false,
     })
     createdBy?: string;
 
-    @Column({ enum: ExamType, nullable: true, type: "enum" })
+    @Column({ enum: ExamType, name: "exam_type", nullable: true, type: "enum" })
     examType?: ExamType;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ length: 50, nullable: true, type: "varchar" })
+    @Column({ length: 50, name: "level", nullable: true, type: "varchar" })
     level?: string;
 
-    @JoinColumn({ name: "studentId" })
+    @JoinColumn({ name: "student_id" })
     @ManyToOne("StudentEntity", "certifications", {
         onDelete: "CASCADE",
         orphanedRowAction: "delete",
     })
     student!: Relation<StudentEntity>;
 
-    @Column({ type: "uuid" })
+    @Column({ name: "student_id", type: "uuid" })
     studentId!: string;
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })
@@ -81,6 +85,7 @@ export class CertificationEntity {
     @Column({
         insert: false,
         length: 255,
+        name: "updated_by",
         nullable: true,
         type: "varchar",
         update: true,

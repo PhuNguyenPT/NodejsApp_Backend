@@ -14,6 +14,8 @@ export class CreateSchemas1754794900000 implements MigrationInterface {
     }
 
     public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS vector`);
+
         // Create schemas if they don't exist
         await queryRunner.query(`CREATE SCHEMA IF NOT EXISTS "uni_guide"`);
         await queryRunner.query(

@@ -8,19 +8,20 @@ import {
 } from "typeorm";
 
 @Entity({ name: "l3_transcript", schema: "machine_learning" })
-@Index("idx_l3_major_code", ["major_code"])
-@Index("idx_l3_major_group", ["major_group"])
-@Index("idx_l3_major_name", ["major_name"])
+@Index("idx_l3_major_code", ["majorCode"])
+@Index("idx_l3_major_group", ["majorGroup"])
+@Index("idx_l3_major_name", ["majorName"])
 @Index("idx_l3_province", ["province"])
 @Index("idx_l3_score", ["score"])
-@Index("idx_l3_tuition_fee", ["tuition_fee"])
-@Index("idx_l3_uni_code", ["uni_code"])
-@Index("idx_l3_uni_type", ["uni_type"])
+@Index("idx_l3_tuition_fee", ["tuitionFee"])
+@Index("idx_l3_uni_code", ["uniCode"])
+@Index("idx_l3_uni_type", ["uniType"])
 @Index("idx_l3_created_at", ["createdAt"])
 @Index("idx_l3_updated_at", ["updatedAt"])
 export class L3Entity {
     @CreateDateColumn({
         insert: true,
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })
@@ -30,31 +31,32 @@ export class L3Entity {
     id!: string;
 
     @Column({ name: "major_code", nullable: true, type: "varchar" })
-    major_code!: null | string;
+    majorCode?: null | string;
 
     @Column({ name: "major_group", nullable: true, type: "integer" })
-    major_group!: null | number;
+    majorGroup?: null | number;
 
     @Column({ name: "major_name", nullable: true, type: "varchar" })
-    major_name!: null | string;
+    majorName?: null | string;
 
     @Column({ name: "province", nullable: true, type: "varchar" })
-    province!: null | string;
+    province?: null | string;
 
     @Column({ name: "score", nullable: true, type: "numeric" })
-    score!: null | number;
+    score?: null | number;
 
     @Column({ name: "tuition_fee", nullable: true, type: "numeric" })
-    tuition_fee!: null | number;
+    tuitionFee?: null | number;
 
     @Column({ name: "uni_code", nullable: true, type: "varchar" })
-    uni_code!: null | string;
+    uniCode?: null | string;
 
     @Column({ name: "uni_type", nullable: true, type: "smallint" })
-    uni_type!: null | number;
+    uniType?: null | number;
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })

@@ -8,14 +8,15 @@ import {
 } from "typeorm";
 
 @Entity({ name: "transcript_subject_group", schema: "machine_learning" })
-@Index("idx_tsg_major_code", ["major_code"])
-@Index("idx_tsg_uni_code", ["uni_code"])
-@Index("idx_tsg_subject_combination", ["subject_combination"])
+@Index("idx_tsg_major_code", ["majorCode"])
+@Index("idx_tsg_uni_code", ["uniCode"])
+@Index("idx_tsg_subject_combination", ["subjectCombination"])
 @Index("idx_tsg_created_at", ["createdAt"])
 @Index("idx_tsg_updated_at", ["updatedAt"])
 export class TranscriptSubjectGroupEntity {
     @CreateDateColumn({
         insert: true,
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })
@@ -25,16 +26,17 @@ export class TranscriptSubjectGroupEntity {
     id!: string;
 
     @Column({ name: "major_code", nullable: true, type: "varchar" })
-    major_code!: null | string;
+    majorCode?: null | string;
 
     @Column({ name: "subject_combination", nullable: true, type: "varchar" })
-    subject_combination!: null | string;
+    subjectCombination?: null | string;
 
     @Column({ name: "uni_code", nullable: true, type: "varchar" })
-    uni_code!: null | string;
+    uniCode?: null | string;
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })

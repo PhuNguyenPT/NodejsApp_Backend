@@ -93,7 +93,7 @@ export class L2Data1760411108656 implements MigrationInterface {
         let batch: L2Entity[] = [];
         let fileRecords = 0;
 
-        // Note: CSV uses semicolon as delimiter
+        // Note: CSV uses comma as delimiter
         const stream = fs
             .createReadStream(csvPath, { encoding: "utf-8" })
             .pipe(stripBomStream())
@@ -104,6 +104,7 @@ export class L2Data1760411108656 implements MigrationInterface {
             const csvRow = row as L2CsvRow;
             const l2Record = new L2Entity();
 
+            // Use camelCase property names
             l2Record.uniTypeLabel =
                 parseInt(csvRow.uni_type_label ?? "0", 10) || 0;
             l2Record.province = csvRow.province ?? "";
@@ -121,18 +122,18 @@ export class L2Data1760411108656 implements MigrationInterface {
                 parseInt(csvRow.certification_score_equivalence ?? "0", 10) ||
                 0;
 
-            l2Record.conduct_grade_10 =
+            l2Record.conductGrade10 =
                 parseInt(csvRow.conduct_grade_10 ?? "0", 10) || 0;
-            l2Record.conduct_grade_11 =
+            l2Record.conductGrade11 =
                 parseInt(csvRow.conduct_grade_11 ?? "0", 10) || 0;
-            l2Record.conduct_grade_12 =
+            l2Record.conductGrade12 =
                 parseInt(csvRow.conduct_grade_12 ?? "0", 10) || 0;
 
-            l2Record.academic_performance_grade_10 =
+            l2Record.academicPerformanceGrade10 =
                 parseInt(csvRow.academic_performance_grade_10 ?? "0", 10) || 0;
-            l2Record.academic_performance_grade_11 =
+            l2Record.academicPerformanceGrade11 =
                 parseInt(csvRow.academic_performance_grade_11 ?? "0", 10) || 0;
-            l2Record.academic_performance_grade_12 =
+            l2Record.academicPerformanceGrade12 =
                 parseInt(csvRow.academic_performance_grade_12 ?? "0", 10) || 0;
 
             l2Record.majorCode = parseInt(csvRow.major_code ?? "0", 10) || 0;

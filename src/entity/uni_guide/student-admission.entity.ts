@@ -34,6 +34,7 @@ export class StudentAdmissionEntity {
 
     @CreateDateColumn({
         insert: true,
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })
@@ -54,6 +55,7 @@ export class StudentAdmissionEntity {
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })

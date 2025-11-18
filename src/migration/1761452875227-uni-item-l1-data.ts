@@ -80,17 +80,19 @@ export class UniItemL1Data1761452875227 implements MigrationInterface {
             // Default to 0 if tuition_fee is missing
             uniL1Record.tuitionFee = record.tuition_fee ?? 0;
 
-            // Default to "[]" (empty vector) if tfidf_content is missing
-            if (!record.tfidf_content) {
-                uniL1Record.tfidfContent = "[]";
-            } else if (Array.isArray(record.tfidf_content.list)) {
+            // Handle tfidf_content as number array
+            if (
+                !record.tfidf_content ||
+                !Array.isArray(record.tfidf_content.list)
+            ) {
+                // Empty vector as number array
+                uniL1Record.tfidfContent = [];
+            } else {
+                // Extract elements from the nested structure
                 const flatArray = record.tfidf_content.list.map(
                     (item) => item.element,
                 );
-                uniL1Record.tfidfContent =
-                    flatArray.length === 0 ? "[]" : `[${flatArray.join(",")}]`;
-            } else {
-                uniL1Record.tfidfContent = "[]";
+                uniL1Record.tfidfContent = flatArray;
             }
 
             batch.push(uniL1Record);

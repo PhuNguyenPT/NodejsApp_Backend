@@ -17,15 +17,32 @@ import { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
  */
 @Entity({ name: "majors", schema: "uni_guide" })
 export class MajorEntity {
-    @Column({ length: 255, nullable: false, type: "varchar", unique: true })
+    @Column({
+        length: 255,
+        name: "code",
+        nullable: false,
+        type: "varchar",
+        unique: true,
+    })
     code!: string; // The full major code, e.g., "71401"
 
     @CreateDateColumn({
         insert: true,
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })
     createdAt!: Date;
+
+    @Column({
+        insert: true,
+        length: 255,
+        name: "created_by",
+        nullable: true,
+        type: "varchar",
+        update: false,
+    })
+    createdBy?: string;
 
     @JoinColumn({ name: "group_id" })
     @ManyToOne("MajorGroupEntity", "majors", {
@@ -34,21 +51,32 @@ export class MajorEntity {
     })
     group!: Relation<MajorGroupEntity>;
 
-    @Column({ nullable: false, type: "uuid" })
+    @Column({ name: "group_id", nullable: false, type: "uuid" })
     group_id!: string;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ nullable: false, type: "varchar" })
+    @Column({ name: "name", nullable: false, type: "varchar" })
     name!: string; // The Vietnamese name of the major, e.g., "Khoa học giáo dục"
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })
     updatedAt!: Date;
+
+    @Column({
+        insert: false,
+        length: 255,
+        name: "updated_by",
+        nullable: true,
+        type: "varchar",
+        update: true,
+    })
+    updatedBy?: string;
 
     constructor(major?: Partial<MajorEntity>) {
         if (major) {

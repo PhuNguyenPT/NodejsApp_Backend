@@ -82,14 +82,15 @@ export class L3Data1760925742503 implements MigrationInterface {
             const csvRow = row as L3CsvRow;
             const l3Record = new L3Entity();
 
-            l3Record.uni_code = csvRow.uni_code ?? "";
-            l3Record.major_code = csvRow.major_code ?? "";
-            l3Record.major_name = csvRow.major_name ?? "";
+            // Use camelCase property names
+            l3Record.uniCode = csvRow.uni_code ?? "";
+            l3Record.majorCode = csvRow.major_code ?? "";
+            l3Record.majorName = csvRow.major_name ?? "";
             l3Record.score = this.parseDecimal(csvRow.score ?? "0");
-            l3Record.major_group = parseInt(csvRow.major_group ?? "0", 10) || 0;
+            l3Record.majorGroup = parseInt(csvRow.major_group ?? "0", 10) || 0;
             l3Record.province = csvRow.province ?? "";
-            l3Record.uni_type = parseInt(csvRow.uni_type ?? "0", 10) || 0;
-            l3Record.tuition_fee = parseFloat(csvRow.tuition_fee ?? "0") || 0;
+            l3Record.uniType = parseInt(csvRow.uni_type ?? "0", 10) || 0;
+            l3Record.tuitionFee = parseFloat(csvRow.tuition_fee ?? "0") || 0;
 
             batch.push(l3Record);
             fileRecords++;

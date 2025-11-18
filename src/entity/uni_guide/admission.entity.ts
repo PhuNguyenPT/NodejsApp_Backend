@@ -87,6 +87,7 @@ export class AdmissionEntity {
 
     @CreateDateColumn({
         insert: true,
+        name: "created_at", // Added snake_case name
         type: "timestamp with time zone",
         update: false,
     })
@@ -130,8 +131,15 @@ export class AdmissionEntity {
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })
     updatedAt!: Date;
+
+    constructor(award?: Partial<AdmissionEntity>) {
+        if (award) {
+            Object.assign(this, award);
+        }
+    }
 }

@@ -24,15 +24,26 @@ import { MajorGroup, MajorGroupKey } from "@/type/enum/major.js";
 @Index("idx_major_groups_name", ["name"])
 @Index("idx_major_groups_updated_at", ["updatedAt"])
 export class MajorGroupEntity {
-    @Column({ length: "255", type: "varchar", unique: true })
+    @Column({ length: "255", name: "code", type: "varchar", unique: true })
     code!: string; // The 3-digit code, e.g., "714"
 
     @CreateDateColumn({
         insert: true,
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })
     createdAt!: Date;
+
+    @Column({
+        insert: true,
+        length: 255,
+        name: "created_by",
+        nullable: true,
+        type: "varchar",
+        update: false,
+    })
+    createdBy?: string;
 
     @Column({
         length: 255,
@@ -48,15 +59,26 @@ export class MajorGroupEntity {
     @OneToMany("MajorEntity", "group")
     majors!: Relation<MajorEntity[]>;
 
-    @Column({ enum: MajorGroup, nullable: false, type: "enum" })
+    @Column({ enum: MajorGroup, name: "name", nullable: false, type: "enum" })
     name!: MajorGroup; // The Vietnamese name, e.g., "Khoa học giáo dục và đào tạo giáo viên"
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })
     updatedAt!: Date;
+
+    @Column({
+        insert: false,
+        length: 255,
+        name: "updated_by",
+        nullable: true,
+        type: "varchar",
+        update: true,
+    })
+    updatedBy?: string;
 
     constructor(majorGroup?: Partial<MajorGroupEntity>) {
         if (majorGroup) {

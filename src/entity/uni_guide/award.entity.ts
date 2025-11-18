@@ -27,6 +27,7 @@ import { Rank } from "@/type/enum/rank.js";
 export class AwardEntity {
     @Column({
         enum: NationalExcellentStudentExamSubject,
+        name: "category",
         nullable: true,
         type: "enum",
     })
@@ -34,6 +35,7 @@ export class AwardEntity {
 
     @CreateDateColumn({
         insert: true,
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })
@@ -42,6 +44,7 @@ export class AwardEntity {
     @Column({
         insert: true,
         length: 255,
+        name: "created_by",
         nullable: true,
         type: "varchar",
         update: false,
@@ -51,24 +54,35 @@ export class AwardEntity {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ enum: Rank, nullable: true, type: "enum" })
+    @Column({
+        enum: Rank,
+        name: "level",
+        nullable: true,
+        type: "enum",
+    })
     level?: Rank;
 
-    @Column({ enum: NationalExcellentExamType, nullable: true, type: "enum" })
+    @Column({
+        enum: NationalExcellentExamType,
+        name: "name",
+        nullable: true,
+        type: "enum",
+    })
     name?: NationalExcellentExamType;
 
-    @JoinColumn({ name: "studentId" })
+    @JoinColumn({ name: "student_id" })
     @ManyToOne("StudentEntity", "awards", {
         onDelete: "CASCADE",
         orphanedRowAction: "delete",
     })
     student!: Relation<StudentEntity>;
 
-    @Column({ type: "uuid" })
+    @Column({ name: "student_id", type: "uuid" })
     studentId!: string;
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })
@@ -77,6 +91,7 @@ export class AwardEntity {
     @Column({
         insert: false,
         length: 255,
+        name: "updated_by",
         nullable: true,
         type: "varchar",
         update: true,
