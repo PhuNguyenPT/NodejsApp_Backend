@@ -1,5 +1,8 @@
 // src/handler/global.exception.handler.ts
 
+import { AxiosError } from "axios";
+import { plainToInstance } from "class-transformer";
+import { validate, ValidationError } from "class-validator";
 import jwt from "jsonwebtoken"; // Corrected import
 import { MulterError } from "multer";
 import { ValidateError } from "tsoa";
@@ -13,6 +16,7 @@ import {
 
 import { logger } from "@/config/logger.config.js";
 import { ExceptionHandler } from "@/decorator/exception-handler.decorator.js";
+import { HTTPValidationError } from "@/dto/prediction/validation-error.dto.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { AuthenticationException } from "@/type/exception/authentication.exception.js";
@@ -52,6 +56,7 @@ class ExceptionHandlers {
 
         return { message, response, status };
     }
+
     @ExceptionHandler(AuthenticationException)
     handleAuthenticationException(
         exception: AuthenticationException,
@@ -72,6 +77,76 @@ class ExceptionHandlers {
 
         return { message, response, status };
     }
+
+    @ExceptionHandler(AxiosError)
+    async handleAxiosError<T = unknown, D = unknown>(
+        error: AxiosError<T, D>,
+    ): Promise<ErrorDetails> {
+        const status =
+            error.response?.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
+        let message = error.message;
+        let validationErrors: Record<string, string> | undefined;
+
+        if (status === 422 && error.response?.data) {
+            const instance = plainToInstance(
+                HTTPValidationError,
+                error.response.data,
+            );
+            const errors = await validate(instance);
+
+            if (errors.length === 0) {
+                message = "External API validation failed";
+
+                validationErrors = {};
+                instance.detail.forEach((err) => {
+                    const fieldPath = err.loc.join(".");
+                    if (validationErrors) {
+                        validationErrors[fieldPath] = err.msg;
+                    }
+                });
+            } else {
+                const extractedMessage = this.extractErrorMessage(
+                    error.response.data,
+                );
+                if (extractedMessage !== message) {
+                    message = extractedMessage;
+                }
+            }
+        } else if (error.response?.data) {
+            const extractedMessage = this.extractErrorMessage(
+                error.response.data,
+            );
+            if (extractedMessage !== message) {
+                message = extractedMessage;
+            }
+        }
+
+        // Use ValidationResponse if we have validation errors, otherwise ErrorResponse
+        const response: ErrorResponse | ValidationResponse = validationErrors
+            ? {
+                  message,
+                  status,
+                  validationErrors,
+              }
+            : {
+                  message,
+                  status,
+              };
+
+        logger.error("AxiosError", {
+            code: error.code,
+            message,
+            method: error.config?.method,
+            responseData: error.response?.data,
+            stack: error.stack,
+            status,
+            url: error.config?.url,
+            validationErrors,
+        });
+
+        return { message, response, status };
+    }
+
     @ExceptionHandler(BadCredentialsException)
     handleBadCredentialsException(
         exception: BadCredentialsException,
@@ -113,6 +188,7 @@ class ExceptionHandlers {
 
         return { message, response, status };
     }
+
     @ExceptionHandler(EntityMetadataNotFoundError)
     handleEntityMetadataNotFoundError(
         error: EntityMetadataNotFoundError,
@@ -131,6 +207,7 @@ class ExceptionHandlers {
         });
         return { message, response, status };
     }
+
     @ExceptionHandler(EntityNotFoundException)
     handleEntityNotFoundException(
         exception: EntityNotFoundException,
@@ -151,6 +228,7 @@ class ExceptionHandlers {
 
         return { message, response, status };
     }
+
     @ExceptionHandler(ExpiredJwtException)
     handleExpiredJwtException(exception: ExpiredJwtException): ErrorDetails {
         const status: number = exception.status;
@@ -188,7 +266,6 @@ class ExceptionHandlers {
 
         return { message, response, status };
     }
-
     @ExceptionHandler(HttpException)
     handleHttpException(exception: HttpException): ErrorDetails {
         const status = exception.status || HttpStatus.INTERNAL_SERVER_ERROR;
@@ -440,6 +517,34 @@ class ExceptionHandlers {
         return { message, response, status };
     }
 
+    @ExceptionHandler(ValidationError)
+    handleValidationError(error: ValidationError): ErrorDetails {
+        const status = HttpStatus.BAD_REQUEST;
+        const message = "Validation failed";
+
+        const validationErrors: Record<string, string> = {};
+        if (error.constraints) {
+            validationErrors[error.property] = Object.values(
+                error.constraints,
+            ).join(", ");
+        }
+
+        const response: ValidationResponse = {
+            message,
+            status,
+            validationErrors,
+        };
+
+        logger.warn("ValidationError", {
+            constraints: error.constraints,
+            message,
+            property: error.property,
+            status,
+        });
+
+        return { message, response, status };
+    }
+
     @ExceptionHandler(ValidationException)
     handleValidationException(exception: ValidationException): ErrorDetails {
         const status = exception.status;
@@ -517,15 +622,29 @@ class ExceptionHandlers {
 
         return { message, response, status };
     }
+
+    private extractErrorMessage(data: unknown): string {
+        if (typeof data === "string") {
+            return data;
+        }
+
+        if (typeof data === "object" && data !== null) {
+            const obj = data as Record<string, unknown>;
+            if (typeof obj.message === "string") {
+                return obj.message;
+            }
+            if (typeof obj.error === "string") {
+                return obj.error;
+            }
+        }
+
+        return "An error occurred";
+    }
 }
 
-// Create an instance to avoid "only static properties" ESLint error
 const exceptionHandlers = new ExceptionHandlers();
 
 // Export the generic error handler with proper typing
 export const handleGenericError = (error: Error): ErrorDetails => {
     return exceptionHandlers.handleGenericError(error);
 };
-
-// Also export the class instance if needed elsewhere
-export const GlobalExceptionHandler = exceptionHandlers;

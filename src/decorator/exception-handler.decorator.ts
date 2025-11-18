@@ -2,10 +2,10 @@
 
 import { ErrorDetails } from "@/type/interface/error-details.interface.js";
 
-// Use a more flexible constructor type that doesn't constrain parameters
-type ErrorConstructor = abstract new (...args: never[]) => Error;
+// Make it more flexible to accept any class constructor, not just Error subclasses
+type ErrorConstructor = abstract new (...args: never[]) => unknown;
 
-type ExceptionHandlerFn = (error: Error) => ErrorDetails;
+type ExceptionHandlerFn = (error: unknown) => ErrorDetails;
 
 // Use module pattern instead of namespace
 const handlers = new Map<ErrorConstructor, ExceptionHandlerFn>();
@@ -15,7 +15,11 @@ export const ExceptionHandlerRegistry = {
         return new Map(handlers);
     },
 
-    getHandler(error: Error): ExceptionHandlerFn | null {
+    getHandler(error: unknown): ExceptionHandlerFn | null {
+        if (!error || typeof error !== "object") {
+            return null;
+        }
+
         // Check for exact match first
         for (const [ExceptionClass, handler] of handlers.entries()) {
             if (error.constructor === ExceptionClass) {

@@ -378,87 +378,6 @@ export class PredictionL2Service implements IPredictionL2Service {
         return deduplicatedResults;
     }
 
-    public async predictL2MajorsBatch(
-        userInputs: UserInputL2[],
-        dynamicConcurrency?: number, // Optional override
-    ): Promise<L2PredictResult[]> {
-        try {
-            // Calculate dynamic concurrency if not provided
-            const batchConcurrency =
-                dynamicConcurrency ??
-                this.concurrencyUtil.calculateDynamicBatchConcurrency(
-                    userInputs.length,
-                    this.config.SERVICE_INPUTS_PER_WORKER, // inputs per worker
-                    this.config.SERVICE_BATCH_CONCURRENCY, // Use config as max limit
-                    this.config.SERVICE_MIN_BATCH_CONCURRENCY, // Min concurrency
-                );
-
-            const batchRequest: L2BatchRequest = {
-                items: userInputs,
-            };
-
-            const response = await this.httpClient.post<L2PredictResult[][]>(
-                `/predict/l2/batch?concurrency=${batchConcurrency.toString()}`,
-                batchRequest,
-            );
-
-            const flattenedResults = response.data.flat();
-            const validatedResults =
-                await this.validateL2PredictResponse(flattenedResults);
-
-            this.logger.info("L2 Prediction: Batch prediction completed", {
-                inputCount: userInputs.length,
-                resultCount: validatedResults.length,
-                usedConcurrency: batchConcurrency,
-            });
-
-            return validatedResults;
-        } catch (error) {
-            const errorContext = {
-                inputCount: userInputs.length,
-                usedConcurrency: dynamicConcurrency ?? "calculated",
-            };
-
-            if (isAxiosError(error)) {
-                const axiosError = error as AxiosError;
-                const status = axiosError.response?.status;
-                let detailedMessage = axiosError.message;
-
-                if (
-                    status === 422 &&
-                    this.predictionUtil.isValidationError(
-                        axiosError.response?.data,
-                    )
-                ) {
-                    const validationError = axiosError.response.data;
-                    const specificErrors = validationError.detail
-                        .map((err) => `${err.loc.join(".")} - ${err.msg}`)
-                        .join("; ");
-                    detailedMessage = `API Validation Error: ${specificErrors}`;
-                }
-
-                this.logger.error("L2 Prediction: Batch API error", {
-                    message: detailedMessage,
-                    status: status ?? "unknown",
-                    ...errorContext,
-                });
-
-                throw new Error(
-                    `L2 Prediction: Batch API error (${String(status)}): ${detailedMessage}`,
-                );
-            }
-
-            const message =
-                error instanceof Error ? error.message : "Unknown error";
-            this.logger.error("L2 Prediction: Batch service error", {
-                message,
-                ...errorContext,
-            });
-
-            throw new Error(`L2 Prediction: Batch service error: ${message}`);
-        }
-    }
-
     public async predictMajorsByStudentIdAndUserId(
         userInput: UserInputL2,
     ): Promise<L2PredictResult[]> {
@@ -547,6 +466,87 @@ export class PredictionL2Service implements IPredictionL2Service {
         }
     }
 
+    public async predictMajorsL2Batch(
+        userInputs: UserInputL2[],
+        dynamicConcurrency?: number, // Optional override
+    ): Promise<L2PredictResult[]> {
+        try {
+            // Calculate dynamic concurrency if not provided
+            const batchConcurrency =
+                dynamicConcurrency ??
+                this.concurrencyUtil.calculateDynamicBatchConcurrency(
+                    userInputs.length,
+                    this.config.SERVICE_INPUTS_PER_WORKER, // inputs per worker
+                    this.config.SERVICE_BATCH_CONCURRENCY, // Use config as max limit
+                    this.config.SERVICE_MIN_BATCH_CONCURRENCY, // Min concurrency
+                );
+
+            const batchRequest: L2BatchRequest = {
+                items: userInputs,
+            };
+
+            const response = await this.httpClient.post<L2PredictResult[][]>(
+                `/predict/l2/batch?concurrency=${batchConcurrency.toString()}`,
+                batchRequest,
+            );
+
+            const flattenedResults = response.data.flat();
+            const validatedResults =
+                await this.validateL2PredictResponse(flattenedResults);
+
+            this.logger.info("L2 Prediction: Batch prediction completed", {
+                inputCount: userInputs.length,
+                resultCount: validatedResults.length,
+                usedConcurrency: batchConcurrency,
+            });
+
+            return validatedResults;
+        } catch (error) {
+            const errorContext = {
+                inputCount: userInputs.length,
+                usedConcurrency: dynamicConcurrency ?? "calculated",
+            };
+
+            if (isAxiosError(error)) {
+                const axiosError = error as AxiosError;
+                const status = axiosError.response?.status;
+                let detailedMessage = axiosError.message;
+
+                if (
+                    status === 422 &&
+                    this.predictionUtil.isValidationError(
+                        axiosError.response?.data,
+                    )
+                ) {
+                    const validationError = axiosError.response.data;
+                    const specificErrors = validationError.detail
+                        .map((err) => `${err.loc.join(".")} - ${err.msg}`)
+                        .join("; ");
+                    detailedMessage = `API Validation Error: ${specificErrors}`;
+                }
+
+                this.logger.error("L2 Prediction: Batch API error", {
+                    message: detailedMessage,
+                    status: status ?? "unknown",
+                    ...errorContext,
+                });
+
+                throw new Error(
+                    `L2 Prediction: Batch API error (${String(status)}): ${detailedMessage}`,
+                );
+            }
+
+            const message =
+                error instanceof Error ? error.message : "Unknown error";
+            this.logger.error("L2 Prediction: Batch service error", {
+                message,
+                ...errorContext,
+            });
+
+            throw new Error(`L2 Prediction: Batch service error: ${message}`);
+        }
+    }
+
     private async _performL2BatchPrediction(
         inputsForGroup: UserInputL2[],
         subjectGroup: string,
@@ -568,7 +568,7 @@ export class PredictionL2Service implements IPredictionL2Service {
                 );
 
             // Use dynamic concurrency in the batch call
-            const batchResults = await this.predictL2MajorsBatch(
+            const batchResults = await this.predictMajorsL2Batch(
                 inputsForGroup,
                 dynamicConcurrency,
             );
