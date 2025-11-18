@@ -1,5 +1,6 @@
 import { Expose, Transform, Type } from "class-transformer";
 import {
+    IsArray,
     IsEnum,
     IsIn,
     IsInt,
@@ -27,6 +28,13 @@ const ToTwoDecimals = () =>
         }
         return value;
     });
+
+export class AwardEnglish {
+    @Expose()
+    @IsIn(["A1", "A2", "B1", "B2", "C1", "C2"])
+    @IsString()
+    level!: string;
+}
 
 export class AwardQG {
     @Expose()
@@ -468,7 +476,6 @@ export class TranscriptRecordL3 {
     @ValidateNested()
     grade_12!: TranscriptSubjectScoreL3;
 }
-
 export class TranscriptSubjectScoreL3 {
     @Expose()
     @IsNumber()
@@ -550,16 +557,17 @@ export class TranscriptSubjectScoreL3 {
 
 export class UserInputL3 {
     @Expose()
-    @IsIn(["A1", "A2", "B1", "B2", "C1", "C2"])
     @IsOptional()
-    @IsString()
-    award_english?: string;
+    @Type(() => AwardEnglish)
+    @ValidateNested()
+    award_english?: AwardEnglish;
 
     @Expose()
+    @IsArray()
     @IsOptional()
     @Type(() => AwardQG)
-    @ValidateNested()
-    award_qg?: AwardQG;
+    @ValidateNested({ each: true })
+    award_qg?: AwardQG[];
 
     @Expose()
     @IsIn([0, 1])
