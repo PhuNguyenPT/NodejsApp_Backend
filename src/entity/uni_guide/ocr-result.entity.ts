@@ -48,6 +48,7 @@ export interface OcrMetadata {
 export class OcrResultEntity {
     @CreateDateColumn({
         insert: true,
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })
@@ -56,49 +57,52 @@ export class OcrResultEntity {
     @Column({
         insert: true,
         length: 255,
+        name: "created_by",
         nullable: true,
         type: "varchar",
         update: false,
     })
     createdBy?: string;
 
-    @Column({ nullable: true, type: "text" })
+    @Column({ name: "document_annotation", nullable: true, type: "text" })
     documentAnnotation?: string;
 
-    @Column({ nullable: true, type: "text" })
+    @Column({ name: "error_message", nullable: true, type: "text" })
     errorMessage?: string;
 
-    @JoinColumn({ name: "fileId" })
+    @JoinColumn({ name: "file_id" })
     @OneToOne("FileEntity", "ocrResult", { onDelete: "CASCADE" })
     file!: Relation<FileEntity>;
 
-    @Column({ type: "uuid" })
+    @Column({ name: "file_id", type: "uuid" })
     fileId!: string;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ nullable: true, type: "jsonb" })
+    @Column({ name: "metadata", nullable: true, type: "jsonb" })
     metadata?: OcrMetadata;
 
-    @Column({ nullable: true, type: "jsonb" })
+    @Column({ name: "scores", nullable: true, type: "jsonb" })
     scores?: ISubjectScore[];
 
     @Column({
         enum: OcrStatus,
+        name: "status",
         type: "enum",
     })
     status!: OcrStatus;
 
-    @JoinColumn({ name: "studentId" })
+    @JoinColumn({ name: "student_id" })
     @ManyToOne("StudentEntity", { onDelete: "CASCADE" })
     student!: Relation<StudentEntity>;
 
-    @Column({ type: "uuid" })
+    @Column({ name: "student_id", type: "uuid" })
     studentId!: string;
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })
@@ -107,6 +111,7 @@ export class OcrResultEntity {
     @Column({
         insert: false,
         length: 255,
+        name: "updated_by",
         nullable: true,
         type: "varchar",
         update: true,

@@ -28,14 +28,15 @@ import { Permission, Role } from "@/type/enum/user.js";
 @Index("idx_user_permissions", ["permissions"])
 @Index("idx_user_phone_numbers", ["phoneNumbers"])
 export class UserEntity {
-    @Column({ default: true, type: "boolean" })
+    @Column({ default: true, name: "account_non_expired", type: "boolean" })
     accountNonExpired = true;
 
-    @Column({ default: true, type: "boolean" })
+    @Column({ default: true, name: "account_non_locked", type: "boolean" })
     accountNonLocked = true;
 
     @CreateDateColumn({
         insert: true,
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })
@@ -45,40 +46,42 @@ export class UserEntity {
         default: Role.ANONYMOUS,
         insert: true,
         length: 255,
+        name: "created_by",
         nullable: true,
         type: "varchar",
         update: false,
     })
     createdBy?: string;
 
-    @Column({ default: true, type: "boolean" })
+    @Column({ default: true, name: "credentials_non_expired", type: "boolean" })
     credentialsNonExpired = true;
 
-    @Column({ length: 255, type: "varchar", unique: true })
+    @Column({ length: 255, name: "email", type: "varchar", unique: true })
     email!: string;
 
-    @Column({ default: true, type: "boolean" })
+    @Column({ default: true, name: "enabled", type: "boolean" })
     enabled = true;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ length: 255, nullable: true, type: "varchar" })
+    @Column({ length: 255, name: "name", nullable: true, type: "varchar" })
     name?: string;
 
-    @Column({ length: 128, type: "varchar" })
+    @Column({ length: 128, name: "password", type: "varchar" })
     password!: string;
 
     // Store permissions as an array of strings
-    @Column({ nullable: true, type: "jsonb" })
+    @Column({ name: "permissions", nullable: true, type: "jsonb" })
     permissions!: Permission[];
 
-    @Column({ nullable: true, type: "jsonb" })
+    @Column({ name: "phone_numbers", nullable: true, type: "jsonb" })
     phoneNumbers?: string[];
 
     @Column({
         default: Role.USER,
         enum: Role,
+        name: "role",
         type: "enum",
     })
     role!: Role;
@@ -90,6 +93,7 @@ export class UserEntity {
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })
@@ -98,6 +102,7 @@ export class UserEntity {
     @Column({
         insert: false,
         length: 255,
+        name: "updated_by",
         nullable: true,
         type: "varchar",
         update: true,
@@ -177,7 +182,6 @@ export class UserEntity {
         return this.enabled;
     }
 
-    // Helper methods for account management
     lockAccount(): void {
         this.accountNonLocked = false;
     }

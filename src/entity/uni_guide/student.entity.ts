@@ -77,6 +77,7 @@ export class StudentEntity {
 
     @CreateDateColumn({
         insert: true,
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })
@@ -85,6 +86,7 @@ export class StudentEntity {
     @Column({
         insert: true,
         length: 255,
+        name: "created_by",
         nullable: true,
         type: "varchar",
         update: false,
@@ -101,13 +103,25 @@ export class StudentEntity {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ nullable: true, type: "jsonb" })
+    @Column({ name: "majors", nullable: true, type: "jsonb" })
     majors?: MajorGroup[];
 
-    @Column({ nullable: true, precision: 14, scale: 2, type: "decimal" })
+    @Column({
+        name: "max_budget",
+        nullable: true,
+        precision: 14,
+        scale: 2,
+        type: "decimal",
+    })
     maxBudget?: number;
 
-    @Column({ nullable: true, precision: 14, scale: 2, type: "decimal" })
+    @Column({
+        name: "min_budget",
+        nullable: true,
+        precision: 14,
+        scale: 2,
+        type: "decimal",
+    })
     minBudget?: number;
 
     @OneToMany("StudentNationalExamEntity", "student", {
@@ -126,12 +140,14 @@ export class StudentEntity {
 
     @Column({
         enum: VietnamSouthernProvinces,
+        name: "province",
         nullable: true,
         type: "varchar",
     })
     province?: VietnamSouthernProvinces;
 
     @Column({
+        name: "special_student_cases",
         nullable: true,
         type: "jsonb",
     })
@@ -158,11 +174,12 @@ export class StudentEntity {
     })
     talentExams?: Relation<StudentTalentExamEntity[]>;
 
-    @Column({ enum: UniType, nullable: true, type: "enum" })
+    @Column({ enum: UniType, name: "uni_type", nullable: true, type: "enum" })
     uniType?: UniType;
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })
@@ -171,13 +188,14 @@ export class StudentEntity {
     @Column({
         insert: false,
         length: 255,
+        name: "updated_by",
         nullable: true,
         type: "varchar",
         update: true,
     })
     updatedBy?: string;
 
-    @JoinColumn({ name: "userId" })
+    @JoinColumn({ name: "user_id" })
     @ManyToOne("UserEntity", "studentEntities", {
         eager: false,
         nullable: true,
@@ -185,7 +203,7 @@ export class StudentEntity {
     })
     user?: Relation<UserEntity>;
 
-    @Column({ nullable: true, type: "uuid" })
+    @Column({ name: "user_id", nullable: true, type: "uuid" })
     userId?: string;
 
     @OneToMany("StudentVsatExamEntity", "student", {

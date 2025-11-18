@@ -3,7 +3,7 @@ import { VietnameseSubject } from "./subject.js";
 /**
  * National exam subjects required for graduation
  */
-const NationalExamSubjectsArray: VietnameseSubject[] = [
+const NationalExamSubjectsArray = [
     VietnameseSubject.TOAN,
     VietnameseSubject.NGU_VAN,
     VietnameseSubject.TIENG_ANH,
@@ -32,6 +32,10 @@ export type NationalExamSubject = (typeof NationalExamSubjectsArray)[number];
 /**
  * Check if a subject is a national subject
  */
-export function isNationalExamSubjects(subject: VietnameseSubject): boolean {
-    return NationalExamSubjectsArray.includes(subject);
+export function isNationalExamSubjects(
+    subject: VietnameseSubject,
+): subject is NationalExamSubject {
+    return (NationalExamSubjects as readonly VietnameseSubject[]).includes(
+        subject,
+    );
 }

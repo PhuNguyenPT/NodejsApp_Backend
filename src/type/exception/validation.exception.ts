@@ -10,13 +10,13 @@ export class ValidationException extends HttpException {
     /**
      * Creates a new ValidationException with detailed validation errors.
      * @param validationErrors - An object mapping field names to error messages.
+     * @param message - Custom error message (defaults to "Validation failed")
      */
-    constructor(validationErrors: Record<string, string>) {
-        super(
-            HttpStatus.UNPROCESSABLE_ENTITY,
-            "Validation failed",
-            "ValidationException",
-        );
+    constructor(
+        validationErrors: Record<string, string>,
+        message = "Validation failed",
+    ) {
+        super(HttpStatus.UNPROCESSABLE_ENTITY, message, "ValidationException");
         this.validationErrors = validationErrors;
     }
 }

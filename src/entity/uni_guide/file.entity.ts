@@ -48,6 +48,7 @@ export enum FileType {
 export class FileEntity {
     @CreateDateColumn({
         insert: true,
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })
@@ -56,30 +57,37 @@ export class FileEntity {
     @Column({
         insert: true,
         length: 255,
+        name: "created_by",
         nullable: true,
         type: "varchar",
         update: false,
     })
     createdBy?: string;
 
-    @Column({ length: 500, nullable: true, type: "varchar" })
+    @Column({
+        length: 500,
+        name: "description",
+        nullable: true,
+        type: "varchar",
+    })
     description?: string;
 
-    @Column({ select: false, type: "bytea" }) // PostgreSQL binary data type
+    @Column({ name: "file_content", select: false, type: "bytea" })
     fileContent!: Buffer;
 
-    @Column({ length: 255, type: "varchar" })
+    @Column({ length: 255, name: "file_name", type: "varchar" })
     fileName!: string;
 
-    @Column({ length: 500, nullable: true, type: "varchar" })
+    @Column({ length: 500, name: "file_path", nullable: true, type: "varchar" })
     filePath!: string;
 
-    @Column({ type: "bigint" })
+    @Column({ name: "file_size", type: "bigint" })
     fileSize!: number;
 
     @Column({
         default: FileType.OTHER,
         enum: FileType,
+        name: "file_type",
         type: "enum",
     })
     fileType!: FileType;
@@ -87,10 +95,10 @@ export class FileEntity {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ nullable: true, type: "jsonb" })
+    @Column({ name: "metadata", nullable: true, type: "jsonb" })
     metadata?: Record<string, unknown>;
 
-    @Column({ length: 100, type: "varchar" })
+    @Column({ length: 100, name: "mime_type", type: "varchar" })
     mimeType!: string;
 
     @OneToOne("OcrResultEntity", "file", {
@@ -99,17 +107,18 @@ export class FileEntity {
     })
     ocrResult?: Relation<OcrResultEntity>;
 
-    @Column({ length: 255, type: "varchar" })
+    @Column({ length: 255, name: "original_file_name", type: "varchar" })
     originalFileName!: string;
 
     @Column({
         default: FileStatus.ACTIVE,
         enum: FileStatus,
+        name: "status",
         type: "enum",
     })
     status!: FileStatus;
 
-    @JoinColumn({ name: "studentId" })
+    @JoinColumn({ name: "student_id" })
     @ManyToOne("StudentEntity", "files", {
         eager: false,
         onDelete: "CASCADE",
@@ -117,14 +126,15 @@ export class FileEntity {
     })
     student!: Relation<StudentEntity>;
 
-    @Column({ type: "uuid" })
+    @Column({ name: "student_id", type: "uuid" })
     studentId!: string;
 
-    @Column({ length: 255, nullable: true, type: "varchar" })
+    @Column({ length: 255, name: "tags", nullable: true, type: "varchar" })
     tags?: string;
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })
@@ -133,6 +143,7 @@ export class FileEntity {
     @Column({
         insert: false,
         length: 255,
+        name: "updated_by",
         nullable: true,
         type: "varchar",
         update: true,

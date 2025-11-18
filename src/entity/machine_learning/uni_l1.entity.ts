@@ -9,10 +9,11 @@ import {
 @Entity({ name: "uni_l1", schema: "machine_learning" })
 export class UniL1Entity {
     @Column({ name: "admission_code", nullable: true, type: "varchar" })
-    admissionCode?: string;
+    admissionCode?: null | string;
 
     @CreateDateColumn({
         insert: true,
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })
@@ -22,27 +23,43 @@ export class UniL1Entity {
     id!: string;
 
     @Column({
-        insert: false,
+        length: "65",
         name: "tfidf_content",
         nullable: true,
         transformer: {
-            from: (value: null | string | undefined) => value ?? null,
-            to: (value: null | number[] | string | undefined) => {
+            // From DB to application: string → number[]
+            from: (value: null | string | undefined): null | number[] => {
                 if (value == null) return null;
-                if (typeof value === "string") return value;
-                return `[${value.join(",")}]`;
+                // pgvector returns format like "[1,2,3]"
+                if (typeof value === "string") {
+                    // Remove brackets and parse
+                    const cleaned = value.replace(/^\[|\]$/g, "");
+                    if (!cleaned) return null;
+                    return cleaned.split(",").map(Number);
+                }
+                return value as number[];
+            },
+            // From application to DB: number[] → string
+            to: (value: null | number[] | undefined): null | string => {
+                if (value == null) return null;
+                // Convert array to pgvector format "[1,2,3]"
+                if (Array.isArray(value)) {
+                    return `[${value.join(",")}]`;
+                }
+                // If already formatted (shouldn't happen)
+                return value as string;
             },
         },
-        type: "text",
-        update: false,
+        type: "vector",
     })
-    tfidfContent?: string;
+    tfidfContent?: null | number[];
 
     @Column({ name: "tuition_fee", nullable: true, type: "numeric" })
-    tuitionFee?: number;
+    tuitionFee?: null | number;
 
     @UpdateDateColumn({
         insert: false,
+        name: "updated_at",
         type: "timestamp with time zone",
         update: true,
     })

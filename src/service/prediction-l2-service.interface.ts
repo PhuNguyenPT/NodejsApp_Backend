@@ -15,12 +15,12 @@ export interface IPredictionL2Service {
         studentId: string,
         userId?: string,
     ): Promise<L2PredictResult[]>;
-    predictL2MajorsBatch(
-        userInputs: UserInputL2[],
-        dynamicConcurrency?: number,
-    ): Promise<L2PredictResult[]>;
     predictMajorsByStudentIdAndUserId(
         userInput: UserInputL2,
     ): Promise<L2PredictResult[]>;
     predictMajorsL2(userInput: UserInputL2): Promise<L2PredictResult[]>;
+    predictMajorsL2Batch(
+        userInputs: UserInputL2[],
+        dynamicConcurrency?: number,
+    ): Promise<L2PredictResult[]>;
 }

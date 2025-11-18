@@ -78,9 +78,9 @@ export class TranscriptSubjectGroup1760934064921 implements MigrationInterface {
             const csvRow = row as TranscriptSubjectGroupCsvRow;
             const record = new TranscriptSubjectGroupEntity();
 
-            record.uni_code = csvRow.uni_code ?? "";
-            record.major_code = csvRow.major_code ?? "";
-            record.subject_combination = csvRow.subject_combination ?? "";
+            record.uniCode = csvRow.uni_code ?? "";
+            record.majorCode = csvRow.major_code ?? "";
+            record.subjectCombination = csvRow.subject_combination ?? "";
 
             batch.push(record);
             fileRecords++;
