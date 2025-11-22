@@ -16,6 +16,7 @@ import {
 import { MajorGroupCodes } from "@/type/enum/major.js";
 
 import { HsgSubject } from "./hsg-subject.enum.js";
+import { InterCerEnum } from "./inter-cert.enum.js";
 import { L3NationalSubject } from "./l3-national-subject.enum.js";
 
 const ToTwoDecimals = () =>
@@ -72,7 +73,7 @@ export class InterCer {
     @Expose()
     @IsNotEmpty()
     @IsString()
-    name!: string;
+    name!: InterCerEnum;
 
     @Expose()
     @IsNotEmpty()
