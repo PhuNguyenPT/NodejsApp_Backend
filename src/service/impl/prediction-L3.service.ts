@@ -6,12 +6,16 @@ import { Repository } from "typeorm";
 import { Logger } from "winston";
 
 import { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
+import { HsgSubject } from "@/dto/prediction/hsg-subject.enum.js";
+import { InterCerEnum } from "@/dto/prediction/inter-cert.enum.js";
 import { L3NationalSubject } from "@/dto/prediction/l3-national-subject.enum.js";
 import { L3PredictResult } from "@/dto/prediction/l3-predict-result.dto.js";
 import { UserInputL3 } from "@/dto/prediction/l3-request.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
+import { CCQTType, ExamType } from "@/type/enum/exam-type.js";
 import { NationalExamSubject } from "@/type/enum/national-exam-subject.js";
+import { NationalExcellentStudentExamSubject } from "@/type/enum/national-excellent-exam.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { ConcurrencyUtil } from "@/util/concurrency.util.js";
@@ -79,6 +83,31 @@ export class PredictionL3Service implements IPredictionL3Service {
         return validatedResults;
     }
 
+    private mapCCQTTypeToInterCerEnum(examType: CCQTType): InterCerEnum {
+        switch (examType) {
+            case ExamType.A_Level:
+                return InterCerEnum.A_LEVEL;
+            case ExamType.ACT:
+                return InterCerEnum.ACT;
+            case ExamType.Duolingo_English_Test:
+                return InterCerEnum.DOULINGO_ENGLISH_TEST;
+            case ExamType.IB:
+                return InterCerEnum.IB;
+            case ExamType.OSSD:
+                return InterCerEnum.OSSD;
+            case ExamType.PTE_Academic:
+                return InterCerEnum.PTE_ACADEMIC;
+            case ExamType.SAT:
+                return InterCerEnum.SAT;
+            default: {
+                const _exhaustiveCheck: never = examType;
+                throw new Error(
+                    `Unsupported CCQT exam type: ${String(_exhaustiveCheck)}`,
+                );
+            }
+        }
+    }
+
     private mapNationalExamSubjectToL3NationalSubject(
         nationalExamSubject: NationalExamSubject,
     ): L3NationalSubject {
@@ -123,6 +152,45 @@ export class PredictionL3Service implements IPredictionL3Service {
                 const _exhaustiveCheck: never = nationalExamSubject;
                 throw new Error(
                     `Unsupported national exam subject: ${String(_exhaustiveCheck)}`,
+                );
+            }
+        }
+    }
+
+    private mapNationalExcellentStudentExamSubjectToHsgSubject(
+        subject: NationalExcellentStudentExamSubject,
+    ): HsgSubject {
+        switch (subject) {
+            case NationalExcellentStudentExamSubject.BIOLOGY:
+                return HsgSubject.SINH;
+            case NationalExcellentStudentExamSubject.CHEMISTRY:
+                return HsgSubject.HOA;
+            case NationalExcellentStudentExamSubject.CHINESE:
+                return HsgSubject.TIENG_TRUNG;
+            case NationalExcellentStudentExamSubject.ENGLISH:
+                return HsgSubject.ANH;
+            case NationalExcellentStudentExamSubject.FRENCH:
+                return HsgSubject.TIENG_PHAP;
+            case NationalExcellentStudentExamSubject.GEOGRAPHY:
+                return HsgSubject.DIA;
+            case NationalExcellentStudentExamSubject.HISTORY:
+                return HsgSubject.SU;
+            case NationalExcellentStudentExamSubject.INFORMATION_TECHNOLOGY:
+                return HsgSubject.TIN;
+            case NationalExcellentStudentExamSubject.JAPANESE:
+                return HsgSubject.TIENG_NHAT;
+            case NationalExcellentStudentExamSubject.LITERATURE:
+                return HsgSubject.VAN;
+            case NationalExcellentStudentExamSubject.MATHEMATICS:
+                return HsgSubject.TOAN;
+            case NationalExcellentStudentExamSubject.PHYSICS:
+                return HsgSubject.LY;
+            case NationalExcellentStudentExamSubject.RUSSIAN:
+                return HsgSubject.TIENG_NGA;
+            default: {
+                const _exhaustiveCheck: never = subject;
+                throw new Error(
+                    `Unsupported national excellent student exam subject: ${String(_exhaustiveCheck)}`,
                 );
             }
         }
