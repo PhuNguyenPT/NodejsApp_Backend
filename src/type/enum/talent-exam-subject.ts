@@ -1,6 +1,6 @@
 import { VietnameseSubject } from "./subject.js";
 
-const TalentExamSubjectsArray: VietnameseSubject[] = [
+const TalentExamSubjectsArray = [
     VietnameseSubject.BIEU_DIEN_NGHE_THUAT,
     VietnameseSubject.CHI_HUY_TAI_CHO,
     VietnameseSubject.CHUYEN_MON_AM_NHAC,
@@ -54,6 +54,10 @@ export type TalentExamSubject = (typeof TalentExamSubjectsArray)[number];
 /**
  * Check if a subject is a talent exam subject
  */
-export function isTalentExamSubjects(subject: VietnameseSubject): boolean {
-    return TalentExamSubjectsArray.includes(subject);
+export function isTalentExamSubjects(
+    subject: VietnameseSubject,
+): subject is TalentExamSubject {
+    return (TalentExamSubjectsArray as readonly VietnameseSubject[]).includes(
+        subject,
+    );
 }

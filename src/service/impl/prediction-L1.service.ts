@@ -780,6 +780,7 @@ export class PredictionL1Service implements IPredictionL1Service {
 
     private groupAwardsByRank(awards: AwardDTO[]): Record<Rank, AwardDTO[]> {
         const initialGroup: Record<Rank, AwardDTO[]> = {
+            [Rank.CONSOLATION]: [],
             [Rank.FIRST]: [],
             [Rank.SECOND]: [],
             [Rank.THIRD]: [],

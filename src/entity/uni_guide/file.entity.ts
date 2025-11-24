@@ -104,6 +104,7 @@ export class FileEntity {
     @OneToOne("OcrResultEntity", "file", {
         cascade: true,
         eager: false,
+        nullable: true,
     })
     ocrResult?: Relation<OcrResultEntity>;
 
