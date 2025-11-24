@@ -24,6 +24,7 @@ export const ServiceTypes = {
     IOcrResultService: Symbol.for("IOcrResultService"),
     IPredictionL1Service: Symbol.for("IPredictionL1Service"),
     IPredictionL2Service: Symbol.for("IPredictionL2Service"),
+    IPredictionL3Service: Symbol.for("IPredictionL3Service"),
     IPredictionModelService: Symbol.for("IPredictionModelService"),
     IPredictionResultService: Symbol.for("IPredictionResultService"),
     IStudentService: Symbol.for("IStudentService"),

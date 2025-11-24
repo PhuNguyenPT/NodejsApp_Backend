@@ -70,6 +70,7 @@ import { MistralService } from "@/service/impl/mistral.service.js";
 import { OcrResultService } from "@/service/impl/ocr-result.service.js";
 import { PredictionL1Service } from "@/service/impl/prediction-L1.service.js";
 import { PredictionL2Service } from "@/service/impl/prediction-L2.service.js";
+import { PredictionL3Service } from "@/service/impl/prediction-L3.service.js";
 import { PredictionResultService } from "@/service/impl/prediction-result.service.js";
 import { StudentService } from "@/service/impl/student.service.js";
 import { UserService } from "@/service/impl/user.service.js";
@@ -79,6 +80,7 @@ import { IMistralService } from "@/service/mistral-service.interface.js";
 import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
 import { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
+import { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
 import { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
 import { IStudentService } from "@/service/student-service.interface.js";
 import { IUserService } from "@/service/user-service.interface.js";
@@ -275,6 +277,10 @@ iocContainer
 iocContainer
     .bind<IPredictionL2Service>(TYPES.IPredictionL2Service)
     .to(PredictionL2Service)
+    .inSingletonScope();
+iocContainer
+    .bind<IPredictionL3Service>(TYPES.IPredictionL3Service)
+    .to(PredictionL3Service)
     .inSingletonScope();
 iocContainer
     .bind<IAdmissionService>(TYPES.IAdmissionService)
