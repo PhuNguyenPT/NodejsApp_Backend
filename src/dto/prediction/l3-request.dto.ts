@@ -480,66 +480,115 @@ export class TranscriptRecordL3 {
 export class TranscriptSubjectScoreL3 {
     @Expose()
     @IsNumber()
+    @IsOptional()
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    anh!: number;
+    anh?: number;
 
     @Expose()
     @IsNumber()
+    @IsOptional()
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    cong_nghe!: number;
+    cong_nghe?: number;
 
     @Expose()
     @IsNumber()
+    @IsOptional()
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    dia!: number;
+    dia?: number;
 
     @Expose()
     @IsNumber()
+    @IsOptional()
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    gdkt_pl!: number;
+    gdkt_pl?: number;
 
     @Expose()
     @IsNumber()
+    @IsOptional()
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    hoa!: number;
+    hoa?: number;
 
     @Expose()
     @IsNumber()
+    @IsOptional()
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    ly!: number;
+    ly?: number;
 
     @Expose()
     @IsNumber()
+    @IsOptional()
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    sinh!: number;
+    sinh?: number;
 
     @Expose()
     @IsNumber()
+    @IsOptional()
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    su!: number;
+    su?: number;
 
     @Expose()
     @IsNumber()
+    @IsOptional()
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
-    tin!: number;
+    tieng_duc?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    tieng_nga?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    tieng_nhat?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    tieng_phap?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    tieng_trung?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
+    tin?: number;
 
     @Expose()
     @IsNumber()
