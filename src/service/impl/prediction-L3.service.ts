@@ -158,11 +158,12 @@ export class PredictionL3Service implements IPredictionL3Service {
         [TranscriptSubject.NGU_VAN]: "van",
         [TranscriptSubject.SINH_HOC]: "sinh",
         [TranscriptSubject.TIENG_ANH]: "anh",
-        [TranscriptSubject.TIENG_DUC]: "anh",
-        [TranscriptSubject.TIENG_NGA]: "anh",
-        [TranscriptSubject.TIENG_NHAT]: "anh",
-        [TranscriptSubject.TIENG_PHAP]: "anh",
-        [TranscriptSubject.TIENG_TRUNG]: "anh",
+        [TranscriptSubject.TIENG_DUC]: "tieng_duc",
+        [TranscriptSubject.TIENG_HAN]: "anh",
+        [TranscriptSubject.TIENG_NGA]: "tieng_nga",
+        [TranscriptSubject.TIENG_NHAT]: "tieng_nhat",
+        [TranscriptSubject.TIENG_PHAP]: "tieng_phap",
+        [TranscriptSubject.TIENG_TRUNG]: "tieng_trung",
         [TranscriptSubject.TIN_HOC]: "tin",
         [TranscriptSubject.TOAN]: "toan",
         [TranscriptSubject.VAT_LY]: "ly",
@@ -314,7 +315,16 @@ export class PredictionL3Service implements IPredictionL3Service {
             );
         }
 
-        await validate(userInputs, DEFAULT_VALIDATOR_OPTIONS);
+        for (const userInput of userInputs) {
+            const errors = await validate(userInput);
+            if (errors.length > 0) {
+                const validationErrors = formatValidationErrors(errors);
+                throw new ValidationException(
+                    validationErrors,
+                    "Invalid L3 user input",
+                );
+            }
+        }
 
         this.logger.info("L3 Prediction: Starting predictions", {
             inputCount: userInputs.length,
@@ -745,6 +755,11 @@ export class PredictionL3Service implements IPredictionL3Service {
             ly: 0,
             sinh: 0,
             su: 0,
+            tieng_duc: 0,
+            tieng_nga: 0,
+            tieng_nhat: 0,
+            tieng_phap: 0,
+            tieng_trung: 0,
             tin: 0,
             toan: 0,
             van: 0,
@@ -1029,8 +1044,20 @@ export class PredictionL3Service implements IPredictionL3Service {
             studentEntity,
             { excludeExtraneousValues: true },
         );
-        await validate(studentInfoDTO);
 
+        const errors = await validate(studentInfoDTO, {
+            ...DEFAULT_VALIDATOR_OPTIONS,
+            skipMissingProperties: true,
+        });
+
+        if (errors.length > 0) {
+            const validationErrors = formatValidationErrors(errors);
+
+            throw new ValidationException(
+                validationErrors,
+                "Invalid L3 Student Info DTO",
+            );
+        }
         // Get certifications and aptitude exams by type
         const ccnnCertifications: CertificationDTO[] =
             studentInfoDTO.getCertificationsByExamType("CCNN");
