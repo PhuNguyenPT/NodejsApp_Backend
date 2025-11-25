@@ -77,8 +77,8 @@ export class InterCer {
 
     @Expose()
     @IsNotEmpty()
-    @IsNumber()
-    score!: number;
+    @IsString()
+    score!: string;
 }
 
 export class NangKhieuScore {

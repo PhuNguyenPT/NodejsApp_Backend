@@ -1,11 +1,11 @@
-import { Expose, Type } from "class-transformer";
+import { Expose } from "class-transformer";
 import {
     IsArray,
     IsInt,
     IsNotEmpty,
+    IsNotEmptyObject,
     IsNumber,
     IsString,
-    ValidateNested,
 } from "class-validator";
 
 export class L3PredictionItem {
@@ -53,8 +53,6 @@ export class L3PredictionItem {
 
 export class L3PredictResult {
     @Expose()
-    @IsNotEmpty()
-    @Type(() => L3PredictionItem)
-    @ValidateNested({ each: true })
+    @IsNotEmptyObject()
     result!: Record<string, L3PredictionItem[]>;
 }
