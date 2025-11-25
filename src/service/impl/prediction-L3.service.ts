@@ -253,7 +253,9 @@ export class PredictionL3Service implements IPredictionL3Service {
             totalResults: allResults.length,
         });
 
-        return allResults;
+        const dedupedResults = this.deduplicateL3PredictResults(allResults);
+
+        return dedupedResults;
     }
 
     public async getL3PredictResults(
@@ -263,15 +265,11 @@ export class PredictionL3Service implements IPredictionL3Service {
         // Fetch student without file relations first
         const student = await this.studentRepository.findOne({
             relations: [
-                "academicPerformances",
-                "aptitudeExams",
                 "awards",
                 "certifications",
-                "conducts",
-                "studentMajorGroups.majorGroup",
                 "nationalExams",
                 "talentExams",
-                "vsatExams",
+                "aptitudeExams",
             ],
             where: {
                 id: studentId,
@@ -299,20 +297,6 @@ export class PredictionL3Service implements IPredictionL3Service {
                 status: FileStatus.ACTIVE,
                 studentId: studentId,
             },
-        });
-
-        // Log file entities information
-        this.logger.debug("L3 Prediction: Processing files for transcript", {
-            fileCount: fileEntities.length,
-            files: fileEntities.map((f) => ({
-                description: f.description,
-                fileName: f.fileName,
-                hasOcrResult: !!f.ocrResult,
-                id: f.id,
-                ocrScoresCount: f.ocrResult?.scores?.length ?? 0,
-                originalFileName: f.originalFileName,
-                tags: f.tags,
-            })),
         });
 
         // Attach files to student object for downstream processing
@@ -919,6 +903,50 @@ export class PredictionL3Service implements IPredictionL3Service {
     }
 
     /**
+     * Create a stable signature for an L3PredictResult
+     * Uses only ma_nganh and university code to create a compact signature
+     */
+    private createResultSignature(result: L3PredictResult): string {
+        const majors: string[] = [];
+
+        // Extract all ma_nganh values from all universities
+        for (const [university, predictions] of Object.entries(result.result)) {
+            predictions.forEach((pred) => {
+                majors.push(`${university}:${pred.ma_nganh}`);
+            });
+        }
+
+        // Sort to ensure consistent ordering
+        majors.sort();
+        return majors.join("|");
+    }
+
+    /**
+     * Deduplicate L3PredictResult array by comparing the result objects
+     * Optimized for comparing complex nested structures
+     * @param results Array of L3PredictResult to deduplicate
+     * @returns Deduplicated array maintaining order of first occurrence
+     */
+    private deduplicateL3PredictResults(
+        results: L3PredictResult[],
+    ): L3PredictResult[] {
+        const seen = new Set<string>();
+        const deduplicated: L3PredictResult[] = [];
+
+        for (const result of results) {
+            // Create a stable signature by sorting and stringifying
+            const signature = this.createResultSignature(result);
+
+            if (!seen.has(signature)) {
+                seen.add(signature);
+                deduplicated.push(result);
+            }
+        }
+
+        return deduplicated;
+    }
+
+    /**
      * Extract grade number (10, 11, 12) from file entity
      */
     private extractGradeFromFile(fileEntity: FileEntity): null | number {
@@ -1066,7 +1094,7 @@ export class PredictionL3Service implements IPredictionL3Service {
         const transcriptRecordL3: TranscriptRecordL3 =
             this.buildTranscriptRecordL3FromFiles(fileEntities);
 
-        this.logger.info("L3 Prediction: Transcript record built", {
+        this.logger.debug("L3 Prediction: Transcript record built", {
             fileCount: fileEntities.length,
             hasGrade10: !!transcriptRecordL3.grade_10,
             hasGrade11: !!transcriptRecordL3.grade_11,
@@ -1140,15 +1168,31 @@ export class PredictionL3Service implements IPredictionL3Service {
             }
         }
 
-        this.logger.info("L3 Prediction: Generated combinations", {
+        const uniqueInputs = new Map<string, UserInputL3>();
+        for (const input of combinations) {
+            const key = JSON.stringify(input);
+            uniqueInputs.set(key, input);
+        }
+
+        const dedupedCombinations = Array.from(uniqueInputs.values());
+        const duplicatesRemoved =
+            combinations.length - dedupedCombinations.length;
+
+        this.logger.debug("L3 Prediction: Generated combinations", {
             awardEnglishOptions: awardEnglishOptions.length,
+            deduplicationRate:
+                combinations.length > 0
+                    ? `${((duplicatesRemoved / combinations.length) * 100).toFixed(2)}%`
+                    : "0%",
             dgnlOptions: dgnlOptions.length,
+            duplicatesRemoved,
             generatedCombinations: combinations.length,
             interCerOptions: interCerOptions.length,
             majors: majors.length,
+            uniqueCombinations: dedupedCombinations.length,
         });
 
-        return combinations;
+        return dedupedCombinations;
     }
 
     /**
@@ -1186,13 +1230,6 @@ export class PredictionL3Service implements IPredictionL3Service {
         certification: CertificationDTO,
     ): AwardEnglish | undefined {
         if (!certification.cefr) {
-            this.logger.warn(
-                "L3 Prediction: CCNN certification missing CEFR level",
-                {
-                    examType: certification.examType,
-                    level: certification.level,
-                },
-            );
             return undefined;
         }
 
@@ -1272,12 +1309,6 @@ export class PredictionL3Service implements IPredictionL3Service {
             aptitudeExam.mathScore === undefined ||
             aptitudeExam.scienceLogic === undefined
         ) {
-            this.logger.warn(
-                "L3 Prediction: DGNL exam missing required component scores",
-                {
-                    examType: aptitudeExam.examType,
-                },
-            );
             return undefined;
         }
 
