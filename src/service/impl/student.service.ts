@@ -38,7 +38,7 @@ export class StudentService implements IStudentService {
         @inject(TYPES.AcademicPerformanceRepository)
         private readonly academicPerformanceRepository: Repository<AcademicPerformanceEntity>,
         @inject(TYPES.AptitudeExamRepository)
-        private readonly AptitudeExamRepository: Repository<AptitudeExamEntity>,
+        private readonly aptitudeExamRepository: Repository<AptitudeExamEntity>,
         @inject(TYPES.StudentMajorGroupRepository)
         private readonly studentMajorGroupRepository: Repository<StudentMajorGroupEntity>,
         @inject(TYPES.VnuhcmScoreComponentRepository)
@@ -48,13 +48,13 @@ export class StudentService implements IStudentService {
         @inject(TYPES.FileRepository)
         private readonly fileRepository: Repository<FileEntity>,
         @inject(TYPES.ConductRepository)
-        private readonly ConductRepository: Repository<ConductEntity>,
+        private readonly conductRepository: Repository<ConductEntity>,
         @inject(TYPES.NationalExamRepository)
-        private readonly NationalExamRepository: Repository<NationalExamEntity>,
+        private readonly nationalExamRepository: Repository<NationalExamEntity>,
         @inject(TYPES.TalentExamRepository)
-        private readonly TalentExamRepository: Repository<TalentExamEntity>,
+        private readonly talentExamRepository: Repository<TalentExamEntity>,
         @inject(TYPES.VsatExamRepository)
-        private readonly VsatExamRepository: Repository<VsatExamEntity>,
+        private readonly vsatExamRepository: Repository<VsatExamEntity>,
         @inject(TYPES.ICertificationService)
         private readonly certificationService: ICertificationService,
         @inject(TYPES.IStudentEventListener)
@@ -256,7 +256,7 @@ export class StudentService implements IStudentService {
             studentEntity.aptitudeExams = studentRequest.aptitudeExams.map(
                 (aptitudeExamRequest) => {
                     const aptitudeExamEntity: AptitudeExamEntity =
-                        this.AptitudeExamRepository.create(aptitudeExamRequest);
+                        this.aptitudeExamRepository.create(aptitudeExamRequest);
                     if (userEntity) {
                         aptitudeExamEntity.createdBy = userEntity.email;
                     } else {
@@ -323,7 +323,7 @@ export class StudentService implements IStudentService {
             studentEntity.conducts = studentRequest.conducts.map(
                 (conductRequest) => {
                     const conductEntity: ConductEntity =
-                        this.ConductRepository.create(conductRequest);
+                        this.conductRepository.create(conductRequest);
                     if (userEntity) {
                         conductEntity.createdBy = userEntity.email;
                     } else {
@@ -360,7 +360,7 @@ export class StudentService implements IStudentService {
             studentEntity.nationalExams = studentRequest.nationalExams.map(
                 (nationalExam) => {
                     const nationalExamEntity: NationalExamEntity =
-                        this.NationalExamRepository.create(nationalExam);
+                        this.nationalExamRepository.create(nationalExam);
                     if (userEntity) {
                         nationalExamEntity.createdBy = userEntity.email;
                     } else {
@@ -378,7 +378,7 @@ export class StudentService implements IStudentService {
             studentEntity.talentExams = studentRequest.talentExams.map(
                 (talentExam) => {
                     const talentExamEntity: TalentExamEntity =
-                        this.TalentExamRepository.create(talentExam);
+                        this.talentExamRepository.create(talentExam);
                     if (userEntity) {
                         talentExamEntity.createdBy = userEntity.email;
                     } else {
@@ -393,7 +393,7 @@ export class StudentService implements IStudentService {
             studentEntity.vsatExams = studentRequest.vsatExams.map(
                 (vsatExam) => {
                     const vsatExamEntity: VsatExamEntity =
-                        this.VsatExamRepository.create(vsatExam);
+                        this.vsatExamRepository.create(vsatExam);
                     if (userEntity) {
                         vsatExamEntity.createdBy = userEntity.email;
                     } else {
