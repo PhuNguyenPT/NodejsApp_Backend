@@ -1585,6 +1585,11 @@ export const USER_DEFINED_GROUPS: Partial<
         VietnameseSubject.HOA_HOC,
         VietnameseSubject.CONG_NGHE_CONG_NGHIEP,
     ],
+    THT: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.HOA_HOC,
+        VietnameseSubject.TIN_HOC,
+    ],
     TLC: [
         VietnameseSubject.TOAN,
         VietnameseSubject.VAT_LY,
@@ -1599,6 +1604,16 @@ export const USER_DEFINED_GROUPS: Partial<
         VietnameseSubject.TOAN,
         VietnameseSubject.SINH_HOC,
         VietnameseSubject.CONG_NGHE_CONG_NGHIEP,
+    ],
+    TST: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.SINH_HOC,
+        VietnameseSubject.TIN_HOC,
+    ],
+    TTA: [
+        VietnameseSubject.TOAN,
+        VietnameseSubject.TIN_HOC,
+        VietnameseSubject.TIENG_ANH,
     ],
     TVC: [
         VietnameseSubject.TOAN,
@@ -1633,11 +1648,6 @@ export const USER_DEFINED_GROUPS: Partial<
 } as const;
 
 export type UserDefinedSubjectGroupKey = keyof typeof USER_DEFINED_GROUPS;
-
-/**
- * Special matching rules for user-defined groups with flexible subject requirements
- * Maps group key to array of [required subjects, alternative subjects for specific positions]
- */
 
 /**
  * Special matching rules for user-defined groups with flexible subject requirements
