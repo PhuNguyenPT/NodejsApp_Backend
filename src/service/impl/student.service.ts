@@ -4,16 +4,16 @@ import { Logger } from "winston";
 
 import { StudentRequest } from "@/dto/student/student-request.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
+import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
 import { AwardEntity } from "@/entity/uni_guide/award.entity.js";
+import { ConductEntity } from "@/entity/uni_guide/conduct.entity.js";
 import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
-import { StudentAptitudeExamEntity } from "@/entity/uni_guide/student-aptitude-exam.entity.js";
-import { StudentConductEntity } from "@/entity/uni_guide/student-conduct.entity.js";
+import { NationalExamEntity } from "@/entity/uni_guide/national-exam.enity.js";
 import { StudentMajorGroupEntity } from "@/entity/uni_guide/student-major-group.entity.js";
-import { StudentNationalExamEntity } from "@/entity/uni_guide/student-national-exam.enity.js";
-import { StudentTalentExamEntity } from "@/entity/uni_guide/student-talent-exam.entity.js";
-import { StudentVsatExamEntity } from "@/entity/uni_guide/student-vsat-exam.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { TalentExamEntity } from "@/entity/uni_guide/talent-exam.entity.js";
 import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-component.entity.js";
+import { VsatExamEntity } from "@/entity/uni_guide/vsat-exam.entity.js";
 import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
 import { StudentCreatedEvent } from "@/event/student.event.js";
 import { ICertificationService } from "@/service/certification-service.interface.js";
@@ -36,7 +36,7 @@ export class StudentService implements IStudentService {
         @inject(TYPES.UserRepository)
         private readonly userRepository: Repository<UserEntity>,
         @inject(TYPES.StudentAptitudeExamRepository)
-        private readonly studentAptitudeExamRepository: Repository<StudentAptitudeExamEntity>,
+        private readonly studentAptitudeExamRepository: Repository<AptitudeExamEntity>,
         @inject(TYPES.StudentMajorGroupRepository)
         private readonly studentMajorGroupRepository: Repository<StudentMajorGroupEntity>,
         @inject(TYPES.VnuhcmScoreComponentRepository)
@@ -46,13 +46,13 @@ export class StudentService implements IStudentService {
         @inject(TYPES.FileRepository)
         private readonly fileRepository: Repository<FileEntity>,
         @inject(TYPES.StudentConductRepository)
-        private readonly studentConductRepository: Repository<StudentConductEntity>,
+        private readonly studentConductRepository: Repository<ConductEntity>,
         @inject(TYPES.StudentNationalExamRepository)
-        private readonly studentNationalExamRepository: Repository<StudentNationalExamEntity>,
+        private readonly studentNationalExamRepository: Repository<NationalExamEntity>,
         @inject(TYPES.StudentTalentExamRepository)
-        private readonly studentTalentExamRepository: Repository<StudentTalentExamEntity>,
+        private readonly studentTalentExamRepository: Repository<TalentExamEntity>,
         @inject(TYPES.StudentVsatExamRepository)
-        private readonly studentVsatExamRepository: Repository<StudentVsatExamEntity>,
+        private readonly studentVsatExamRepository: Repository<VsatExamEntity>,
         @inject(TYPES.ICertificationService)
         private readonly certificationService: ICertificationService,
         @inject(TYPES.IStudentEventListener)
@@ -233,14 +233,14 @@ export class StudentService implements IStudentService {
         ) {
             studentEntity.aptitudeExams = studentRequest.aptitudeExams.map(
                 (aptitudeExamRequest) => {
-                    const studentAptitudeTestEntity: StudentAptitudeExamEntity =
+                    const aptitudeExamEntity: AptitudeExamEntity =
                         this.studentAptitudeExamRepository.create(
                             aptitudeExamRequest,
                         );
                     if (userEntity) {
-                        studentAptitudeTestEntity.createdBy = userEntity.email;
+                        aptitudeExamEntity.createdBy = userEntity.email;
                     } else {
-                        studentAptitudeTestEntity.createdBy ??= Role.ANONYMOUS;
+                        aptitudeExamEntity.createdBy ??= Role.ANONYMOUS;
                     }
 
                     if (
@@ -263,10 +263,10 @@ export class StudentService implements IStudentService {
                         } else {
                             vnuhcmComponents.createdBy ??= Role.ANONYMOUS;
                         }
-                        studentAptitudeTestEntity.vnuhcmScoreComponents =
+                        aptitudeExamEntity.vnuhcmScoreComponents =
                             vnuhcmComponents;
                     }
-                    return studentAptitudeTestEntity;
+                    return aptitudeExamEntity;
                 },
             );
         }
@@ -302,14 +302,14 @@ export class StudentService implements IStudentService {
         if (studentRequest.conducts.length > 0) {
             studentEntity.conducts = studentRequest.conducts.map(
                 (conductRequest) => {
-                    const studentConductEntity: StudentConductEntity =
+                    const conductEntity: ConductEntity =
                         this.studentConductRepository.create(conductRequest);
                     if (userEntity) {
-                        studentConductEntity.createdBy = userEntity.email;
+                        conductEntity.createdBy = userEntity.email;
                     } else {
-                        studentConductEntity.createdBy ??= Role.ANONYMOUS;
+                        conductEntity.createdBy ??= Role.ANONYMOUS;
                     }
-                    return studentConductEntity;
+                    return conductEntity;
                 },
             );
         }
@@ -339,14 +339,14 @@ export class StudentService implements IStudentService {
         if (studentRequest.nationalExams.length > 0) {
             studentEntity.nationalExams = studentRequest.nationalExams.map(
                 (nationalExam) => {
-                    const studentNationalExamEntity: StudentNationalExamEntity =
+                    const nationalExamEntity: NationalExamEntity =
                         this.studentNationalExamRepository.create(nationalExam);
                     if (userEntity) {
-                        studentNationalExamEntity.createdBy = userEntity.email;
+                        nationalExamEntity.createdBy = userEntity.email;
                     } else {
-                        studentNationalExamEntity.createdBy ??= Role.ANONYMOUS;
+                        nationalExamEntity.createdBy ??= Role.ANONYMOUS;
                     }
-                    return studentNationalExamEntity;
+                    return nationalExamEntity;
                 },
             );
         }
@@ -357,14 +357,14 @@ export class StudentService implements IStudentService {
         ) {
             studentEntity.talentExams = studentRequest.talentExams.map(
                 (talentExam) => {
-                    const studentTalentExamEntity: StudentTalentExamEntity =
+                    const talentExamEntity: TalentExamEntity =
                         this.studentTalentExamRepository.create(talentExam);
                     if (userEntity) {
-                        studentTalentExamEntity.createdBy = userEntity.email;
+                        talentExamEntity.createdBy = userEntity.email;
                     } else {
-                        studentTalentExamEntity.createdBy ??= Role.ANONYMOUS;
+                        talentExamEntity.createdBy ??= Role.ANONYMOUS;
                     }
-                    return studentTalentExamEntity;
+                    return talentExamEntity;
                 },
             );
         }
@@ -372,14 +372,14 @@ export class StudentService implements IStudentService {
         if (studentRequest.vsatExams && studentRequest.vsatExams.length > 0) {
             studentEntity.vsatExams = studentRequest.vsatExams.map(
                 (vsatExam) => {
-                    const studentVsatExamEntity: StudentVsatExamEntity =
+                    const vsatExamEntity: VsatExamEntity =
                         this.studentVsatExamRepository.create(vsatExam);
                     if (userEntity) {
-                        studentVsatExamEntity.createdBy = userEntity.email;
+                        vsatExamEntity.createdBy = userEntity.email;
                     } else {
-                        studentVsatExamEntity.createdBy ??= Role.ANONYMOUS;
+                        vsatExamEntity.createdBy ??= Role.ANONYMOUS;
                     }
-                    return studentVsatExamEntity;
+                    return vsatExamEntity;
                 },
             );
         }

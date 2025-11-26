@@ -1,16 +1,16 @@
 import { plainToInstance } from "class-transformer";
 
 import { AptitudeExamResponse } from "@/dto/student/aptitude-exam-response.js";
-import { StudentAptitudeExamEntity } from "@/entity/uni_guide/student-aptitude-exam.entity.js";
+import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
 import { ExamType } from "@/type/enum/exam-type.js";
 
 export const StudentAptitudeExamMapper = {
     /**
-     * Maps a StudentAptitudeExamEntity to AptitudeExamResponse
+     * Maps a AptitudeExamEntity to AptitudeExamResponse
      * Includes VNUHCM component scores when available
      */
     toStudentAptitudeExamResponse(
-        entity: StudentAptitudeExamEntity,
+        entity: AptitudeExamEntity,
     ): AptitudeExamResponse {
         const response = plainToInstance(AptitudeExamResponse, entity, {
             excludeExtraneousValues: true,
@@ -29,10 +29,10 @@ export const StudentAptitudeExamMapper = {
         return response;
     },
     /**
-     * Maps array of StudentAptitudeExamEntity to AptitudeExamResponse array
+     * Maps array of AptitudeExamEntity to AptitudeExamResponse array
      */
     toStudentAptitudeExamResponses(
-        entities: StudentAptitudeExamEntity[],
+        entities: AptitudeExamEntity[],
     ): AptitudeExamResponse[] {
         return entities.map((entity) =>
             this.toStudentAptitudeExamResponse(entity),

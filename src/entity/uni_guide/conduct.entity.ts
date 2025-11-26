@@ -1,4 +1,4 @@
-import { Expose, Transform } from "class-transformer";
+import { Expose } from "class-transformer";
 import {
     Column,
     CreateDateColumn,
@@ -10,15 +10,16 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import {
-    VsatExamSubject,
-    VsatExamSubjects,
-} from "@/type/enum/vsat-exam-subject.js";
+import { Conduct } from "@/type/enum/conduct.js";
 
 import { StudentEntity } from "./student.entity.js";
 
-@Entity({ name: "student_vsat_exams", schema: "uni_guide" })
-export class StudentVsatExamEntity {
+@Entity({ name: "conducts", schema: "uni_guide" })
+export class ConductEntity {
+    @Column({ enum: Conduct, name: "conduct", type: "enum" })
+    @Expose()
+    conduct!: Conduct;
+
     @CreateDateColumn({
         insert: true,
         name: "created_at",
@@ -39,26 +40,17 @@ export class StudentVsatExamEntity {
     @Expose()
     createdBy?: string;
 
+    @Column({ name: "grade", type: "int" })
+    @Expose()
+    grade!: number;
+
     @Expose()
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: string;
 
-    @Column({ enum: VsatExamSubjects, name: "name", type: "varchar" })
-    @Expose()
-    name!: VsatExamSubject;
-
-    @Column({ name: "score", type: "decimal" })
-    @Expose()
-    @Transform(({ value }) => {
-        if (typeof value === "string") return parseFloat(value);
-        if (typeof value === "number") return value;
-        return 0;
-    })
-    score!: number;
-
     @Expose()
     @JoinColumn({ name: "student_id" })
-    @ManyToOne("StudentEntity", "vsatExams", {
+    @ManyToOne("StudentEntity", "conducts", {
         onDelete: "CASCADE",
         orphanedRowAction: "delete",
     })

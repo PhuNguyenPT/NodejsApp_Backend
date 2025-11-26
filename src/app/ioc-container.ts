@@ -31,21 +31,21 @@ import { StudentController } from "@/controller/student.controller.js";
 import { UserController } from "@/controller/user.controller.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
+import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
 import { AwardEntity } from "@/entity/uni_guide/award.entity.js";
 import { CertificationEntity } from "@/entity/uni_guide/certification.entity.js";
+import { ConductEntity } from "@/entity/uni_guide/conduct.entity.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
 import { MajorEntity } from "@/entity/uni_guide/major.entity.js";
+import { NationalExamEntity } from "@/entity/uni_guide/national-exam.enity.js";
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
-import { StudentAptitudeExamEntity } from "@/entity/uni_guide/student-aptitude-exam.entity.js";
-import { StudentConductEntity } from "@/entity/uni_guide/student-conduct.entity.js";
 import { StudentMajorGroupEntity } from "@/entity/uni_guide/student-major-group.entity.js";
-import { StudentNationalExamEntity } from "@/entity/uni_guide/student-national-exam.enity.js";
-import { StudentTalentExamEntity } from "@/entity/uni_guide/student-talent-exam.entity.js";
-import { StudentVsatExamEntity } from "@/entity/uni_guide/student-vsat-exam.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { TalentExamEntity } from "@/entity/uni_guide/talent-exam.entity.js";
 import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-component.entity.js";
+import { VsatExamEntity } from "@/entity/uni_guide/vsat-exam.entity.js";
 import { IFileEventListener } from "@/event/file-event-listener.interface.js";
 import { FileEventListener } from "@/event/impl/file-event-listener.js";
 import { StudentEventListener } from "@/event/impl/student-event-listener.js";
@@ -162,12 +162,8 @@ iocContainer
     .bind<Repository<StudentEntity>>(TYPES.StudentRepository)
     .toConstantValue(postgresDataSource.getRepository(StudentEntity));
 iocContainer
-    .bind<
-        Repository<StudentAptitudeExamEntity>
-    >(TYPES.StudentAptitudeExamRepository)
-    .toConstantValue(
-        postgresDataSource.getRepository(StudentAptitudeExamEntity),
-    );
+    .bind<Repository<AptitudeExamEntity>>(TYPES.StudentAptitudeExamRepository)
+    .toConstantValue(postgresDataSource.getRepository(AptitudeExamEntity));
 iocContainer
     .bind<
         Repository<VnuhcmScoreComponentEntity>
@@ -182,8 +178,8 @@ iocContainer
     .bind<Repository<CertificationEntity>>(TYPES.CertificationRepository)
     .toConstantValue(postgresDataSource.getRepository(CertificationEntity));
 iocContainer
-    .bind<Repository<StudentConductEntity>>(TYPES.StudentConductRepository)
-    .toConstantValue(postgresDataSource.getRepository(StudentConductEntity));
+    .bind<Repository<ConductEntity>>(TYPES.StudentConductRepository)
+    .toConstantValue(postgresDataSource.getRepository(ConductEntity));
 iocContainer
     .bind<Repository<FileEntity>>(TYPES.FileRepository)
     .toConstantValue(postgresDataSource.getRepository(FileEntity));
@@ -199,20 +195,14 @@ iocContainer
     .bind<Repository<MajorEntity>>(TYPES.MajorRepository)
     .toConstantValue(postgresDataSource.getRepository(MajorEntity));
 iocContainer
-    .bind<
-        Repository<StudentNationalExamEntity>
-    >(TYPES.StudentNationalExamRepository)
-    .toConstantValue(
-        postgresDataSource.getRepository(StudentNationalExamEntity),
-    );
+    .bind<Repository<NationalExamEntity>>(TYPES.StudentNationalExamRepository)
+    .toConstantValue(postgresDataSource.getRepository(NationalExamEntity));
 iocContainer
-    .bind<
-        Repository<StudentTalentExamEntity>
-    >(TYPES.StudentTalentExamRepository)
-    .toConstantValue(postgresDataSource.getRepository(StudentTalentExamEntity));
+    .bind<Repository<TalentExamEntity>>(TYPES.StudentTalentExamRepository)
+    .toConstantValue(postgresDataSource.getRepository(TalentExamEntity));
 iocContainer
-    .bind<Repository<StudentVsatExamEntity>>(TYPES.StudentVsatExamRepository)
-    .toConstantValue(postgresDataSource.getRepository(StudentVsatExamEntity));
+    .bind<Repository<VsatExamEntity>>(TYPES.StudentVsatExamRepository)
+    .toConstantValue(postgresDataSource.getRepository(VsatExamEntity));
 iocContainer
     .bind<Repository<OcrResultEntity>>(TYPES.OcrResultRepository)
     .toConstantValue(postgresDataSource.getRepository(OcrResultEntity));

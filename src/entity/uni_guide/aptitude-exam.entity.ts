@@ -1,3 +1,4 @@
+// student-aptitude-exam.entity.ts
 import { Expose, Transform } from "class-transformer";
 import {
     Column,
@@ -5,20 +6,19 @@ import {
     Entity,
     JoinColumn,
     ManyToOne,
+    OneToOne,
     PrimaryGeneratedColumn,
     Relation,
     UpdateDateColumn,
 } from "typeorm";
 
-import {
-    NationalExamSubject,
-    NationalExamSubjects,
-} from "@/type/enum/national-exam-subject.js";
+import { ExamType } from "@/type/enum/exam-type.js";
 
 import { StudentEntity } from "./student.entity.js";
+import { VnuhcmScoreComponentEntity } from "./vnuhcm-score-component.entity.js";
 
-@Entity({ name: "student_national_exams", schema: "uni_guide" })
-export class StudentNationalExamEntity {
+@Entity({ name: "aptitude_exams", schema: "uni_guide" })
+export class AptitudeExamEntity {
     @CreateDateColumn({
         insert: true,
         name: "created_at",
@@ -39,13 +39,13 @@ export class StudentNationalExamEntity {
     @Expose()
     createdBy?: string;
 
+    @Column({ enum: ExamType, name: "exam_type", type: "enum" })
+    @Expose()
+    examType!: ExamType;
+
     @Expose()
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: string;
-
-    @Column({ enum: NationalExamSubjects, name: "name", type: "varchar" })
-    @Expose()
-    name!: NationalExamSubject;
 
     @Column({ name: "score", type: "decimal" })
     @Expose()
@@ -58,7 +58,7 @@ export class StudentNationalExamEntity {
 
     @Expose()
     @JoinColumn({ name: "student_id" })
-    @ManyToOne("StudentEntity", "nationalExams", {
+    @ManyToOne("StudentEntity", "aptitudeExams", {
         onDelete: "CASCADE",
         orphanedRowAction: "delete",
     })
@@ -87,4 +87,16 @@ export class StudentNationalExamEntity {
     })
     @Expose()
     updatedBy?: string;
+
+    /**
+     * One-to-one relationship with VNUHCM score components
+     * Only populated when examType is VNUHCM
+     */
+    @Expose()
+    @OneToOne("VnuhcmScoreComponentEntity", "aptitudeExam", {
+        cascade: true,
+        eager: true,
+        nullable: true,
+    })
+    vnuhcmScoreComponents?: Relation<VnuhcmScoreComponentEntity>;
 }
