@@ -17,9 +17,10 @@ import { StudentEntity } from "./student.entity.js";
 @Entity({ name: "student_admissions", schema: "uni_guide" })
 @Index("idx_student_admissions_student_id", ["studentId"])
 @Index("idx_student_admissions_admission_id", ["admissionId"])
-@Index("idx_student_admissions_composite", ["studentId", "admissionId"])
 @Index("idx_student_admissions_created_at", ["createdAt"])
+@Index("idx_student_admissions_created_by", ["createdBy"])
 @Index("idx_student_admissions_updated_at", ["updatedAt"])
+@Index("idx_student_admissions_updated_by", ["updatedBy"])
 @Unique("uq_student_admission", ["studentId", "admissionId"])
 export class StudentAdmissionEntity {
     @JoinColumn({ name: "admission_id" })
@@ -39,6 +40,15 @@ export class StudentAdmissionEntity {
         update: false,
     })
     createdAt!: Date;
+
+    @Column({
+        insert: true,
+        name: "created_by",
+        nullable: true,
+        type: "varchar",
+        update: false,
+    })
+    createdBy!: string;
 
     @PrimaryGeneratedColumn("uuid")
     id!: string;
@@ -60,4 +70,14 @@ export class StudentAdmissionEntity {
         update: true,
     })
     updatedAt!: Date;
+
+    @Column({
+        insert: false,
+        length: 255,
+        name: "updated_by",
+        nullable: true,
+        type: "varchar",
+        update: true,
+    })
+    updatedBy?: string;
 }

@@ -36,16 +36,6 @@ export class MajorGroupEntity {
     createdAt!: Date;
 
     @Column({
-        insert: true,
-        length: 255,
-        name: "created_by",
-        nullable: true,
-        type: "varchar",
-        update: false,
-    })
-    createdBy?: string;
-
-    @Column({
         length: 255,
         name: "english_name",
         type: "varchar",
@@ -69,16 +59,6 @@ export class MajorGroupEntity {
         update: true,
     })
     updatedAt!: Date;
-
-    @Column({
-        insert: false,
-        length: 255,
-        name: "updated_by",
-        nullable: true,
-        type: "varchar",
-        update: true,
-    })
-    updatedBy?: string;
 
     constructor(majorGroup?: Partial<MajorGroupEntity>) {
         if (majorGroup) {

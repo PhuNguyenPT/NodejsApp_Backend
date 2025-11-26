@@ -34,16 +34,6 @@ export class MajorEntity {
     })
     createdAt!: Date;
 
-    @Column({
-        insert: true,
-        length: 255,
-        name: "created_by",
-        nullable: true,
-        type: "varchar",
-        update: false,
-    })
-    createdBy?: string;
-
     @JoinColumn({ name: "group_id" })
     @ManyToOne("MajorGroupEntity", "majors", {
         nullable: false,
@@ -67,16 +57,6 @@ export class MajorEntity {
         update: true,
     })
     updatedAt!: Date;
-
-    @Column({
-        insert: false,
-        length: 255,
-        name: "updated_by",
-        nullable: true,
-        type: "varchar",
-        update: true,
-    })
-    updatedBy?: string;
 
     constructor(major?: Partial<MajorEntity>) {
         if (major) {

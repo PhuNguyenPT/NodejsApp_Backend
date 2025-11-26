@@ -294,6 +294,7 @@ export class StudentEventListener implements IStudentEventListener {
                         "nationalExams",
                         "talentExams",
                         "vsatExams",
+                        "user",
                     ],
                     where: { id: studentId, userId: userId ?? IsNull() },
                 },
@@ -323,15 +324,24 @@ export class StudentEventListener implements IStudentEventListener {
                     studentInfoDTO,
                 );
             }
-
+            const userEntity: undefined | UserEntity = studentEntity.user;
             // Step 4: Create new StudentAdmissionEntity instances for the new links
-            const newStudentAdmissionLinks = newAdmissionsToAdd.map(
-                (admission) =>
-                    manager.create(StudentAdmissionEntity, {
-                        admissionId: admission.id,
-                        studentId: studentId,
-                    }),
-            );
+            const newStudentAdmissionLinks: StudentAdmissionEntity[] =
+                newAdmissionsToAdd.map((admission) => {
+                    const studentAdmissionEntity = manager.create(
+                        StudentAdmissionEntity,
+                        {
+                            admissionId: admission.id,
+                            studentId: studentId,
+                        },
+                    );
+                    if (userEntity) {
+                        studentAdmissionEntity.createdBy = userEntity.email;
+                    } else {
+                        studentAdmissionEntity.createdBy = Role.ANONYMOUS;
+                    }
+                    return studentAdmissionEntity;
+                });
 
             // Step 5: Save the new links to the database in a single bulk operation
             await manager.save(newStudentAdmissionLinks);
