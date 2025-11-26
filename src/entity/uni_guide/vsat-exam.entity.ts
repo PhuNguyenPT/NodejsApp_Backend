@@ -1,4 +1,3 @@
-// student-aptitude-exam.entity.ts
 import { Expose, Transform } from "class-transformer";
 import {
     Column,
@@ -6,19 +5,20 @@ import {
     Entity,
     JoinColumn,
     ManyToOne,
-    OneToOne,
     PrimaryGeneratedColumn,
     Relation,
     UpdateDateColumn,
 } from "typeorm";
 
-import { ExamType } from "@/type/enum/exam-type.js";
+import {
+    VsatExamSubject,
+    VsatExamSubjects,
+} from "@/type/enum/vsat-exam-subject.js";
 
 import { StudentEntity } from "./student.entity.js";
-import { VnuhcmScoreComponentEntity } from "./vnuhcm-score-component.entity.js";
 
-@Entity({ name: "student_aptitude_exams", schema: "uni_guide" })
-export class StudentAptitudeExamEntity {
+@Entity({ name: "vsat_exams", schema: "uni_guide" })
+export class VsatExamEntity {
     @CreateDateColumn({
         insert: true,
         name: "created_at",
@@ -39,13 +39,13 @@ export class StudentAptitudeExamEntity {
     @Expose()
     createdBy?: string;
 
-    @Column({ enum: ExamType, name: "exam_type", type: "enum" })
-    @Expose()
-    examType!: ExamType;
-
     @Expose()
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: string;
+
+    @Column({ enum: VsatExamSubjects, name: "name", type: "varchar" })
+    @Expose()
+    name!: VsatExamSubject;
 
     @Column({ name: "score", type: "decimal" })
     @Expose()
@@ -58,7 +58,7 @@ export class StudentAptitudeExamEntity {
 
     @Expose()
     @JoinColumn({ name: "student_id" })
-    @ManyToOne("StudentEntity", "aptitudeExams", {
+    @ManyToOne("StudentEntity", "vsatExams", {
         onDelete: "CASCADE",
         orphanedRowAction: "delete",
     })
@@ -87,16 +87,4 @@ export class StudentAptitudeExamEntity {
     })
     @Expose()
     updatedBy?: string;
-
-    /**
-     * One-to-one relationship with VNUHCM score components
-     * Only populated when examType is VNUHCM
-     */
-    @Expose()
-    @OneToOne("VnuhcmScoreComponentEntity", "aptitudeExam", {
-        cascade: true,
-        eager: true,
-        nullable: true,
-    })
-    vnuhcmScoreComponents?: Relation<VnuhcmScoreComponentEntity>;
 }

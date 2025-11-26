@@ -11,17 +11,17 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { StudentAptitudeExamEntity } from "./student-aptitude-exam.entity.js";
+import { AptitudeExamEntity } from "./aptitude-exam.entity.js";
 
 @Entity({ name: "vnuhcm_score_components", schema: "uni_guide" })
 export class VnuhcmScoreComponentEntity {
     @Expose()
     @JoinColumn({ name: "aptitude_exam_id" })
-    @OneToOne("StudentAptitudeExamEntity", "vnuhcmPartialScores", {
+    @OneToOne("AptitudeExamEntity", "vnuhcmPartialScores", {
         onDelete: "CASCADE",
         orphanedRowAction: "delete",
     })
-    aptitudeExam!: Relation<StudentAptitudeExamEntity>;
+    aptitudeExam!: Relation<AptitudeExamEntity>;
 
     @Column({ name: "aptitude_exam_id", type: "uuid" })
     @Expose()
