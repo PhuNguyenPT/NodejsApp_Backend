@@ -35,29 +35,30 @@ export const ServiceTypes = {
  * @description Symbols for all data repositories.
  */
 export const RepositoryTypes = {
+    AcademicPerformanceRepository: Symbol.for("AcademicPerformanceRepository"),
     AdmissionRepository: Symbol.for("AdmissionRepository"),
+    AptitudeExamRepository: Symbol.for("AptitudeExamRepository"),
     AwardRepository: Symbol.for("AwardRepository"),
     CertificationRepository: Symbol.for("CertificationRepository"),
+    ConductRepository: Symbol.for("ConductRepository"),
     FileRepository: Symbol.for("FileRepository"),
     IJwtTokenRepository: Symbol.for("IJwtTokenRepository"),
     IUserRepository: Symbol.for("IUserRepository"),
     MajorGroupRepository: Symbol.for("MajorGroupRepository"),
     MajorRepository: Symbol.for("MajorRepository"),
+    NationalExamRepository: Symbol.for("NationalExamRepository"),
     OcrResultRepository: Symbol.for("OcrResultRepository"),
     PredictionResultEntityRepository: Symbol.for(
         "PredictionResultEntityRepository",
     ),
-    StudentAptitudeExamRepository: Symbol.for("StudentAptitudeExamRepository"),
-    StudentConductRepository: Symbol.for("StudentConductRepository"),
     StudentMajorGroupRepository: Symbol.for("StudentMajorGroupRepository"),
-    StudentNationalExamRepository: Symbol.for("StudentNationalExamRepository"),
     StudentRepository: Symbol.for("StudentRepository"),
-    StudentTalentExamRepository: Symbol.for("StudentTalentExamRepository"),
-    StudentVsatExamRepository: Symbol.for("StudentVsatExamRepository"),
+    TalentExamRepository: Symbol.for("TalentExamRepository"),
     UserRepository: Symbol.for("UserRepository"),
     VnuhcmScoreComponentRepository: Symbol.for(
         "VnuhcmScoreComponentRepository",
     ),
+    VsatExamRepository: Symbol.for("VsatExamRepository"),
 };
 
 /**

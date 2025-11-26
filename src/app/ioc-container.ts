@@ -30,6 +30,7 @@ import { PredictionController } from "@/controller/prediction.controller.js";
 import { StudentController } from "@/controller/student.controller.js";
 import { UserController } from "@/controller/user.controller.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
+import { AcademicPerformanceEntity } from "@/entity/uni_guide/academic-performance.entity.js";
 import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
 import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
 import { AwardEntity } from "@/entity/uni_guide/award.entity.js";
@@ -162,7 +163,14 @@ iocContainer
     .bind<Repository<StudentEntity>>(TYPES.StudentRepository)
     .toConstantValue(postgresDataSource.getRepository(StudentEntity));
 iocContainer
-    .bind<Repository<AptitudeExamEntity>>(TYPES.StudentAptitudeExamRepository)
+    .bind<
+        Repository<AcademicPerformanceEntity>
+    >(TYPES.AcademicPerformanceRepository)
+    .toConstantValue(
+        postgresDataSource.getRepository(AcademicPerformanceEntity),
+    );
+iocContainer
+    .bind<Repository<AptitudeExamEntity>>(TYPES.AptitudeExamRepository)
     .toConstantValue(postgresDataSource.getRepository(AptitudeExamEntity));
 iocContainer
     .bind<
@@ -178,7 +186,7 @@ iocContainer
     .bind<Repository<CertificationEntity>>(TYPES.CertificationRepository)
     .toConstantValue(postgresDataSource.getRepository(CertificationEntity));
 iocContainer
-    .bind<Repository<ConductEntity>>(TYPES.StudentConductRepository)
+    .bind<Repository<ConductEntity>>(TYPES.ConductRepository)
     .toConstantValue(postgresDataSource.getRepository(ConductEntity));
 iocContainer
     .bind<Repository<FileEntity>>(TYPES.FileRepository)
@@ -195,13 +203,13 @@ iocContainer
     .bind<Repository<MajorEntity>>(TYPES.MajorRepository)
     .toConstantValue(postgresDataSource.getRepository(MajorEntity));
 iocContainer
-    .bind<Repository<NationalExamEntity>>(TYPES.StudentNationalExamRepository)
+    .bind<Repository<NationalExamEntity>>(TYPES.NationalExamRepository)
     .toConstantValue(postgresDataSource.getRepository(NationalExamEntity));
 iocContainer
-    .bind<Repository<TalentExamEntity>>(TYPES.StudentTalentExamRepository)
+    .bind<Repository<TalentExamEntity>>(TYPES.TalentExamRepository)
     .toConstantValue(postgresDataSource.getRepository(TalentExamEntity));
 iocContainer
-    .bind<Repository<VsatExamEntity>>(TYPES.StudentVsatExamRepository)
+    .bind<Repository<VsatExamEntity>>(TYPES.VsatExamRepository)
     .toConstantValue(postgresDataSource.getRepository(VsatExamEntity));
 iocContainer
     .bind<Repository<OcrResultEntity>>(TYPES.OcrResultRepository)

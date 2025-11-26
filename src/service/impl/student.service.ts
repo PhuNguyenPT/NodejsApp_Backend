@@ -4,6 +4,7 @@ import { Logger } from "winston";
 
 import { StudentRequest } from "@/dto/student/student-request.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
+import { AcademicPerformanceEntity } from "@/entity/uni_guide/academic-performance.entity.js";
 import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
 import { AwardEntity } from "@/entity/uni_guide/award.entity.js";
 import { ConductEntity } from "@/entity/uni_guide/conduct.entity.js";
@@ -27,7 +28,6 @@ import { ValidationException } from "@/type/exception/validation.exception.js";
 import { PageImpl } from "@/type/pagination/page-impl.js";
 import { Page } from "@/type/pagination/page.interface.js";
 import { Pageable } from "@/type/pagination/pageable.interface.js";
-
 @injectable()
 export class StudentService implements IStudentService {
     constructor(
@@ -35,8 +35,10 @@ export class StudentService implements IStudentService {
         private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.UserRepository)
         private readonly userRepository: Repository<UserEntity>,
-        @inject(TYPES.StudentAptitudeExamRepository)
-        private readonly studentAptitudeExamRepository: Repository<AptitudeExamEntity>,
+        @inject(TYPES.AcademicPerformanceRepository)
+        private readonly academicPerformanceRepository: Repository<AcademicPerformanceEntity>,
+        @inject(TYPES.AptitudeExamRepository)
+        private readonly aptitudeExamRepository: Repository<AptitudeExamEntity>,
         @inject(TYPES.StudentMajorGroupRepository)
         private readonly studentMajorGroupRepository: Repository<StudentMajorGroupEntity>,
         @inject(TYPES.VnuhcmScoreComponentRepository)
@@ -45,14 +47,14 @@ export class StudentService implements IStudentService {
         private readonly awardRepository: Repository<AwardEntity>,
         @inject(TYPES.FileRepository)
         private readonly fileRepository: Repository<FileEntity>,
-        @inject(TYPES.StudentConductRepository)
-        private readonly studentConductRepository: Repository<ConductEntity>,
-        @inject(TYPES.StudentNationalExamRepository)
-        private readonly studentNationalExamRepository: Repository<NationalExamEntity>,
-        @inject(TYPES.StudentTalentExamRepository)
-        private readonly studentTalentExamRepository: Repository<TalentExamEntity>,
-        @inject(TYPES.StudentVsatExamRepository)
-        private readonly studentVsatExamRepository: Repository<VsatExamEntity>,
+        @inject(TYPES.ConductRepository)
+        private readonly conductRepository: Repository<ConductEntity>,
+        @inject(TYPES.NationalExamRepository)
+        private readonly nationalExamRepository: Repository<NationalExamEntity>,
+        @inject(TYPES.TalentExamRepository)
+        private readonly talentExamRepository: Repository<TalentExamEntity>,
+        @inject(TYPES.VsatExamRepository)
+        private readonly vsatExamRepository: Repository<VsatExamEntity>,
         @inject(TYPES.ICertificationService)
         private readonly certificationService: ICertificationService,
         @inject(TYPES.IStudentEventListener)
@@ -227,6 +229,26 @@ export class StudentService implements IStudentService {
             : Role.ANONYMOUS;
         studentEntity.user = userEntity ?? undefined;
 
+        if (studentRequest.academicPerformances.length > 0) {
+            studentEntity.academicPerformances =
+                studentRequest.academicPerformances.map(
+                    (academicPerformanceRequest) => {
+                        const academicPerformanceEntity: AcademicPerformanceEntity =
+                            this.academicPerformanceRepository.create(
+                                academicPerformanceRequest,
+                            );
+                        if (userEntity) {
+                            academicPerformanceEntity.createdBy =
+                                userEntity.email;
+                        } else {
+                            academicPerformanceEntity.createdBy ??=
+                                Role.ANONYMOUS;
+                        }
+                        return academicPerformanceEntity;
+                    },
+                );
+        }
+
         if (
             studentRequest.aptitudeExams &&
             studentRequest.aptitudeExams.length > 0
@@ -234,9 +256,7 @@ export class StudentService implements IStudentService {
             studentEntity.aptitudeExams = studentRequest.aptitudeExams.map(
                 (aptitudeExamRequest) => {
                     const aptitudeExamEntity: AptitudeExamEntity =
-                        this.studentAptitudeExamRepository.create(
-                            aptitudeExamRequest,
-                        );
+                        this.aptitudeExamRepository.create(aptitudeExamRequest);
                     if (userEntity) {
                         aptitudeExamEntity.createdBy = userEntity.email;
                     } else {
@@ -303,7 +323,7 @@ export class StudentService implements IStudentService {
             studentEntity.conducts = studentRequest.conducts.map(
                 (conductRequest) => {
                     const conductEntity: ConductEntity =
-                        this.studentConductRepository.create(conductRequest);
+                        this.conductRepository.create(conductRequest);
                     if (userEntity) {
                         conductEntity.createdBy = userEntity.email;
                     } else {
@@ -340,7 +360,7 @@ export class StudentService implements IStudentService {
             studentEntity.nationalExams = studentRequest.nationalExams.map(
                 (nationalExam) => {
                     const nationalExamEntity: NationalExamEntity =
-                        this.studentNationalExamRepository.create(nationalExam);
+                        this.nationalExamRepository.create(nationalExam);
                     if (userEntity) {
                         nationalExamEntity.createdBy = userEntity.email;
                     } else {
@@ -358,7 +378,7 @@ export class StudentService implements IStudentService {
             studentEntity.talentExams = studentRequest.talentExams.map(
                 (talentExam) => {
                     const talentExamEntity: TalentExamEntity =
-                        this.studentTalentExamRepository.create(talentExam);
+                        this.talentExamRepository.create(talentExam);
                     if (userEntity) {
                         talentExamEntity.createdBy = userEntity.email;
                     } else {
@@ -373,7 +393,7 @@ export class StudentService implements IStudentService {
             studentEntity.vsatExams = studentRequest.vsatExams.map(
                 (vsatExam) => {
                     const vsatExamEntity: VsatExamEntity =
-                        this.studentVsatExamRepository.create(vsatExam);
+                        this.vsatExamRepository.create(vsatExam);
                     if (userEntity) {
                         vsatExamEntity.createdBy = userEntity.email;
                     } else {
