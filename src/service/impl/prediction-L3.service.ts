@@ -9,22 +9,20 @@ import { Logger } from "winston";
 import { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
 import { ISubjectScore } from "@/dto/ocr/ocr.js";
+import { AwardEnglish } from "@/dto/prediction/award-english.dto.js";
+import { AwardQG } from "@/dto/prediction/award-qg.dto.js";
+import { DGNL } from "@/dto/prediction/dgnl.dto.js";
 import { HsgSubject } from "@/dto/prediction/hsg-subject.enum.js";
+import { InterCer } from "@/dto/prediction/inter-cer.dto.js";
 import { InterCerEnum } from "@/dto/prediction/inter-cert.enum.js";
 import { L3NationalSubject } from "@/dto/prediction/l3-national-subject.enum.js";
 import { L3PredictResult } from "@/dto/prediction/l3-predict-result.dto.js";
-import {
-    AwardEnglish,
-    AwardQG,
-    DGNL,
-    InterCer,
-    NangKhieuScore,
-    THPTSubjectScore,
-    TNTHPTScores,
-    TranscriptRecordL3,
-    TranscriptSubjectScoreL3,
-    UserInputL3,
-} from "@/dto/prediction/l3-request.dto.js";
+import { UserInputL3 } from "@/dto/prediction/l3-request.dto.js";
+import { NangKhieuScore } from "@/dto/prediction/nang-khieu-score.dto.js";
+import { THPTSubjectScore } from "@/dto/prediction/thpt-subject-score.dto.js";
+import { TNTHPTScores } from "@/dto/prediction/tnthpt-scores.dto.js";
+import { TranscriptRecord } from "@/dto/prediction/transcript-record.dto.js";
+import { TranscriptSubjectScore } from "@/dto/prediction/transcript-subject-score.dto.js";
 import { AptitudeExamDTO } from "@/dto/student/aptitude-exam-dto.js";
 import { AwardDTO } from "@/dto/student/award-dto.js";
 import { CertificationDTO } from "@/dto/student/certification-dto.js";
@@ -143,12 +141,12 @@ export class PredictionL3Service implements IPredictionL3Service {
     };
 
     /**
-     * Mapping from TranscriptSubject enum to TranscriptSubjectScoreL3 properties
+     * Mapping from TranscriptSubject enum to TranscriptSubjectScore properties
      * All foreign languages map to "anh" as there's only one language field
      */
     private readonly TRANSCRIPT_SUBJECT_MAPPING: Record<
         TranscriptSubject,
-        keyof TranscriptSubjectScoreL3
+        keyof TranscriptSubjectScore
     > = {
         [TranscriptSubject.CONG_NGHE]: "cong_nghe",
         [TranscriptSubject.DIA_LY]: "dia",
@@ -738,15 +736,15 @@ export class PredictionL3Service implements IPredictionL3Service {
     }
 
     /**
-     * Assign mapped scores to TranscriptSubjectScoreL3
+     * Assign mapped scores to TranscriptSubjectScore
      * @param subjectScoresMap Map of subject to score
-     * @returns Populated TranscriptSubjectScoreL3 instance
+     * @returns Populated TranscriptSubjectScore instance
      */
-    private assignScoresToTranscriptSubjectScoreL3(
+    private assignScoresToTranscriptSubjectScore(
         subjectScoresMap: Map<TranscriptSubject, number>,
-    ): TranscriptSubjectScoreL3 {
+    ): TranscriptSubjectScore {
         // Initialize with default values for all required fields
-        const scoreData: Record<keyof TranscriptSubjectScoreL3, number> = {
+        const scoreData: Record<keyof TranscriptSubjectScore, number> = {
             anh: 0,
             cong_nghe: 0,
             dia: 0,
@@ -771,16 +769,16 @@ export class PredictionL3Service implements IPredictionL3Service {
             scoreData[propertyName] = score;
         });
 
-        return plainToInstance(TranscriptSubjectScoreL3, scoreData);
+        return plainToInstance(TranscriptSubjectScore, scoreData);
     }
 
     /**
      * Build transcript record with semester averaging
      */
-    private buildTranscriptRecordL3FromFiles(
+    private buildTranscriptRecordFromFiles(
         fileEntities: FileEntity[],
-    ): TranscriptRecordL3 {
-        const transcriptRecordL3 = new TranscriptRecordL3();
+    ): TranscriptRecord {
+        const transcriptRecord = new TranscriptRecord();
 
         // Check if we have semester-level data (6 files = 3 grades × 2 semesters)
         const hasSemesterData = fileEntities.length === 6;
@@ -812,19 +810,17 @@ export class PredictionL3Service implements IPredictionL3Service {
 
                 // Assign to appropriate grade
                 const transcriptSubjectScore =
-                    this.assignScoresToTranscriptSubjectScoreL3(
-                        subjectScoresMap,
-                    );
+                    this.assignScoresToTranscriptSubjectScore(subjectScoresMap);
 
                 switch (grade) {
                     case 10:
-                        transcriptRecordL3.grade_10 = transcriptSubjectScore;
+                        transcriptRecord.grade_10 = transcriptSubjectScore;
                         break;
                     case 11:
-                        transcriptRecordL3.grade_11 = transcriptSubjectScore;
+                        transcriptRecord.grade_11 = transcriptSubjectScore;
                         break;
                     case 12:
-                        transcriptRecordL3.grade_12 = transcriptSubjectScore;
+                        transcriptRecord.grade_12 = transcriptSubjectScore;
                         break;
                 }
             }
@@ -850,25 +846,23 @@ export class PredictionL3Service implements IPredictionL3Service {
                 );
 
                 const transcriptSubjectScore =
-                    this.assignScoresToTranscriptSubjectScoreL3(
-                        subjectScoresMap,
-                    );
+                    this.assignScoresToTranscriptSubjectScore(subjectScoresMap);
 
                 switch (grade) {
                     case 10:
-                        transcriptRecordL3.grade_10 = transcriptSubjectScore;
+                        transcriptRecord.grade_10 = transcriptSubjectScore;
                         break;
                     case 11:
-                        transcriptRecordL3.grade_11 = transcriptSubjectScore;
+                        transcriptRecord.grade_11 = transcriptSubjectScore;
                         break;
                     case 12:
-                        transcriptRecordL3.grade_12 = transcriptSubjectScore;
+                        transcriptRecord.grade_12 = transcriptSubjectScore;
                         break;
                 }
             });
         }
 
-        return transcriptRecordL3;
+        return transcriptRecord;
     }
 
     /**
@@ -1118,14 +1112,14 @@ export class PredictionL3Service implements IPredictionL3Service {
             });
         }
 
-        const transcriptRecordL3: TranscriptRecordL3 =
-            this.buildTranscriptRecordL3FromFiles(fileEntities);
+        const TranscriptRecord: TranscriptRecord =
+            this.buildTranscriptRecordFromFiles(fileEntities);
 
         this.logger.debug("L3 Prediction: Transcript record built", {
             fileCount: fileEntities.length,
-            hasGrade10: !!transcriptRecordL3.grade_10,
-            hasGrade11: !!transcriptRecordL3.grade_11,
-            hasGrade12: !!transcriptRecordL3.grade_12,
+            hasGrade10: !!TranscriptRecord.grade_10,
+            hasGrade11: !!TranscriptRecord.grade_11,
+            hasGrade12: !!TranscriptRecord.grade_12,
         });
 
         const awardQG: AwardQG[] = studentInfoDTO.awards
@@ -1181,7 +1175,7 @@ export class PredictionL3Service implements IPredictionL3Service {
                                 award_qg:
                                     awardQG.length > 0 ? awardQG : undefined,
                                 dgnl: dgnl,
-                                hoc_ba: transcriptRecordL3,
+                                hoc_ba: TranscriptRecord,
                                 int_cer: interCer,
                                 nang_khieu: nangKhieuScore,
                                 nhom_nganh: majorCode,
