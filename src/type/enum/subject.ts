@@ -31,7 +31,7 @@ export enum VietnameseSubject {
     NANG_KHIEU_1 = "Năng khiếu 1",
     NANG_KHIEU_2 = "Năng khiếu 2",
     NANG_KHIEU_AM_NHAC_1 = "Năng khiếu Âm nhạc 1 (Hát, xướng âm)",
-    NANG_KHIEU_AM_NHAC_2 = "Năng khiếu Âm nhạc 2 (Thẩm âm, tiết tất)",
+    NANG_KHIEU_AM_NHAC_2 = "Năng khiếu Âm nhạc 2 (Thẩm âm, tiết tấu)",
     NANG_KHIEU_ANH_BAO_CHI = "Năng khiếu ảnh báo chí",
     NANG_KHIEU_BAO_CHI = "Năng khiếu báo chí",
     NANG_KHIEU_BIEU_DIEN_NGHE_THUAT = "Năng khiếu Biểu diễn nghệ thuật",
