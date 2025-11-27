@@ -3,57 +3,65 @@ import { Expose, Type } from "class-transformer";
 export class AdmissionResponse {
     @Expose()
     @Type(() => String)
-    admissionCode!: string;
+    admissionCode?: string;
 
     @Expose()
     @Type(() => String)
-    admissionType!: string;
+    admissionType?: string;
 
     @Expose()
     @Type(() => String)
-    admissionTypeName!: string;
+    admissionTypeName?: string;
 
     @Expose()
     @Type(() => String)
     id!: string;
 
     @Expose()
-    @Type(() => String)
-    majorCode!: number;
+    @Type(() => Number)
+    majorCode?: number;
+
+    @Expose()
+    @Type(() => Number)
+    majorGroup?: number;
 
     @Expose()
     @Type(() => String)
-    majorName!: string;
+    majorName?: string;
 
     @Expose()
     @Type(() => String)
-    province!: string;
+    province?: string;
+
+    @Expose()
+    @Type(() => Number)
+    score?: number;
 
     @Expose()
     @Type(() => String)
-    studyProgram!: string;
+    studyProgram?: string;
 
     @Expose()
     @Type(() => String)
-    subjectCombination!: string;
+    subjectCombination?: string;
+
+    @Expose()
+    @Type(() => Number)
+    tuitionFee?: number;
 
     @Expose()
     @Type(() => String)
-    tuitionFee!: number;
+    uniCode?: string;
 
     @Expose()
     @Type(() => String)
-    uniCode!: string;
+    uniName?: string;
 
     @Expose()
     @Type(() => String)
-    uniName!: string;
+    uniType?: string;
 
     @Expose()
     @Type(() => String)
-    uniType!: string;
-
-    @Expose()
-    @Type(() => String)
-    uniWebLink!: string;
+    uniWebLink?: string;
 }
