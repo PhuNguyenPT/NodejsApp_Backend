@@ -10,15 +10,29 @@ import {
 
 export class L3PredictionItem {
     @Expose()
-    @IsArray()
     @IsNotEmpty()
-    @IsString({ each: true })
-    best_to_hop!: string[];
+    @IsString()
+    admission_code!: string;
+
+    @Expose()
+    @IsNotEmpty()
+    @IsString()
+    admission_type!: string;
+
+    @Expose()
+    @IsNotEmpty()
+    @IsString()
+    admission_type_name!: string;
 
     @Expose()
     @IsNotEmpty()
     @IsNumber()
-    best_to_hop_score!: number;
+    best_subject_combination_score!: number;
+
+    @Expose()
+    @IsNotEmpty()
+    @IsNumber()
+    best_subject_combination_total_score!: number;
 
     @Expose()
     @IsNotEmpty()
@@ -27,28 +41,64 @@ export class L3PredictionItem {
 
     @Expose()
     @IsNotEmpty()
-    @IsNumber()
-    diem_chuan!: number;
-
-    @Expose()
-    @IsNotEmpty()
     @IsString()
-    ma_nganh!: string;
+    major_code!: string;
 
     @Expose()
     @IsInt()
     @IsNotEmpty()
-    nhom_nganh!: number;
+    major_group!: number;
 
     @Expose()
     @IsNotEmpty()
     @IsString()
-    ten_nganh!: string;
+    major_name!: string;
+
+    @Expose()
+    @IsNotEmpty()
+    @IsString()
+    province!: string;
+
+    @Expose()
+    @IsNotEmpty()
+    @IsString()
+    study_program!: string;
+
+    @Expose()
+    @IsArray()
+    @IsNotEmpty()
+    @IsString({ each: true })
+    subject_combination!: string[];
 
     @Expose()
     @IsNotEmpty()
     @IsNumber()
-    total_score!: number;
+    tuition_fee!: number;
+
+    @Expose()
+    @IsNotEmpty()
+    @IsString()
+    uni_code!: string;
+
+    @Expose()
+    @IsNotEmpty()
+    @IsString()
+    uni_name!: string;
+
+    @Expose()
+    @IsNotEmpty()
+    @IsNumber()
+    uni_score!: number;
+
+    @Expose()
+    @IsNotEmpty()
+    @IsString()
+    uni_type!: string;
+
+    @Expose()
+    @IsNotEmpty()
+    @IsString()
+    uni_web_name!: string;
 }
 
 export class L3PredictResult {
