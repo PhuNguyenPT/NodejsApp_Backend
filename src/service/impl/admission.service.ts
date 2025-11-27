@@ -389,6 +389,7 @@ export class AdmissionService implements IAdmissionService {
             discounted: 0,
             processed: 0,
             skippedBelowThreshold: 0,
+            skippedMissingData: 0,
             skippedNoScore: 0,
             totalDiscount: 0,
         };
@@ -401,6 +402,12 @@ export class AdmissionService implements IAdmissionService {
             }
 
             stats.processed++;
+
+            // Check if required fields are present
+            if (!entity.subjectCombination || entity.tuitionFee === undefined) {
+                stats.skippedMissingData++;
+                return entity;
+            }
 
             // Calculate score for this subject combination
             const totalScore = this.calculateSubjectCombinationScore(
@@ -445,6 +452,7 @@ export class AdmissionService implements IAdmissionService {
                 discounted: stats.discounted,
                 processed: stats.processed,
                 skippedBelowThreshold: stats.skippedBelowThreshold,
+                skippedMissingData: stats.skippedMissingData,
                 skippedNoScore: stats.skippedNoScore,
                 studentId,
                 totalDiscountAmount: stats.totalDiscount,

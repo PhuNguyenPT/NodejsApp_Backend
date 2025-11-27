@@ -98,7 +98,7 @@ export class StudentEventListener implements IStudentEventListener {
                     subject_combinations,
                 );
 
-                if (!passes) {
+                if (!passes && admission.admissionCode) {
                     filteredOutAdmissionCodes.add(admission.admissionCode);
                 }
 
@@ -158,11 +158,16 @@ export class StudentEventListener implements IStudentEventListener {
         studentInfoDTO: StudentInfoDTO,
         subject_combinations?: Set<string>,
     ): boolean {
+        // Early return if required fields are missing
+        if (!admission.uniType || !admission.province) {
+            return false;
+        }
+
         const studentUniType = studentInfoDTO.uniType;
         const admissionUniType = admission.uniType.trim().toUpperCase();
 
         let passesSubject = true;
-        if (subject_combinations) {
+        if (subject_combinations && admission.subjectCombination) {
             passesSubject = subject_combinations.has(
                 admission.subjectCombination,
             );
@@ -189,7 +194,8 @@ export class StudentEventListener implements IStudentEventListener {
         let passesMajorGroup = true;
         if (
             studentInfoDTO.studentMajorGroups &&
-            studentInfoDTO.studentMajorGroups.length > 0
+            studentInfoDTO.studentMajorGroups.length > 0 &&
+            admission.majorCode !== undefined
         ) {
             const studentMajorGroupCodes = studentInfoDTO.getMajorGroupCodes();
             const admissionMajorGroupCode = String(
@@ -200,6 +206,7 @@ export class StudentEventListener implements IStudentEventListener {
                 admissionMajorGroupCode,
             );
         }
+
         return (
             passesSubject && passesProvince && passesUniType && passesMajorGroup
         );
