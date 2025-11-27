@@ -351,8 +351,8 @@ export class PredictionL3Service implements IPredictionL3Service {
                 ([universityCode, predictions]) => {
                     uniqueUniversities.add(universityCode);
                     predictions.forEach((prediction) => {
-                        uniqueMajorGroups.add(prediction.nhom_nganh);
-                        uniqueMajorCodes.add(prediction.ma_nganh);
+                        uniqueMajorGroups.add(prediction.major_group);
+                        uniqueMajorCodes.add(prediction.major_code);
                     });
                 },
             );
@@ -921,7 +921,7 @@ export class PredictionL3Service implements IPredictionL3Service {
         // Extract all ma_nganh values from all universities
         for (const [university, predictions] of Object.entries(result.result)) {
             predictions.forEach((pred) => {
-                majors.push(`${university}:${pred.ma_nganh}`);
+                majors.push(`${university}:${pred.major_code}`);
             });
         }
 
