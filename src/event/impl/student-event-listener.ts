@@ -198,9 +198,7 @@ export class StudentEventListener implements IStudentEventListener {
             admission.majorCode !== undefined
         ) {
             const studentMajorGroupCodes = studentInfoDTO.getMajorGroupCodes();
-            const admissionMajorGroupCode = String(
-                admission.majorCode,
-            ).substring(0, 3);
+            const admissionMajorGroupCode = admission.majorCode.substring(0, 3);
 
             passesMajorGroup = studentMajorGroupCodes.has(
                 admissionMajorGroupCode,

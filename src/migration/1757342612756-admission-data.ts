@@ -13,10 +13,10 @@ interface AdmissionCsvRow {
     admission_type?: string;
     admission_type_name?: string;
     major_code?: string;
-    major_group?: number; // Present in transcript-admission-data.csv
+    major_group?: number;
     major_name?: string;
     province?: string;
-    score?: number; // Present in transcript-admission-data.csv
+    score?: number;
     study_program?: string;
     subject_combination?: string;
     tuition_fee?: string;
@@ -147,7 +147,9 @@ export class AdmissionData1757342612756 implements MigrationInterface {
             );
             admission.uniCode = this.parseStringOrUndefined(csvRow.uni_code);
             admission.uniName = this.parseStringOrUndefined(csvRow.uni_name);
-            admission.majorCode = this.parseIntOrUndefined(csvRow.major_code);
+            admission.majorCode = this.parseStringOrUndefined(
+                csvRow.major_code,
+            );
             admission.majorGroup = this.parseIntOrUndefined(csvRow.major_group);
             admission.majorName = this.parseStringOrUndefined(
                 csvRow.major_name,
