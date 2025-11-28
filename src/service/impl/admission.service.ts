@@ -154,7 +154,7 @@ export class AdmissionService implements IAdmissionService {
 
         // Filter out admissions with major_code = 0 (invalid/placeholder records)
         const validAdmissionEntities = admissionEntities.filter(
-            (admission) => admission.majorCode !== 0,
+            (admission) => admission.majorCode === "0",
         );
 
         // Apply UEF scholarship adjustments before extracting distinct values

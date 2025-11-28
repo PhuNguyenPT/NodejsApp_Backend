@@ -96,8 +96,8 @@ export class AdmissionEntity {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
-    @Column({ name: "major_code", nullable: true, type: "integer" })
-    majorCode?: number;
+    @Column({ name: "major_code", nullable: true, type: "varchar" })
+    majorCode?: string;
 
     @Column({ name: "major_group", nullable: true, type: "integer" })
     majorGroup?: number;
@@ -108,7 +108,7 @@ export class AdmissionEntity {
     @Column({ name: "province", nullable: true, type: "varchar" })
     province?: string;
 
-    @Column({ name: "score", nullable: true, type: "bigint" })
+    @Column({ name: "score", nullable: true, type: "numeric" })
     score?: number;
 
     @OneToMany("StudentAdmissionEntity", "admission")
