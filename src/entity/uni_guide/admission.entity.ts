@@ -87,7 +87,7 @@ export class AdmissionEntity {
 
     @CreateDateColumn({
         insert: true,
-        name: "created_at", // Added snake_case name
+        name: "created_at",
         type: "timestamp with time zone",
         update: false,
     })

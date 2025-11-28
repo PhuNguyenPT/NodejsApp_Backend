@@ -18,8 +18,8 @@ export class AdmissionResponse {
     id!: string;
 
     @Expose()
-    @Type(() => Number)
-    majorCode?: number;
+    @Type(() => String)
+    majorCode?: string;
 
     @Expose()
     @Type(() => Number)
