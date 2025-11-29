@@ -3,12 +3,12 @@ import { inject, injectable } from "inversify";
 import { In, Repository } from "typeorm";
 import { Logger } from "winston";
 
-import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.js";
+import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.dto.js";
 import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
     ISubjectScore,
-} from "@/dto/ocr/ocr.js";
+} from "@/dto/ocr/ocr.dto.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import {
     OcrMetadata,

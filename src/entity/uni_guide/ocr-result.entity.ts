@@ -13,7 +13,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { ISubjectScore } from "@/dto/ocr/ocr.js";
+import { ISubjectScore } from "@/dto/ocr/ocr.dto.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 

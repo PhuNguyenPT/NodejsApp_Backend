@@ -16,11 +16,11 @@ import {
 import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
-import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.js";
+import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.dto.js";
 import {
     BatchScoreExtractionResult,
     OcrResultResponse,
-} from "@/dto/ocr/ocr.js";
+} from "@/dto/ocr/ocr.dto.js";
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 import { OcrResultMapper } from "@/mapper/ocr-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";

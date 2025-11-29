@@ -1,7 +1,7 @@
 import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
-} from "@/dto/ocr/ocr.js";
+} from "@/dto/ocr/ocr.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
 export interface IMistralService {
