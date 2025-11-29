@@ -5,7 +5,7 @@ import { Logger } from "winston";
 import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
-} from "@/dto/ocr/ocr.js";
+} from "@/dto/ocr/ocr.dto.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";

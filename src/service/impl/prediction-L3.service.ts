@@ -8,7 +8,7 @@ import { Logger } from "winston";
 
 import { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
-import { ISubjectScore } from "@/dto/ocr/ocr.js";
+import { ISubjectScore } from "@/dto/ocr/ocr.dto.js";
 import { AwardEnglish } from "@/dto/prediction/award-english.dto.js";
 import { AwardQG } from "@/dto/prediction/award-qg.dto.js";
 import { DGNL } from "@/dto/prediction/dgnl.dto.js";
