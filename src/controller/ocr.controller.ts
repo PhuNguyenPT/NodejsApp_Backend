@@ -126,7 +126,7 @@ export class OcrController extends Controller {
     ): Promise<OcrResultResponse> {
         this.logger.info(`Retrieving OCR result for id ${id}`);
         const result: OcrResultEntity =
-            await this.ocrResultService.patchByStudentIdAndFileId(
+            await this.ocrResultService.patchByStudentIdAndUsername(
                 id,
                 ocrUpdateRequest,
             );
@@ -148,7 +148,7 @@ export class OcrController extends Controller {
         const user = authenticatedRequest.user;
 
         const result: OcrResultEntity =
-            await this.ocrResultService.patchByStudentIdAndFileId(
+            await this.ocrResultService.patchByStudentIdAndUsername(
                 id,
                 ocrUpdateRequest,
                 user.email,

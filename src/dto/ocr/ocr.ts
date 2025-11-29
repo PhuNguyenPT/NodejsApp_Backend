@@ -1,7 +1,8 @@
-import { Expose } from "class-transformer";
+import { Expose, Type } from "class-transformer";
 import { IsEnum, IsNumber, Max, Min } from "class-validator";
 import { z } from "zod";
 
+import { OcrStatus } from "@/entity/uni_guide/ocr-result.entity.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 
 export interface ISubjectScore {
@@ -72,17 +73,26 @@ export interface ScoreExtractionResult {
 
 export class OcrResultResponse {
     @Expose()
+    @Type(() => Date)
     createdAt!: Date;
 
     @Expose()
+    @Type(() => String)
+    createdBy?: string;
+
+    @Expose()
+    @Type(() => String)
     fileId!: string;
 
     @Expose()
+    @Type(() => String)
     id!: string;
 
     @Expose()
-    processedBy!: string;
+    @Type(() => SubjectScore)
+    scores?: ISubjectScore[];
 
     @Expose()
-    scores!: ISubjectScore[];
+    @Type(() => String)
+    status!: OcrStatus;
 }

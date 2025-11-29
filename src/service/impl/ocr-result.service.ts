@@ -164,7 +164,7 @@ export class OcrResultService implements IOcrResultService {
         await this.ocrResultRepository.save(results);
     }
 
-    public async patchByStudentIdAndFileId(
+    public async patchByStudentIdAndUsername(
         id: string,
         ocrUpdateRequest: OcrUpdateRequest,
         username?: string,
