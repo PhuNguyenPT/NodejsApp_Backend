@@ -12,6 +12,7 @@ import {
 
 import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
 import { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
+import { L3PredictResult } from "@/dto/prediction/l3-predict-result.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
 export enum PredictionResultStatus {
@@ -54,6 +55,9 @@ export class PredictionResultEntity {
 
     @Column({ name: "l2_predict_results", nullable: true, type: "jsonb" })
     l2PredictResults!: L2PredictResult[];
+
+    @Column({ name: "l3_predict_results", nullable: true, type: "jsonb" })
+    l3PredictResults!: L3PredictResult[];
 
     @Column({
         enum: PredictionResultStatus,
