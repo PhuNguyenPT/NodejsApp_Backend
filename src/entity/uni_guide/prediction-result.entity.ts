@@ -51,13 +51,13 @@ export class PredictionResultEntity {
     id!: string;
 
     @Column({ name: "l1_predict_results", nullable: true, type: "jsonb" })
-    l1PredictResults!: L1PredictResult[];
+    l1PredictResults?: L1PredictResult[];
 
     @Column({ name: "l2_predict_results", nullable: true, type: "jsonb" })
-    l2PredictResults!: L2PredictResult[];
+    l2PredictResults?: L2PredictResult[];
 
     @Column({ name: "l3_predict_results", nullable: true, type: "jsonb" })
-    l3PredictResults!: L3PredictResult[];
+    l3PredictResults?: L3PredictResult[];
 
     @Column({
         enum: PredictionResultStatus,
