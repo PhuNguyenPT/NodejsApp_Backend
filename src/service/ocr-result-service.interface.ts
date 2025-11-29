@@ -17,7 +17,7 @@ export interface IOcrResultService {
         errorMessage: string,
         startTime: Date,
     ): Promise<void>;
-    patchByStudentIdAndFileId(
+    patchByStudentIdAndUsername(
         id: string,
         ocrUpdateRequest: OcrUpdateRequest,
         username?: string,
