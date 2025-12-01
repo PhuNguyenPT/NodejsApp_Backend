@@ -13,6 +13,7 @@ import {
     SuccessResponse,
     Tags,
 } from "@tsoa/runtime";
+import { plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
@@ -20,13 +21,14 @@ import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.dto.js";
 import {
     BatchScoreExtractionResult,
     OcrResultResponse,
+    SubjectScore,
 } from "@/dto/ocr/ocr.dto.js";
-import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
-import { OcrResultMapper } from "@/mapper/ocr-mapper.js";
+import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
 import { IMistralService } from "@/service/mistral-service.interface.js";
 import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
+import { ITranscriptService } from "@/service/transcript-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { AuthenticatedRequest } from "@/type/express/express.js";
@@ -40,6 +42,8 @@ export class OcrController extends Controller {
         private readonly mistralService: IMistralService,
         @inject(TYPES.IOcrResultService)
         private readonly ocrResultService: IOcrResultService,
+        @inject(TYPES.ITranscriptService)
+        private readonly transcriptService: ITranscriptService,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
     ) {
@@ -85,18 +89,47 @@ export class OcrController extends Controller {
         @Path("studentId") studentId: string,
         @Request() request: AuthenticatedRequest,
     ): Promise<OcrResultResponse[]> {
-        this.logger.info(
-            `Retrieving OCR result for student with id ${studentId}`,
-        );
         const user: Express.User = request.user;
-        const results: OcrResultEntity[] =
-            await this.ocrResultService.findByStudentIdAndUsername(
+        const userId: string = user.id;
+
+        this.logger.info("Retrieving OCR results for authorized student", {
+            studentId,
+            userId,
+        });
+
+        const transcriptEntities: TranscriptEntity[] =
+            await this.transcriptService.findByStudentIdAndUserId(
                 studentId,
-                user.email,
+                userId,
             );
-        const resultResponses: OcrResultResponse[] =
-            OcrResultMapper.toResponseList(results);
-        return resultResponses;
+
+        const ocrResultResponses: OcrResultResponse[] = transcriptEntities.map(
+            (transcriptEntity) => {
+                const subjectScores: SubjectScore[] = (
+                    transcriptEntity.transcriptSubjects ?? []
+                ).map((subject) =>
+                    plainToInstance(SubjectScore, {
+                        name: subject.subject,
+                        score: subject.score,
+                    }),
+                );
+
+                return plainToInstance(
+                    OcrResultResponse,
+                    {
+                        id: transcriptEntity.id,
+                        scores: subjectScores,
+                    },
+                    { excludeExtraneousValues: true },
+                );
+            },
+        );
+        this.logger.info(
+            "Retrieving OCR results successfully for authorized student",
+            { length: ocrResultResponses.length, studentId, userId },
+        );
+
+        return ocrResultResponses;
     }
 
     @Get("guest/{studentId}")
@@ -106,14 +139,39 @@ export class OcrController extends Controller {
     public async getExtractedScoresGuest(
         @Path("studentId") studentId: string,
     ): Promise<OcrResultResponse[]> {
-        this.logger.info(
-            `Retrieving OCR result for student with id ${studentId}`,
+        this.logger.info("Retrieving OCR result for guest student", {
+            studentId,
+        });
+        const transcriptEntities: TranscriptEntity[] =
+            await this.transcriptService.findByStudentIdAndUserId(studentId);
+
+        const ocrResultResponses: OcrResultResponse[] = transcriptEntities.map(
+            (transcriptEntity) => {
+                const subjectScores: SubjectScore[] = (
+                    transcriptEntity.transcriptSubjects ?? []
+                ).map((subject) =>
+                    plainToInstance(SubjectScore, {
+                        name: subject.subject,
+                        score: subject.score,
+                    }),
+                );
+
+                return plainToInstance(
+                    OcrResultResponse,
+                    {
+                        id: transcriptEntity.id,
+                        scores: subjectScores,
+                    },
+                    { excludeExtraneousValues: true },
+                );
+            },
         );
-        const results: OcrResultEntity[] =
-            await this.ocrResultService.findByStudentIdAndUsername(studentId);
-        const resultResponses: OcrResultResponse[] =
-            OcrResultMapper.toResponseList(results);
-        return resultResponses;
+        this.logger.info(
+            "Retrieving OCR results successfully for guest student",
+            { length: ocrResultResponses.length, studentId },
+        );
+
+        return ocrResultResponses;
     }
 
     @Middlewares(validateUuidParams("id"), validateDTO(OcrUpdateRequest))
@@ -124,15 +182,21 @@ export class OcrController extends Controller {
         @Path("id") id: string,
         @Body() ocrUpdateRequest: OcrUpdateRequest,
     ): Promise<OcrResultResponse> {
-        this.logger.info(`Retrieving OCR result for id ${id}`);
-        const result: OcrResultEntity =
-            await this.ocrResultService.patchByStudentIdAndUsername(
-                id,
-                ocrUpdateRequest,
-            );
-        const resultResponse: OcrResultResponse =
-            OcrResultMapper.toResponse(result);
-        return resultResponse;
+        this.logger.info(`Updating OCR result for transcript id ${id}`);
+
+        const result = await this.transcriptService.patchByIdAndCreatedBy(
+            id,
+            ocrUpdateRequest,
+        );
+
+        return plainToInstance(
+            OcrResultResponse,
+            {
+                id: result.id,
+                scores: result.subjectScores,
+            },
+            { excludeExtraneousValues: true },
+        );
     }
 
     @Middlewares(validateUuidParams("id"), validateDTO(OcrUpdateRequest))
@@ -146,15 +210,25 @@ export class OcrController extends Controller {
         @Request() authenticatedRequest: AuthenticatedRequest,
     ): Promise<OcrResultResponse> {
         const user = authenticatedRequest.user;
+        const createdBy: string = user.email;
 
-        const result: OcrResultEntity =
-            await this.ocrResultService.patchByStudentIdAndUsername(
-                id,
-                ocrUpdateRequest,
-                user.email,
-            );
-        const resultResponse: OcrResultResponse =
-            OcrResultMapper.toResponse(result);
-        return resultResponse;
+        this.logger.info(
+            `Updating OCR result for transcript id ${id} by ${createdBy}`,
+        );
+
+        const result = await this.transcriptService.patchByIdAndCreatedBy(
+            id,
+            ocrUpdateRequest,
+            createdBy,
+        );
+
+        return plainToInstance(
+            OcrResultResponse,
+            {
+                id: result.id,
+                scores: result.subjectScores,
+            },
+            { excludeExtraneousValues: true },
+        );
     }
 }

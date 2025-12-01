@@ -10,6 +10,8 @@ import { UserEntity } from "@/entity/security/user.entity.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.entity.js";
+import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { IMistralService } from "@/service/mistral-service.interface.js";
 import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
@@ -35,6 +37,10 @@ export class FileEventListener implements IFileEventListener {
         private readonly fileRepository: Repository<FileEntity>,
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
+        @inject(TYPES.TranscriptRepository)
+        private readonly transcriptRepository: Repository<TranscriptEntity>,
+        @inject(TYPES.TranscriptSubjectRepository)
+        private readonly transcriptSubjectRepository: Repository<TranscriptSubjectEntity>,
         @inject(TYPES.UserRepository)
         private readonly userRepository: Repository<UserEntity>,
         @inject(TYPES.Logger) private readonly logger: Logger,
@@ -105,11 +111,12 @@ export class FileEventListener implements IFileEventListener {
             }
 
             let createdBy: string = Role.ANONYMOUS;
+            let userEntity: null | UserEntity = null;
+
             if (userId) {
-                const userEntity: null | UserEntity =
-                    await this.userRepository.findOne({
-                        where: { id: userId },
-                    });
+                userEntity = await this.userRepository.findOne({
+                    where: { id: userId },
+                });
 
                 if (userEntity) {
                     createdBy = userEntity.email;
@@ -157,15 +164,69 @@ export class FileEventListener implements IFileEventListener {
                 );
 
             // 6. Update results
-            await this.ocrResultService.updateResults(
-                initialOcrResults,
-                batchExtractionResult,
-                processingStartTime,
-            );
+            const updatedOcrResultEntities: OcrResultEntity[] =
+                await this.ocrResultService.updateResults(
+                    initialOcrResults,
+                    batchExtractionResult,
+                    processingStartTime,
+                );
 
             this.logger.info(
                 `Batch OCR processing completed for student ${studentId}. Processed ${initialOcrResults.length.toString()} files.`,
             );
+
+            if (updatedOcrResultEntities.length > 0) {
+                for (const ocrResultEntity of updatedOcrResultEntities) {
+                    if (
+                        ocrResultEntity.scores &&
+                        ocrResultEntity.scores.length > 0
+                    ) {
+                        const file = filesToProcess.find(
+                            (f) => f.id === ocrResultEntity.fileId,
+                        );
+
+                        if (!file || file.studentId !== studentId) {
+                            this.logger.error(
+                                `Data integrity error: File ${ocrResultEntity.fileId} does not belong to student ${studentId}`,
+                            );
+                            continue;
+                        }
+
+                        const transcriptEntity: TranscriptEntity =
+                            this.transcriptRepository.create({
+                                createdBy: createdBy,
+                                ocrResult: ocrResultEntity,
+                                student: student,
+                                studentId: studentId,
+                            });
+
+                        const transcriptSubjectEntities: TranscriptSubjectEntity[] =
+                            ocrResultEntity.scores.map((subjectScore) => {
+                                const transcriptSubjectEntity: TranscriptSubjectEntity =
+                                    this.transcriptSubjectRepository.create({
+                                        createdBy: createdBy,
+                                        score: subjectScore.score,
+                                        subject: subjectScore.name,
+                                    });
+                                return transcriptSubjectEntity;
+                            });
+
+                        transcriptEntity.transcriptSubjects =
+                            transcriptSubjectEntities;
+
+                        const savedTranscriptEntity: TranscriptEntity =
+                            await this.transcriptRepository.save(
+                                transcriptEntity,
+                            );
+
+                        this.logger.info(
+                            `Saved TranscriptEntity with id ${savedTranscriptEntity.id} for file ${ocrResultEntity.fileId}`,
+                        );
+                    }
+                }
+            } else {
+                this.logger.warn("No Updated OCR Results to create Transcript");
+            }
         } catch (error) {
             const errorMessage =
                 error instanceof Error ? error.message : "Unknown error";

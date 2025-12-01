@@ -28,6 +28,7 @@ export const ServiceTypes = {
     IPredictionModelService: Symbol.for("IPredictionModelService"),
     IPredictionResultService: Symbol.for("IPredictionResultService"),
     IStudentService: Symbol.for("IStudentService"),
+    ITranscriptService: Symbol.for("ITranscriptService"),
     IUserService: Symbol.for("IUserService"),
 };
 
@@ -54,6 +55,8 @@ export const RepositoryTypes = {
     StudentMajorGroupRepository: Symbol.for("StudentMajorGroupRepository"),
     StudentRepository: Symbol.for("StudentRepository"),
     TalentExamRepository: Symbol.for("TalentExamRepository"),
+    TranscriptRepository: Symbol.for("TranscriptRepository"),
+    TranscriptSubjectRepository: Symbol.for("TranscriptSubjectRepository"),
     UserRepository: Symbol.for("UserRepository"),
     VnuhcmScoreComponentRepository: Symbol.for(
         "VnuhcmScoreComponentRepository",

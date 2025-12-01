@@ -3,11 +3,9 @@ import { inject, injectable } from "inversify";
 import { In, Repository } from "typeorm";
 import { Logger } from "winston";
 
-import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.dto.js";
 import {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
-    ISubjectScore,
 } from "@/dto/ocr/ocr.dto.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import {
@@ -17,7 +15,6 @@ import {
 } from "@/entity/uni_guide/ocr-result.entity.js";
 import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
-import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 
@@ -26,7 +23,6 @@ export class OcrResultService implements IOcrResultService {
     constructor(
         @inject(TYPES.OcrResultRepository)
         private readonly ocrResultRepository: Repository<OcrResultEntity>,
-
         @inject(TYPES.Logger)
         private readonly logger: Logger,
     ) {}
@@ -120,23 +116,6 @@ export class OcrResultService implements IOcrResultService {
         return ocrResultEntity;
     }
 
-    public async findByStudentIdAndUsername(
-        studentId: string,
-        username?: string,
-    ): Promise<OcrResultEntity[]> {
-        const ocrResultEntities: OcrResultEntity[] =
-            await this.ocrResultRepository.find({
-                where: { createdBy: username ?? Role.ANONYMOUS, studentId },
-            });
-
-        if (ocrResultEntities.length === 0) {
-            throw new EntityNotFoundException(
-                `No OCR results found for student id ${studentId}`,
-            );
-        }
-        return ocrResultEntities;
-    }
-
     // Helper for handling failures during processing
     public async markAsFailed(
         results: OcrResultEntity[],
@@ -164,81 +143,13 @@ export class OcrResultService implements IOcrResultService {
         await this.ocrResultRepository.save(results);
     }
 
-    public async patchByStudentIdAndUsername(
-        id: string,
-        ocrUpdateRequest: OcrUpdateRequest,
-        username?: string,
-    ): Promise<OcrResultEntity> {
-        const ocrResultEntity: OcrResultEntity = await this.findById(
-            id,
-            username,
-        );
-
-        if (
-            ocrUpdateRequest.subjectScores &&
-            ocrUpdateRequest.subjectScores.length > 0
-        ) {
-            const newSubjectScores: ISubjectScore[] =
-                ocrUpdateRequest.subjectScores;
-
-            // --- START: New Merging Logic ---
-
-            // 1. Use a Map for efficient merging (key: subject name, value: score).
-            const mergedScoresMap = new Map<TranscriptSubject, number>();
-
-            // 2. Populate the map with existing scores first to preserve them.
-            if (ocrResultEntity.scores) {
-                for (const existingScore of ocrResultEntity.scores) {
-                    mergedScoresMap.set(
-                        existingScore.name,
-                        existingScore.score,
-                    );
-                }
-            }
-
-            // 3. Add or update scores from the patch request.
-            // The .set() method handles both adding new and updating existing keys.
-            for (const newScore of newSubjectScores) {
-                mergedScoresMap.set(newScore.name, newScore.score);
-            }
-
-            // 4. Convert the map back into an array of SubjectScore objects.
-            const finalScores: ISubjectScore[] = Array.from(
-                mergedScoresMap,
-                ([name, score]) => ({ name, score }),
-            );
-
-            ocrResultEntity.scores = finalScores;
-
-            // --- END: New Merging Logic ---
-
-            ocrResultEntity.status = OcrStatus.COMPLETED;
-            ocrResultEntity.errorMessage = undefined;
-
-            const updatedEntity =
-                await this.ocrResultRepository.save(ocrResultEntity);
-
-            this.logger.info(
-                `Successfully patched OCR result id ${id}. Final score count: ${finalScores.length.toString()}`,
-            );
-
-            return updatedEntity;
-        }
-
-        this.logger.info(
-            `No subject scores provided for id ${id}, returning existing OCR result without changes.`,
-        );
-
-        return ocrResultEntity;
-    }
-
     // Update records with final results
     public async updateResults(
         initialResults: OcrResultEntity[],
         batchExtractionResult: BatchScoreExtractionResult,
         processingStartTime: Date,
-    ): Promise<void> {
-        if (initialResults.length === 0) return;
+    ): Promise<OcrResultEntity[]> {
+        if (initialResults.length === 0) return [];
 
         const processingTimeMs = differenceInMilliseconds(
             new Date(),
@@ -285,9 +196,12 @@ export class OcrResultService implements IOcrResultService {
             return entity;
         });
 
-        await this.ocrResultRepository.save(updatedEntities);
+        const ocrResultEntities: OcrResultEntity[] =
+            await this.ocrResultRepository.save(updatedEntities);
         this.logger.info(
             `Successfully updated ${updatedEntities.length.toString()} OCR results.`,
         );
+
+        return ocrResultEntities;
     }
 }

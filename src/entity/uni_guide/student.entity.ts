@@ -29,6 +29,7 @@ import { NationalExamEntity } from "./national-exam.enity.js";
 import { StudentAdmissionEntity } from "./student-admission.entity.js";
 import { StudentMajorGroupEntity } from "./student-major-group.entity.js";
 import { TalentExamEntity } from "./talent-exam.entity.js";
+import { TranscriptEntity } from "./transcript.entity.js";
 import { VsatExamEntity } from "./vsat-exam.entity.js";
 
 @Entity({ name: "students", schema: "uni_guide" })
@@ -173,6 +174,13 @@ export class StudentEntity {
         nullable: true,
     })
     talentExams?: Relation<TalentExamEntity[]>;
+
+    @OneToMany("TranscriptEntity", "student", {
+        cascade: true,
+        eager: false,
+        nullable: true,
+    })
+    transcripts?: Relation<TranscriptEntity[]>;
 
     @Column({ enum: UniType, name: "uni_type", nullable: true, type: "enum" })
     uniType?: UniType;

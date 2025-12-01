@@ -1,4 +1,3 @@
-import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.dto.js";
 import { BatchScoreExtractionResult } from "@/dto/ocr/ocr.dto.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
@@ -8,23 +7,14 @@ export interface IOcrResultService {
         createdBy: string,
         files: FileEntity[],
     ): Promise<OcrResultEntity[]>;
-    findByStudentIdAndUsername(
-        studentId: string,
-        username?: string,
-    ): Promise<OcrResultEntity[]>;
     markAsFailed(
         results: OcrResultEntity[],
         errorMessage: string,
         startTime: Date,
     ): Promise<void>;
-    patchByStudentIdAndUsername(
-        id: string,
-        ocrUpdateRequest: OcrUpdateRequest,
-        username?: string,
-    ): Promise<OcrResultEntity>;
     updateResults(
         initialResults: OcrResultEntity[],
         batchExtractionResult: BatchScoreExtractionResult,
         processingStartTime: Date,
-    ): Promise<void>;
+    ): Promise<OcrResultEntity[]>;
 }
