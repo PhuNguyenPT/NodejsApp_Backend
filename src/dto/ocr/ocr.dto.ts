@@ -74,9 +74,9 @@ export interface ScoreExtractionResult {
 export class OcrResultResponse {
     @Expose()
     @Type(() => String)
-    id!: string;
+    id?: string;
 
     @Expose()
     @Type(() => SubjectScore)
-    scores?: SubjectScore[];
+    subjectScores?: SubjectScore[];
 }

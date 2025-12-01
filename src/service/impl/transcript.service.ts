@@ -3,6 +3,7 @@ import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
+import { OcrRequest } from "@/dto/ocr/ocr-request.dto.js";
 import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.dto.js";
 import { SubjectScore } from "@/dto/ocr/ocr.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
@@ -12,11 +13,13 @@ import { TYPES } from "@/type/container/types.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
+import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 
 import { ITranscriptService } from "../transcript-service.interface.js";
 
 @injectable()
 export class TranscriptService implements ITranscriptService {
+    private readonly MAX_SEMESTER_TRANSCRIPTS = 6;
     private readonly NO_GRADE_SORT_VALUE = Number.MAX_SAFE_INTEGER;
     private readonly NO_SEMESTER_SORT_VALUE = Number.MAX_SAFE_INTEGER;
 
@@ -36,6 +39,7 @@ export class TranscriptService implements ITranscriptService {
         userId?: string,
     ): Promise<TranscriptEntity[]> {
         const student = await this.studentRepository.findOne({
+            order: { createdAt: "ASC" },
             relations: [
                 "transcripts",
                 "transcripts.transcriptSubjects",
@@ -49,7 +53,9 @@ export class TranscriptService implements ITranscriptService {
         });
 
         if (!student?.transcripts || student.transcripts.length === 0) {
-            return [];
+            throw new EntityNotFoundException(
+                `Transcripts not found for student id ${studentId}`,
+            );
         }
 
         student.transcripts.forEach((transcript) => {
@@ -124,7 +130,6 @@ export class TranscriptService implements ITranscriptService {
 
         await this.transcriptRepository.save(transcript);
 
-        // Map current subjects to SubjectScore format (already sorted)
         const subjectScores: SubjectScore[] = transcript.transcriptSubjects.map(
             (subject) =>
                 plainToInstance(SubjectScore, {
@@ -139,11 +144,95 @@ export class TranscriptService implements ITranscriptService {
         };
     }
 
+    public async savedByStudentIdAndUserId(
+        studentId: string,
+        ocrRequest: OcrRequest,
+        userId?: string,
+    ): Promise<TranscriptEntity> {
+        const student: null | StudentEntity =
+            await this.studentRepository.findOne({
+                relations: [
+                    "transcripts",
+                    "transcripts.transcriptSubjects",
+                    "transcripts.ocrResult",
+                    "transcripts.ocrResult.file",
+                    "files",
+                    "user",
+                ],
+                where: {
+                    id: studentId,
+                    userId: userId ?? IsNull(),
+                },
+            });
+
+        if (student === null) {
+            throw new EntityNotFoundException(
+                `No Student Profile found for id ${studentId}`,
+            );
+        }
+
+        const filesCount: number = student.files?.length ?? 0;
+        const ocrResultsCount: number =
+            student.transcripts?.filter((t) => t.ocrResult != null).length ?? 0;
+        const transcriptsCount: number = student.transcripts?.length ?? 0;
+
+        this.logger.debug(
+            `Validating transcript creation for student ${studentId}`,
+            {
+                filesCount,
+                ocrResultsCount,
+                transcriptsCount,
+            },
+        );
+
+        this.validateTranscriptCreation(
+            filesCount,
+            ocrResultsCount,
+            transcriptsCount,
+        );
+
+        let createdBy: string = Role.ANONYMOUS;
+        if (student.user) createdBy = student.user.email;
+
+        const transcriptEntity: TranscriptEntity =
+            this.transcriptRepository.create({
+                createdBy,
+                student: student,
+            });
+
+        const transcriptSubjects: TranscriptSubjectEntity[] = [];
+        for (const subjectScore of ocrRequest.subjectScores) {
+            const transcriptSubjectEntity: TranscriptSubjectEntity =
+                this.transcriptSubjectRepository.create({
+                    createdBy,
+                    score: subjectScore.score,
+                    subject: subjectScore.name,
+                });
+            transcriptSubjects.push(transcriptSubjectEntity);
+        }
+
+        transcriptEntity.transcriptSubjects = transcriptSubjects;
+        const savedTranscript =
+            await this.transcriptRepository.save(transcriptEntity);
+
+        this.logger.info(
+            `Successfully created transcript for student ${studentId}`,
+            {
+                filesCount,
+                ocrResultsCount,
+                subjectsCount: transcriptSubjects.length,
+                transcriptId: savedTranscript.id,
+                transcriptsCount,
+            },
+        );
+
+        return savedTranscript;
+    }
+
     private extractGradeFromTranscript(transcript: TranscriptEntity): number {
         const file = transcript.ocrResult?.file;
         if (!file) return this.NO_GRADE_SORT_VALUE;
 
-        // Priority: tags > description > filename
         return (
             this.extractNumberFromPattern(file.tags, /grade-(\d+)/i) ??
             this.extractNumberFromPattern(file.description, /grade\s*(\d+)/i) ??
@@ -199,5 +288,53 @@ export class TranscriptService implements ITranscriptService {
 
             return 0;
         });
+    }
+
+    private validateTranscriptCreation(
+        filesCount: number,
+        ocrResultsCount: number,
+        transcriptsCount: number,
+    ): void {
+        // Hard limit: Maximum 6 transcripts total
+        if (transcriptsCount >= this.MAX_SEMESTER_TRANSCRIPTS) {
+            throw new IllegalArgumentException(
+                `Cannot create more transcripts. Maximum of ${this.MAX_SEMESTER_TRANSCRIPTS.toString()} transcripts reached.`,
+            );
+        }
+
+        // Case 1: Files and OCR results exist (OCR-based transcripts)
+        if (filesCount > 0 && ocrResultsCount > 0) {
+            // Files and OCR results must match
+            if (filesCount !== ocrResultsCount) {
+                throw new IllegalArgumentException(
+                    `Files count (${filesCount.toString()}) must match OCR results count (${ocrResultsCount.toString()}).`,
+                );
+            }
+
+            // Dynamic 2n pattern: max transcripts = filesCount
+            // For even numbers (2, 4, 6): semester-based
+            // For odd numbers (3, 5): grade-based
+            const maxAllowed = filesCount;
+            if (transcriptsCount >= maxAllowed) {
+                throw new IllegalArgumentException(
+                    `Cannot create more transcripts. Maximum of ${maxAllowed.toString()} transcripts allowed for ${filesCount.toString()} files.`,
+                );
+            }
+            return;
+        }
+
+        // Case 2: Manual entry (no files/OCR results)
+        if (filesCount === 0 && ocrResultsCount === 0) {
+            // Allow creation up to MAX_SEMESTER_TRANSCRIPTS
+            return;
+        }
+
+        // If none of the valid cases match, throw error
+        throw new IllegalArgumentException(
+            `Invalid transcript creation: Files=${filesCount.toString()}, OCR Results=${ocrResultsCount.toString()}, Transcripts=${transcriptsCount.toString()}. ` +
+                `Valid scenarios: ` +
+                `(1) OCR-based: Files must equal OCR results, max transcripts = file count (2n pattern supports 2, 4, 6 files for semester-based or 3, 5 files for grade-based). ` +
+                `(2) Manual entry: 0 files and 0 OCR results, max ${this.MAX_SEMESTER_TRANSCRIPTS.toString()} transcripts total.`,
+        );
     }
 }

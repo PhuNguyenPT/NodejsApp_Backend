@@ -17,6 +17,7 @@ import { plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
+import { OcrRequest } from "@/dto/ocr/ocr-request.dto.js";
 import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.dto.js";
 import {
     BatchScoreExtractionResult,
@@ -48,6 +49,83 @@ export class OcrController extends Controller {
         private readonly logger: Logger,
     ) {
         super();
+    }
+
+    /**
+     * Manually create a transcript for an authenticated user's student
+     */
+    @Middlewares(validateUuidParams("studentId"), validateDTO(OcrRequest))
+    @Post("{studentId}")
+    @Produces("application/json")
+    @Security("bearerAuth", ["profile:update:own"])
+    @SuccessResponse(HttpStatus.CREATED, "Transcript successfully created")
+    public async createTranscript(
+        @Path("studentId") studentId: string,
+        @Body() ocrRequest: OcrRequest,
+        @Request() authenticatedRequest: AuthenticatedRequest,
+    ): Promise<OcrResultResponse> {
+        const user = authenticatedRequest.user;
+
+        const transcript =
+            await this.transcriptService.savedByStudentIdAndUserId(
+                studentId,
+                ocrRequest,
+                user.id,
+            );
+
+        const subjectScores: SubjectScore[] = (
+            transcript.transcriptSubjects ?? []
+        ).map((subject) =>
+            plainToInstance(SubjectScore, {
+                name: subject.subject,
+                score: subject.score,
+            }),
+        );
+
+        return plainToInstance(
+            OcrResultResponse,
+            {
+                id: transcript.id,
+                subjectScores: subjectScores,
+            },
+            { excludeExtraneousValues: true },
+        );
+    }
+
+    /**
+     * Manually create a transcript for a guest student
+     */
+    @Middlewares(validateUuidParams("studentId"), validateDTO(OcrRequest))
+    @Post("guest/{studentId}")
+    @Produces("application/json")
+    @SuccessResponse(HttpStatus.CREATED, "Transcript successfully created")
+    public async createTranscriptGuest(
+        @Path("studentId") studentId: string,
+        @Body() ocrRequest: OcrRequest,
+    ): Promise<OcrResultResponse> {
+        const transcript =
+            await this.transcriptService.savedByStudentIdAndUserId(
+                studentId,
+                ocrRequest,
+            );
+
+        const subjectScores: SubjectScore[] = (
+            transcript.transcriptSubjects ?? []
+        ).map((subject) =>
+            plainToInstance(SubjectScore, {
+                name: subject.subject,
+                score: subject.score,
+            }),
+        );
+
+        return plainToInstance(
+            OcrResultResponse,
+            {
+                id: transcript.id,
+                subjectScores: subjectScores,
+            },
+            { excludeExtraneousValues: true },
+        );
     }
 
     /**
@@ -118,7 +196,7 @@ export class OcrController extends Controller {
                     OcrResultResponse,
                     {
                         id: transcriptEntity.id,
-                        scores: subjectScores,
+                        subjectScores: subjectScores,
                     },
                     { excludeExtraneousValues: true },
                 );
@@ -160,7 +238,7 @@ export class OcrController extends Controller {
                     OcrResultResponse,
                     {
                         id: transcriptEntity.id,
-                        scores: subjectScores,
+                        subjectScores: subjectScores,
                     },
                     { excludeExtraneousValues: true },
                 );
@@ -175,36 +253,11 @@ export class OcrController extends Controller {
     }
 
     @Middlewares(validateUuidParams("id"), validateDTO(OcrUpdateRequest))
-    @Patch("guest/{id}")
-    @Produces("application/json")
-    @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
-    public async patchExtractedScores(
-        @Path("id") id: string,
-        @Body() ocrUpdateRequest: OcrUpdateRequest,
-    ): Promise<OcrResultResponse> {
-        this.logger.info(`Updating OCR result for transcript id ${id}`);
-
-        const result = await this.transcriptService.patchByIdAndCreatedBy(
-            id,
-            ocrUpdateRequest,
-        );
-
-        return plainToInstance(
-            OcrResultResponse,
-            {
-                id: result.id,
-                scores: result.subjectScores,
-            },
-            { excludeExtraneousValues: true },
-        );
-    }
-
-    @Middlewares(validateUuidParams("id"), validateDTO(OcrUpdateRequest))
     @Patch("{id}")
     @Produces("application/json")
     @Security("bearerAuth", ["profile:update:own"])
-    @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
-    public async patchExtractedScoresGuest(
+    @SuccessResponse(HttpStatus.OK, "Scores successfully updated")
+    public async patchExtractedScores(
         @Path("id") id: string,
         @Body() ocrUpdateRequest: OcrUpdateRequest,
         @Request() authenticatedRequest: AuthenticatedRequest,
@@ -226,7 +279,32 @@ export class OcrController extends Controller {
             OcrResultResponse,
             {
                 id: result.id,
-                scores: result.subjectScores,
+                subjectScores: result.subjectScores,
+            },
+            { excludeExtraneousValues: true },
+        );
+    }
+
+    @Middlewares(validateUuidParams("id"), validateDTO(OcrUpdateRequest))
+    @Patch("guest/{id}")
+    @Produces("application/json")
+    @SuccessResponse(HttpStatus.OK, "Scores successfully updated")
+    public async patchExtractedScoresGuest(
+        @Path("id") id: string,
+        @Body() ocrUpdateRequest: OcrUpdateRequest,
+    ): Promise<OcrResultResponse> {
+        this.logger.info(`Updating OCR result for transcript id ${id}`);
+
+        const result = await this.transcriptService.patchByIdAndCreatedBy(
+            id,
+            ocrUpdateRequest,
+        );
+
+        return plainToInstance(
+            OcrResultResponse,
+            {
+                id: result.id,
+                subjectScores: result.subjectScores,
             },
             { excludeExtraneousValues: true },
         );
