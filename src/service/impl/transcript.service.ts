@@ -52,7 +52,13 @@ export class TranscriptService implements ITranscriptService {
             return [];
         }
 
-        // Sort and return transcripts
+        student.transcripts.forEach((transcript) => {
+            if (transcript.transcriptSubjects) {
+                transcript.transcriptSubjects.sort((a, b) =>
+                    a.subject.localeCompare(b.subject),
+                );
+            }
+        });
         return this.sortTranscripts(student.transcripts);
     }
 
@@ -73,6 +79,8 @@ export class TranscriptService implements ITranscriptService {
             );
         }
 
+        const updater = createdBy ?? Role.ANONYMOUS;
+
         const subjectMap: Map<TranscriptSubject, TranscriptSubjectEntity> =
             new Map<TranscriptSubject, TranscriptSubjectEntity>(
                 (transcript.transcriptSubjects ?? []).map((subject) => [
@@ -81,21 +89,23 @@ export class TranscriptService implements ITranscriptService {
                 ]),
             );
 
-        // Update only the subject scores provided in the request
         if (
             ocrUpdateRequest.subjectScores &&
             ocrUpdateRequest.subjectScores.length > 0
         ) {
+            transcript.updatedBy = updater;
+
             for (const updateScore of ocrUpdateRequest.subjectScores) {
                 const existingSubject = subjectMap.get(updateScore.name);
 
                 if (existingSubject) {
                     existingSubject.score = updateScore.score;
+                    existingSubject.updatedBy = updater;
+
                     await this.transcriptSubjectRepository.save(
                         existingSubject,
                     );
                 } else {
-                    // Create new transcript subject if it doesn't exist
                     const newSubject = this.transcriptSubjectRepository.create({
                         createdBy: createdBy,
                         score: updateScore.score,
@@ -108,7 +118,6 @@ export class TranscriptService implements ITranscriptService {
             }
         }
 
-        // Convert to array and SORT alphabetically
         transcript.transcriptSubjects = Array.from(subjectMap.values()).sort(
             (a, b) => a.subject.localeCompare(b.subject),
         );
@@ -186,16 +195,6 @@ export class TranscriptService implements ITranscriptService {
 
             if (semesterA !== semesterB) {
                 return semesterA - semesterB;
-            }
-
-            // Sort subjects within each transcript
-            if (a.transcriptSubjects && b.transcriptSubjects) {
-                a.transcriptSubjects.sort((s1, s2) =>
-                    s1.subject.localeCompare(s2.subject),
-                );
-                b.transcriptSubjects.sort((s1, s2) =>
-                    s1.subject.localeCompare(s2.subject),
-                );
             }
 
             return 0;
