@@ -45,6 +45,8 @@ import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.ent
 import { StudentMajorGroupEntity } from "@/entity/uni_guide/student-major-group.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TalentExamEntity } from "@/entity/uni_guide/talent-exam.entity.js";
+import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.entity.js";
+import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-component.entity.js";
 import { VsatExamEntity } from "@/entity/uni_guide/vsat-exam.entity.js";
 import { IFileEventListener } from "@/event/file-event-listener.interface.js";
@@ -74,6 +76,7 @@ import { PredictionL2Service } from "@/service/impl/prediction-L2.service.js";
 import { PredictionL3Service } from "@/service/impl/prediction-L3.service.js";
 import { PredictionResultService } from "@/service/impl/prediction-result.service.js";
 import { StudentService } from "@/service/impl/student.service.js";
+import { TranscriptService } from "@/service/impl/transcript.service.js";
 import { UserService } from "@/service/impl/user.service.js";
 import { IJwtService } from "@/service/jwt-service.interface.js";
 import { IMajorService } from "@/service/major-service.interface.js";
@@ -84,6 +87,7 @@ import { IPredictionL2Service } from "@/service/prediction-l2-service.interface.
 import { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
 import { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
 import { IStudentService } from "@/service/student-service.interface.js";
+import { ITranscriptService } from "@/service/transcript-service.interface.js";
 import { IUserService } from "@/service/user-service.interface.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import {
@@ -216,6 +220,14 @@ iocContainer
     .toConstantValue(postgresDataSource.getRepository(OcrResultEntity));
 iocContainer
     .bind<
+        Repository<TranscriptSubjectEntity>
+    >(TYPES.TranscriptSubjectRepository)
+    .toConstantValue(postgresDataSource.getRepository(TranscriptSubjectEntity));
+iocContainer
+    .bind<Repository<TranscriptEntity>>(TYPES.TranscriptRepository)
+    .toConstantValue(postgresDataSource.getRepository(TranscriptEntity));
+iocContainer
+    .bind<
         Repository<PredictionResultEntity>
     >(TYPES.PredictionResultEntityRepository)
     .toConstantValue(postgresDataSource.getRepository(PredictionResultEntity));
@@ -263,6 +275,10 @@ iocContainer
 iocContainer
     .bind<IOcrResultService>(TYPES.IOcrResultService)
     .to(OcrResultService)
+    .inSingletonScope();
+iocContainer
+    .bind<ITranscriptService>(TYPES.ITranscriptService)
+    .to(TranscriptService)
     .inSingletonScope();
 iocContainer
     .bind<IPredictionResultService>(TYPES.IPredictionResultService)

@@ -13,9 +13,11 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { ISubjectScore } from "@/dto/ocr/ocr.dto.js";
+import { ISubjectScore, SubjectScore } from "@/dto/ocr/ocr.dto.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+
+import { TranscriptEntity } from "./transcript.entity.js";
 
 /**
  * OCR processing status
@@ -84,7 +86,7 @@ export class OcrResultEntity {
     metadata?: OcrMetadata;
 
     @Column({ name: "scores", nullable: true, type: "jsonb" })
-    scores?: ISubjectScore[];
+    scores?: SubjectScore[];
 
     @Column({
         enum: OcrStatus,
@@ -99,6 +101,11 @@ export class OcrResultEntity {
 
     @Column({ name: "student_id", type: "uuid" })
     studentId!: string;
+
+    @OneToOne("TranscriptEntity", "ocrResult", {
+        nullable: true,
+    })
+    transcript?: Relation<TranscriptEntity>;
 
     @UpdateDateColumn({
         insert: false,
