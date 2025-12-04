@@ -1,4 +1,4 @@
-import { BatchScoreExtractionResult } from "@/dto/ocr/ocr.dto.js";
+import { BatchScoreExtractionResult } from "@/dto/ocr/score-extraction-result.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 export interface IOcrResultService {

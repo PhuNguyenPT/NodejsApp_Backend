@@ -1,12 +1,13 @@
 import { Expose, Type } from "class-transformer";
-import { IsArray, ValidateNested } from "class-validator";
 
 import { SubjectScore } from "./subject-score.dto.js";
 
-export class OcrUpdateRequest {
+export class OcrResultResponse {
     @Expose()
-    @IsArray()
+    @Type(() => String)
+    id?: string;
+
+    @Expose()
     @Type(() => SubjectScore)
-    @ValidateNested({ each: true })
     subjectScores?: SubjectScore[];
 }
