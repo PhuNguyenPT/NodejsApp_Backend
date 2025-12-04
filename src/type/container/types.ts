@@ -6,6 +6,7 @@
  */
 export const ListenerTypes = {
     IFileEventListener: Symbol.for("IFileEventListener"),
+    IOcrEventListener: Symbol.for("IOcrEventListener"),
     IStudentEventListener: Symbol.for("IStudentEventListener"),
 };
 
