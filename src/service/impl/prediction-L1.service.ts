@@ -25,8 +25,10 @@ import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
 import { UniType } from "@/type/enum/uni-type.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
+import { ValidationException } from "@/type/exception/validation.exception.js";
 import { ConcurrencyUtil } from "@/util/concurrency.util.js";
 import { PredictionUtil } from "@/util/prediction.util.js";
+import { formatValidationErrors } from "@/util/validation.util.js";
 
 import { IPredictionL1Service } from "../prediction-l1-service.interface.js";
 
@@ -261,7 +263,18 @@ export class PredictionL1Service implements IPredictionL1Service {
             student,
             { excludeExtraneousValues: true },
         );
-        await validate(studentInfoDTO, DEFAULT_VALIDATOR_OPTIONS);
+        // Validate StudentInfoDTO and throw ValidationException if errors exist
+        const studentErrors = await validate(
+            studentInfoDTO,
+            DEFAULT_VALIDATOR_OPTIONS,
+        );
+        if (studentErrors.length > 0) {
+            const validationErrors = formatValidationErrors(studentErrors);
+            throw new ValidationException(
+                validationErrors,
+                "Invalid Student Info DTO",
+            );
+        }
 
         // Generate ALL user input combinations (awards × majors)
         const userInputs = this.generateUserInputL1Combinations(studentInfoDTO);
