@@ -9,6 +9,7 @@ import {
     IsNumber,
     IsOptional,
     Min,
+    ValidateIf,
     ValidateNested,
 } from "class-validator";
 
@@ -365,19 +366,16 @@ export class StudentInfoDTO {
 
     /**
      * VSAT score (Vietnamese Scholastic Aptitude Test)
-     * Array of at lease 3 exam subjects, at most 8 subjects, with names and scores (0-150 each)
-     * Each subject contains a name and score following the ExamSubject structure
+     * Array of at least 3 exam subjects, at most 8 subjects, with names and scores (0-150 each)
+     * @validation
+     * - If provided, must have 3-8 exam subjects
+     * - Optional field (can be null, undefined, or omitted)
+     * - Empty arrays or arrays with <3 items are treated as undefined
      * @example [
      *     { "name": "Toán", "score": 120 },
      *     { "name": "Ngữ Văn", "score": 130 },
      *     { "name": "Tiếng Anh", "score": 125 }
      * ]
-     * @validation
-     * - Must be an array of at lease 3 exam subjects, at most 8 subjects,
-     * - Each ExamSubject must have a valid name (string) and score (number 0-150)
-     * - Optional field (can be null or undefined)
-     * @type {VsatExam[]}
-     * @see VsatExam for detailed structure and validation rules
      */
     @ArrayMaxSize(8)
     @ArrayMinSize(3)
@@ -385,7 +383,16 @@ export class StudentInfoDTO {
     @IsArray()
     @IsArrayUnique("name")
     @IsOptional()
+    @Transform(({ value }: { value: unknown }): undefined | VsatExam[] => {
+        if (!Array.isArray(value) || value.length < 3) {
+            return undefined;
+        }
+        return value as VsatExam[];
+    })
     @Type(() => VsatExam)
+    @ValidateIf((obj: StudentInfoDTO) => {
+        return obj.vsatExams !== undefined && obj.vsatExams.length >= 3;
+    })
     @ValidateNested({ each: true })
     vsatExams?: VsatExam[];
 

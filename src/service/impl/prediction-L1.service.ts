@@ -263,7 +263,6 @@ export class PredictionL1Service implements IPredictionL1Service {
             student,
             { excludeExtraneousValues: true },
         );
-        // Validate StudentInfoDTO and throw ValidationException if errors exist
         const studentErrors = await validate(
             studentInfoDTO,
             DEFAULT_VALIDATOR_OPTIONS,
