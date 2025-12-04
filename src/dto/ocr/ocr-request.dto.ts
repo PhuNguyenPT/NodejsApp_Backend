@@ -1,7 +1,7 @@
 import { Expose, Type } from "class-transformer";
 import { IsArray, ValidateNested } from "class-validator";
 
-import { SubjectScore } from "./ocr.dto.js";
+import { SubjectScore } from "./subject-score.dto.js";
 
 export class OcrRequest {
     /**

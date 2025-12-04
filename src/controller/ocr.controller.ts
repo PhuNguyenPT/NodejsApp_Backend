@@ -18,12 +18,10 @@ import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
 import { OcrRequest } from "@/dto/ocr/ocr-request.dto.js";
+import { OcrResultResponse } from "@/dto/ocr/ocr-result-response.dto.js";
 import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.dto.js";
-import {
-    BatchScoreExtractionResult,
-    OcrResultResponse,
-    SubjectScore,
-} from "@/dto/ocr/ocr.dto.js";
+import { BatchScoreExtractionResult } from "@/dto/ocr/score-extraction-result.js";
+import { SubjectScore } from "@/dto/ocr/subject-score.dto.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";

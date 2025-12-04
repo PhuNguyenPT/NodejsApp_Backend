@@ -5,7 +5,7 @@ import { Logger } from "winston";
 
 import { OcrRequest } from "@/dto/ocr/ocr-request.dto.js";
 import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.dto.js";
-import { SubjectScore } from "@/dto/ocr/ocr.dto.js";
+import { SubjectScore } from "@/dto/ocr/subject-score.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
