@@ -28,8 +28,10 @@ import { ExamType } from "@/type/enum/exam-type.js";
 import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
+import { ValidationException } from "@/type/exception/validation.exception.js";
 import { ConcurrencyUtil } from "@/util/concurrency.util.js";
 import { PredictionUtil } from "@/util/prediction.util.js";
+import { formatValidationErrors } from "@/util/validation.util.js";
 
 import { IPredictionL2Service } from "../prediction-l2-service.interface.js";
 
@@ -344,7 +346,17 @@ export class PredictionL2Service implements IPredictionL2Service {
             student,
             { excludeExtraneousValues: true },
         );
-        await validate(studentInfoDTO, DEFAULT_VALIDATOR_OPTIONS);
+        const studentErrors = await validate(
+            studentInfoDTO,
+            DEFAULT_VALIDATOR_OPTIONS,
+        );
+        if (studentErrors.length > 0) {
+            const validationErrors = formatValidationErrors(studentErrors);
+            throw new ValidationException(
+                validationErrors,
+                "Invalid Student Info DTO",
+            );
+        }
 
         // Generate user inputs for all combinations
         const userInputs = this.generateL2UserInputCombinations(studentInfoDTO);

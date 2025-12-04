@@ -1039,10 +1039,10 @@ export class PredictionL3Service implements IPredictionL3Service {
             { excludeExtraneousValues: true },
         );
 
-        const errors = await validate(studentInfoDTO, {
-            ...DEFAULT_VALIDATOR_OPTIONS,
-            skipMissingProperties: true,
-        });
+        const errors = await validate(
+            studentInfoDTO,
+            DEFAULT_VALIDATOR_OPTIONS,
+        );
 
         if (errors.length > 0) {
             const validationErrors = formatValidationErrors(errors);
