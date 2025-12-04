@@ -16,7 +16,7 @@ import { EntityNotFoundException } from "@/type/exception/entity-not-found.excep
 
 import {
     OcrCreatedEvent,
-    OCRCreatedEventSchema,
+    OcrCreatedEventSchema,
 } from "../ocr-created.event.js";
 import { IOcrEventListener } from "../ocr-event-listener.interface.js";
 
@@ -31,7 +31,7 @@ export class OcrEventListener implements IOcrEventListener {
 
     public async handleOcrCreatedEvent(event: OcrCreatedEvent): Promise<void> {
         try {
-            const parsed = OCRCreatedEventSchema.safeParse(event);
+            const parsed = OcrCreatedEventSchema.safeParse(event);
             if (!parsed.success) {
                 this.logger.error("Schema validation failed", {
                     errors: parsed.error.format(),
