@@ -51,7 +51,9 @@ import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-comp
 import { VsatExamEntity } from "@/entity/uni_guide/vsat-exam.entity.js";
 import { IFileEventListener } from "@/event/file-event-listener.interface.js";
 import { FileEventListener } from "@/event/impl/file-event-listener.js";
+import { OcrEventListener } from "@/event/impl/ocr-event-listener.js";
 import { StudentEventListener } from "@/event/impl/student-event-listener.js";
+import { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
 import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
 import { JwtTokenRepository } from "@/repository/impl/jwt-repository.js";
 import { UserRepository } from "@/repository/impl/user-repository.js";
@@ -319,6 +321,10 @@ iocContainer
 iocContainer
     .bind<IStudentEventListener>(TYPES.IStudentEventListener)
     .to(StudentEventListener)
+    .inSingletonScope();
+iocContainer
+    .bind<IOcrEventListener>(TYPES.IOcrEventListener)
+    .to(OcrEventListener)
     .inSingletonScope();
 
 // ############## --- Controller Bindings --- ##############

@@ -454,8 +454,8 @@ export class StudentEventListener implements IStudentEventListener {
                         l2PredictionResults;
 
                     // Decide status based on results
-                    const hasL1Results = l1PredictionResults.length > 0;
-                    const hasL2Results = l2PredictionResults.length > 0;
+                    const hasL1Results = Array.isArray(l1PredictionResults);
+                    const hasL2Results = Array.isArray(l2PredictionResults);
 
                     if (hasL1Results && hasL2Results) {
                         savedPredictionResult.status =
