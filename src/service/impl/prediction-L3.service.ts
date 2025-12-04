@@ -1055,15 +1055,28 @@ export class PredictionL3Service implements IPredictionL3Service {
         // Get certifications and aptitude exams by type
         const ccnnCertifications: CertificationDTO[] =
             studentInfoDTO.getCertificationsByExamType("CCNN");
+        this.logger.debug(
+            "L3 Prediction: CCNN Certifications: ",
+            ccnnCertifications,
+        );
 
         const ccqtCertifications: CertificationDTO[] =
             studentInfoDTO.getCertificationsByExamType("CCQT");
+        this.logger.debug(
+            "L3 Prediction: CCQT Certifications: ",
+            ccqtCertifications,
+        );
 
         const dgnlAptitudeExams: AptitudeExamDTO[] =
             studentInfoDTO.getAptitudeTestScoresByExamType("ĐGNL");
+        this.logger.debug("L3 Prediction: ĐGNL Exams: ", dgnlAptitudeExams);
 
         // Create base template for user inputs
         const baseTemplate = this.createBaseL3UserInputTemplate(studentInfoDTO);
+        this.logger.debug(
+            "L3 Prediction: Base UserInputL3 Template: ",
+            baseTemplate,
+        );
 
         const thptScores: TNTHPTScores = new TNTHPTScores();
         const electiveSubjects: THPTSubjectScore[] = [];
@@ -1111,6 +1124,7 @@ export class PredictionL3Service implements IPredictionL3Service {
                 subject_name: electiveSubjects[1].subject_name,
             });
         }
+        this.logger.debug("L3 Prediction: THPTSubjectScore", thptScores);
 
         const TranscriptRecord: TranscriptRecord =
             this.buildTranscriptRecordFromFiles(fileEntities);
@@ -1125,31 +1139,41 @@ export class PredictionL3Service implements IPredictionL3Service {
         const awardQG: AwardQG[] = studentInfoDTO.awards
             ? this.mapAwardsToAwardQG(studentInfoDTO.awards)
             : [];
+        this.logger.debug("L3 Prediction: AwardQG", awardQG);
 
         const nangKhieuScore: NangKhieuScore | undefined =
             this.mapTalentExamsToNangKhieu(studentInfoDTO.talentExams);
+        this.logger.debug("L3 Prediction: NangKhieuScore", nangKhieuScore);
 
         // Map all possible combinations
-        const awardEnglishOptions: (AwardEnglish | undefined)[] =
+        const awardEnglishOptions: AwardEnglish[] =
             ccnnCertifications.length > 0
-                ? ccnnCertifications.map((cert) =>
-                      this.mapCCNNCertificationToAwardEnglish(cert),
-                  )
-                : [undefined];
+                ? ccnnCertifications
+                      .map((cert) =>
+                          this.mapCCNNCertificationToAwardEnglish(cert),
+                      )
+                      .filter(
+                          (award): award is AwardEnglish => award !== undefined,
+                      )
+                : [];
 
-        const interCerOptions: (InterCer | undefined)[] =
+        this.logger.debug("L3 Prediction: AwardEnglish", awardEnglishOptions);
+
+        const interCerOptions: InterCer[] =
             ccqtCertifications.length > 0
-                ? ccqtCertifications.map((cert) =>
-                      this.mapCCQTCertificationToInterCer(cert),
-                  )
-                : [undefined];
+                ? ccqtCertifications
+                      .map((cert) => this.mapCCQTCertificationToInterCer(cert))
+                      .filter((cert): cert is InterCer => cert !== undefined)
+                : [];
+        this.logger.debug("L3 Prediction: InterCer", interCerOptions);
 
-        const dgnlOptions: (DGNL | undefined)[] =
+        const dgnlOptions: DGNL[] =
             dgnlAptitudeExams.length > 0
-                ? dgnlAptitudeExams.map((exam) =>
-                      this.mapDGNLAptitudeExamToDGNL(exam),
-                  )
-                : [undefined];
+                ? dgnlAptitudeExams
+                      .map((exam) => this.mapDGNLAptitudeExamToDGNL(exam))
+                      .filter((dgnl): dgnl is DGNL => dgnl !== undefined)
+                : [];
+        this.logger.debug("L3 Prediction: DGNL", dgnlOptions);
 
         const majors: MajorGroup[] = studentInfoDTO.majors;
         const combinations: UserInputL3[] = [];
@@ -1164,9 +1188,18 @@ export class PredictionL3Service implements IPredictionL3Service {
                 continue;
             }
 
-            for (const awardEnglish of awardEnglishOptions) {
-                for (const interCer of interCerOptions) {
-                    for (const dgnl of dgnlOptions) {
+            // Create combinations for each present option
+            const awardEnglishLoop =
+                awardEnglishOptions.length > 0
+                    ? awardEnglishOptions
+                    : [undefined];
+            const interCerLoop =
+                interCerOptions.length > 0 ? interCerOptions : [undefined];
+            const dgnlLoop = dgnlOptions.length > 0 ? dgnlOptions : [undefined];
+
+            for (const awardEnglish of awardEnglishLoop) {
+                for (const interCer of interCerLoop) {
+                    for (const dgnl of dgnlLoop) {
                         const userInput: UserInputL3 = plainToInstance(
                             UserInputL3,
                             {
@@ -1317,26 +1350,26 @@ export class PredictionL3Service implements IPredictionL3Service {
     }
 
     /**
-     * Map a single DGNL aptitude exam to DGNL scores
-     * @param aptitudeExam AptitudeExamDTO object
-     * @returns DGNL instance or undefined if missing required scores
+     * Map a single DGNL aptitude exam (VNUHCM only) to DGNL scores.
+     * @param aptitudeExam AptitudeExamDTO object (with nested vnuhcmComponents)
+     * @returns DGNL instance or undefined if not VNUHCM or missing required scores
      */
     private mapDGNLAptitudeExamToDGNL(
         aptitudeExam: AptitudeExamDTO,
     ): DGNL | undefined {
-        // Check if it has the required scores
         if (
-            aptitudeExam.languageScore === undefined ||
-            aptitudeExam.mathScore === undefined ||
-            aptitudeExam.scienceLogic === undefined
+            aptitudeExam.examType !== ExamType.VNUHCM ||
+            !aptitudeExam.vnuhcmComponents
         ) {
             return undefined;
         }
 
+        const components = aptitudeExam.vnuhcmComponents;
+
         return plainToInstance(DGNL, {
-            language_score: aptitudeExam.languageScore,
-            math_score: aptitudeExam.mathScore,
-            science_logic: aptitudeExam.scienceLogic,
+            language_score: components.languageScore,
+            math_score: components.mathScore,
+            science_logic: components.scienceLogic,
         });
     }
 

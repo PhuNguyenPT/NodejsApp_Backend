@@ -401,9 +401,9 @@ export class StudentInfoDTO {
     ): AptitudeExamDTO[] {
         if (!this.aptitudeExams) return [];
 
-        return this.aptitudeExams.filter((apt) => {
-            return this.getExamCategory(apt.examType) === type;
-        });
+        return this.aptitudeExams.filter(
+            (cert) => this.getExamCategory(cert.examType) === type,
+        );
     }
 
     getCertificationsByExamType(
@@ -411,9 +411,9 @@ export class StudentInfoDTO {
     ): CertificationDTO[] {
         if (!this.certifications) return [];
 
-        return this.certifications.filter((cert) => {
-            return this.getExamCategory(cert.examType) === type;
-        });
+        return this.certifications.filter(
+            (cert) => this.getExamCategory(cert.examType) === type,
+        );
     }
 
     getExamCategory(examType: ExamType): "CCNN" | "CCQT" | "ĐGNL" | null {
