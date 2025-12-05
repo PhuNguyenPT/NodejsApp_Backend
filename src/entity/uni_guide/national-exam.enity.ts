@@ -1,4 +1,3 @@
-import { Expose, Transform } from "class-transformer";
 import {
     Column,
     CreateDateColumn,
@@ -26,7 +25,6 @@ export class NationalExamEntity {
         type: "timestamp with time zone",
         update: false,
     })
-    @Expose()
     createdAt!: Date;
 
     @Column({
@@ -37,27 +35,17 @@ export class NationalExamEntity {
         type: "varchar",
         update: false,
     })
-    @Expose()
     createdBy?: string;
 
-    @Expose()
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: string;
 
     @Column({ enum: NationalExamSubjects, name: "name", type: "varchar" })
-    @Expose()
     name!: NationalExamSubject;
 
     @Column({ name: "score", type: "decimal" })
-    @Expose()
-    @Transform(({ value }) => {
-        if (typeof value === "string") return parseFloat(value);
-        if (typeof value === "number") return value;
-        return 0;
-    })
     score!: number;
 
-    @Expose()
     @JoinColumn({ name: "student_id" })
     @ManyToOne("StudentEntity", "nationalExams", {
         onDelete: "CASCADE",
@@ -66,10 +54,8 @@ export class NationalExamEntity {
     student!: Relation<StudentEntity>;
 
     @Column({ name: "student_id", type: "uuid" })
-    @Expose()
     studentId!: string;
 
-    @Expose()
     @UpdateDateColumn({
         insert: false,
         name: "updated_at",
@@ -86,7 +72,6 @@ export class NationalExamEntity {
         type: "varchar",
         update: true,
     })
-    @Expose()
     updatedBy?: string;
 
     constructor(entityLike?: DeepPartial<NationalExamEntity>) {

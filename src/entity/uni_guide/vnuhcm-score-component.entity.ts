@@ -1,5 +1,4 @@
 // vnuhcm-score-component.entity.ts
-import { Expose } from "class-transformer";
 import {
     Column,
     CreateDateColumn,
@@ -16,7 +15,6 @@ import { AptitudeExamEntity } from "./aptitude-exam.entity.js";
 
 @Entity({ name: "vnuhcm_score_components", schema: "uni_guide" })
 export class VnuhcmScoreComponentEntity {
-    @Expose()
     @JoinColumn({ name: "aptitude_exam_id" })
     @OneToOne("AptitudeExamEntity", "vnuhcmPartialScores", {
         onDelete: "CASCADE",
@@ -25,7 +23,6 @@ export class VnuhcmScoreComponentEntity {
     aptitudeExam!: Relation<AptitudeExamEntity>;
 
     @Column({ name: "aptitude_exam_id", type: "uuid" })
-    @Expose()
     aptitudeExamId!: string;
 
     @CreateDateColumn({
@@ -34,7 +31,6 @@ export class VnuhcmScoreComponentEntity {
         type: "timestamp with time zone",
         update: false,
     })
-    @Expose()
     createdAt!: Date;
 
     @Column({
@@ -45,10 +41,8 @@ export class VnuhcmScoreComponentEntity {
         type: "varchar",
         update: false,
     })
-    @Expose()
     createdBy?: string;
 
-    @Expose()
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: string;
 
@@ -56,24 +50,20 @@ export class VnuhcmScoreComponentEntity {
      * Language score component (0-400)
      */
     @Column({ name: "language_score", type: "int" })
-    @Expose()
     languageScore!: number;
 
     /**
      * Math score component (0-300)
      */
     @Column({ name: "math_score", type: "int" })
-    @Expose()
     mathScore!: number;
 
     /**
      * Science & Logic score component (0-500)
      */
     @Column({ name: "science_logic", type: "int" })
-    @Expose()
     scienceLogic!: number;
 
-    @Expose()
     @UpdateDateColumn({
         insert: false,
         name: "updated_at",
@@ -90,7 +80,6 @@ export class VnuhcmScoreComponentEntity {
         type: "varchar",
         update: true,
     })
-    @Expose()
     updatedBy?: string;
 
     constructor(entityLike?: DeepPartial<VnuhcmScoreComponentEntity>) {
