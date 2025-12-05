@@ -1,4 +1,3 @@
-import { Expose, Transform } from "class-transformer";
 import {
     Column,
     CreateDateColumn,
@@ -38,7 +37,6 @@ export class VsatExamEntity {
     })
     createdBy?: string;
 
-    @Expose()
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: string;
 
@@ -46,11 +44,6 @@ export class VsatExamEntity {
     name!: VsatExamSubject;
 
     @Column({ name: "score", type: "decimal" })
-    @Transform(({ value }) => {
-        if (typeof value === "string") return parseFloat(value);
-        if (typeof value === "number") return value;
-        return 0;
-    })
     score!: number;
 
     @JoinColumn({ name: "student_id" })
@@ -63,7 +56,6 @@ export class VsatExamEntity {
     @Column({ name: "student_id", type: "uuid" })
     studentId!: string;
 
-    @Expose()
     @UpdateDateColumn({
         insert: false,
         name: "updated_at",
