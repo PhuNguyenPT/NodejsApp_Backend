@@ -1,6 +1,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     Index,
     OneToMany,
@@ -143,9 +144,7 @@ export class AdmissionEntity {
     })
     updatedAt!: Date;
 
-    constructor(award?: Partial<AdmissionEntity>) {
-        if (award) {
-            Object.assign(this, award);
-        }
+    constructor(entityLike?: DeepPartial<AdmissionEntity>) {
+        Object.assign(this, entityLike);
     }
 }

@@ -65,7 +65,7 @@ export class OcrController extends Controller {
         const user = authenticatedRequest.user;
 
         const transcript =
-            await this.transcriptService.savedByStudentIdAndUserId(
+            await this.transcriptService.saveByStudentIdAndUserId(
                 studentId,
                 ocrRequest,
                 user.id,
@@ -80,14 +80,14 @@ export class OcrController extends Controller {
             }),
         );
 
-        return plainToInstance(
+        const ocrResultResponse: OcrResultResponse = plainToInstance(
             OcrResultResponse,
-            {
-                id: transcript.id,
-                subjectScores: subjectScores,
-            },
+            transcript,
             { excludeExtraneousValues: true },
         );
+
+        ocrResultResponse.subjectScores = subjectScores;
+        return ocrResultResponse;
     }
 
     /**
@@ -102,7 +102,7 @@ export class OcrController extends Controller {
         @Body() ocrRequest: OcrRequest,
     ): Promise<OcrResultResponse> {
         const transcript =
-            await this.transcriptService.savedByStudentIdAndUserId(
+            await this.transcriptService.saveByStudentIdAndUserId(
                 studentId,
                 ocrRequest,
             );
@@ -116,14 +116,14 @@ export class OcrController extends Controller {
             }),
         );
 
-        return plainToInstance(
+        const ocrResultResponse: OcrResultResponse = plainToInstance(
             OcrResultResponse,
-            {
-                id: transcript.id,
-                subjectScores: subjectScores,
-            },
+            transcript,
             { excludeExtraneousValues: true },
         );
+
+        ocrResultResponse.subjectScores = subjectScores;
+        return ocrResultResponse;
     }
 
     /**
@@ -190,14 +190,14 @@ export class OcrController extends Controller {
                     }),
                 );
 
-                return plainToInstance(
+                const ocrResultResponse: OcrResultResponse = plainToInstance(
                     OcrResultResponse,
-                    {
-                        id: transcriptEntity.id,
-                        subjectScores: subjectScores,
-                    },
+                    transcriptEntity,
                     { excludeExtraneousValues: true },
                 );
+
+                ocrResultResponse.subjectScores = subjectScores;
+                return ocrResultResponse;
             },
         );
         this.logger.info(
@@ -232,14 +232,14 @@ export class OcrController extends Controller {
                     }),
                 );
 
-                return plainToInstance(
+                const ocrResultResponse: OcrResultResponse = plainToInstance(
                     OcrResultResponse,
-                    {
-                        id: transcriptEntity.id,
-                        subjectScores: subjectScores,
-                    },
+                    transcriptEntity,
                     { excludeExtraneousValues: true },
                 );
+
+                ocrResultResponse.subjectScores = subjectScores;
+                return ocrResultResponse;
             },
         );
         this.logger.info(

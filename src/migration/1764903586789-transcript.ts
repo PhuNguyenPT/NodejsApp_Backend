@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class Transcripts1764554753378 implements MigrationInterface {
-    name = "Transcripts1764554753378";
+export class Transcript1764903586789 implements MigrationInterface {
+    name = "Transcript1764903586789";
 
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(
@@ -22,7 +22,7 @@ export class Transcripts1764554753378 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(
-            `CREATE TABLE "uni_guide"."transcripts" ("created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "created_by" character varying(255), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "ocr_result_id" uuid, "student_id" uuid NOT NULL, "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updated_by" character varying(255), CONSTRAINT "REL_86ff89c447ff969df2f63b1790" UNIQUE ("ocr_result_id"), CONSTRAINT "PK_40c75f89c1fc953cd33e702247d" PRIMARY KEY ("id"))`,
+            `CREATE TABLE "uni_guide"."transcripts" ("created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "created_by" character varying(255), "grade" integer, "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "ocr_result_id" uuid, "semester" integer, "student_id" uuid NOT NULL, "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updated_by" character varying(255), CONSTRAINT "REL_86ff89c447ff969df2f63b1790" UNIQUE ("ocr_result_id"), CONSTRAINT "PK_40c75f89c1fc953cd33e702247d" PRIMARY KEY ("id"))`,
         );
         await queryRunner.query(
             `CREATE TYPE "uni_guide"."transcript_subjects_subject_enum" AS ENUM('Công Nghệ', 'Địa Lý', 'GDKTPL', 'Hóa Học', 'Lịch Sử', 'Ngữ Văn', 'Sinh Học', 'Tiếng Anh', 'Tiếng Đức', 'Tiếng Hàn', 'Tiếng Nga', 'Tiếng Nhật', 'Tiếng Pháp', 'Tiếng Trung', 'Tin Học', 'Toán', 'Vật Lý')`,

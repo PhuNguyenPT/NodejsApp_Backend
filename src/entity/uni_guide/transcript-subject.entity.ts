@@ -1,6 +1,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     JoinColumn,
     ManyToOne,
@@ -74,4 +75,8 @@ export class TranscriptSubjectEntity {
         update: true,
     })
     updatedBy?: string;
+
+    constructor(entityLike?: DeepPartial<TranscriptSubjectEntity>) {
+        Object.assign(this, entityLike);
+    }
 }

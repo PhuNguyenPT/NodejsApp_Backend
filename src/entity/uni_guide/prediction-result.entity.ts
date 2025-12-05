@@ -1,6 +1,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     Index,
     JoinColumn,
@@ -92,4 +93,8 @@ export class PredictionResultEntity {
         update: true,
     })
     updatedBy!: string;
+
+    constructor(entityLike?: DeepPartial<PredictionResultEntity>) {
+        Object.assign(this, entityLike);
+    }
 }

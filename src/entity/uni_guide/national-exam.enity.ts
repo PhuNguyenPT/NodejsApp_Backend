@@ -2,6 +2,7 @@ import { Expose, Transform } from "class-transformer";
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     JoinColumn,
     ManyToOne,
@@ -87,4 +88,8 @@ export class NationalExamEntity {
     })
     @Expose()
     updatedBy?: string;
+
+    constructor(entityLike?: DeepPartial<NationalExamEntity>) {
+        Object.assign(this, entityLike);
+    }
 }

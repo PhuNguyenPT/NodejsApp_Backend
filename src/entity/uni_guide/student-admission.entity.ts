@@ -1,6 +1,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     Index,
     JoinColumn,
@@ -80,4 +81,8 @@ export class StudentAdmissionEntity {
         update: true,
     })
     updatedBy?: string;
+
+    constructor(entityLike?: DeepPartial<StudentAdmissionEntity>) {
+        Object.assign(this, entityLike);
+    }
 }

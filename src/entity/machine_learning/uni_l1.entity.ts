@@ -1,6 +1,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
@@ -64,4 +65,8 @@ export class UniL1Entity {
         update: true,
     })
     updatedAt!: Date;
+
+    constructor(entityLike?: DeepPartial<UniL1Entity>) {
+        Object.assign(this, entityLike);
+    }
 }

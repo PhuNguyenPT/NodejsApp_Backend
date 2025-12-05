@@ -1,6 +1,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     Index,
     PrimaryGeneratedColumn,
@@ -41,4 +42,8 @@ export class TranscriptSubjectGroupEntity {
         update: true,
     })
     updatedAt!: Date;
+
+    constructor(entityLike?: DeepPartial<TranscriptSubjectGroupEntity>) {
+        Object.assign(this, entityLike);
+    }
 }

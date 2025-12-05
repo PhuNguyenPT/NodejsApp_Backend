@@ -1,9 +1,27 @@
 import { Expose, Type } from "class-transformer";
-import { IsArray, ValidateNested } from "class-validator";
+import { IsArray, IsIn, IsInt, ValidateNested } from "class-validator";
 
 import { SubjectScore } from "./subject-score.dto.js";
 
 export class OcrRequest {
+    /**
+     * @example 10
+     */
+    @Expose()
+    @IsIn([10, 11, 12])
+    @IsInt()
+    @Type(() => Number)
+    grade!: number;
+
+    /**
+     * @example 1
+     */
+    @Expose()
+    @IsIn([1, 2])
+    @IsInt()
+    @Type(() => Number)
+    semester!: number;
+
     /**
      * Array of subject scores for transcript creation
      * Contains subjects and their corresponding scores for a specific grade or semester.

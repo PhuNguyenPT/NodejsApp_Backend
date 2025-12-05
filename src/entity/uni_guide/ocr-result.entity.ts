@@ -2,6 +2,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     Index,
     JoinColumn,
@@ -126,10 +127,8 @@ export class OcrResultEntity {
     })
     updatedBy?: string;
 
-    constructor(ocrResult?: Partial<OcrResultEntity>) {
-        if (ocrResult) {
-            Object.assign(this, ocrResult);
-        }
+    constructor(entityLike?: DeepPartial<OcrResultEntity>) {
+        Object.assign(this, entityLike);
     }
 
     getAverageScore(): null | number {

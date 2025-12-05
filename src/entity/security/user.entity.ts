@@ -2,6 +2,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     Index,
     OneToMany,
@@ -109,10 +110,8 @@ export class UserEntity {
     })
     updatedBy?: string;
 
-    constructor(user?: Partial<UserEntity>) {
-        if (user) {
-            Object.assign(this, user);
-        }
+    constructor(entityLike?: DeepPartial<UserEntity>) {
+        Object.assign(this, entityLike);
     }
 
     disableAccount(): void {

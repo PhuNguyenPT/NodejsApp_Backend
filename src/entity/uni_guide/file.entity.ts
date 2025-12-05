@@ -2,6 +2,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     Index,
     JoinColumn,
@@ -151,10 +152,8 @@ export class FileEntity {
     })
     updatedBy?: string;
 
-    constructor(file?: Partial<FileEntity>) {
-        if (file) {
-            Object.assign(this, file);
-        }
+    constructor(entityLike?: DeepPartial<FileEntity>) {
+        Object.assign(this, entityLike);
     }
 
     // Existing helper methods

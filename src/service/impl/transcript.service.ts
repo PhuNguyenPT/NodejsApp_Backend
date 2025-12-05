@@ -39,33 +39,53 @@ export class TranscriptService implements ITranscriptService {
         userId?: string,
     ): Promise<TranscriptEntity[]> {
         const student = await this.studentRepository.findOne({
-            order: { createdAt: "ASC" },
-            relations: [
-                "transcripts",
-                "transcripts.transcriptSubjects",
-                "transcripts.ocrResult",
-                "transcripts.ocrResult.file",
-            ],
             where: {
                 id: studentId,
                 userId: userId ?? IsNull(),
             },
         });
 
-        if (!student?.transcripts || student.transcripts.length === 0) {
+        if (!student) {
+            throw new EntityNotFoundException(
+                `Student not found for id ${studentId}`,
+            );
+        }
+
+        const transcripts = await this.transcriptRepository.find({
+            order: {
+                grade: "ASC",
+                semester: "ASC",
+            },
+            relations: ["transcriptSubjects", "ocrResult", "ocrResult.file"],
+            where: {
+                studentId: studentId,
+            },
+        });
+
+        if (transcripts.length === 0) {
             throw new EntityNotFoundException(
                 `Transcripts not found for student id ${studentId}`,
             );
         }
 
-        student.transcripts.forEach((transcript) => {
+        transcripts.forEach((transcript) => {
             if (transcript.transcriptSubjects) {
                 transcript.transcriptSubjects.sort((a, b) =>
                     a.subject.localeCompare(b.subject),
                 );
             }
         });
-        return this.sortTranscripts(student.transcripts);
+
+        const hasNullGradeOrSemester = transcripts.some(
+            (transcript) =>
+                transcript.grade == null || transcript.semester == null,
+        );
+
+        if (hasNullGradeOrSemester) {
+            return this.sortTranscripts(transcripts);
+        }
+
+        return transcripts;
     }
 
     public async patchByIdAndCreatedBy(
@@ -144,7 +164,7 @@ export class TranscriptService implements ITranscriptService {
         };
     }
 
-    public async savedByStudentIdAndUserId(
+    public async saveByStudentIdAndUserId(
         studentId: string,
         ocrRequest: OcrRequest,
         userId?: string,
@@ -195,10 +215,9 @@ export class TranscriptService implements ITranscriptService {
         if (student.user) createdBy = student.user.email;
 
         const transcriptEntity: TranscriptEntity =
-            this.transcriptRepository.create({
-                createdBy,
-                student: student,
-            });
+            this.transcriptRepository.create(ocrRequest);
+        transcriptEntity.createdBy = createdBy;
+        transcriptEntity.student = student;
 
         const transcriptSubjects: TranscriptSubjectEntity[] = [];
         for (const subjectScore of ocrRequest.subjectScores) {
