@@ -43,7 +43,14 @@ export class NationalExamEntity {
     @Column({ enum: NationalExamSubjects, name: "name", type: "varchar" })
     name!: NationalExamSubject;
 
-    @Column({ name: "score", type: "decimal" })
+    @Column({
+        name: "score",
+        transformer: {
+            from: (value: string) => parseFloat(value),
+            to: (value: number) => value,
+        },
+        type: "numeric",
+    })
     score!: number;
 
     @JoinColumn({ name: "student_id" })

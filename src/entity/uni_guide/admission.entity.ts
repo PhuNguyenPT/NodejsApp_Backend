@@ -109,7 +109,15 @@ export class AdmissionEntity {
     @Column({ name: "province", nullable: true, type: "varchar" })
     province?: string;
 
-    @Column({ name: "score", nullable: true, type: "numeric" })
+    @Column({
+        name: "score",
+        nullable: true,
+        transformer: {
+            from: (value: string) => parseFloat(value),
+            to: (value: number) => value,
+        },
+        type: "numeric",
+    })
     score?: number;
 
     @OneToMany("StudentAdmissionEntity", "admission")

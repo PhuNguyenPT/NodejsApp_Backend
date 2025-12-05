@@ -43,7 +43,14 @@ export class AptitudeExamEntity {
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: string;
 
-    @Column({ name: "score", type: "decimal" })
+    @Column({
+        name: "score",
+        transformer: {
+            from: (value: string) => parseFloat(value),
+            to: (value: number) => value,
+        },
+        type: "numeric",
+    })
     score!: number;
 
     @JoinColumn({ name: "student_id" })

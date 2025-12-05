@@ -82,6 +82,14 @@ export class TranscriptSubjectScore {
     @Max(10)
     @Min(0)
     @ToTwoDecimals()
+    tieng_han?: number;
+
+    @Expose()
+    @IsNumber()
+    @IsOptional()
+    @Max(10)
+    @Min(0)
+    @ToTwoDecimals()
     tieng_nga?: number;
 
     @Expose()

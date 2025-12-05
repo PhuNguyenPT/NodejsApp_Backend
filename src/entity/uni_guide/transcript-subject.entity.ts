@@ -37,7 +37,15 @@ export class TranscriptSubjectEntity {
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: string;
 
-    @Column({ name: "score", nullable: false, type: "numeric" })
+    @Column({
+        name: "score",
+        nullable: false,
+        transformer: {
+            from: (value: string) => parseFloat(value),
+            to: (value: number) => value,
+        },
+        type: "numeric",
+    })
     score!: number;
 
     @Column({
