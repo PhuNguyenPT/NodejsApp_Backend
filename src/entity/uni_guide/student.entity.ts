@@ -1,6 +1,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     Index,
     JoinColumn,
@@ -221,9 +222,7 @@ export class StudentEntity {
     })
     vsatExams?: Relation<VsatExamEntity[]>;
 
-    constructor(student?: Partial<StudentEntity>) {
-        if (student) {
-            Object.assign(this, student);
-        }
+    constructor(entityLike?: DeepPartial<StudentEntity>) {
+        Object.assign(this, entityLike);
     }
 }

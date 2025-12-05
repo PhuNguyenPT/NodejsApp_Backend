@@ -3,6 +3,7 @@ import { Expose, Transform } from "class-transformer";
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     JoinColumn,
     ManyToOne,
@@ -99,4 +100,8 @@ export class AptitudeExamEntity {
         nullable: true,
     })
     vnuhcmScoreComponents?: Relation<VnuhcmScoreComponentEntity>;
+
+    constructor(entityLike?: DeepPartial<AptitudeExamEntity>) {
+        Object.assign(this, entityLike);
+    }
 }

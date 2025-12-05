@@ -2,6 +2,7 @@ import { Expose, Transform } from "class-transformer";
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     JoinColumn,
     ManyToOne,
@@ -25,7 +26,6 @@ export class VsatExamEntity {
         type: "timestamp with time zone",
         update: false,
     })
-    @Expose()
     createdAt!: Date;
 
     @Column({
@@ -36,7 +36,6 @@ export class VsatExamEntity {
         type: "varchar",
         update: false,
     })
-    @Expose()
     createdBy?: string;
 
     @Expose()
@@ -44,11 +43,9 @@ export class VsatExamEntity {
     id!: string;
 
     @Column({ enum: VsatExamSubjects, name: "name", type: "varchar" })
-    @Expose()
     name!: VsatExamSubject;
 
     @Column({ name: "score", type: "decimal" })
-    @Expose()
     @Transform(({ value }) => {
         if (typeof value === "string") return parseFloat(value);
         if (typeof value === "number") return value;
@@ -56,7 +53,6 @@ export class VsatExamEntity {
     })
     score!: number;
 
-    @Expose()
     @JoinColumn({ name: "student_id" })
     @ManyToOne("StudentEntity", "vsatExams", {
         onDelete: "CASCADE",
@@ -65,7 +61,6 @@ export class VsatExamEntity {
     student!: Relation<StudentEntity>;
 
     @Column({ name: "student_id", type: "uuid" })
-    @Expose()
     studentId!: string;
 
     @Expose()
@@ -85,6 +80,9 @@ export class VsatExamEntity {
         type: "varchar",
         update: true,
     })
-    @Expose()
     updatedBy?: string;
+
+    constructor(entityLike?: DeepPartial<VsatExamEntity>) {
+        Object.assign(this, entityLike);
+    }
 }

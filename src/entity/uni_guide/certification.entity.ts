@@ -2,6 +2,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     Index,
     JoinColumn,
@@ -92,9 +93,7 @@ export class CertificationEntity {
     })
     updatedBy?: string;
 
-    constructor(certification?: Partial<CertificationEntity>) {
-        if (certification) {
-            Object.assign(this, certification);
-        }
+    constructor(entityLike?: DeepPartial<CertificationEntity>) {
+        Object.assign(this, entityLike);
     }
 }

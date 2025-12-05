@@ -3,6 +3,7 @@ import { Expose } from "class-transformer";
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     JoinColumn,
     OneToOne,
@@ -91,4 +92,8 @@ export class VnuhcmScoreComponentEntity {
     })
     @Expose()
     updatedBy?: string;
+
+    constructor(entityLike?: DeepPartial<VnuhcmScoreComponentEntity>) {
+        Object.assign(this, entityLike);
+    }
 }

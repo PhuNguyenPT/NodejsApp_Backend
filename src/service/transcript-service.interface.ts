@@ -13,7 +13,7 @@ export interface ITranscriptService {
         ocrUpdateRequest: OcrUpdateRequest,
         createdBy?: string,
     ): Promise<{ id: string; subjectScores: SubjectScore[] }>;
-    savedByStudentIdAndUserId(
+    saveByStudentIdAndUserId(
         studentId: string,
         ocrRequest: OcrRequest,
         userId?: string,

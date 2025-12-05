@@ -1,6 +1,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     JoinColumn,
     ManyToOne,
@@ -35,6 +36,9 @@ export class TranscriptEntity {
     })
     createdBy?: string;
 
+    @Column({ name: "grade", nullable: true, type: "integer" })
+    grade?: number;
+
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: string;
 
@@ -47,6 +51,9 @@ export class TranscriptEntity {
 
     @Column({ name: "ocr_result_id", nullable: true, type: "uuid" })
     ocrResultId?: string;
+
+    @Column({ name: "semester", nullable: true, type: "integer" })
+    semester?: number;
 
     @JoinColumn({ name: "student_id" })
     @ManyToOne("StudentEntity", "transcripts", {
@@ -82,4 +89,8 @@ export class TranscriptEntity {
         update: true,
     })
     updatedBy?: string;
+
+    constructor(entityLike?: DeepPartial<TranscriptEntity>) {
+        Object.assign(this, entityLike);
+    }
 }

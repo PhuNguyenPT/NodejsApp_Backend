@@ -1,6 +1,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     Index,
     OneToMany,
@@ -60,9 +61,7 @@ export class MajorGroupEntity {
     })
     updatedAt!: Date;
 
-    constructor(majorGroup?: Partial<MajorGroupEntity>) {
-        if (majorGroup) {
-            Object.assign(this, majorGroup);
-        }
+    constructor(entityLike?: DeepPartial<MajorGroupEntity>) {
+        Object.assign(this, entityLike);
     }
 }

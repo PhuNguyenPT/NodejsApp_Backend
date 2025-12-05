@@ -2,6 +2,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     Index,
     JoinColumn,
@@ -98,9 +99,7 @@ export class AwardEntity {
     })
     updatedBy?: string;
 
-    constructor(award?: Partial<AwardEntity>) {
-        if (award) {
-            Object.assign(this, award);
-        }
+    constructor(entityLike?: DeepPartial<AwardEntity>) {
+        Object.assign(this, entityLike);
     }
 }

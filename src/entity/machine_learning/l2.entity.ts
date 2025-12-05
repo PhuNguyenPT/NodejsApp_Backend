@@ -1,6 +1,7 @@
 import {
     Column,
     CreateDateColumn,
+    DeepPartial,
     Entity,
     Index,
     PrimaryGeneratedColumn,
@@ -123,4 +124,8 @@ export class L2Entity {
 
     @Column({ name: "y_base", nullable: true, type: "numeric" })
     yBase?: null | number;
+
+    constructor(entityLike?: DeepPartial<L2Entity>) {
+        Object.assign(this, entityLike);
+    }
 }
