@@ -1079,10 +1079,17 @@ export class PredictionL3Service implements IPredictionL3Service {
     private deduplicateL3PredictResults(
         results: L3PredictResult[],
     ): L3PredictResult[] {
+        // Filter out results with no predictions first
+        const nonEmptyResults = results.filter((result) => {
+            return Object.values(result.result).some(
+                (predictions) => predictions.length > 0,
+            );
+        });
+
         const seen = new Set<string>();
         const deduplicated: L3PredictResult[] = [];
 
-        for (const result of results) {
+        for (const result of nonEmptyResults) {
             // Create a stable signature by sorting and stringifying
             const signature = this.createResultSignature(result);
 
