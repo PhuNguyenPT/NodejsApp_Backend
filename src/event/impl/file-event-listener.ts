@@ -160,6 +160,69 @@ export class FileEventListener implements IFileEventListener {
         }
     }
 
+    /**
+     * Extract grade number from file metadata using pattern matching
+     */
+    private extractGradeFromFile(file: FileEntity): number | undefined {
+        const gradeFromTags = this.extractNumberFromPattern(
+            file.tags,
+            /grade-(\d+)/i,
+        );
+        if (gradeFromTags !== null) return gradeFromTags;
+
+        const gradeFromDescription = this.extractNumberFromPattern(
+            file.description,
+            /grade\s*(\d+)/i,
+        );
+        if (gradeFromDescription !== null) return gradeFromDescription;
+
+        const gradeFromFileName = this.extractNumberFromPattern(
+            file.fileName,
+            /hb(\d+)/i,
+        );
+        if (gradeFromFileName !== null) return gradeFromFileName;
+
+        return undefined;
+    }
+
+    /**
+     * Extract number from text using a regex pattern
+     */
+    private extractNumberFromPattern(
+        text: null | string | undefined,
+        pattern: RegExp,
+    ): null | number {
+        if (!text) return null;
+
+        const match = text.match(pattern);
+        return match ? parseInt(match[1], 10) : null;
+    }
+
+    /**
+     * Extract semester number from file metadata using pattern matching
+     */
+    private extractSemesterFromFile(file: FileEntity): number | undefined {
+        const semesterFromTags = this.extractNumberFromPattern(
+            file.tags,
+            /semester-(\d+)/i,
+        );
+        if (semesterFromTags !== null) return semesterFromTags;
+
+        const semesterFromDescription = this.extractNumberFromPattern(
+            file.description,
+            /semester\s*(\d+)/i,
+        );
+        if (semesterFromDescription !== null) return semesterFromDescription;
+
+        const semesterFromFileName = this.extractNumberFromPattern(
+            file.fileName,
+            /k(\d+)/i,
+        );
+        if (semesterFromFileName !== null) return semesterFromFileName;
+
+        return undefined;
+    }
+
     private async processMultipleFiles(
         payload: FilesCreatedEvent,
     ): Promise<void> {
@@ -274,12 +337,26 @@ export class FileEventListener implements IFileEventListener {
                             continue;
                         }
 
+                        // Extract grade and semester from file metadata
+                        const grade = this.extractGradeFromFile(file);
+                        const semester = this.extractSemesterFromFile(file);
+
+                        this.logger.debug(
+                            `Extracted metadata for file ${file.id}`,
+                            {
+                                fileName: file.fileName,
+                                grade,
+                                semester,
+                            },
+                        );
+
                         const transcriptEntity: TranscriptEntity =
                             this.transcriptRepository.create({
                                 createdBy: createdBy,
+                                grade: grade,
                                 ocrResult: ocrResultEntity,
+                                semester: semester,
                                 student: student,
-                                studentId: studentId,
                             });
 
                         const transcriptSubjectEntities: TranscriptSubjectEntity[] =
@@ -303,6 +380,10 @@ export class FileEventListener implements IFileEventListener {
 
                         this.logger.info(
                             `Saved TranscriptEntity with id ${savedTranscriptEntity.id} for file ${ocrResultEntity.fileId}`,
+                            {
+                                grade: savedTranscriptEntity.grade,
+                                semester: savedTranscriptEntity.semester,
+                            },
                         );
                     }
                 }
