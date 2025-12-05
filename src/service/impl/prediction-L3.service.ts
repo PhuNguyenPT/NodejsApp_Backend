@@ -30,6 +30,7 @@ import { TalentExam } from "@/dto/student/exam.dto.js";
 import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import { CCQTType, ExamType, isCCQTType } from "@/type/enum/exam-type.js";
 import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.js";
@@ -157,7 +158,7 @@ export class PredictionL3Service implements IPredictionL3Service {
         [TranscriptSubject.SINH_HOC]: "sinh",
         [TranscriptSubject.TIENG_ANH]: "anh",
         [TranscriptSubject.TIENG_DUC]: "tieng_duc",
-        [TranscriptSubject.TIENG_HAN]: "anh",
+        [TranscriptSubject.TIENG_HAN]: "tieng_han",
         [TranscriptSubject.TIENG_NGA]: "tieng_nga",
         [TranscriptSubject.TIENG_NHAT]: "tieng_nhat",
         [TranscriptSubject.TIENG_PHAP]: "tieng_phap",
@@ -269,6 +270,8 @@ export class PredictionL3Service implements IPredictionL3Service {
                 "nationalExams",
                 "talentExams",
                 "aptitudeExams",
+                "transcripts",
+                "transcripts.transcriptSubjects",
             ],
             where: {
                 id: studentId,
@@ -754,6 +757,7 @@ export class PredictionL3Service implements IPredictionL3Service {
             sinh: 0,
             su: 0,
             tieng_duc: 0,
+            tieng_han: 0,
             tieng_nga: 0,
             tieng_nhat: 0,
             tieng_phap: 0,
@@ -766,7 +770,13 @@ export class PredictionL3Service implements IPredictionL3Service {
         // Override with actual scores where available
         subjectScoresMap.forEach((score, subject) => {
             const propertyName = this.TRANSCRIPT_SUBJECT_MAPPING[subject];
-            scoreData[propertyName] = score;
+
+            // Round to 2 decimal places and ensure it's between 0-10
+            const normalizedScore = Math.min(
+                Math.max(Number(score.toFixed(2)), 0),
+                10,
+            );
+            scoreData[propertyName] = normalizedScore;
         });
 
         return plainToInstance(TranscriptSubjectScore, scoreData);
@@ -860,6 +870,136 @@ export class PredictionL3Service implements IPredictionL3Service {
                         break;
                 }
             });
+        }
+
+        return transcriptRecord;
+    }
+
+    /**
+     * Build transcript record from TranscriptEntity array
+     */
+    private buildTranscriptRecordFromTranscripts(
+        transcripts: TranscriptEntity[],
+    ): TranscriptRecord {
+        const transcriptRecord = new TranscriptRecord();
+
+        // Group transcripts by grade
+        const transcriptsByGrade = new Map<number, TranscriptEntity[]>();
+
+        transcripts.forEach((transcript) => {
+            if (!transcript.grade) return;
+
+            const gradeTranscripts =
+                transcriptsByGrade.get(transcript.grade) ?? [];
+            gradeTranscripts.push(transcript);
+            transcriptsByGrade.set(transcript.grade, gradeTranscripts);
+        });
+
+        this.logger.debug("L3 Prediction: Processing transcript entities", {
+            grades: Array.from(transcriptsByGrade.keys()),
+            transcriptCount: transcripts.length,
+        });
+
+        // Process each grade
+        for (const [grade, gradeTranscripts] of transcriptsByGrade.entries()) {
+            // Check if we have semester-level data (2 transcripts per grade)
+            const hasSemesterData =
+                gradeTranscripts.length === 2 &&
+                gradeTranscripts.every((t) => t.semester != null);
+
+            const subjectScoresMap = new Map<TranscriptSubject, number>();
+
+            if (hasSemesterData) {
+                // Average semester scores for each subject
+                this.logger.debug(
+                    `L3 Prediction: Processing semester-level data for grade ${grade.toString()}`,
+                    {
+                        semesterCount: gradeTranscripts.length,
+                    },
+                );
+
+                const subjectSemesterScores = new Map<
+                    TranscriptSubject,
+                    { semester1?: number; semester2?: number }
+                >();
+
+                gradeTranscripts.forEach((transcript) => {
+                    if (!transcript.transcriptSubjects) return;
+
+                    transcript.transcriptSubjects.forEach((subjectEntity) => {
+                        const transcriptSubject = subjectEntity.subject;
+
+                        let semesterScores =
+                            subjectSemesterScores.get(transcriptSubject);
+
+                        if (!semesterScores) {
+                            semesterScores = {};
+                            subjectSemesterScores.set(
+                                transcriptSubject,
+                                semesterScores,
+                            );
+                        }
+
+                        if (transcript.semester === 1) {
+                            semesterScores.semester1 = subjectEntity.score;
+                        } else if (transcript.semester === 2) {
+                            semesterScores.semester2 = subjectEntity.score;
+                        }
+                    });
+                });
+
+                // Calculate averages
+                for (const [
+                    subject,
+                    scores,
+                ] of subjectSemesterScores.entries()) {
+                    const averageScore = this.calculateAverageScore(scores);
+                    subjectScoresMap.set(subject, averageScore);
+                }
+            } else {
+                // Use scores directly (full-year or single semester)
+                this.logger.debug(
+                    `L3 Prediction: Processing full-year data for grade ${grade.toString()}`,
+                );
+
+                gradeTranscripts.forEach((transcript) => {
+                    if (!transcript.transcriptSubjects) return;
+
+                    transcript.transcriptSubjects.forEach((subjectEntity) => {
+                        // If subject already exists, average with existing score
+                        const existingScore = subjectScoresMap.get(
+                            subjectEntity.subject,
+                        );
+                        if (existingScore != null) {
+                            subjectScoresMap.set(
+                                subjectEntity.subject,
+                                (existingScore + subjectEntity.score) / 2,
+                            );
+                        } else {
+                            subjectScoresMap.set(
+                                subjectEntity.subject,
+                                subjectEntity.score,
+                            );
+                        }
+                    });
+                });
+            }
+
+            // Assign to appropriate grade
+            const transcriptSubjectScore =
+                this.assignScoresToTranscriptSubjectScore(subjectScoresMap);
+
+            switch (grade) {
+                case 10:
+                    transcriptRecord.grade_10 = transcriptSubjectScore;
+                    break;
+                case 11:
+                    transcriptRecord.grade_11 = transcriptSubjectScore;
+                    break;
+                case 12:
+                    transcriptRecord.grade_12 = transcriptSubjectScore;
+                    break;
+            }
         }
 
         return transcriptRecord;
@@ -1052,6 +1192,7 @@ export class PredictionL3Service implements IPredictionL3Service {
                 "Invalid L3 Student Info DTO",
             );
         }
+
         // Get certifications and aptitude exams by type
         const ccnnCertifications: CertificationDTO[] =
             studentInfoDTO.getCertificationsByExamType("CCNN");
@@ -1126,14 +1267,80 @@ export class PredictionL3Service implements IPredictionL3Service {
         }
         this.logger.debug("L3 Prediction: THPTSubjectScore", thptScores);
 
-        const TranscriptRecord: TranscriptRecord =
-            this.buildTranscriptRecordFromFiles(fileEntities);
+        // Priority 1: Check if transcripts with grade and semester exist
+        let transcriptRecord: null | TranscriptRecord = null;
+
+        if (studentEntity.transcripts && studentEntity.transcripts.length > 0) {
+            const allHaveGradeAndSemester = studentEntity.transcripts.every(
+                (transcript) =>
+                    transcript.grade != null && transcript.semester != null,
+            );
+
+            if (allHaveGradeAndSemester) {
+                this.logger.debug(
+                    "L3 Prediction: Using transcripts with grade and semester columns",
+                    {
+                        transcriptCount: studentEntity.transcripts.length,
+                    },
+                );
+                transcriptRecord = this.buildTranscriptRecordFromTranscripts(
+                    studentEntity.transcripts,
+                );
+            }
+        }
+
+        // Priority 2: Check if OCR results from files exist
+        if (!transcriptRecord && fileEntities.length > 0) {
+            const hasOcrResults = fileEntities.every(
+                (file) =>
+                    file.ocrResult?.scores && file.ocrResult.scores.length > 0,
+            );
+
+            if (hasOcrResults) {
+                this.logger.debug(
+                    "L3 Prediction: Using OCR results from files",
+                    {
+                        fileCount: fileEntities.length,
+                    },
+                );
+                transcriptRecord =
+                    this.buildTranscriptRecordFromFiles(fileEntities);
+            }
+        }
+
+        // Priority 3: Check if manual transcripts exist (no ocrResult)
+        if (
+            !transcriptRecord &&
+            studentEntity.transcripts &&
+            studentEntity.transcripts.length > 0
+        ) {
+            const manualTranscripts = studentEntity.transcripts.filter(
+                (transcript) => !transcript.ocrResultId,
+            );
+
+            if (manualTranscripts.length > 0) {
+                this.logger.debug("L3 Prediction: Using manual transcripts", {
+                    manualTranscriptCount: manualTranscripts.length,
+                });
+                transcriptRecord =
+                    this.buildTranscriptRecordFromTranscripts(
+                        manualTranscripts,
+                    );
+            }
+        }
+
+        // If no transcript data available, throw error
+        if (!transcriptRecord) {
+            throw new IllegalArgumentException(
+                "TranscriptRecord is required but no valid transcript data is available",
+            );
+        }
 
         this.logger.debug("L3 Prediction: Transcript record built", {
-            fileCount: fileEntities.length,
-            hasGrade10: !!TranscriptRecord.grade_10,
-            hasGrade11: !!TranscriptRecord.grade_11,
-            hasGrade12: !!TranscriptRecord.grade_12,
+            hasGrade10: !!transcriptRecord.grade_10,
+            hasGrade11: !!transcriptRecord.grade_11,
+            hasGrade12: !!transcriptRecord.grade_12,
+            transcriptRecord: transcriptRecord,
         });
 
         const awardQG: AwardQG[] = studentInfoDTO.awards
@@ -1208,7 +1415,7 @@ export class PredictionL3Service implements IPredictionL3Service {
                                 award_qg:
                                     awardQG.length > 0 ? awardQG : undefined,
                                 dgnl: dgnl,
-                                hoc_ba: TranscriptRecord,
+                                hoc_ba: transcriptRecord,
                                 int_cer: interCer,
                                 nang_khieu: nangKhieuScore,
                                 nhom_nganh: majorCode,

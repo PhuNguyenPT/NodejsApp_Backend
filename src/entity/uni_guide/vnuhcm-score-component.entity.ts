@@ -49,19 +49,19 @@ export class VnuhcmScoreComponentEntity {
     /**
      * Language score component (0-400)
      */
-    @Column({ name: "language_score", type: "int" })
+    @Column({ name: "language_score", type: "integer" })
     languageScore!: number;
 
     /**
      * Math score component (0-300)
      */
-    @Column({ name: "math_score", type: "int" })
+    @Column({ name: "math_score", type: "integer" })
     mathScore!: number;
 
     /**
      * Science & Logic score component (0-500)
      */
-    @Column({ name: "science_logic", type: "int" })
+    @Column({ name: "science_logic", type: "integer" })
     scienceLogic!: number;
 
     @UpdateDateColumn({

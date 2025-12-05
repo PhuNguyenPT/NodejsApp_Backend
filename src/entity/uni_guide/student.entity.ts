@@ -113,7 +113,11 @@ export class StudentEntity {
         nullable: true,
         precision: 14,
         scale: 2,
-        type: "decimal",
+        transformer: {
+            from: (value: string) => parseFloat(value),
+            to: (value: number) => value,
+        },
+        type: "numeric",
     })
     maxBudget?: number;
 
@@ -122,7 +126,11 @@ export class StudentEntity {
         nullable: true,
         precision: 14,
         scale: 2,
-        type: "decimal",
+        transformer: {
+            from: (value: string) => parseFloat(value),
+            to: (value: number) => value,
+        },
+        type: "numeric",
     })
     minBudget?: number;
 
