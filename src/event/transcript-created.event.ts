@@ -1,11 +1,11 @@
-import { z } from "zod";
+import z from "zod";
 
-export const TranscriptUpdatedEventSchema = z.object({
+export const TranscriptCreatedEventSchema = z.object({
     studentId: z.string().uuid("Invalid student ID format"),
     transcriptIds: z.array(z.string().uuid("Invalid transcripts ID format")),
     userId: z.string().uuid("Invalid user ID format").optional(),
 });
 
-export type TranscriptUpdatedEvent = z.infer<
-    typeof TranscriptUpdatedEventSchema
+export type TranscriptCreatedEvent = z.infer<
+    typeof TranscriptCreatedEventSchema
 >;

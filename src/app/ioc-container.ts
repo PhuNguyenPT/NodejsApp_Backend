@@ -52,9 +52,13 @@ import { VsatExamEntity } from "@/entity/uni_guide/vsat-exam.entity.js";
 import { IFileEventListener } from "@/event/file-event-listener.interface.js";
 import { FileEventListener } from "@/event/impl/file-event-listener.js";
 import { OcrEventListener } from "@/event/impl/ocr-event-listener.js";
+import { PredictionL3ProcessorService } from "@/event/impl/predicition-response-processor.service.js";
 import { StudentEventListener } from "@/event/impl/student-event-listener.js";
+import { TranscriptEventListener } from "@/event/impl/transcript-event-listener.js";
 import { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
+import { IPredictionL3ProcessorService } from "@/event/prediction-response-processor-service.interface.js";
 import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
+import { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
 import { JwtTokenRepository } from "@/repository/impl/jwt-repository.js";
 import { UserRepository } from "@/repository/impl/user-repository.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
@@ -302,7 +306,10 @@ iocContainer
     .bind<IAdmissionService>(TYPES.IAdmissionService)
     .to(AdmissionService)
     .inSingletonScope();
-
+iocContainer
+    .bind<IPredictionL3ProcessorService>(TYPES.IPredictionL3ProcessorService)
+    .to(PredictionL3ProcessorService)
+    .inSingletonScope();
 // --- Utility Bindings ---
 iocContainer
     .bind<PredictionUtil>(TYPES.PredictionUtil)
@@ -326,7 +333,10 @@ iocContainer
     .bind<IOcrEventListener>(TYPES.IOcrEventListener)
     .to(OcrEventListener)
     .inSingletonScope();
-
+iocContainer
+    .bind<ITranscriptEventListener>(TYPES.ITranscriptEventListener)
+    .to(TranscriptEventListener)
+    .inSingletonScope();
 // ############## --- Controller Bindings --- ##############
 iocContainer.bind<UserController>(UserController).toSelf().inRequestScope();
 iocContainer.bind<AuthController>(AuthController).toSelf().inRequestScope();

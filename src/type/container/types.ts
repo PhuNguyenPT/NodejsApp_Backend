@@ -8,6 +8,7 @@ export const ListenerTypes = {
     IFileEventListener: Symbol.for("IFileEventListener"),
     IOcrEventListener: Symbol.for("IOcrEventListener"),
     IStudentEventListener: Symbol.for("IStudentEventListener"),
+    ITranscriptEventListener: Symbol.for("ITranscriptEventListener"),
 };
 
 /**
@@ -25,6 +26,7 @@ export const ServiceTypes = {
     IOcrResultService: Symbol.for("IOcrResultService"),
     IPredictionL1Service: Symbol.for("IPredictionL1Service"),
     IPredictionL2Service: Symbol.for("IPredictionL2Service"),
+    IPredictionL3ProcessorService: Symbol.for("IPredictionL3ProcessorService"),
     IPredictionL3Service: Symbol.for("IPredictionL3Service"),
     IPredictionModelService: Symbol.for("IPredictionModelService"),
     IPredictionResultService: Symbol.for("IPredictionResultService"),
