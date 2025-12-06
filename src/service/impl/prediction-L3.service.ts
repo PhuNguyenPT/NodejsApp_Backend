@@ -790,12 +790,86 @@ export class PredictionL3Service implements IPredictionL3Service {
     ): TranscriptRecord {
         const transcriptRecord = new TranscriptRecord();
 
-        // Check if we have semester-level data (6 files = 3 grades × 2 semesters)
-        const hasSemesterData = fileEntities.length === 6;
+        // Group files by grade first
+        const filesByGrade = new Map<number, FileEntity[]>();
+
+        fileEntities.forEach((file) => {
+            const grade = this.extractGradeFromFile(file);
+            if (!grade) return;
+
+            const gradeFiles = filesByGrade.get(grade) ?? [];
+            gradeFiles.push(file);
+            filesByGrade.set(grade, gradeFiles);
+        });
+
+        this.logger.debug(
+            "L3 Prediction: Processing file-based transcript data",
+            {
+                fileCount: fileEntities.length,
+                grades: Array.from(filesByGrade.keys()),
+            },
+        );
+
+        // Validate we have all 3 grades before processing
+        const hasAllGrades =
+            filesByGrade.has(10) &&
+            filesByGrade.has(11) &&
+            filesByGrade.has(12);
+
+        if (!hasAllGrades) {
+            this.logger.warn(
+                "L3 Prediction: Missing required grades in files",
+                {
+                    hasGrade10: filesByGrade.has(10),
+                    hasGrade11: filesByGrade.has(11),
+                    hasGrade12: filesByGrade.has(12),
+                    presentGrades: Array.from(filesByGrade.keys()),
+                },
+            );
+            // Return empty record - will fail validation later
+            return transcriptRecord;
+        }
+
+        // Check consistency - either all semester-based or all full-year
+        const allHaveSemesters = Array.from(filesByGrade.values()).every(
+            (gradeFiles) =>
+                gradeFiles.every(
+                    (f) => this.extractSemesterFromFile(f) != null,
+                ),
+        );
+
+        const allHaveNoSemesters = Array.from(filesByGrade.values()).every(
+            (gradeFiles) =>
+                gradeFiles.every(
+                    (f) => this.extractSemesterFromFile(f) == null,
+                ),
+        );
+
+        if (!allHaveSemesters && !allHaveNoSemesters) {
+            this.logger.warn(
+                "L3 Prediction: Inconsistent file types - mixing semester and full-year data",
+                {
+                    gradeDetails: Array.from(filesByGrade.entries()).map(
+                        ([grade, files]) => ({
+                            fileCount: files.length,
+                            grade,
+                            hasSemester: files.some(
+                                (f) => this.extractSemesterFromFile(f) != null,
+                            ),
+                        }),
+                    ),
+                },
+            );
+            // Return empty record - will fail validation later
+            return transcriptRecord;
+        }
+
+        // Determine if this is semester-level data
+        const hasSemesterData = fileEntities.length === 6 && allHaveSemesters;
 
         if (hasSemesterData) {
             this.logger.debug(
-                "L3 Prediction: Processing semester-level transcript data",
+                "L3 Prediction: Processing semester-level transcript data from files",
                 {
                     fileCount: fileEntities.length,
                 },
@@ -837,7 +911,7 @@ export class PredictionL3Service implements IPredictionL3Service {
         } else {
             // Original logic for full-year transcripts
             this.logger.debug(
-                "L3 Prediction: Processing full-year transcript data",
+                "L3 Prediction: Processing full-year transcript data from files",
                 {
                     fileCount: fileEntities.length,
                 },
@@ -900,12 +974,69 @@ export class PredictionL3Service implements IPredictionL3Service {
             transcriptCount: transcripts.length,
         });
 
+        // Validate we have all 3 grades before processing
+        const hasAllGrades =
+            transcriptsByGrade.has(10) &&
+            transcriptsByGrade.has(11) &&
+            transcriptsByGrade.has(12);
+
+        if (!hasAllGrades) {
+            this.logger.warn("L3 Prediction: Missing required grades", {
+                hasGrade10: transcriptsByGrade.has(10),
+                hasGrade11: transcriptsByGrade.has(11),
+                hasGrade12: transcriptsByGrade.has(12),
+                presentGrades: Array.from(transcriptsByGrade.keys()),
+            });
+            // Return empty record - will fail validation later
+            return transcriptRecord;
+        }
+
+        // Check consistency - either all semester-based or all full-year
+        const allHaveSemesters = Array.from(transcriptsByGrade.values()).every(
+            (gradeTranscripts) =>
+                gradeTranscripts.every((t) => t.semester != null),
+        );
+
+        const allHaveNoSemesters = Array.from(
+            transcriptsByGrade.values(),
+        ).every((gradeTranscripts) =>
+            gradeTranscripts.every((t) => t.semester == null),
+        );
+
+        if (!allHaveSemesters && !allHaveNoSemesters) {
+            this.logger.warn(
+                "L3 Prediction: Inconsistent transcript types - mixing semester and full-year data",
+                {
+                    gradeDetails: Array.from(transcriptsByGrade.entries()).map(
+                        ([grade, transcripts]) => ({
+                            grade,
+                            hasSemester: transcripts.some(
+                                (t) => t.semester != null,
+                            ),
+                            transcriptCount: transcripts.length,
+                        }),
+                    ),
+                },
+            );
+            // Return empty record - will fail validation later
+            return transcriptRecord;
+        }
+
         // Process each grade
         for (const [grade, gradeTranscripts] of transcriptsByGrade.entries()) {
-            // Check if we have semester-level data (2 transcripts per grade)
+            // Check if this is semester-level data:
+            // - Must have exactly 2 transcripts for this grade
+            // - Both must have semester field populated (not null)
+            // - They must be different semesters (1 and 2)
             const hasSemesterData =
                 gradeTranscripts.length === 2 &&
-                gradeTranscripts.every((t) => t.semester != null);
+                gradeTranscripts.every((t) => t.semester != null) &&
+                gradeTranscripts[0].semester !== gradeTranscripts[1].semester;
+
+            // Check if this is valid full-year data
+            const isFullYearData =
+                gradeTranscripts.length === 1 &&
+                gradeTranscripts[0].semester == null;
 
             const subjectScoresMap = new Map<TranscriptSubject, number>();
 
@@ -956,49 +1087,53 @@ export class PredictionL3Service implements IPredictionL3Service {
                     const averageScore = this.calculateAverageScore(scores);
                     subjectScoresMap.set(subject, averageScore);
                 }
-            } else {
-                // Use scores directly (full-year or single semester)
+            } else if (isFullYearData) {
+                // Full-year data: semester should be null and grade should be present
+                // Use scores directly from the transcript
                 this.logger.debug(
                     `L3 Prediction: Processing full-year data for grade ${grade.toString()}`,
                 );
 
-                gradeTranscripts.forEach((transcript) => {
-                    if (!transcript.transcriptSubjects) return;
+                const transcript = gradeTranscripts[0];
+                if (!transcript.transcriptSubjects) continue;
 
-                    transcript.transcriptSubjects.forEach((subjectEntity) => {
-                        // If subject already exists, average with existing score
-                        const existingScore = subjectScoresMap.get(
-                            subjectEntity.subject,
-                        );
-                        if (existingScore != null) {
-                            subjectScoresMap.set(
-                                subjectEntity.subject,
-                                (existingScore + subjectEntity.score) / 2,
-                            );
-                        } else {
-                            subjectScoresMap.set(
-                                subjectEntity.subject,
-                                subjectEntity.score,
-                            );
-                        }
-                    });
+                transcript.transcriptSubjects.forEach((subjectEntity) => {
+                    subjectScoresMap.set(
+                        subjectEntity.subject,
+                        subjectEntity.score,
+                    );
                 });
+            } else {
+                // This shouldn't happen if top-level validation passed, but log it anyway
+                this.logger.error(
+                    `L3 Prediction: Invalid data for grade ${grade.toString()} despite passing validation`,
+                    {
+                        hasSemesterField: gradeTranscripts.some(
+                            (t) => t.semester != null,
+                        ),
+                        transcriptCount: gradeTranscripts.length,
+                    },
+                );
+                // Return empty record to trigger validation error
+                return new TranscriptRecord();
             }
 
-            // Assign to appropriate grade
-            const transcriptSubjectScore =
-                this.assignScoresToTranscriptSubjectScore(subjectScoresMap);
+            // Assign to appropriate grade only if we have valid data
+            if (subjectScoresMap.size > 0) {
+                const transcriptSubjectScore =
+                    this.assignScoresToTranscriptSubjectScore(subjectScoresMap);
 
-            switch (grade) {
-                case 10:
-                    transcriptRecord.grade_10 = transcriptSubjectScore;
-                    break;
-                case 11:
-                    transcriptRecord.grade_11 = transcriptSubjectScore;
-                    break;
-                case 12:
-                    transcriptRecord.grade_12 = transcriptSubjectScore;
-                    break;
+                switch (grade) {
+                    case 10:
+                        transcriptRecord.grade_10 = transcriptSubjectScore;
+                        break;
+                    case 11:
+                        transcriptRecord.grade_11 = transcriptSubjectScore;
+                        break;
+                    case 12:
+                        transcriptRecord.grade_12 = transcriptSubjectScore;
+                        break;
+                }
             }
         }
 
@@ -1271,39 +1406,70 @@ export class PredictionL3Service implements IPredictionL3Service {
                 score: electiveSubjects[1].score,
                 subject_name: electiveSubjects[1].subject_name,
             });
+        } else {
+            throw new IllegalArgumentException(
+                "THPTSubjectScore is required with 2 electives but no valid data is available",
+            );
         }
         this.logger.debug("L3 Prediction: THPTSubjectScore", thptScores);
 
-        // Priority 1: Check if transcripts with grade and semester exist
+        // Priority 1: Check if transcripts with grade exist
+        // Full-year: 3 transcripts (grades 10, 11, 12) with semester = null
+        // Semester-based: 6 transcripts (3 grades × 2 semesters) with semester = 1 or 2
         let transcriptRecord: null | TranscriptRecord = null;
 
         if (studentEntity.transcripts && studentEntity.transcripts.length > 0) {
-            const allHaveGradeAndSemester = studentEntity.transcripts.every(
-                (transcript) =>
-                    transcript.grade != null && transcript.semester != null,
-            );
+            const transcripts = studentEntity.transcripts;
+            const hasGradeData = transcripts.every((t) => t.grade != null);
 
-            if (allHaveGradeAndSemester) {
-                this.logger.debug(
-                    "L3 Prediction: Using transcripts with grade and semester columns",
-                    {
-                        transcriptCount: studentEntity.transcripts.length,
-                    },
-                );
-                transcriptRecord = this.buildTranscriptRecordFromTranscripts(
-                    studentEntity.transcripts,
-                );
+            if (hasGradeData) {
+                // Check if it's semester-based (6 transcripts with semesters)
+                const isSemesterBased =
+                    transcripts.length === 6 &&
+                    transcripts.every((t) => t.semester != null);
+
+                // Check if it's full-year based (3 transcripts with semester = null)
+                const isFullYear =
+                    transcripts.length === 3 &&
+                    transcripts.every((t) => t.semester == null);
+
+                if (isSemesterBased || isFullYear) {
+                    this.logger.debug(
+                        `L3 Prediction: Using transcripts (${isSemesterBased ? "semester-based" : "full-year"})`,
+                        {
+                            transcriptCount: transcripts.length,
+                        },
+                    );
+                    transcriptRecord =
+                        this.buildTranscriptRecordFromTranscripts(transcripts);
+                } else {
+                    this.logger.warn(
+                        "L3 Prediction: Invalid transcript configuration",
+                        {
+                            hasGrade: hasGradeData,
+                            semesterData: transcripts.map((t) => ({
+                                grade: t.grade,
+                                semester: t.semester,
+                            })),
+                            transcriptCount: transcripts.length,
+                        },
+                    );
+                }
             }
         }
 
         // Priority 2: Check if OCR results from files exist
+        // Same logic: 3 files for full-year OR 6 files for semester-based
         if (!transcriptRecord && fileEntities.length > 0) {
             const hasOcrResults = fileEntities.every(
                 (file) =>
                     file.ocrResult?.scores && file.ocrResult.scores.length > 0,
             );
 
-            if (hasOcrResults) {
+            if (
+                hasOcrResults &&
+                (fileEntities.length === 3 || fileEntities.length === 6)
+            ) {
                 this.logger.debug(
                     "L3 Prediction: Using OCR results from files",
                     {
@@ -1316,16 +1482,15 @@ export class PredictionL3Service implements IPredictionL3Service {
         }
 
         // Priority 3: Check if manual transcripts exist (no ocrResult)
-        if (
-            !transcriptRecord &&
-            studentEntity.transcripts &&
-            studentEntity.transcripts.length > 0
-        ) {
+        if (!transcriptRecord && studentEntity.transcripts) {
             const manualTranscripts = studentEntity.transcripts.filter(
                 (transcript) => !transcript.ocrResultId,
             );
 
-            if (manualTranscripts.length > 0) {
+            if (
+                manualTranscripts.length === 3 ||
+                manualTranscripts.length === 6
+            ) {
                 this.logger.debug("L3 Prediction: Using manual transcripts", {
                     manualTranscriptCount: manualTranscripts.length,
                 });

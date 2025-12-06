@@ -1,3 +1,4 @@
+// Updated TranscriptService
 import { plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
@@ -9,6 +10,7 @@ import { SubjectScore } from "@/dto/ocr/subject-score.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
+import { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { Role } from "@/type/enum/user.js";
@@ -19,6 +21,7 @@ import { ITranscriptService } from "../transcript-service.interface.js";
 
 @injectable()
 export class TranscriptService implements ITranscriptService {
+    private readonly ALLOWED_TRANSCRIPT_COUNTS = [3, 6];
     private readonly MAX_SEMESTER_TRANSCRIPTS = 6;
     private readonly NO_GRADE_SORT_VALUE = Number.MAX_SAFE_INTEGER;
     private readonly NO_SEMESTER_SORT_VALUE = Number.MAX_SAFE_INTEGER;
@@ -32,6 +35,8 @@ export class TranscriptService implements ITranscriptService {
         private readonly transcriptSubjectRepository: Repository<TranscriptSubjectEntity>,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
+        @inject(TYPES.ITranscriptEventListener)
+        private readonly transcriptEventListener: ITranscriptEventListener,
     ) {}
 
     public async findByStudentIdAndUserId(
@@ -95,7 +100,11 @@ export class TranscriptService implements ITranscriptService {
     ): Promise<{ id: string; subjectScores: SubjectScore[] }> {
         const transcript: null | TranscriptEntity =
             await this.transcriptRepository.findOne({
-                relations: ["transcriptSubjects"],
+                relations: [
+                    "transcriptSubjects",
+                    "student",
+                    "student.transcripts",
+                ],
                 where: { createdBy: createdBy ?? Role.ANONYMOUS, id },
             });
 
@@ -157,6 +166,8 @@ export class TranscriptService implements ITranscriptService {
                     score: subject.score,
                 }),
         );
+
+        this._publishTranscriptUpdatedEvent(transcript.student);
 
         return {
             id: transcript.id,
@@ -245,7 +256,316 @@ export class TranscriptService implements ITranscriptService {
             },
         );
 
+        // Reload student with updated transcripts count
+        const updatedStudent = await this.studentRepository.findOne({
+            relations: ["transcripts"],
+            where: {
+                id: studentId,
+                userId: userId ?? IsNull(),
+            },
+        });
+
+        this._publishTranscriptCreatedEvent(updatedStudent, userId);
+
         return savedTranscript;
+    }
+
+    private _publishTranscriptCreatedEvent(
+        student: null | StudentEntity,
+        userId?: string,
+    ): void {
+        if (!student) {
+            this.logger.warn(
+                "Cannot publish TranscriptCreatedEvent: student not found",
+            );
+            return;
+        }
+
+        const transcriptCount = student.transcripts?.length ?? 0;
+
+        if (!this.ALLOWED_TRANSCRIPT_COUNTS.includes(transcriptCount)) {
+            this.logger.debug(
+                `Skipping TranscriptCreatedEvent: transcript count is ${transcriptCount.toString()}, expected 3 or 6`,
+                {
+                    allowedCounts: this.ALLOWED_TRANSCRIPT_COUNTS,
+                    studentId: student.id,
+                    transcriptCount,
+                },
+            );
+            return;
+        }
+
+        // Validate transcript data consistency
+        const validationResult = this._validateTranscriptConsistency(
+            student.transcripts ?? [],
+        );
+
+        if (!validationResult.isValid) {
+            // Use the explicit isDebug flag: true = debug, false = warn
+            const logLevel = validationResult.isDebug ? "debug" : "warn";
+
+            this.logger[logLevel](
+                "Skipping TranscriptCreatedEvent: transcripts have inconsistent data",
+                {
+                    hasAllGrades: validationResult.hasAllGrades,
+                    hasConsistentSemesters:
+                        validationResult.hasConsistentSemesters,
+                    isDebug: validationResult.isDebug,
+                    missingGrades: validationResult.missingGrades,
+                    reason: validationResult.reason,
+                    studentId: student.id,
+                    transcriptCount,
+                },
+            );
+            return;
+        }
+
+        const transcriptIds = student.transcripts?.map((t) => t.id) ?? [];
+
+        // Fire-and-forget: don't await, let it run in background
+        this.transcriptEventListener
+            .handleTranscriptCreatedEvent({
+                studentId: student.id,
+                transcriptIds,
+                userId,
+            })
+            .catch((error: unknown) => {
+                this.logger.error(
+                    "Failed to handle TranscriptCreatedEvent in background",
+                    {
+                        error,
+                        studentId: student.id,
+                        transcriptIds,
+                        userId,
+                    },
+                );
+            });
+
+        this.logger.info(
+            `Triggered TranscriptCreatedEvent for studentId ${student.id}` +
+                (userId ? ` and userId ${userId}` : ""),
+            {
+                transcriptCount,
+                transcriptIds,
+            },
+        );
+    }
+
+    private _publishTranscriptUpdatedEvent(student: StudentEntity): void {
+        const transcriptCount = student.transcripts?.length ?? 0;
+
+        if (!this.ALLOWED_TRANSCRIPT_COUNTS.includes(transcriptCount)) {
+            this.logger.debug(
+                `Skipping TranscriptUpdatedEvent: transcript count is ${transcriptCount.toString()}, expected 3 or 6`,
+                {
+                    allowedCounts: this.ALLOWED_TRANSCRIPT_COUNTS,
+                    studentId: student.id,
+                    transcriptCount,
+                },
+            );
+            return;
+        }
+
+        // Validate transcript data consistency
+        const validationResult = this._validateTranscriptConsistency(
+            student.transcripts ?? [],
+        );
+
+        if (!validationResult.isValid) {
+            // Use the explicit isDebug flag: true = debug, false = warn
+            const logLevel = validationResult.isDebug ? "debug" : "warn";
+
+            this.logger[logLevel](
+                "Skipping TranscriptUpdatedEvent: transcripts have inconsistent data",
+                {
+                    hasAllGrades: validationResult.hasAllGrades,
+                    hasConsistentSemesters:
+                        validationResult.hasConsistentSemesters,
+                    isDebug: validationResult.isDebug,
+                    missingGrades: validationResult.missingGrades,
+                    reason: validationResult.reason,
+                    studentId: student.id,
+                    transcriptCount,
+                },
+            );
+            return;
+        }
+
+        const transcriptIds = student.transcripts?.map((t) => t.id) ?? [];
+        const userId = student.userId;
+
+        // Fire-and-forget: don't await, let it run in background
+        this.transcriptEventListener
+            .handleTranscriptUpdatedEvent({
+                studentId: student.id,
+                transcriptIds,
+                userId,
+            })
+            .catch((error: unknown) => {
+                this.logger.error(
+                    "Failed to handle TranscriptUpdatedEvent in background",
+                    {
+                        error,
+                        studentId: student.id,
+                        transcriptIds,
+                        userId,
+                    },
+                );
+            });
+
+        this.logger.info(
+            `Triggered TranscriptUpdatedEvent for studentId ${student.id}` +
+                (userId ? ` and userId ${userId}` : ""),
+            {
+                transcriptCount,
+                transcriptIds,
+            },
+        );
+    }
+
+    /**
+     * Validate transcript data consistency before publishing events
+     * @param transcripts Array of TranscriptEntity to validate
+     * @returns Validation result with detailed information
+     */
+    private _validateTranscriptConsistency(transcripts: TranscriptEntity[]): {
+        hasAllGrades: boolean;
+        hasConsistentSemesters: boolean;
+        isDebug: boolean;
+        isValid: boolean;
+        missingGrades: number[];
+        reason?: string;
+    } {
+        // Group transcripts by grade
+        const transcriptsByGrade = new Map<number, TranscriptEntity[]>();
+
+        transcripts.forEach((transcript) => {
+            if (transcript.grade == null) {
+                return;
+            }
+
+            const gradeTranscripts =
+                transcriptsByGrade.get(transcript.grade) ?? [];
+            gradeTranscripts.push(transcript);
+            transcriptsByGrade.set(transcript.grade, gradeTranscripts);
+        });
+
+        // Check if all required grades (10, 11, 12) are present
+        const hasAllGrades =
+            transcriptsByGrade.has(10) &&
+            transcriptsByGrade.has(11) &&
+            transcriptsByGrade.has(12);
+
+        const missingGrades = [10, 11, 12].filter(
+            (grade) => !transcriptsByGrade.has(grade),
+        );
+
+        if (!hasAllGrades) {
+            return {
+                hasAllGrades: false,
+                hasConsistentSemesters: true, // Not a mixing issue, just missing grades
+                isDebug: true, // Use debug logging
+                isValid: false,
+                missingGrades,
+                reason: `Missing required grades: ${missingGrades.join(", ")}`,
+            };
+        }
+
+        // Check consistency - either all semester-based or all full-year
+        const allHaveSemesters = Array.from(transcriptsByGrade.values()).every(
+            (gradeTranscripts) =>
+                gradeTranscripts.every((t) => t.semester != null),
+        );
+
+        const allHaveNoSemesters = Array.from(
+            transcriptsByGrade.values(),
+        ).every((gradeTranscripts) =>
+            gradeTranscripts.every((t) => t.semester == null),
+        );
+
+        const hasConsistentSemesters = allHaveSemesters || allHaveNoSemesters;
+
+        if (!hasConsistentSemesters) {
+            const gradeDetails = Array.from(transcriptsByGrade.entries()).map(
+                ([grade, transcripts]) => ({
+                    grade,
+                    hasSemester: transcripts.some((t) => t.semester != null),
+                    transcriptCount: transcripts.length,
+                }),
+            );
+
+            return {
+                hasAllGrades: true,
+                hasConsistentSemesters: false,
+                isDebug: false, // Use warn logging - this is a data integrity issue!
+                isValid: false,
+                missingGrades: [],
+                reason: `Inconsistent semester data: mixing semester-based and full-year transcripts. Details: ${JSON.stringify(gradeDetails)}`,
+            };
+        }
+
+        // Additional validation for semester-based transcripts
+        if (allHaveSemesters) {
+            // Each grade should have exactly 2 transcripts (semester 1 and 2)
+            for (const [
+                grade,
+                gradeTranscripts,
+            ] of transcriptsByGrade.entries()) {
+                if (gradeTranscripts.length !== 2) {
+                    return {
+                        hasAllGrades: true,
+                        hasConsistentSemesters: true,
+                        isDebug: true, // Use debug logging
+                        isValid: false,
+                        missingGrades: [],
+                        reason: `Grade ${grade.toString()} has ${gradeTranscripts.length.toString()} transcripts, expected 2 for semester-based data`,
+                    };
+                }
+
+                // Check that we have both semester 1 and 2
+                const semesters = gradeTranscripts
+                    .map((t) => t.semester)
+                    .sort();
+                if (semesters[0] !== 1 || semesters[1] !== 2) {
+                    return {
+                        hasAllGrades: true,
+                        hasConsistentSemesters: true,
+                        isDebug: true, // Use debug logging
+                        isValid: false,
+                        missingGrades: [],
+                        reason: `Grade ${grade.toString()} has semesters [${semesters.join(", ")}], expected [1, 2]`,
+                    };
+                }
+            }
+        }
+
+        // Additional validation for full-year transcripts
+        if (allHaveNoSemesters) {
+            // Each grade should have exactly 1 transcript
+            for (const [
+                grade,
+                gradeTranscripts,
+            ] of transcriptsByGrade.entries()) {
+                if (gradeTranscripts.length !== 1) {
+                    return {
+                        hasAllGrades: true,
+                        hasConsistentSemesters: true,
+                        isDebug: true, // Use debug logging
+                        isValid: false,
+                        missingGrades: [],
+                        reason: `Grade ${grade.toString()} has ${gradeTranscripts.length.toString()} transcripts, expected 1 for full-year data`,
+                    };
+                }
+            }
+        }
+
+        return {
+            hasAllGrades: true,
+            hasConsistentSemesters: true,
+            isDebug: true, // Valid data, no logging of validation result
+            isValid: true,
+            missingGrades: [],
+        };
     }
 
     private extractGradeFromTranscript(transcript: TranscriptEntity): number {
