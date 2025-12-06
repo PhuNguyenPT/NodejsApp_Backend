@@ -4,10 +4,12 @@ import { Logger } from "winston";
 
 import { L3PredictResult } from "@/dto/prediction/l3-predict-result.dto.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
+import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
 import {
     PredictionResultEntity,
     PredictionResultStatus,
 } from "@/entity/uni_guide/prediction-result.entity.js";
+import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
@@ -71,7 +73,7 @@ export class OcrEventListener implements IOcrEventListener {
         userId?: string,
     ): Promise<void> {
         const studentEntity = await manager.findOne(StudentEntity, {
-            relations: ["predictionResult", "user"],
+            relations: ["predictionResult", "user", "studentAdmissions"],
             where: {
                 id: studentId,
                 userId: userId ?? IsNull(),
@@ -85,7 +87,6 @@ export class OcrEventListener implements IOcrEventListener {
         }
 
         const userEntity: undefined | UserEntity = studentEntity.user;
-
         const predictionResultEntity = studentEntity.predictionResult;
 
         if (!predictionResultEntity) {
@@ -120,6 +121,32 @@ export class OcrEventListener implements IOcrEventListener {
                 studentId,
             });
 
+            const existingAdmissionIds: Set<string> = new Set<string>(
+                studentEntity.studentAdmissions?.map((sa) => sa.admissionId) ??
+                    [],
+            );
+
+            const l3AdmissionIds = new Set<string>();
+            for (const result of l3PredictionResults) {
+                for (const items of Object.values(result.result)) {
+                    for (const item of items) {
+                        l3AdmissionIds.add(item.id);
+                    }
+                }
+            }
+
+            const newAdmissionIds = Array.from(l3AdmissionIds).filter(
+                (id) => !existingAdmissionIds.has(id),
+            );
+
+            this.logger.info("Admission IDs analysis", {
+                existingCount: existingAdmissionIds.size,
+                l3Count: l3AdmissionIds.size,
+                newAdmissionIds,
+                newToAddCount: newAdmissionIds.length,
+                studentId,
+            });
+
             await this.dataSource.transaction(
                 async (txManager: EntityManager) => {
                     const predictionResult = await txManager.findOne(
@@ -149,7 +176,6 @@ export class OcrEventListener implements IOcrEventListener {
                         ? true
                         : false;
 
-                    // Update status logic
                     if (hasL1Results && hasL2Results && hasL3Results) {
                         predictionResult.status =
                             PredictionResultStatus.COMPLETED;
@@ -165,8 +191,64 @@ export class OcrEventListener implements IOcrEventListener {
 
                     await txManager.save(predictionResult);
 
+                    if (newAdmissionIds.length > 0) {
+                        const validAdmissions = await txManager.find(
+                            AdmissionEntity,
+                            {
+                                select: ["id"],
+                                where: newAdmissionIds.map((id) => ({ id })),
+                            },
+                        );
+
+                        const validAdmissionIdSet = new Set(
+                            validAdmissions.map((a) => a.id),
+                        );
+
+                        const invalidIds = newAdmissionIds.filter(
+                            (id) => !validAdmissionIdSet.has(id),
+                        );
+
+                        if (invalidIds.length > 0) {
+                            this.logger.warn(
+                                "Some admission IDs from L3 results do not exist in AdmissionEntity",
+                                {
+                                    invalidIds,
+                                    studentId,
+                                },
+                            );
+                        }
+
+                        const studentAdmissionsToCreate = Array.from(
+                            validAdmissionIdSet,
+                        ).map((admissionId) => {
+                            return new StudentAdmissionEntity({
+                                admissionId: admissionId,
+                                createdBy: userEntity?.email ?? Role.ANONYMOUS,
+                                studentId: studentId,
+                            });
+                        });
+
+                        if (studentAdmissionsToCreate.length > 0) {
+                            await txManager.save(
+                                StudentAdmissionEntity,
+                                studentAdmissionsToCreate,
+                            );
+
+                            this.logger.info(
+                                "Created new StudentAdmissionEntity records",
+                                {
+                                    admissionIds:
+                                        Array.from(validAdmissionIdSet),
+                                    count: studentAdmissionsToCreate.length,
+                                    studentId,
+                                },
+                            );
+                        }
+                    }
+
                     this.logger.info("Updated prediction result with L3 data", {
                         l3ResultsCount: l3PredictionResults.length,
+                        newStudentAdmissionsCreated: newAdmissionIds.length,
                         predictionResultId: predictionResult.id,
                         status: predictionResult.status,
                         studentId,
@@ -200,7 +282,6 @@ export class OcrEventListener implements IOcrEventListener {
                 studentId,
             });
 
-            // Re-throw to trigger proper error handling
             throw error;
         }
     }
