@@ -105,7 +105,10 @@ export class TranscriptService implements ITranscriptService {
                     "student",
                     "student.transcripts",
                 ],
-                where: { createdBy: createdBy ?? Role.ANONYMOUS, id },
+                where: {
+                    createdBy: createdBy ?? Role.ANONYMOUS,
+                    id,
+                },
             });
 
         if (transcript === null) {
@@ -116,13 +119,12 @@ export class TranscriptService implements ITranscriptService {
 
         const updater = createdBy ?? Role.ANONYMOUS;
 
-        const subjectMap: Map<TranscriptSubject, TranscriptSubjectEntity> =
-            new Map<TranscriptSubject, TranscriptSubjectEntity>(
-                (transcript.transcriptSubjects ?? []).map((subject) => [
-                    subject.subject,
-                    subject,
-                ]),
-            );
+        const subjectMap = new Map<TranscriptSubject, TranscriptSubjectEntity>(
+            (transcript.transcriptSubjects ?? []).map((subject) => [
+                subject.subject,
+                subject,
+            ]),
+        );
 
         if (
             ocrUpdateRequest.subjectScores &&
@@ -136,7 +138,6 @@ export class TranscriptService implements ITranscriptService {
                 if (existingSubject) {
                     existingSubject.score = updateScore.score;
                     existingSubject.updatedBy = updater;
-
                     await this.transcriptSubjectRepository.save(
                         existingSubject,
                     );
@@ -167,7 +168,14 @@ export class TranscriptService implements ITranscriptService {
                 }),
         );
 
-        this._publishTranscriptUpdatedEvent(transcript.student);
+        const updatedStudent = await this.studentRepository.findOne({
+            relations: ["transcripts"],
+            where: { id: transcript.student.id },
+        });
+
+        if (updatedStudent) {
+            this._publishTranscriptUpdatedEvent(updatedStudent);
+        }
 
         return {
             id: transcript.id,
@@ -303,7 +311,6 @@ export class TranscriptService implements ITranscriptService {
         if (!validationResult.isValid) {
             // Use the explicit isDebug flag: true = debug, false = warn
             const logLevel = validationResult.isDebug ? "debug" : "warn";
-
             this.logger[logLevel](
                 "Skipping TranscriptCreatedEvent: transcripts have inconsistent data",
                 {
@@ -374,7 +381,6 @@ export class TranscriptService implements ITranscriptService {
         if (!validationResult.isValid) {
             // Use the explicit isDebug flag: true = debug, false = warn
             const logLevel = validationResult.isDebug ? "debug" : "warn";
-
             this.logger[logLevel](
                 "Skipping TranscriptUpdatedEvent: transcripts have inconsistent data",
                 {
@@ -384,6 +390,22 @@ export class TranscriptService implements ITranscriptService {
                     isDebug: validationResult.isDebug,
                     missingGrades: validationResult.missingGrades,
                     reason: validationResult.reason,
+                    studentId: student.id,
+                    transcriptCount,
+                },
+            );
+            return;
+        }
+
+        // NEW: Validate that at least one transcript has been updated (has updatedBy)
+        const hasUpdatedTranscripts = (student.transcripts ?? []).some(
+            (t) => t.updatedBy != null,
+        );
+
+        if (!hasUpdatedTranscripts) {
+            this.logger.debug(
+                "Skipping TranscriptUpdatedEvent: no transcripts have been updated (all updatedBy are null)",
+                {
                     studentId: student.id,
                     transcriptCount,
                 },
@@ -438,12 +460,10 @@ export class TranscriptService implements ITranscriptService {
     } {
         // Group transcripts by grade
         const transcriptsByGrade = new Map<number, TranscriptEntity[]>();
-
         transcripts.forEach((transcript) => {
             if (transcript.grade == null) {
                 return;
             }
-
             const gradeTranscripts =
                 transcriptsByGrade.get(transcript.grade) ?? [];
             gradeTranscripts.push(transcript);
@@ -497,7 +517,7 @@ export class TranscriptService implements ITranscriptService {
             return {
                 hasAllGrades: true,
                 hasConsistentSemesters: false,
-                isDebug: false, // Use warn logging - this is a data integrity issue!
+                isDebug: false,
                 isValid: false,
                 missingGrades: [],
                 reason: `Inconsistent semester data: mixing semester-based and full-year transcripts. Details: ${JSON.stringify(gradeDetails)}`,
@@ -530,7 +550,7 @@ export class TranscriptService implements ITranscriptService {
                     return {
                         hasAllGrades: true,
                         hasConsistentSemesters: true,
-                        isDebug: true, // Use debug logging
+                        isDebug: false,
                         isValid: false,
                         missingGrades: [],
                         reason: `Grade ${grade.toString()} has semesters [${semesters.join(", ")}], expected [1, 2]`,
@@ -550,7 +570,7 @@ export class TranscriptService implements ITranscriptService {
                     return {
                         hasAllGrades: true,
                         hasConsistentSemesters: true,
-                        isDebug: true, // Use debug logging
+                        isDebug: false,
                         isValid: false,
                         missingGrades: [],
                         reason: `Grade ${grade.toString()} has ${gradeTranscripts.length.toString()} transcripts, expected 1 for full-year data`,
@@ -585,7 +605,6 @@ export class TranscriptService implements ITranscriptService {
         pattern: RegExp,
     ): null | number {
         if (!text) return null;
-
         const match = text.match(pattern);
         return match ? parseInt(match[1], 10) : null;
     }
@@ -659,6 +678,7 @@ export class TranscriptService implements ITranscriptService {
                     `Cannot create more transcripts. Maximum of ${maxAllowed.toString()} transcripts allowed for ${filesCount.toString()} files.`,
                 );
             }
+
             return;
         }
 
