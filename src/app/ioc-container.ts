@@ -7,6 +7,8 @@ import { DataSource, Repository } from "typeorm";
 import { Logger } from "winston";
 import { ZlibOptions } from "zlib";
 
+import App from "@/app/app.js";
+import { Config } from "@/config/app.config.js";
 import { postgresDataSource } from "@/config/data-source.config.js";
 import { mutterOptions } from "@/config/file.config.js";
 import { logger } from "@/config/logger.config.js";
@@ -103,10 +105,12 @@ import {
 import { TYPES } from "@/type/container/types.js";
 import { ConcurrencyUtil } from "@/util/concurrency.util.js";
 import { PredictionUtil } from "@/util/prediction.util.js";
+import { config } from "@/util/validate-env.js";
 
 const iocContainer = new Container();
 
 // --- Core & Infrastructure Bindings ---
+iocContainer.bind<App>(TYPES.App).to(App).inSingletonScope();
 iocContainer
     .bind<Container>(TYPES.InversifyContainer)
     .toConstantValue(iocContainer);
@@ -136,6 +140,7 @@ iocContainer
 iocContainer.bind<KeyStore>(TYPES.KeyStore).to(KeyStore).inSingletonScope();
 
 // --- Configuration Bindings ---
+iocContainer.bind<Config>(TYPES.Config).toConstantValue(config);
 iocContainer
     .bind<PredictionModelServiceConfig>(TYPES.PredictionModelServiceConfig)
     .toConstantValue(predictionModelServiceConfig);

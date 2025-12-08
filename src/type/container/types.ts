@@ -73,6 +73,7 @@ export const RepositoryTypes = {
 export const ConfigTypes = {
     ClientConfig: Symbol.for("ClientConfig"),
     CompressionOptions: Symbol.for("CompressionOptions"),
+    Config: Symbol.for("Config"),
     DecompressionOptions: Symbol.for("DecompressionOptions"),
     IncompressibleMimeTypes: Symbol.for("IncompressibleMimeTypes"),
     LoggerConfig: Symbol.for("LoggerConfig"),
@@ -85,6 +86,7 @@ export const ConfigTypes = {
  * @description Symbols for core infrastructure and clients.
  */
 export const InfrastructureTypes = {
+    App: Symbol.for("App"),
     DataSource: Symbol.for("DataSource"),
     InversifyContainer: Symbol.for("InversifyContainer"),
     KeyStore: Symbol.for("KeyStore"),

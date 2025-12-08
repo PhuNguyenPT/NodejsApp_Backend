@@ -63,36 +63,3 @@ redisSubscriber.on("reconnecting", () => {
 redisSubscriber.on("end", () => {
     logger.info("❌ Redis Subscriber connection ended");
 });
-
-// Initialize Redis connections
-export const initializeRedis = async (): Promise<void> => {
-    try {
-        // Connect both clients concurrently
-        await Promise.all([redisClient.connect(), redisSubscriber.connect()]);
-
-        logger.info(
-            "✅ Redis Publisher and Subscriber clients initialized successfully",
-        );
-    } catch (error) {
-        const errorMessage =
-            error instanceof Error ? error.message : "Unknown error occurred";
-        logger.error("❌ Failed to connect to Redis:", errorMessage);
-        throw error;
-    }
-};
-
-// Graceful shutdown helper
-export const closeRedisConnections = async (): Promise<void> => {
-    try {
-        await Promise.all([redisClient.quit(), redisSubscriber.quit()]);
-        logger.info("✅ Redis connections closed gracefully");
-    } catch (error) {
-        logger.error("❌ Error closing Redis connections:", error);
-        throw error;
-    }
-};
-
-// Health check helper
-export const isRedisHealthy = (): boolean => {
-    return redisClient.isReady && redisSubscriber.isReady;
-};
