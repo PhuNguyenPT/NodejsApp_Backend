@@ -1,55 +1,42 @@
 @startuml
 class L2Entity {
-    +academic_performance_grade_10: number | null
-    +academic_performance_grade_11: number | null
-    +academic_performance_grade_12: number | null
-    +admissionCode: string | null
-    +certificationName: number | null
-    +certificationScore: number | null
-    +certificationScoreEquivalence: number | null
-    +conduct_grade_10: number | null
-    +conduct_grade_11: number | null
-    +conduct_grade_12: number | null
+    +academicPerformanceGrade10?: number | null | undefined
+    +academicPerformanceGrade11?: number | null | undefined
+    +academicPerformanceGrade12?: number | null | undefined
+    +admissionCode?: string | null | undefined
+    +certificationName?: number | null | undefined
+    +certificationScore?: number | null | undefined
+    +certificationScoreEquivalence?: number | null | undefined
+    +conductGrade10?: number | null | undefined
+    +conductGrade11?: number | null | undefined
+    +conductGrade12?: number | null | undefined
     +createdAt: Date
     +id: string
-    +isBaseRow: boolean | null
-    +majorCode: number | null
-    +province: string | null
-    +score: number | null
-    +scoreFinal: number | null
-    +subjectCombination: string | null
-    +tuitionFee: number | null
-    +uniTypeLabel: number | null
+    +isBaseRow?: boolean | null | undefined
+    +majorCode?: number | null | undefined
+    +province?: string | null | undefined
+    +score?: number | null | undefined
+    +scoreFinal?: number | null | undefined
+    +subjectCombination?: string | null | undefined
+    +tuitionFee?: number | null | undefined
+    +uniTypeLabel?: number | null | undefined
     +updatedAt: Date
-    +yBase: number | null
-}
-class L3Entity {
-    +createdAt: Date
-    +id: string
-    +major_code: string | null
-    +major_group: number | null
-    +major_name: string | null
-    +province: string | null
-    +score: number | null
-    +tuition_fee: number | null
-    +uni_code: string | null
-    +uni_type: number | null
-    +updatedAt: Date
+    +yBase?: number | null | undefined
 }
 class TranscriptSubjectGroupEntity {
     +createdAt: Date
     +id: string
-    +major_code: string | null
-    +subject_combination: string | null
-    +uni_code: string | null
+    +majorCode?: string | null | undefined
+    +subjectCombination?: string | null | undefined
+    +uniCode?: string | null | undefined
     +updatedAt: Date
 }
 class UniL1Entity {
-    +admissionCode?: string | undefined
+    +admissionCode?: string | null | undefined
     +createdAt: Date
     +id: string
-    +tfidfContent?: string | undefined
-    +tuitionFee?: number | undefined
+    +tfidfContent?: number[] | null | undefined
+    +tuitionFee?: number | null | undefined
     +updatedAt: Date
 }
 interface LoggerConfig {
@@ -69,6 +56,7 @@ interface Config {
     +DB_RUN_MIGRATIONS_ON_STARTUP: boolean
     +DB_SYNCHRONIZE: boolean
     +ENABLE_FILE_LOGGING: boolean
+    +FILE_SIZE: number
     +JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS: number
     +JWT_AUDIENCE: string
     +JWT_ISSUER: string
@@ -98,6 +86,7 @@ interface Config {
     +SERVER_HOSTNAME: string
     +SERVER_PATH: string
     +SERVER_PORT: number
+    +SERVER_TLS_PORT: number
     +SERVICE_BATCH_CONCURRENCY: number
     +SERVICE_INPUTS_PER_WORKER: number
     +SERVICE_L1_CHUNK_DELAY_MS: number
@@ -115,6 +104,9 @@ interface Config {
     +SERVICE_SERVER_PATH: string
     +SERVICE_SERVER_PORT: number
     +SERVICE_TIMEOUT_IN_MS: number
+    +TLS_CA_PATH: string
+    +TLS_CERT_PATH: string
+    +TLS_KEY_PATH: string
 }
 interface IKeyStore {
     +privateKey: string
@@ -140,34 +132,6 @@ class JwtEntity {
     +toRedisObject(): Record<string, string>
     +{static} fromRedisObject(data: Record<string, string>): JwtEntity
 }
-class StudentAdmissionEntity {
-    +admission: AdmissionEntity
-    +admissionId: string
-    +createdAt: Date
-    +id: string
-    +student: StudentEntity
-    +studentId: string
-    +updatedAt: Date
-}
-class AdmissionEntity {
-    +admissionCode: string
-    +admissionType: string
-    +admissionTypeName: string
-    +createdAt: Date
-    +id: string
-    +majorCode: number
-    +majorName: string
-    +province: string
-    +studentAdmissions: StudentAdmissionEntity[]
-    +studyProgram: string
-    +subjectCombination: string
-    +tuitionFee: number
-    +uniCode: string
-    +uniName: string
-    +uniType: string
-    +uniWebLink: string
-    +updatedAt: Date
-}
 enum NationalExcellentExamType {
     NATIONAL
 }
@@ -187,6 +151,7 @@ enum NationalExcellentStudentExamSubject {
     RUSSIAN
 }
 enum Rank {
+    CONSOLATION
     FIRST
     SECOND
     THIRD
@@ -273,36 +238,27 @@ class HttpException extends Error implements Exception {
 class ValidationException extends HttpException {
     +validationErrors: Record<string, string>
 }
-enum CCNNType {
+enum ExamType {
+    A_Level
+    ACT
+    Duolingo_English_Test
+    HSA
+    IB
     IELTS
     JLPT
+    OSSD
+    PTE_Academic
+    SAT
     TOEFL_CBT
     TOEFL_iBT
     TOEFL_Paper
     TOEIC
-}
-enum CCQTType {
-    A-Level
-    ACT
-    Duolingo English Test
-    IB
-    OSSD
-    PTE Academic
-    SAT
-}
-enum DGNLType {
-    HSA
     TSA
     VNUHCM
 }
 interface Exam {
     +examType: ExamType
     +level: string
-}
-interface ExamTypeValueMap {
-    +CCNN: CCNNType
-    +CCQT: CCQTType
-    +DGNL: DGNLType
 }
 enum CEFR {
     A1
@@ -326,16 +282,27 @@ class CertificationEntity {
 }
 enum VietnameseSubject {
     BIEU_DIEN_NGHE_THUAT
+    CHI_HUY_TAI_CHO
+    CHUNG_CHI_QUY_DOI_TIENG_ANH
+    CHUYEN_MON_AM_NHAC
+    CHUYEN_MON_AM_NHAC_1
+    CHUYEN_MON_AM_NHAC_2
     CONG_NGHE
+    CONG_NGHE_CONG_NGHIEP
+    CONG_NGHE_NONG_NGHIEP
     DIA_LY
+    DOC_DIEN_CAM
     DOC_HIEU
-    DOC_KE_DIEN_CAM
     GDKTPL
+    GHI_AM_XUONG_AM
     HAT
     HAT_BIEU_DIEN_NHAC_CU
     HAT_MUA
-    HINH_HOA
+    HAT_XUONG_AM
     HOA_HOC
+    HOA_THANH
+    KHOA_HOC_TU_NHIEN
+    KHOA_HOC_XA_HOI
     KY_XUONG_AM
     LICH_SU
     NANG_KHIEU
@@ -343,31 +310,41 @@ enum VietnameseSubject {
     NANG_KHIEU_2
     NANG_KHIEU_AM_NHAC_1
     NANG_KHIEU_AM_NHAC_2
+    NANG_KHIEU_ANH_BAO_CHI
     NANG_KHIEU_BAO_CHI
+    NANG_KHIEU_BIEU_DIEN_NGHE_THUAT
+    NANG_KHIEU_KIEN_THUC_VAN_HOA_XA_HOI_NGHE_THUAT
+    NANG_KHIEU_MAM_NON
     NANG_KHIEU_MAM_NON_1
     NANG_KHIEU_MAM_NON_2
+    NANG_KHIEU_QUAY_PHIM_TRUYEN_HINH
     NANG_KHIEU_SKDA_1
     NANG_KHIEU_SKDA_2
     NANG_KHIEU_TDTT
-    NANG_KHIEU_VE
+    NANG_KHIEU_THUYET_TRINH
+    NANG_KHIEU_VE_1
+    NANG_KHIEU_VE_2
     NGU_VAN
+    PHAT_TRIEN_CHU_DE_PHO_THO
     SINH_HOC
     TIENG_ANH
     TIENG_DUC
+    TIENG_HAN
     TIENG_NGA
     TIENG_NHAT
     TIENG_PHAP
     TIENG_TRUNG
     TIN_HOC
     TOAN
-    TRANG_TRI
     TU_DUY_GIAI_QUYET_NGU_VAN_DE
     VAT_LY
+    VE_HINH_HOA
     VE_HINH_HOA_MY_THUAT
     VE_MY_THUAT
+    VE_NANG_KHIEU
+    VE_TRANG_TRI
     VE_TRANG_TRI_MAU
     XAY_DUNG_KICH_BAN_SU_KIEN
-    XUONG_AM
 }
 enum TranscriptSubject {
     CONG_NGHE
@@ -379,6 +356,7 @@ enum TranscriptSubject {
     SINH_HOC
     TIENG_ANH
     TIENG_DUC
+    TIENG_HAN
     TIENG_NGA
     TIENG_NHAT
     TIENG_PHAP
@@ -391,39 +369,34 @@ interface ISubjectScore {
     +name: TranscriptSubject
     +score: number
 }
-interface ITranscript {
-    +subjects: ISubjectScore[]
-}
 class SubjectScore implements ISubjectScore {
     +name: TranscriptSubject
     +score: number
 }
-interface BatchScoreExtractionResult {
-    +error?: string | undefined
-    +ocrModel?: string | undefined
-    +results: FileScoreExtractionResult[]
-    +success: boolean
-}
-interface FileScoreExtractionResult {
-    +documentAnnotation?: string | undefined
-    +error?: string | undefined
-    +fileId: string
-    +fileName: string
-    +scores: ISubjectScore[]
-    +success: boolean
-}
-interface ScoreExtractionResult {
-    +documentAnnotation?: string | undefined
-    +error?: string | undefined
-    +scores: ISubjectScore[]
-    +success: boolean
-}
-class OcrResultResponse {
+class TranscriptSubjectEntity {
     +createdAt: Date
-    +fileId: string
+    +createdBy?: string | undefined
     +id: string
-    +processedBy: string
-    +scores: ISubjectScore[]
+    +score: number
+    +subject: TranscriptSubject
+    +transcript: TranscriptEntity
+    +transcriptId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class TranscriptEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +grade?: number | undefined
+    +id: string
+    +ocrResult?: OcrResultEntity | undefined
+    +ocrResultId?: string | undefined
+    +semester?: number | undefined
+    +student: StudentEntity
+    +studentId: string
+    +transcriptSubjects?: TranscriptSubjectEntity[] | undefined
+    +updatedAt: Date
+    +updatedBy?: string | undefined
 }
 enum OcrStatus {
     COMPLETED
@@ -447,10 +420,11 @@ class OcrResultEntity {
     +fileId: string
     +id: string
     +metadata?: OcrMetadata | undefined
-    +scores?: ISubjectScore[] | undefined
+    +scores?: SubjectScore[] | undefined
     +status: OcrStatus
     +student: StudentEntity
     +studentId: string
+    +transcript?: TranscriptEntity | undefined
     +updatedAt: Date
     +updatedBy?: string | undefined
     +getAverageScore(): number | null
@@ -494,8 +468,6 @@ class FileEntity {
     +tags?: string | undefined
     +updatedAt: Date
     +updatedBy?: string | undefined
-    +user?: UserEntity | undefined
-    +userId?: string | undefined
     +getFileExtension(): string
     +getHumanReadableFileSize(): string
     +getTagsArray(): string[]
@@ -504,14 +476,56 @@ class FileEntity {
     +isImage(): boolean
     +setTagsFromArray(tags: string[]): void
 }
-class MajorEntity {
-    +code: string
-    +createdAt: Date
-    +group: MajorGroupEntity
-    +group_id: string
+class L1PredictResult {
+    +loai_uu_tien: string
+    +ma_xet_tuyen: Record<string, number>
+}
+class L2PredictResult {
+    +ma_xet_tuyen: string
+    +score: number
+}
+class L3PredictionItem {
+    +admission_code: string
+    +admission_type: string
+    +admission_type_name: string
+    +best_subject_combination_score: number
+    +best_subject_combination_total_score: number
+    +bonus_points: number
     +id: string
-    +name: string
+    +major_code: string
+    +major_group: number
+    +major_name: string
+    +province: string
+    +study_program: string
+    +subject_combination: string[]
+    +tuition_fee: number
+    +uni_code: string
+    +uni_name: string
+    +uni_score: number
+    +uni_type: string
+    +uni_web_link: string
+}
+class L3PredictResult {
+    +result: Record<string, L3PredictionItem[]>
+}
+enum PredictionResultStatus {
+    COMPLETED
+    FAILED
+    PARTIAL
+    PROCESSING
+}
+class PredictionResultEntity {
+    +createdAt: Date
+    +createdBy: string
+    +id: string
+    +l1PredictResults?: L1PredictResult[] | undefined
+    +l2PredictResults?: L2PredictResult[] | undefined
+    +l3PredictResults?: L3PredictResult[] | undefined
+    +status: PredictionResultStatus
+    +student: StudentEntity
+    +studentId: string
     +updatedAt: Date
+    +updatedBy: string
 }
 enum MajorGroup {
     AGRICULTURE_FORESTRY_FISHERIES
@@ -538,100 +552,6 @@ enum MajorGroup {
     TOURISM_HOSPITALITY_SPORTS_PERSONAL
     TRANSPORT_SERVICES
     VETERINARY
-}
-class MajorGroupEntity {
-    +code: string
-    +createdAt: Date
-    +englishName: "AGRICULTURE_FORESTRY_FISHERIES" | "ARCHITECTURE_AND_CONSTRUCTION" | "ARTS" | "BUSINESS_AND_MANAGEMENT" | "COMPUTER_AND_IT" | "EDUCATION_AND_TEACHER_TRAINING" | "ENGINEERING" | ... 16 more ... | "VETERINARY"
-    +id: string
-    +majors: MajorEntity[]
-    +name: MajorGroup
-    +students?: StudentEntity[] | undefined
-    +updatedAt: Date
-}
-enum HsgSubject {
-    ANH
-    DIA
-    HOA
-    LY
-    SINH
-    SU
-    TIENG_NGA
-    TIENG_NHAT
-    TIENG_PHAP
-    TIENG_TRUNG
-    TIN
-    TOAN
-    VAN
-}
-class HTTPValidationError {
-    +detail: ValidationError[]
-}
-class L1BatchRequest {
-    +items: UserInputL1[]
-}
-class L1PredictResult {
-    +loai_uu_tien: string
-    +ma_xet_tuyen: Record<string, number>
-}
-class L2BatchRequest {
-    +items: UserInputL2[]
-}
-class L2PredictResult {
-    +ma_xet_tuyen: string
-    +score: number
-}
-class UserInputL1 {
-    +ahld?: number | undefined
-    +cong_lap: number
-    +dan_toc_thieu_so?: number | undefined
-    +haimuoi_huyen_ngheo_tnb?: number | undefined
-    +hoc_phi: number
-    +hsg_1?: number | HsgSubject | undefined
-    +hsg_2?: number | HsgSubject | undefined
-    +hsg_3?: number | HsgSubject | undefined
-    +nhom_nganh: number
-    +tinh_tp: string
-}
-class UserInputL2 {
-    +cong_lap: number
-    +diem_ccta?: string | undefined
-    +diem_chuan: number
-    +hk10: number
-    +hk11: number
-    +hk12: number
-    +hl10: number
-    +hl11: number
-    +hl12: number
-    +hoc_phi: number
-    +nhom_nganh: number
-    +ten_ccta?: string | undefined
-    +tinh_tp: string
-    +to_hop_mon: string
-}
-class ValidationError {
-    +loc: (string | number)[]
-    +msg: string
-    +type: string
-}
-enum PredictionResultStatus {
-    COMPLETED
-    FAILED
-    PARTIAL
-    PROCESSING
-}
-class PredictionResultEntity {
-    +createdAt: Date
-    +createdBy: string
-    +id: string
-    +l1PredictResults: L1PredictResult[]
-    +l2PredictResults: L2PredictResult[]
-    +status: PredictionResultStatus
-    +student: StudentEntity
-    +studentId: string
-    +updatedAt: Date
-    +updatedBy: string
-    +userId?: string | undefined
 }
 enum SpecialStudentCase {
     ETHNIC_MINORITY_STUDENT
@@ -665,102 +585,185 @@ enum VietnamSouthernProvinces {
     VINH_LONG
     VUNG_TAU
 }
-interface AcademicPerformanceData {
-    +academicPerformance: string
-    +grade: number
+enum AcademicPerformance {
+    GOOD
+    NOT_PASSED
+    PASSED
+    SATISFACTORY
 }
-interface AptitudeTestData {
+class AcademicPerformanceEntity {
+    +academicPerformance: AcademicPerformance
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +grade: number
+    +id: string
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class VnuhcmScoreComponentEntity {
+    +aptitudeExam: AptitudeExamEntity
+    +aptitudeExamId: string
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +languageScore: number
+    +mathScore: number
+    +scienceLogic: number
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class AptitudeExamEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
     +examType: ExamType
+    +id: string
     +score: number
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+    +vnuhcmScoreComponents?: VnuhcmScoreComponentEntity | undefined
 }
-interface ConductData {
-    +conduct: string
+enum Conduct {
+    GOOD
+    NOT_PASSED
+    PASSED
+    SATISFACTORY
+}
+class ConductEntity {
+    +conduct: Conduct
+    +createdAt: Date
+    +createdBy?: string | undefined
     +grade: number
+    +id: string
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
 }
-interface ExamSubjectData {
+class NationalExamEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +name: VietnameseSubject.CONG_NGHE_CONG_NGHIEP | VietnameseSubject.CONG_NGHE_NONG_NGHIEP | VietnameseSubject.DIA_LY | VietnameseSubject.GDKTPL | VietnameseSubject.HOA_HOC | ... 12 more ... | VietnameseSubject.VAT_LY
+    +score: number
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class AdmissionEntity {
+    +admissionCode?: string | undefined
+    +admissionType?: string | undefined
+    +admissionTypeName?: string | undefined
+    +createdAt: Date
+    +id: string
+    +majorCode?: string | undefined
+    +majorGroup?: number | undefined
+    +majorName?: string | undefined
+    +province?: string | undefined
+    +score?: number | undefined
+    +studentAdmissions?: StudentAdmissionEntity[] | undefined
+    +studyProgram?: string | undefined
+    +subjectCombination?: string | undefined
+    +tuitionFee?: number | undefined
+    +uniCode?: string | undefined
+    +uniName?: string | undefined
+    +uniType?: string | undefined
+    +uniWebLink?: string | undefined
+    +updatedAt: Date
+}
+class StudentAdmissionEntity {
+    +admission: AdmissionEntity
+    +admissionId: string
+    +createdAt: Date
+    +createdBy: string
+    +id: string
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class MajorEntity {
+    +code: string
+    +createdAt: Date
+    +group: MajorGroupEntity
+    +group_id: string
+    +id: string
+    +name: string
+    +updatedAt: Date
+}
+class MajorGroupEntity {
+    +code: string
+    +createdAt: Date
+    +englishName: "AGRICULTURE_FORESTRY_FISHERIES" | "ARCHITECTURE_AND_CONSTRUCTION" | "ARTS" | "BUSINESS_AND_MANAGEMENT" | "COMPUTER_AND_IT" | "EDUCATION_AND_TEACHER_TRAINING" | "ENGINEERING" | ... 16 more ... | "VETERINARY"
+    +id: string
+    +majors: MajorEntity[]
+    +name: MajorGroup
+    +updatedAt: Date
+}
+class StudentMajorGroupEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +majorGroup: MajorGroupEntity
+    +majorGroupId: string
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class TalentExamEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +name: VietnameseSubject.BIEU_DIEN_NGHE_THUAT | VietnameseSubject.CHI_HUY_TAI_CHO | VietnameseSubject.CHUYEN_MON_AM_NHAC | VietnameseSubject.CHUYEN_MON_AM_NHAC_1 | VietnameseSubject.CHUYEN_MON_AM_NHAC_2 | ... 36 more ... | VietnameseSubject.XAY_DUNG_KICH_BAN_SU_KIEN
+    +score: number
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class VsatExamEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
     +name: VietnameseSubject
     +score: number
-}
-interface NationalExamData {
-    +name: VietnameseSubject
-    +score: number
-}
-interface TalentExamData {
-    +name: VietnameseSubject
-    +score: number
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
 }
 class StudentEntity {
-    +academicPerformances?: AcademicPerformanceData[] | undefined
-    +aptitudeTestScore?: AptitudeTestData | undefined
+    +academicPerformances?: AcademicPerformanceEntity[] | undefined
+    +aptitudeExams?: AptitudeExamEntity[] | undefined
     +awards?: AwardEntity[] | undefined
     +certifications?: CertificationEntity[] | undefined
-    +conducts?: ConductData[] | undefined
+    +conducts?: ConductEntity[] | undefined
     +createdAt: Date
     +createdBy?: string | undefined
     +files?: FileEntity[] | undefined
     +id: string
-    +majorGroupsEntities?: MajorGroupEntity[] | undefined
     +majors?: MajorGroup[] | undefined
     +maxBudget?: number | undefined
     +minBudget?: number | undefined
-    +nationalExams?: NationalExamData[] | undefined
+    +nationalExams?: NationalExamEntity[] | undefined
     +predictionResult?: PredictionResultEntity | undefined
     +province?: VietnamSouthernProvinces | undefined
     +specialStudentCases?: SpecialStudentCase[] | undefined
     +studentAdmissions?: StudentAdmissionEntity[] | undefined
-    +talentScores?: TalentExamData[] | undefined
+    +studentMajorGroups?: StudentMajorGroupEntity[] | undefined
+    +talentExams?: TalentExamEntity[] | undefined
+    +transcripts?: TranscriptEntity[] | undefined
     +uniType?: UniType | undefined
     +updatedAt: Date
     +updatedBy?: string | undefined
     +user?: UserEntity | undefined
     +userId?: string | undefined
-    +vsatScores?: ExamSubjectData[] | undefined
-    +addAcademicPerformance(academicPerformance: string, grade: number): void
-    +addAdmission(admission: AdmissionEntity): void
-    +addConduct(conduct: string, grade: number): void
-    +addTalentScore(subjectName: VietnameseSubject, score: number): void
-    +clearAdmissions(): void
-    +getAcademicPerformanceByGrade(grade: number): AcademicPerformanceData | null
-    +getActiveFiles(): FileEntity[]
-    +getAptitudeTestScore(): number | undefined
-    +getAptitudeTestType(): ExamType | undefined
-    +getAwardsByCategory(category: NationalExcellentStudentExamSubject): AwardEntity[]
-    +getBudgetRangeString(): string
-    +getCertificationsByExamType(type: "CCNN" | "CCQT" | "ĐGNL"): CertificationEntity[]
-    +getConductByGrade(grade: number): ConductData | null
-    +getFilesByType(fileType: FileType): FileEntity[]
-    +getFilesCountByType(): Record<FileType, number>
-    +getLatestAcademicPerformance(): AcademicPerformanceData | null
-    +getLatestConduct(): ConductData | null
-    +getRecentFiles(days?: number): FileEntity[]
-    +getSubjectScore(subjectName: VietnameseSubject): number | null
-    +getTalentScore(subjectName: VietnameseSubject): number | null
-    +getTotalFileSize(): number
-    +getTotalNationalExamScore(): number
-    +getTotalTalentScore(): number
-    +getTotalVSATScore(): number
-    +getUserEmail(): string | null
-    +getVSATScore(index: number): number | undefined
-    +getVSATScoreByName(subjectName: VietnameseSubject): number | undefined
-    +hasAcademicPerformanceData(): boolean
-    +hasAptitudeTestScore(): boolean
-    +hasCertificationExamType(type: "CCNN" | "CCQT" | "ĐGNL"): boolean
-    +hasConductData(): boolean
-    +hasFileType(fileType: FileType): boolean
-    +hasTalentScores(): boolean
-    +hasUser(): boolean
-    +hasValidNationalExamData(): boolean
-    +hasValidVSATScores(): boolean
-    +isBudgetRangeValid(): boolean
-    +isWithinBudget(amount: number): boolean
-    +removeAdmission(admissionId: string): void
-    +setAcademicPerformance(academicPerformanceDataArray: AcademicPerformanceData[]): void
-    +setAdmissions(admissions: AdmissionEntity[]): void
-    +setAptitudeTest(examType: ExamType, score: number): void
-    +setConduct(conductData: ConductData[]): void
-    +setTalentScores(talentScores: TalentExamData[]): void
-    +setVSATScores(vsatScores: ExamSubjectData[]): void
-    +setVSATScoresFromNumbers(scores: number[], subjectNames?: VietnameseSubject[] | undefined): void
+    +vsatExams?: VsatExamEntity[] | undefined
 }
 enum Permission {
     ADMIN_ACCESS
