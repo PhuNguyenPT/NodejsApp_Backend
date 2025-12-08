@@ -107,25 +107,57 @@ class App {
         this.logger.info("🔄 Graceful shutdown initiated...");
 
         try {
-            // Close HTTP server first
+            const serverClosePromises: Promise<void>[] = [];
+
+            // Close HTTP server
             if (this.server) {
                 this.logger.info("📤 Closing HTTP server...");
-                await new Promise<void>((resolve, reject) => {
-                    this.server?.close((error?: Error) => {
-                        if (error) {
-                            this.logger.error(
-                                "❌ Error closing HTTP server:",
-                                error,
-                            );
-                            reject(error);
-                        } else {
-                            this.logger.info(
-                                "✅ HTTP server closed successfully",
-                            );
-                            resolve();
-                        }
-                    });
-                });
+                serverClosePromises.push(
+                    new Promise<void>((resolve, reject) => {
+                        this.server?.close((error?: Error) => {
+                            if (error) {
+                                this.logger.error(
+                                    "❌ Error closing HTTP server:",
+                                    error,
+                                );
+                                reject(error);
+                            } else {
+                                this.logger.info(
+                                    "✅ HTTP server closed successfully",
+                                );
+                                resolve();
+                            }
+                        });
+                    }),
+                );
+            }
+
+            // Close HTTPS server
+            if (this.tlsServer) {
+                this.logger.info("📤 Closing HTTPS server...");
+                serverClosePromises.push(
+                    new Promise<void>((resolve, reject) => {
+                        this.tlsServer?.close((error?: Error) => {
+                            if (error) {
+                                this.logger.error(
+                                    "❌ Error closing HTTPS server:",
+                                    error,
+                                );
+                                reject(error);
+                            } else {
+                                this.logger.info(
+                                    "✅ HTTPS server closed successfully",
+                                );
+                                resolve();
+                            }
+                        });
+                    }),
+                );
+            }
+
+            // Wait for both servers to close
+            if (serverClosePromises.length > 0) {
+                await Promise.all(serverClosePromises);
             }
 
             // Close database connections
