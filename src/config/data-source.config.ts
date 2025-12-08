@@ -4,8 +4,6 @@ import { DataSource } from "typeorm";
 import { redisConfig } from "@/config/redis.config.js";
 import { config } from "@/util/validate-env.js";
 
-import { logger } from "./logger.config.js";
-
 export const postgresDataSource = new DataSource({
     cache: {
         // Enable caching by default for all queries (optional)
@@ -48,26 +46,3 @@ export const postgresDataSource = new DataSource({
     type: "postgres",
     username: config.POSTGRES_USER,
 });
-
-export const initializePostgreSQL = async (): Promise<void> => {
-    logger.info("Connecting to PostgreSQL...");
-    try {
-        await postgresDataSource.initialize();
-        logger.info("✅ PostgreSQL connection established successfully");
-
-        // Test the connection
-        await postgresDataSource.query("SELECT 1");
-        logger.info("✅ PostgreSQL connection test passed");
-
-        // Log entity metadata for debugging
-        if (config.NODE_ENV === "development") {
-            const entities = postgresDataSource.entityMetadatas;
-            logger.info(
-                `📊 Loaded ${entities.length.toString()} entities: ${entities.map((e) => e.name).join(", ")}`,
-            );
-        }
-    } catch (error) {
-        logger.error("❌ Failed to initialize PostgreSQL connection:", error);
-        throw error;
-    }
-};

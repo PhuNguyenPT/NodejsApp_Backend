@@ -1,18 +1,21 @@
 // src/app/index.ts
 import "reflect-metadata";
 
+import type App from "@/app/app.js";
+
 import { logger } from "@/config/logger.config.js";
-import { config, createSafeConfig } from "@/util/validate-env.js";
+import { TYPES } from "@/type/container/types.js";
+import { createSafeConfig } from "@/util/validate-env.js";
 
 async function bootstrap() {
     try {
         logger.info("Starting application", createSafeConfig());
 
-        // Dynamic import of App to ensure all dependencies are ready
-        const { default: App } = await import("@/app/app.js");
-        const app = new App(config);
-        await app.initialize();
+        const { iocContainer } = await import("@/app/ioc-container.js");
 
+        const app = iocContainer.get<App>(TYPES.App);
+
+        await app.initialize();
         logger.info(`Server will be available at: ${app.getServerUrl()}`);
         app.listen();
     } catch (error) {

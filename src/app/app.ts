@@ -6,32 +6,29 @@ import fs from "fs";
 import helmet from "helmet";
 import { Server } from "http";
 import https from "https";
-import multer from "multer";
+import { inject, injectable } from "inversify";
+import multer, { Options } from "multer";
 import passport from "passport";
+import { RedisClientType } from "redis";
+import { DataSource } from "typeorm";
 import { Logger } from "winston";
 
-import { iocContainer } from "@/app/ioc-container.js";
 import { Config } from "@/config/app.config.js";
 import { corsOptions } from "@/config/cors.config.js";
-import {
-    initializePostgreSQL,
-    postgresDataSource,
-} from "@/config/data-source.config.js";
 import { helmetOptions } from "@/config/helmet.config.js";
 import { keyStore } from "@/config/key.config.js";
-import { logger } from "@/config/logger.config.js";
 import {
     getMorganConfig,
     setupRequestTracking,
 } from "@/config/morgan.config.js";
 import { PassportConfig } from "@/config/passport.config.js";
-import { initializeRedis, redisClient } from "@/config/redis.config.js";
 import swaggerDocs from "@/config/swagger.config.js";
 import { RegisterRoutes } from "@/generated/routes.js";
 import ErrorMiddleware from "@/middleware/error-middleware.js";
 import { PredictionServiceClient } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
 
+@injectable()
 class App {
     public readonly basePath: string;
     public readonly express: Express;
@@ -39,19 +36,29 @@ class App {
     public readonly port: number;
     public readonly tlsPort: number;
     private isShuttingDown = false;
-    private readonly logger: Logger;
     private server: null | Server = null;
     private tlsServer: https.Server | null = null;
 
-    constructor(readonly config: Config) {
+    constructor(
+        @inject(TYPES.Config) readonly config: Config,
+        @inject(TYPES.Logger) private readonly logger: Logger,
+        @inject(TYPES.PassportConfig)
+        private readonly passportConfig: PassportConfig,
+        @inject(TYPES.PredictionServiceClient)
+        private readonly predictionServiceClient: PredictionServiceClient,
+        @inject(TYPES.MulterOptions) private readonly multerOptions: Options,
+        @inject(TYPES.DataSource) private readonly dataSource: DataSource,
+        @inject(TYPES.RedisPublisher)
+        private readonly redisPublisher: RedisClientType,
+        @inject(TYPES.RedisSubscriber)
+        private readonly redisSubscriber: RedisClientType,
+    ) {
         this.express = express();
         this.express.set("trust proxy", 1);
-
         this.port = config.SERVER_PORT;
         this.tlsPort = config.SERVER_TLS_PORT;
         this.hostname = config.SERVER_HOSTNAME;
         this.basePath = config.SERVER_PATH;
-        this.logger = logger;
 
         // Initialize synchronous components only
         this.initializeCors();
@@ -137,9 +144,9 @@ class App {
         const closePromises: Promise<void>[] = [];
 
         // Close PostgreSQL connection
-        if (postgresDataSource.isInitialized) {
+        if (this.dataSource.isInitialized) {
             closePromises.push(
-                postgresDataSource
+                this.dataSource
                     .destroy()
                     .then(() => {
                         this.logger.info(
@@ -156,19 +163,38 @@ class App {
             );
         }
 
-        // Close Redis connection
-        if (redisClient.isOpen) {
+        // Close both Redis connections
+        if (this.redisPublisher.isOpen) {
             closePromises.push(
-                redisClient
+                this.redisPublisher
                     .quit()
                     .then(() => {
                         this.logger.info(
-                            "✅ Redis connection closed successfully",
+                            "✅ Redis Publisher connection closed successfully",
                         );
                     })
                     .catch((error: unknown) => {
                         this.logger.error(
-                            "❌ Error closing Redis connection:",
+                            "❌ Error closing Redis Publisher connection:",
+                            error,
+                        );
+                        throw error;
+                    }),
+            );
+        }
+
+        if (this.redisSubscriber.isOpen) {
+            closePromises.push(
+                this.redisSubscriber
+                    .quit()
+                    .then(() => {
+                        this.logger.info(
+                            "✅ Redis Subscriber connection closed successfully",
+                        );
+                    })
+                    .catch((error: unknown) => {
+                        this.logger.error(
+                            "❌ Error closing Redis Subscriber connection:",
                             error,
                         );
                         throw error;
@@ -193,11 +219,12 @@ class App {
         this.logger.info("Initializing database connections...");
 
         try {
-            // Initialize both PostgreSQL and Redis concurrently
-            const postgresPromise = initializePostgreSQL();
-            const redisPromise = initializeRedis();
+            // Initialize PostgreSQL using the injected instance
+            const postgresPromise = this.initializePostgreSQL();
 
-            // Wait for both connections to complete
+            // Initialize Redis using the injected instances
+            const redisPromise = this.initializeRedis();
+
             await Promise.all([postgresPromise, redisPromise]);
 
             this.logger.info(
@@ -243,10 +270,7 @@ class App {
 
     private initializePassportStrategies(): void {
         try {
-            const passportConfig = iocContainer.get<PassportConfig>(
-                TYPES.PassportConfig,
-            );
-            passportConfig.initializeStrategies();
+            this.passportConfig.initializeStrategies();
             this.logger.info("Passport strategies initialized successfully");
         } catch (error) {
             this.logger.error("Error initializing Passport strategies:", error);
@@ -254,14 +278,38 @@ class App {
         }
     }
 
+    private async initializePostgreSQL(): Promise<void> {
+        this.logger.info("Connecting to PostgreSQL...");
+        try {
+            // Use the injected dataSource
+            await this.dataSource.initialize();
+            this.logger.info(
+                "✅ PostgreSQL connection established successfully",
+            );
+
+            // Test the connection
+            await this.dataSource.query("SELECT 1");
+            this.logger.info("✅ PostgreSQL connection test passed");
+
+            // Log entity metadata for debugging
+            if (this.config.NODE_ENV === "development") {
+                const entities = this.dataSource.entityMetadatas;
+                this.logger.info(
+                    `📊 Loaded ${entities.length.toString()} entities: ${entities.map((e) => e.name).join(", ")}`,
+                );
+            }
+        } catch (error) {
+            this.logger.error(
+                "❌ Failed to initialize PostgreSQL connection:",
+                error,
+            );
+            throw error;
+        }
+    }
+
     private async initializePredictModelServer(): Promise<void> {
         try {
             this.logger.info("🔗 Predict Model Server: Initializing...");
-
-            const predictModelServer: PredictionServiceClient =
-                iocContainer.get<PredictionServiceClient>(
-                    TYPES.PredictionServiceClient,
-                );
 
             // Perform health check with retry logic
             const maxRetries = 3;
@@ -273,7 +321,8 @@ class App {
                     this.logger.info(
                         `🏥 Predict Model Server: Health check attempt ${attempt.toString()}/${maxRetries.toString()}`,
                     );
-                    connected = await predictModelServer.healthCheck();
+                    connected =
+                        await this.predictionServiceClient.healthCheck();
 
                     if (connected) {
                         this.logger.info(
@@ -331,6 +380,28 @@ class App {
         }
     }
 
+    private async initializeRedis(): Promise<void> {
+        this.logger.info("Connecting to Redis...");
+        try {
+            // Connect both injected Redis clients concurrently
+            await Promise.all([
+                this.redisPublisher.connect(),
+                this.redisSubscriber.connect(),
+            ]);
+
+            this.logger.info(
+                "✅ Redis Publisher and Subscriber clients initialized successfully",
+            );
+        } catch (error) {
+            const errorMessage =
+                error instanceof Error
+                    ? error.message
+                    : "Unknown error occurred";
+            this.logger.error("❌ Failed to connect to Redis:", errorMessage);
+            throw error;
+        }
+    }
+
     private initializeRequestTracking(): void {
         // Request tracking (must come before Morgan)
         this.express.use(setupRequestTracking());
@@ -354,10 +425,7 @@ class App {
 
         apiRouter.use(helmet(helmetOptions));
 
-        const multerOptions = iocContainer.get<multer.Options>(
-            TYPES.MulterOptions,
-        );
-        RegisterRoutes(apiRouter, { multer: multer(multerOptions) });
+        RegisterRoutes(apiRouter, { multer: multer(this.multerOptions) });
 
         this.express.use(this.basePath, apiRouter);
 
