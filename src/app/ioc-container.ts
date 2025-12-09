@@ -61,6 +61,7 @@ import { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
 import { IPredictionL3ProcessorService } from "@/event/prediction-response-processor-service.interface.js";
 import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
 import { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
+import { DatabaseManager } from "@/manager/database.manager.js";
 import { JwtTokenRepository } from "@/repository/impl/jwt-repository.js";
 import { UserRepository } from "@/repository/impl/user-repository.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
@@ -138,6 +139,12 @@ iocContainer
     })
     .inSingletonScope();
 iocContainer.bind<KeyStore>(TYPES.KeyStore).to(KeyStore).inSingletonScope();
+
+// --- Manager Bindings ---
+iocContainer
+    .bind<DatabaseManager>(TYPES.DatabaseManager)
+    .to(DatabaseManager)
+    .inSingletonScope();
 
 // --- Configuration Bindings ---
 iocContainer.bind<Config>(TYPES.Config).toConstantValue(config);

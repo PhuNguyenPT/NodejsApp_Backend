@@ -9,8 +9,6 @@ import https from "https";
 import { inject, injectable } from "inversify";
 import multer, { Options } from "multer";
 import passport from "passport";
-import { RedisClientType } from "redis";
-import { DataSource } from "typeorm";
 import { Logger } from "winston";
 
 import { Config } from "@/config/app.config.js";
@@ -24,6 +22,7 @@ import {
 import { PassportConfig } from "@/config/passport.config.js";
 import swaggerDocs from "@/config/swagger.config.js";
 import { RegisterRoutes } from "@/generated/routes.js";
+import { DatabaseManager } from "@/manager/database.manager.js";
 import ErrorMiddleware from "@/middleware/error-middleware.js";
 import { PredictionServiceClient } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";
@@ -47,11 +46,8 @@ class App {
         @inject(TYPES.PredictionServiceClient)
         private readonly predictionServiceClient: PredictionServiceClient,
         @inject(TYPES.MulterOptions) private readonly multerOptions: Options,
-        @inject(TYPES.DataSource) private readonly dataSource: DataSource,
-        @inject(TYPES.RedisPublisher)
-        private readonly redisPublisher: RedisClientType,
-        @inject(TYPES.RedisSubscriber)
-        private readonly redisSubscriber: RedisClientType,
+        @inject(TYPES.DatabaseManager)
+        private readonly databaseManager: DatabaseManager,
     ) {
         this.express = express();
         this.express.set("trust proxy", 1);
@@ -78,7 +74,7 @@ class App {
     }
 
     public async initialize(): Promise<void> {
-        await this.initializeDatabaseConnections();
+        await this.databaseManager.initializeAll();
         this.initializePassportStrategies();
         await this.initializePredictModelServer();
     }
@@ -160,8 +156,8 @@ class App {
                 await Promise.all(serverClosePromises);
             }
 
-            // Close database connections
-            await this.closeDatabaseConnections();
+            // Close all database connections using DatabaseManager
+            await this.databaseManager.closeAll();
 
             this.logger.info("🎉 Graceful shutdown completed successfully");
         } catch (error: unknown) {
@@ -170,105 +166,8 @@ class App {
         }
     }
 
-    private async closeDatabaseConnections(): Promise<void> {
-        this.logger.info("🔌 Closing database connections...");
-
-        const closePromises: Promise<void>[] = [];
-
-        // Close PostgreSQL connection
-        if (this.dataSource.isInitialized) {
-            closePromises.push(
-                this.dataSource
-                    .destroy()
-                    .then(() => {
-                        this.logger.info(
-                            "✅ PostgreSQL connection closed successfully",
-                        );
-                    })
-                    .catch((error: unknown) => {
-                        this.logger.error(
-                            "❌ Error closing PostgreSQL connection:",
-                            error,
-                        );
-                        throw error;
-                    }),
-            );
-        }
-
-        // Close both Redis connections
-        if (this.redisPublisher.isOpen) {
-            closePromises.push(
-                this.redisPublisher
-                    .quit()
-                    .then(() => {
-                        this.logger.info(
-                            "✅ Redis Publisher connection closed successfully",
-                        );
-                    })
-                    .catch((error: unknown) => {
-                        this.logger.error(
-                            "❌ Error closing Redis Publisher connection:",
-                            error,
-                        );
-                        throw error;
-                    }),
-            );
-        }
-
-        if (this.redisSubscriber.isOpen) {
-            closePromises.push(
-                this.redisSubscriber
-                    .quit()
-                    .then(() => {
-                        this.logger.info(
-                            "✅ Redis Subscriber connection closed successfully",
-                        );
-                    })
-                    .catch((error: unknown) => {
-                        this.logger.error(
-                            "❌ Error closing Redis Subscriber connection:",
-                            error,
-                        );
-                        throw error;
-                    }),
-            );
-        }
-
-        // Wait for all database connections to close
-        if (closePromises.length > 0) {
-            await Promise.all(closePromises);
-            this.logger.info("✅ All database connections closed successfully");
-        } else {
-            this.logger.info("ℹ️ No active database connections to close");
-        }
-    }
-
     private initializeCors(): void {
         this.express.use(cors(corsOptions));
-    }
-
-    private async initializeDatabaseConnections(): Promise<void> {
-        this.logger.info("Initializing database connections...");
-
-        try {
-            // Initialize PostgreSQL using the injected instance
-            const postgresPromise = this.initializePostgreSQL();
-
-            // Initialize Redis using the injected instances
-            const redisPromise = this.initializeRedis();
-
-            await Promise.all([postgresPromise, redisPromise]);
-
-            this.logger.info(
-                "✅ All database connections established successfully",
-            );
-        } catch (error) {
-            this.logger.error(
-                "❌ Failed to initialize database connections:",
-                error,
-            );
-            throw error;
-        }
     }
 
     private initializeErrorHandling(): void {
@@ -306,35 +205,6 @@ class App {
             this.logger.info("Passport strategies initialized successfully");
         } catch (error) {
             this.logger.error("Error initializing Passport strategies:", error);
-            throw error;
-        }
-    }
-
-    private async initializePostgreSQL(): Promise<void> {
-        this.logger.info("Connecting to PostgreSQL...");
-        try {
-            // Use the injected dataSource
-            await this.dataSource.initialize();
-            this.logger.info(
-                "✅ PostgreSQL connection established successfully",
-            );
-
-            // Test the connection
-            await this.dataSource.query("SELECT 1");
-            this.logger.info("✅ PostgreSQL connection test passed");
-
-            // Log entity metadata for debugging
-            if (this.config.NODE_ENV === "development") {
-                const entities = this.dataSource.entityMetadatas;
-                this.logger.info(
-                    `📊 Loaded ${entities.length.toString()} entities: ${entities.map((e) => e.name).join(", ")}`,
-                );
-            }
-        } catch (error) {
-            this.logger.error(
-                "❌ Failed to initialize PostgreSQL connection:",
-                error,
-            );
             throw error;
         }
     }
@@ -412,28 +282,6 @@ class App {
         }
     }
 
-    private async initializeRedis(): Promise<void> {
-        this.logger.info("Connecting to Redis...");
-        try {
-            // Connect both injected Redis clients concurrently
-            await Promise.all([
-                this.redisPublisher.connect(),
-                this.redisSubscriber.connect(),
-            ]);
-
-            this.logger.info(
-                "✅ Redis Publisher and Subscriber clients initialized successfully",
-            );
-        } catch (error) {
-            const errorMessage =
-                error instanceof Error
-                    ? error.message
-                    : "Unknown error occurred";
-            this.logger.error("❌ Failed to connect to Redis:", errorMessage);
-            throw error;
-        }
-    }
-
     private initializeRequestTracking(): void {
         // Request tracking (must come before Morgan)
         this.express.use(setupRequestTracking());
@@ -462,8 +310,12 @@ class App {
         this.express.use(this.basePath, apiRouter);
 
         this.express.get("/health", (req, res) => {
-            res.json({
-                status: "healthy",
+            const dbStatus = this.databaseManager.getConnectionStatus();
+            const isHealthy = this.databaseManager.isHealthy();
+
+            res.status(isHealthy ? 200 : 503).json({
+                databases: dbStatus,
+                status: isHealthy ? "healthy" : "degraded",
                 timestamp: new Date().toISOString(),
             });
         });
