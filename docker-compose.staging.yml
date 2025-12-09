@@ -11,16 +11,16 @@ networks:
 
 secrets:
   private_key:
-    file: ./private.pem
+    file: ${PRIVATE_KEY_PATH}
   public_key:
-    file: ./public.pem
+    file: ${PUBLIC_KEY_PATH}
   # TLS certificates for backend HTTPS server
   tls_key:
-    file: ./tls/backend.key
+    file: ${TLS_KEY_PATH}
   tls_cert:
-    file: ./tls/backend.crt
+    file: ${TLS_CERT_PATH}
   tls_ca:
-    file: ./tls/ca.crt
+    file: ${TLS_CA_PATH}
 
 services:
   backend-staging:
