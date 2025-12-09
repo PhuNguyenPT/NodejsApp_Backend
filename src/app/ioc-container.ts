@@ -62,6 +62,10 @@ import { IPredictionL3ProcessorService } from "@/event/prediction-response-proce
 import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
 import { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
 import { DatabaseManager } from "@/manager/database.manager.js";
+import { LifecycleManager } from "@/manager/lifecycle.manager.js";
+import { MiddlewareManager } from "@/manager/middleware.manager.js";
+import { RouteManager } from "@/manager/route.manager.js";
+import { ServerManager } from "@/manager/server.manager.js";
 import { JwtTokenRepository } from "@/repository/impl/jwt-repository.js";
 import { UserRepository } from "@/repository/impl/user-repository.js";
 import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
@@ -144,6 +148,26 @@ iocContainer.bind<KeyStore>(TYPES.KeyStore).to(KeyStore).inSingletonScope();
 iocContainer
     .bind<DatabaseManager>(TYPES.DatabaseManager)
     .to(DatabaseManager)
+    .inSingletonScope();
+
+iocContainer
+    .bind<ServerManager>(TYPES.ServerManager)
+    .to(ServerManager)
+    .inSingletonScope();
+
+iocContainer
+    .bind<MiddlewareManager>(TYPES.MiddlewareManager)
+    .to(MiddlewareManager)
+    .inSingletonScope();
+
+iocContainer
+    .bind<RouteManager>(TYPES.RouteManager)
+    .to(RouteManager)
+    .inSingletonScope();
+
+iocContainer
+    .bind<LifecycleManager>(TYPES.LifecycleManager)
+    .to(LifecycleManager)
     .inSingletonScope();
 
 // --- Configuration Bindings ---

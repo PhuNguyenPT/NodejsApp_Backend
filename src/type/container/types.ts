@@ -16,6 +16,10 @@ export const ListenerTypes = {
  */
 export const ManagerTypes = {
     DatabaseManager: Symbol.for("DatabaseManager"),
+    LifecycleManager: Symbol.for("LifecycleManager"),
+    MiddlewareManager: Symbol.for("MiddlewareManager"),
+    RouteManager: Symbol.for("RouteManager"),
+    ServerManager: Symbol.for("ServerManager"),
 };
 
 /**
