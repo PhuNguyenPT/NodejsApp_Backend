@@ -12,6 +12,17 @@ export const ListenerTypes = {
 };
 
 /**
+ * @description Symbols for all managers.
+ */
+export const ManagerTypes = {
+    DatabaseManager: Symbol.for("DatabaseManager"),
+    LifecycleManager: Symbol.for("LifecycleManager"),
+    MiddlewareManager: Symbol.for("MiddlewareManager"),
+    RouteManager: Symbol.for("RouteManager"),
+    ServerManager: Symbol.for("ServerManager"),
+};
+
+/**
  * @description Symbols for all application services.
  */
 export const ServiceTypes = {
@@ -112,6 +123,7 @@ export const UtilityTypes = {
  */
 export const TYPES = {
     ...ListenerTypes,
+    ...ManagerTypes,
     ...ServiceTypes,
     ...RepositoryTypes,
     ...ConfigTypes,
