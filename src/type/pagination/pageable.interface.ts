@@ -1,4 +1,4 @@
-import { Sort } from "@/type/pagination/sort.js";
+import type { Sort } from "@/type/pagination/sort.js";
 
 /**
  * Interface for pagination information (Spring-like)
