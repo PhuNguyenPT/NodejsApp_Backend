@@ -1,7 +1,8 @@
+import type { NextFunction, Request, Response } from "express";
+
 // src/middleware/validation.middleware.ts
-import { ClassConstructor, plainToInstance } from "class-transformer";
+import { type ClassConstructor, plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
-import { NextFunction, Request, Response } from "express";
 
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";

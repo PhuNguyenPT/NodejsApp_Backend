@@ -1,8 +1,9 @@
 import { Exclude, Expose, Type } from "class-transformer";
 
+import type { Page } from "@/type/pagination/page.interface.js";
+import type { Pageable } from "@/type/pagination/pageable.interface.js";
+
 import { PageRequest } from "@/type/pagination/page-request.js";
-import { Page } from "@/type/pagination/page.interface.js";
-import { Pageable } from "@/type/pagination/pageable.interface.js";
 import { Sort } from "@/type/pagination/sort.js";
 
 /**

@@ -1,7 +1,7 @@
 // src/app/app.abstract.ts
 import type { Logger } from "winston";
 
-import express, { Express } from "express";
+import express, { type Express } from "express";
 import { injectable, unmanaged } from "inversify";
 
 import type { Config } from "@/config/app.config.js";

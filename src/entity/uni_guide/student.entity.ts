@@ -1,7 +1,7 @@
 import {
     Column,
     CreateDateColumn,
-    DeepPartial,
+    type DeepPartial,
     Entity,
     Index,
     JoinColumn,
@@ -9,7 +9,7 @@ import {
     OneToMany,
     OneToOne,
     PrimaryGeneratedColumn,
-    Relation,
+    type Relation,
     UpdateDateColumn,
 } from "typeorm";
 

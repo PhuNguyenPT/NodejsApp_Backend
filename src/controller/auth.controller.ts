@@ -16,6 +16,9 @@ import {
 } from "tsoa";
 import { Logger } from "winston";
 
+import type { IAuthService } from "@/service/auth-service.interface.js";
+import type { AuthenticatedRequest } from "@/type/express/express.js";
+
 import {
     LoginRequest,
     LogoutRequest,
@@ -24,10 +27,8 @@ import {
 } from "@/dto/auth/auth-request.js";
 import { AuthResponse } from "@/dto/auth/auth-response.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { IAuthService } from "@/service/auth-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
-import { AuthenticatedRequest } from "@/type/express/express.js";
 
 /**
  * Controller responsible for handling authentication-related HTTP requests.

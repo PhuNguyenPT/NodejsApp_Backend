@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import type { MigrationInterface, QueryRunner } from "typeorm";
 
 import { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
 import { MajorEntity } from "@/entity/uni_guide/major.entity.js";

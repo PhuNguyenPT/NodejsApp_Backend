@@ -1,18 +1,18 @@
 import {
     Column,
     CreateDateColumn,
-    DeepPartial,
+    type DeepPartial,
     Entity,
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
-    Relation,
+    type Relation,
     UpdateDateColumn,
 } from "typeorm";
 
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import {
-    VsatExamSubject,
+    type VsatExamSubject,
     VsatExamSubjects,
 } from "@/type/enum/vsat-exam-subject.js";
 

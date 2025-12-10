@@ -1,7 +1,7 @@
 // src/manager/middleware.manager.ts
 import compression from "compression";
 import cors from "cors";
-import express, { Express } from "express";
+import express, { type Express } from "express";
 import { inject, injectable } from "inversify";
 import passport from "passport";
 import { Logger } from "winston";

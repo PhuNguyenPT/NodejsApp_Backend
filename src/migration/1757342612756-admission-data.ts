@@ -1,7 +1,8 @@
+import type { MigrationInterface, QueryRunner } from "typeorm";
+
 import csv from "csv-parser";
 import fs from "fs";
 import path from "path";
-import { MigrationInterface, QueryRunner } from "typeorm";
 import { fileURLToPath } from "url";
 
 import { logger } from "@/config/logger.config.js";

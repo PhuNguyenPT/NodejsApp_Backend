@@ -1,5 +1,7 @@
 import { injectable } from "inversify";
 
+import type { VsatExamSubject } from "@/type/enum/vsat-exam-subject.js";
+
 import { HTTPValidationError } from "@/dto/prediction/validation-error.dto.js";
 import { AptitudeExamDTO } from "@/dto/student/aptitude-exam-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student.dto.js";
@@ -10,7 +12,6 @@ import {
     VietnameseSubject,
 } from "@/type/enum/subject.js";
 import { UniType } from "@/type/enum/uni-type.js";
-import { VsatExamSubject } from "@/type/enum/vsat-exam-subject.js";
 
 export interface ExamScenario {
     diem_chuan: number;

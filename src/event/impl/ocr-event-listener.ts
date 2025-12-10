@@ -2,12 +2,13 @@ import { inject, injectable } from "inversify";
 import { DataSource } from "typeorm";
 import { Logger } from "winston";
 
+import type { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
+import type { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
+
 import {
-    OcrCreatedEvent,
+    type OcrCreatedEvent,
     OcrCreatedEventSchema,
 } from "@/event/ocr-created.event.js";
-import { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
-import { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 
 @injectable()

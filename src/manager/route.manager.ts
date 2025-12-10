@@ -1,11 +1,11 @@
 // src/manager/route.manager.ts
-import express, { Express, Router } from "express";
+import express, { type Express, Router } from "express";
 import helmet from "helmet";
 import { inject, injectable } from "inversify";
-import multer, { Options } from "multer";
+import multer, { type Options } from "multer";
 import { Logger } from "winston";
 
-import { Config } from "@/config/app.config.js";
+import { type Config } from "@/config/app.config.js";
 import { helmetOptions } from "@/config/helmet.config.js";
 import swaggerDocs from "@/config/swagger.config.js";
 import { RegisterRoutes } from "@/generated/routes.js";

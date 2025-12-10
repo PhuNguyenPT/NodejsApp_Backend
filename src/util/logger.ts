@@ -1,10 +1,11 @@
+import type Transport from "winston-transport";
+
 import {
     addColors,
     createLogger,
     format,
-    Logger,
-    LoggerOptions,
-    transport,
+    type Logger,
+    type LoggerOptions,
     transports,
 } from "winston";
 
@@ -90,7 +91,7 @@ function createLoggerOptions(loggerConfig: LoggerConfig): LoggerOptions {
     );
 
     // Create transports array
-    const loggerTransports: transport[] = [
+    const loggerTransports: Transport[] = [
         new transports.Console({
             format: isProduction ? productionFormat : developmentFormat,
         }),
@@ -118,8 +119,8 @@ function createLoggerOptions(loggerConfig: LoggerConfig): LoggerOptions {
     }
 
     // Exception handlers
-    const exceptionHandlers: transport[] = [];
-    const rejectionHandlers: transport[] = [];
+    const exceptionHandlers: Transport[] = [];
+    const rejectionHandlers: Transport[] = [];
 
     if (enableFileLogging || isProduction) {
         exceptionHandlers.push(

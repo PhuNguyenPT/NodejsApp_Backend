@@ -18,6 +18,9 @@ import {
     Tags,
 } from "tsoa";
 
+import type { IUserService } from "@/service/user-service.interface.js";
+import type { AuthenticatedRequest } from "@/type/express/express.js";
+
 import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
 import { UserAdmin } from "@/dto/user/user.js";
@@ -25,9 +28,7 @@ import { UserEntity } from "@/entity/security/user.entity.js";
 import { UserMapper } from "@/mapper/user-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { IUserService } from "@/service/user-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
-import { AuthenticatedRequest } from "@/type/express/express.js";
 
 /**
  * Manages user-related operations.

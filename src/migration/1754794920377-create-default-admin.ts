@@ -1,5 +1,6 @@
+import type { MigrationInterface, QueryRunner } from "typeorm";
+
 import * as bcrypt from "bcrypt";
-import { MigrationInterface, QueryRunner } from "typeorm";
 
 import { logger } from "@/config/logger.config.js";
 import { UserEntity } from "@/entity/security/user.entity.js";

@@ -1,5 +1,5 @@
-import { ErrorResponse } from "@/type/interface/error-response.interface.js";
-import { ValidationResponse } from "@/type/interface/validation-response.interface.js";
+import type { ErrorResponse } from "@/type/interface/error-response.interface.js";
+import type { ValidationResponse } from "@/type/interface/validation-response.interface.js";
 
 export interface ErrorDetails {
     message: string;

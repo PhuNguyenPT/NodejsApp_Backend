@@ -2,16 +2,17 @@ import { inject, injectable } from "inversify";
 import { DataSource } from "typeorm";
 import { Logger } from "winston";
 
+import type { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
+import type { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
+
 import {
-    TranscriptCreatedEvent,
+    type TranscriptCreatedEvent,
     TranscriptCreatedEventSchema,
 } from "@/event/transcript-created.event.js";
-import { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
 import {
-    TranscriptUpdatedEvent,
+    type TranscriptUpdatedEvent,
     TranscriptUpdatedEventSchema,
 } from "@/event/transcript-updated.event.js";
-import { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 
 @injectable()

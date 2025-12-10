@@ -1,6 +1,6 @@
 import {
     ValidatorConstraint,
-    ValidatorConstraintInterface,
+    type ValidatorConstraintInterface,
 } from "class-validator";
 
 import {

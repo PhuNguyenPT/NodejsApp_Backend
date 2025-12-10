@@ -2,6 +2,14 @@ import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
+import type { IStudentEventListener } from "@/event/student-event-listener.interface.js";
+import type { StudentCreatedEvent } from "@/event/student.event.js";
+import type { ICertificationService } from "@/service/certification-service.interface.js";
+import type { IMajorService } from "@/service/major-service.interface.js";
+import type { IStudentService } from "@/service/student-service.interface.js";
+import type { Page } from "@/type/pagination/page.interface.js";
+import type { Pageable } from "@/type/pagination/pageable.interface.js";
+
 import { StudentRequest } from "@/dto/student/student-request.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { AcademicPerformanceEntity } from "@/entity/uni_guide/academic-performance.entity.js";
@@ -15,19 +23,12 @@ import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TalentExamEntity } from "@/entity/uni_guide/talent-exam.entity.js";
 import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-component.entity.js";
 import { VsatExamEntity } from "@/entity/uni_guide/vsat-exam.entity.js";
-import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
-import { StudentCreatedEvent } from "@/event/student.event.js";
-import { ICertificationService } from "@/service/certification-service.interface.js";
-import { IMajorService } from "@/service/major-service.interface.js";
-import { IStudentService } from "@/service/student-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { ExamType } from "@/type/enum/exam-type.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { PageImpl } from "@/type/pagination/page-impl.js";
-import { Page } from "@/type/pagination/page.interface.js";
-import { Pageable } from "@/type/pagination/pageable.interface.js";
 @injectable()
 export class StudentService implements IStudentService {
     constructor(

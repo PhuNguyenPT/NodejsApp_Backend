@@ -1,10 +1,10 @@
 // vnuhcm-components-not-allowed.validator.ts
 import {
     registerDecorator,
-    ValidationArguments,
-    ValidationOptions,
+    type ValidationArguments,
+    type ValidationOptions,
     ValidatorConstraint,
-    ValidatorConstraintInterface,
+    type ValidatorConstraintInterface,
 } from "class-validator";
 
 import { AptitudeExamRequest } from "@/dto/student/aptitude-exam-request.js";

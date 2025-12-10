@@ -1,24 +1,26 @@
+import type { OCRResponse } from "@mistralai/mistralai/models/components/ocrresponse.js";
+
 import { responseFormatFromZodObject } from "@mistralai/mistralai/extra/structChat.js";
-import { OCRResponse } from "@mistralai/mistralai/models/components/ocrresponse.js";
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 import { promisify } from "util";
 import { Logger } from "winston";
-import { gunzip, ZlibOptions } from "zlib";
+import { gunzip, type ZlibOptions } from "zlib";
 
-import { mistralClient } from "@/config/mistralai.config.js";
-import {
+import type {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
     ScoreExtractionResult,
 } from "@/dto/ocr/score-extraction-result.js";
+import type { IMistralService } from "@/service/mistral-service.interface.js";
+
+import { mistralClient } from "@/config/mistralai.config.js";
 import {
-    ISubjectScore,
+    type ISubjectScore,
     TranscriptSchema,
 } from "@/dto/ocr/subject-score.interface.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { IMistralService } from "@/service/mistral-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";

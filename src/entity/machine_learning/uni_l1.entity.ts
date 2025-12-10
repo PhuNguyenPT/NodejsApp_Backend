@@ -1,7 +1,7 @@
 import {
     Column,
     CreateDateColumn,
-    DeepPartial,
+    type DeepPartial,
     Entity,
     PrimaryGeneratedColumn,
     UpdateDateColumn,

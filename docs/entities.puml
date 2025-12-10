@@ -132,39 +132,32 @@ class JwtEntity {
     +toRedisObject(): Record<string, string>
     +{static} fromRedisObject(data: Record<string, string>): JwtEntity
 }
-enum NationalExcellentExamType {
-    NATIONAL
+enum AcademicPerformance {
+    GOOD
+    NOT_PASSED
+    PASSED
+    SATISFACTORY
 }
-enum NationalExcellentStudentExamSubject {
-    BIOLOGY
-    CHEMISTRY
-    CHINESE
-    ENGLISH
-    FRENCH
-    GEOGRAPHY
-    HISTORY
-    INFORMATION_TECHNOLOGY
-    JAPANESE
-    LITERATURE
-    MATHEMATICS
-    PHYSICS
-    RUSSIAN
+class AcademicPerformanceEntity {
+    +academicPerformance: AcademicPerformance
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +grade: number
+    +id: string
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
 }
-enum Rank {
-    CONSOLATION
-    FIRST
-    SECOND
-    THIRD
-}
-class AwardEntity {
-    +category?: NationalExcellentStudentExamSubject | undefined
+class VnuhcmScoreComponentEntity {
+    +aptitudeExam: AptitudeExamEntity
+    +aptitudeExamId: string
     +createdAt: Date
     +createdBy?: string | undefined
     +id: string
-    +level?: Rank | undefined
-    +name?: NationalExcellentExamType | undefined
-    +student: StudentEntity
-    +studentId: string
+    +languageScore: number
+    +mathScore: number
+    +scienceLogic: number
     +updatedAt: Date
     +updatedBy?: string | undefined
 }
@@ -260,6 +253,54 @@ interface Exam {
     +examType: ExamType
     +level: string
 }
+class AptitudeExamEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +examType: ExamType
+    +id: string
+    +score: number
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+    +vnuhcmScoreComponents?: VnuhcmScoreComponentEntity | undefined
+}
+enum NationalExcellentExamType {
+    NATIONAL
+}
+enum NationalExcellentStudentExamSubject {
+    BIOLOGY
+    CHEMISTRY
+    CHINESE
+    ENGLISH
+    FRENCH
+    GEOGRAPHY
+    HISTORY
+    INFORMATION_TECHNOLOGY
+    JAPANESE
+    LITERATURE
+    MATHEMATICS
+    PHYSICS
+    RUSSIAN
+}
+enum Rank {
+    CONSOLATION
+    FIRST
+    SECOND
+    THIRD
+}
+class AwardEntity {
+    +category?: NationalExcellentStudentExamSubject | undefined
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +level?: Rank | undefined
+    +name?: NationalExcellentExamType | undefined
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
 enum CEFR {
     A1
     A2
@@ -275,6 +316,23 @@ class CertificationEntity {
     +examType?: ExamType | undefined
     +id: string
     +level?: string | undefined
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+enum Conduct {
+    GOOD
+    NOT_PASSED
+    PASSED
+    SATISFACTORY
+}
+class ConductEntity {
+    +conduct: Conduct
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +grade: number
+    +id: string
     +student: StudentEntity
     +studentId: string
     +updatedAt: Date
@@ -476,6 +534,17 @@ class FileEntity {
     +isImage(): boolean
     +setTagsFromArray(tags: string[]): void
 }
+class NationalExamEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +name: VietnameseSubject.CONG_NGHE_CONG_NGHIEP | VietnameseSubject.CONG_NGHE_NONG_NGHIEP | VietnameseSubject.DIA_LY | VietnameseSubject.GDKTPL | VietnameseSubject.HOA_HOC | ... 12 more ... | VietnameseSubject.VAT_LY
+    +score: number
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
 class L1PredictResult {
     +loai_uu_tien: string
     +ma_xet_tuyen: Record<string, number>
@@ -527,133 +596,6 @@ class PredictionResultEntity {
     +updatedAt: Date
     +updatedBy: string
 }
-enum MajorGroup {
-    AGRICULTURE_FORESTRY_FISHERIES
-    ARCHITECTURE_AND_CONSTRUCTION
-    ARTS
-    BUSINESS_AND_MANAGEMENT
-    COMPUTER_AND_IT
-    EDUCATION_AND_TEACHER_TRAINING
-    ENGINEERING
-    ENGINEERING_TECHNOLOGY
-    ENVIRONMENT_AND_PROTECTION
-    HEALTH
-    HUMANITIES
-    JOURNALISM_AND_INFORMATION
-    LAW
-    LIFE_SCIENCES
-    MANUFACTURING_AND_PROCESSING
-    MATHEMATICS_AND_STATISTICS
-    NATURAL_SCIENCES
-    OTHER
-    SECURITY_DEFENSE
-    SOCIAL_AND_BEHAVIORAL_SCIENCES
-    SOCIAL_SERVICES
-    TOURISM_HOSPITALITY_SPORTS_PERSONAL
-    TRANSPORT_SERVICES
-    VETERINARY
-}
-enum SpecialStudentCase {
-    ETHNIC_MINORITY_STUDENT
-    HEROES_AND_CONTRIBUTORS
-    TRANSFER_STUDENT
-    VERY_FEW_ETHNIC_MINORITY
-}
-enum UniType {
-    PRIVATE
-    PUBLIC
-}
-enum VietnamSouthernProvinces {
-    AN_GIANG
-    BAC_LIEU
-    BEN_TRE
-    BINH_DUONG
-    BINH_PHUOC
-    CA_MAU
-    CAN_THO
-    DA_LAT
-    DONG_NAI
-    DONG_THAP
-    HAU_GIANG
-    HO_CHI_MINH
-    KIEN_GIANG
-    LONG_AN
-    SOC_TRANG
-    TAY_NINH
-    TIEN_GIANG
-    TRA_VINH
-    VINH_LONG
-    VUNG_TAU
-}
-enum AcademicPerformance {
-    GOOD
-    NOT_PASSED
-    PASSED
-    SATISFACTORY
-}
-class AcademicPerformanceEntity {
-    +academicPerformance: AcademicPerformance
-    +createdAt: Date
-    +createdBy?: string | undefined
-    +grade: number
-    +id: string
-    +student: StudentEntity
-    +studentId: string
-    +updatedAt: Date
-    +updatedBy?: string | undefined
-}
-class VnuhcmScoreComponentEntity {
-    +aptitudeExam: AptitudeExamEntity
-    +aptitudeExamId: string
-    +createdAt: Date
-    +createdBy?: string | undefined
-    +id: string
-    +languageScore: number
-    +mathScore: number
-    +scienceLogic: number
-    +updatedAt: Date
-    +updatedBy?: string | undefined
-}
-class AptitudeExamEntity {
-    +createdAt: Date
-    +createdBy?: string | undefined
-    +examType: ExamType
-    +id: string
-    +score: number
-    +student: StudentEntity
-    +studentId: string
-    +updatedAt: Date
-    +updatedBy?: string | undefined
-    +vnuhcmScoreComponents?: VnuhcmScoreComponentEntity | undefined
-}
-enum Conduct {
-    GOOD
-    NOT_PASSED
-    PASSED
-    SATISFACTORY
-}
-class ConductEntity {
-    +conduct: Conduct
-    +createdAt: Date
-    +createdBy?: string | undefined
-    +grade: number
-    +id: string
-    +student: StudentEntity
-    +studentId: string
-    +updatedAt: Date
-    +updatedBy?: string | undefined
-}
-class NationalExamEntity {
-    +createdAt: Date
-    +createdBy?: string | undefined
-    +id: string
-    +name: VietnameseSubject.CONG_NGHE_CONG_NGHIEP | VietnameseSubject.CONG_NGHE_NONG_NGHIEP | VietnameseSubject.DIA_LY | VietnameseSubject.GDKTPL | VietnameseSubject.HOA_HOC | ... 12 more ... | VietnameseSubject.VAT_LY
-    +score: number
-    +student: StudentEntity
-    +studentId: string
-    +updatedAt: Date
-    +updatedBy?: string | undefined
-}
 class AdmissionEntity {
     +admissionCode?: string | undefined
     +admissionType?: string | undefined
@@ -694,6 +636,32 @@ class MajorEntity {
     +id: string
     +name: string
     +updatedAt: Date
+}
+enum MajorGroup {
+    AGRICULTURE_FORESTRY_FISHERIES
+    ARCHITECTURE_AND_CONSTRUCTION
+    ARTS
+    BUSINESS_AND_MANAGEMENT
+    COMPUTER_AND_IT
+    EDUCATION_AND_TEACHER_TRAINING
+    ENGINEERING
+    ENGINEERING_TECHNOLOGY
+    ENVIRONMENT_AND_PROTECTION
+    HEALTH
+    HUMANITIES
+    JOURNALISM_AND_INFORMATION
+    LAW
+    LIFE_SCIENCES
+    MANUFACTURING_AND_PROCESSING
+    MATHEMATICS_AND_STATISTICS
+    NATURAL_SCIENCES
+    OTHER
+    SECURITY_DEFENSE
+    SOCIAL_AND_BEHAVIORAL_SCIENCES
+    SOCIAL_SERVICES
+    TOURISM_HOSPITALITY_SPORTS_PERSONAL
+    TRANSPORT_SERVICES
+    VETERINARY
 }
 class MajorGroupEntity {
     +code: string
@@ -736,6 +704,38 @@ class VsatExamEntity {
     +studentId: string
     +updatedAt: Date
     +updatedBy?: string | undefined
+}
+enum SpecialStudentCase {
+    ETHNIC_MINORITY_STUDENT
+    HEROES_AND_CONTRIBUTORS
+    TRANSFER_STUDENT
+    VERY_FEW_ETHNIC_MINORITY
+}
+enum UniType {
+    PRIVATE
+    PUBLIC
+}
+enum VietnamSouthernProvinces {
+    AN_GIANG
+    BAC_LIEU
+    BEN_TRE
+    BINH_DUONG
+    BINH_PHUOC
+    CA_MAU
+    CAN_THO
+    DA_LAT
+    DONG_NAI
+    DONG_THAP
+    HAU_GIANG
+    HO_CHI_MINH
+    KIEN_GIANG
+    LONG_AN
+    SOC_TRANG
+    TAY_NINH
+    TIEN_GIANG
+    TRA_VINH
+    VINH_LONG
+    VUNG_TAU
 }
 class StudentEntity {
     +academicPerformances?: AcademicPerformanceEntity[] | undefined
@@ -826,4 +826,81 @@ class UserEntity {
     +lockAccount(): void
     +unlockAccount(): void
 }
+JwtEntity --> "1" TokenType
+AcademicPerformanceEntity --> "1" AcademicPerformance
+AcademicPerformanceEntity --> "1" StudentEntity
+VnuhcmScoreComponentEntity --> "1" AptitudeExamEntity
+Exam --> "1" ExamType
+AptitudeExamEntity --> "1" ExamType
+AptitudeExamEntity --> "1" StudentEntity
+AptitudeExamEntity --> "1" VnuhcmScoreComponentEntity
+AwardEntity --> "1" NationalExcellentStudentExamSubject
+AwardEntity --> "1" Rank
+AwardEntity --> "1" NationalExcellentExamType
+AwardEntity --> "1" StudentEntity
+CertificationEntity --> "1" CEFR
+CertificationEntity --> "1" ExamType
+CertificationEntity --> "1" StudentEntity
+ConductEntity --> "1" Conduct
+ConductEntity --> "1" StudentEntity
+ISubjectScore --> "1" TranscriptSubject
+SubjectScore --> "1" TranscriptSubject
+TranscriptSubjectEntity --> "1" TranscriptSubject
+TranscriptSubjectEntity --> "1" TranscriptEntity
+TranscriptEntity --> "1" OcrResultEntity
+TranscriptEntity --> "1" StudentEntity
+TranscriptEntity --> "*" TranscriptSubjectEntity
+OcrResultEntity --> "1" FileEntity
+OcrResultEntity --> "1" OcrMetadata
+OcrResultEntity --> "*" SubjectScore
+OcrResultEntity --> "1" OcrStatus
+OcrResultEntity --> "1" StudentEntity
+OcrResultEntity --> "1" TranscriptEntity
+OcrResultEntity --> "1" ISubjectScore
+FileEntity --> "1" FileType
+FileEntity --> "1" OcrResultEntity
+FileEntity --> "1" FileStatus
+FileEntity --> "1" StudentEntity
+NationalExamEntity --> "1" VietnameseSubject
+NationalExamEntity --> "1" StudentEntity
+L3PredictResult --> "*" L3PredictionItem
+PredictionResultEntity --> "*" L1PredictResult
+PredictionResultEntity --> "*" L2PredictResult
+PredictionResultEntity --> "*" L3PredictResult
+PredictionResultEntity --> "1" PredictionResultStatus
+PredictionResultEntity --> "1" StudentEntity
+AdmissionEntity --> "*" StudentAdmissionEntity
+StudentAdmissionEntity --> "1" AdmissionEntity
+StudentAdmissionEntity --> "1" StudentEntity
+MajorEntity --> "1" MajorGroupEntity
+MajorGroupEntity --> "*" MajorEntity
+MajorGroupEntity --> "1" MajorGroup
+StudentMajorGroupEntity --> "1" MajorGroupEntity
+StudentMajorGroupEntity --> "1" StudentEntity
+TalentExamEntity --> "1" VietnameseSubject
+TalentExamEntity --> "1" StudentEntity
+VsatExamEntity --> "1" VietnameseSubject
+VsatExamEntity --> "1" StudentEntity
+StudentEntity --> "*" AcademicPerformanceEntity
+StudentEntity --> "*" AptitudeExamEntity
+StudentEntity --> "*" AwardEntity
+StudentEntity --> "*" CertificationEntity
+StudentEntity --> "*" ConductEntity
+StudentEntity --> "*" FileEntity
+StudentEntity --> "*" MajorGroup
+StudentEntity --> "*" NationalExamEntity
+StudentEntity --> "1" PredictionResultEntity
+StudentEntity --> "1" VietnamSouthernProvinces
+StudentEntity --> "*" SpecialStudentCase
+StudentEntity --> "*" StudentAdmissionEntity
+StudentEntity --> "*" StudentMajorGroupEntity
+StudentEntity --> "*" TalentExamEntity
+StudentEntity --> "*" TranscriptEntity
+StudentEntity --> "1" UniType
+StudentEntity --> "1" UserEntity
+StudentEntity --> "*" VsatExamEntity
+UserEntity --> "*" Permission
+UserEntity --> "1" Role
+UserEntity --> "*" StudentEntity
+UserEntity --> "1" Permission
 @enduml

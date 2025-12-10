@@ -2,16 +2,16 @@ import { Expose, Transform } from "class-transformer";
 import { IsEnum, IsNotEmpty, IsNumber, Max, Min } from "class-validator";
 
 import {
-    NationalExamSubject,
+    type NationalExamSubject,
     NationalExamSubjects,
 } from "@/type/enum/national-exam-subject.js";
 import { VietnameseSubject } from "@/type/enum/subject.js"; // Import VietnameseSubject enum
 import {
-    TalentExamSubject,
+    type TalentExamSubject,
     TalentExamSubjects,
 } from "@/type/enum/talent-exam-subject.js";
 import {
-    VsatExamSubject,
+    type VsatExamSubject,
     VsatExamSubjects,
 } from "@/type/enum/vsat-exam-subject.js";
 

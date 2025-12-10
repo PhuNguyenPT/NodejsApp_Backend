@@ -1,9 +1,10 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
+import type { IAwardService } from "@/service/award-service.interface.js";
+
 import { AwardRequest } from "@/dto/student/award-request.js";
 import { AwardEntity } from "@/entity/uni_guide/award.entity.js";
-import { IAwardService } from "@/service/award-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
 

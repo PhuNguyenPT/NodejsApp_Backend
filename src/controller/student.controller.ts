@@ -17,6 +17,10 @@ import {
     Tags,
 } from "tsoa";
 
+import type { IStudentService } from "@/service/student-service.interface.js";
+import type { AuthenticatedRequest } from "@/type/express/express.js";
+import type { Page } from "@/type/pagination/page.interface.js";
+
 import { StudentProfileResponse } from "@/dto/student/student-profile-response.js";
 import { StudentRequest } from "@/dto/student/student-request.js";
 import { StudentResponse } from "@/dto/student/student.js";
@@ -24,14 +28,11 @@ import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { StudentMapper } from "@/mapper/student-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { IStudentService } from "@/service/student-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
-import { AuthenticatedRequest } from "@/type/express/express.js";
 import { PageableQuery, PageRequest } from "@/type/pagination/page-request.js";
 import { PageResponse } from "@/type/pagination/page-response.js";
-import { Page } from "@/type/pagination/page.interface.js";
 
 @injectable()
 @Route("students")

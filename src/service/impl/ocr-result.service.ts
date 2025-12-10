@@ -3,17 +3,18 @@ import { inject, injectable } from "inversify";
 import { In, Repository } from "typeorm";
 import { Logger } from "winston";
 
-import {
+import type {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
 } from "@/dto/ocr/score-extraction-result.js";
+import type { IOcrResultService } from "@/service/ocr-result-service.interface.js";
+
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import {
-    OcrMetadata,
+    type OcrMetadata,
     OcrResultEntity,
     OcrStatus,
 } from "@/entity/uni_guide/ocr-result.entity.js";
-import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";

@@ -1,5 +1,6 @@
 // src/config/swagger.ts
-import { Express, Request, Response } from "express";
+import type { Express, Request, Response } from "express";
+
 import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 

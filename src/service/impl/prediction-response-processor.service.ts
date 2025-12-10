@@ -2,6 +2,9 @@ import { inject, injectable } from "inversify";
 import { DataSource, EntityManager, IsNull } from "typeorm";
 import { Logger } from "winston";
 
+import type { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
+import type { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
+
 import { L3PredictResult } from "@/dto/prediction/l3-predict-result.dto.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
@@ -11,8 +14,6 @@ import {
 } from "@/entity/uni_guide/prediction-result.entity.js";
 import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
-import { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
