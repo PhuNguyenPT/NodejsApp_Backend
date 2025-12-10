@@ -4,7 +4,7 @@ import { Logger } from "winston";
 
 import { TYPES } from "@/type/container/types.js";
 
-import { IPredictionL3ProcessorService } from "../prediction-response-processor-service.interface.js";
+import { IPredictionL3ProcessorService } from "../../service/prediction-response-processor-service.interface.js";
 import {
     TranscriptCreatedEvent,
     TranscriptCreatedEventSchema,

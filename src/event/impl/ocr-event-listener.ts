@@ -4,12 +4,12 @@ import { Logger } from "winston";
 
 import { TYPES } from "@/type/container/types.js";
 
+import { IPredictionL3ProcessorService } from "../../service/prediction-response-processor-service.interface.js";
 import {
     OcrCreatedEvent,
     OcrCreatedEventSchema,
 } from "../ocr-created.event.js";
 import { IOcrEventListener } from "../ocr-event-listener.interface.js";
-import { IPredictionL3ProcessorService } from "../prediction-response-processor-service.interface.js";
 
 @injectable()
 export class OcrEventListener implements IOcrEventListener {
