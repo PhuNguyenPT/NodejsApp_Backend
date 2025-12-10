@@ -1,6 +1,5 @@
 #!/bin/bash
 # docker-build-prod.sh - Build multi-arch with cache (no push)
-
 set -e
 
 IMAGE_NAME="phunpt01/nodejs-backend"
@@ -9,6 +8,20 @@ CACHE_DIR="/tmp/docker-cache"
 
 echo "🏗️  Building Docker image with cache..."
 mkdir -p "$CACHE_DIR"
+
+# Check if mybuilder exists and is usable
+BUILDER_EXISTS=false
+if docker buildx inspect mybuilder >/dev/null 2>&1; then
+    BUILDER_EXISTS=true
+fi
+
+if [ "$BUILDER_EXISTS" = false ]; then
+    echo "📦 Creating buildx builder..."
+    docker buildx create --name mybuilder --driver docker-container --use --bootstrap
+else
+    echo "📦 Using existing buildx builder..."
+    docker buildx use mybuilder
+fi
 
 # Build for local testing (amd64)
 echo "📦 Building for local testing..."

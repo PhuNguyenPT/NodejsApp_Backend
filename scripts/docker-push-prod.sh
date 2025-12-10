@@ -10,9 +10,22 @@ PLATFORMS="linux/amd64,linux/arm64"
 
 echo "🚀 Building multi-arch and pushing to Docker Hub..."
 
-# Create or use buildx builder (for completeness, though it often exists)
-docker buildx create --use --name multiarch-builder 2>/dev/null || docker buildx use multiarch-builder
+# Check if mybuilder exists and is usable
+BUILDER_EXISTS=false
+if docker buildx inspect mybuilder >/dev/null 2>&1; then
+    BUILDER_EXISTS=true
+fi
 
+if [ "$BUILDER_EXISTS" = false ]; then
+    echo "📦 Creating buildx builder..."
+    docker buildx create --name mybuilder --driver docker-container --use --bootstrap
+else
+    echo "📦 Using existing buildx builder..."
+    docker buildx use mybuilder
+fi
+
+# Build and push multi-arch images
+echo "📦 Building for platforms: $PLATFORMS"
 docker buildx build \
   --platform "$PLATFORMS" \
   -t "$IMAGE_NAME:latest" \
