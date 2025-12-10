@@ -13,7 +13,7 @@ import { AbstractApp } from "@/app/app.abstract.js";
 import { TYPES } from "@/type/container/types.js";
 
 @injectable()
-class App extends AbstractApp {
+export class App extends AbstractApp {
     constructor(
         @inject(TYPES.Config) config: Config,
         @inject(TYPES.Logger) logger: Logger,
@@ -32,5 +32,3 @@ class App extends AbstractApp {
         );
     }
 }
-
-export default App;

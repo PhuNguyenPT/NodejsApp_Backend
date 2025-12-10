@@ -8,7 +8,7 @@ import { Logger } from "winston";
 import { ZlibOptions } from "zlib";
 
 import AbstractApp from "@/app/app.abstract.js";
-import App from "@/app/app.js";
+import { App } from "@/app/app.js";
 import { Config } from "@/config/app.config.js";
 import { postgresDataSource } from "@/config/data-source.config.js";
 import { mutterOptions } from "@/config/file.config.js";
