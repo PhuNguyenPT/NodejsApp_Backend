@@ -1,5 +1,5 @@
-import { LoginRequest, RegisterRequest } from "@/dto/auth/auth-request.js";
-import { AuthResponse } from "@/dto/auth/auth-response.js";
+import type { LoginRequest, RegisterRequest } from "@/dto/auth/auth-request.js";
+import type { AuthResponse } from "@/dto/auth/auth-response.js";
 
 export interface IAuthService {
     login(loginRequest: LoginRequest): Promise<AuthResponse>;

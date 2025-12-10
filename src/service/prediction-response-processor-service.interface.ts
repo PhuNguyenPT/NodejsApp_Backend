@@ -1,4 +1,4 @@
-import { EntityManager } from "typeorm";
+import type { EntityManager } from "typeorm";
 
 export interface IPredictionL3ProcessorService {
     processL3PredictionInTransaction(

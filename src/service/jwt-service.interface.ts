@@ -1,4 +1,4 @@
-import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
+import type { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 
 export interface IJwtService {
     decodeToken(token: string): CustomJwtPayload | null;

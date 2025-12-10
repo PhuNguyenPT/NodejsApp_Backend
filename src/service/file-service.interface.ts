@@ -1,6 +1,6 @@
-import { CreateFileDTO } from "@/dto/file/create-file.js";
-import { UpdateFileRequest } from "@/dto/file/update-file.js";
-import { FileEntity } from "@/entity/uni_guide/file.entity.js";
+import type { CreateFileDTO } from "@/dto/file/create-file.js";
+import type { UpdateFileRequest } from "@/dto/file/update-file.js";
+import type { FileEntity } from "@/entity/uni_guide/file.entity.js";
 
 export interface IFileService {
     createFile(

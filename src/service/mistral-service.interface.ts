@@ -1,8 +1,8 @@
-import {
+import type {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
 } from "@/dto/ocr/score-extraction-result.js";
-import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import type { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
 export interface IMistralService {
     extractSubjectScores(
