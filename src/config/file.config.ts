@@ -1,4 +1,4 @@
-import { memoryStorage, Options } from "multer";
+import { memoryStorage, type Options } from "multer";
 
 import { config } from "@/util/validate-env.js";
 

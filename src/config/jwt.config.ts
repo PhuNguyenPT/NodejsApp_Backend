@@ -1,7 +1,8 @@
 // src/util/jwt.options.ts
-import { Algorithm, SignOptions, VerifyOptions } from "jsonwebtoken";
-import { AuthenticateOptions } from "passport";
-import { ExtractJwt, StrategyOptionsWithRequest } from "passport-jwt";
+import type { Algorithm, SignOptions, VerifyOptions } from "jsonwebtoken";
+import type { AuthenticateOptions } from "passport";
+
+import { ExtractJwt, type StrategyOptionsWithRequest } from "passport-jwt";
 
 import { keyStore } from "@/config/key.config.js";
 import { config } from "@/util/validate-env.js";

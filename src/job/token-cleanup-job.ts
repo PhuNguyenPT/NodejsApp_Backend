@@ -1,7 +1,8 @@
 import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
-import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+
 import { TYPES } from "@/type/container/types.js";
 
 @injectable()

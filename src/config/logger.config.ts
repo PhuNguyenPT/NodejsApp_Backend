@@ -1,4 +1,4 @@
-import { createWinstonLogger, LoggerConfig } from "@/util/logger.js";
+import { createWinstonLogger, type LoggerConfig } from "@/util/logger.js";
 import { config } from "@/util/validate-env.js";
 
 export const loggerConfig: LoggerConfig = {

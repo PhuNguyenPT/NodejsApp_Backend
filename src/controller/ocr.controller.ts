@@ -17,20 +17,21 @@ import { plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
+import type { BatchScoreExtractionResult } from "@/dto/ocr/score-extraction-result.js";
+import type { IMistralService } from "@/service/mistral-service.interface.js";
+import type { IOcrResultService } from "@/service/ocr-result-service.interface.js";
+import type { ITranscriptService } from "@/service/transcript-service.interface.js";
+import type { AuthenticatedRequest } from "@/type/express/express.js";
+
 import { OcrRequest } from "@/dto/ocr/ocr-request.dto.js";
 import { OcrResultResponse } from "@/dto/ocr/ocr-result-response.dto.js";
 import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.dto.js";
-import { BatchScoreExtractionResult } from "@/dto/ocr/score-extraction-result.js";
 import { SubjectScore } from "@/dto/ocr/subject-score.dto.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { IMistralService } from "@/service/mistral-service.interface.js";
-import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
-import { ITranscriptService } from "@/service/transcript-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
-import { AuthenticatedRequest } from "@/type/express/express.js";
 
 @injectable()
 @Route("ocr")

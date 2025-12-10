@@ -1,12 +1,14 @@
 // src/manager/server.manager.ts
-import { Express } from "express";
+import type { Express } from "express";
+
 import fs from "fs";
 import { Server } from "http";
 import https from "https";
 import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
-import { Config } from "@/config/app.config.js";
+import type { Config } from "@/config/app.config.js";
+
 import { TYPES } from "@/type/container/types.js";
 
 export interface ServerInstance {

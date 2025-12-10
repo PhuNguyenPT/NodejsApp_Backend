@@ -1,8 +1,8 @@
 // src/validator/is-valid-aptitude-exam-score.validator.ts
 import {
-    ValidationArguments,
+    type ValidationArguments,
     ValidatorConstraint,
-    ValidatorConstraintInterface,
+    type ValidatorConstraintInterface,
 } from "class-validator";
 
 import { AptitudeExamRequest } from "@/dto/student/aptitude-exam-request.js";

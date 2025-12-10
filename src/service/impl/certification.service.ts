@@ -1,12 +1,13 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
+import type { ICertificationService } from "@/service/certification-service.interface.js";
+
 import { CertificationRequest } from "@/dto/student/certification-request.js";
 import {
     CEFR,
     CertificationEntity,
 } from "@/entity/uni_guide/certification.entity.js";
-import { ICertificationService } from "@/service/certification-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import {
     ExamType,

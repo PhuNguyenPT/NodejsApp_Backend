@@ -3,18 +3,19 @@ import { inject, injectable } from "inversify";
 import { EntityManager, IsNull, Repository } from "typeorm";
 import { promisify } from "util";
 import { Logger } from "winston";
-import { gunzip, gzip, ZlibOptions } from "zlib";
+import { gunzip, gzip, type ZlibOptions } from "zlib";
+
+import type { IFileEventListener } from "@/event/file-event-listener.interface.js";
+import type {
+    FilesCreatedEvent,
+    SingleFileCreatedEvent,
+} from "@/event/file.event.js";
+import type { IFileService } from "@/service/file-service.interface.js";
 
 import { CreateFileDTO } from "@/dto/file/create-file.js";
 import { UpdateFileRequest } from "@/dto/file/update-file.js";
 import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { IFileEventListener } from "@/event/file-event-listener.interface.js";
-import {
-    FilesCreatedEvent,
-    SingleFileCreatedEvent,
-} from "@/event/file.event.js";
-import { IFileService } from "@/service/file-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";

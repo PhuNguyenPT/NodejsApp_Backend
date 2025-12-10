@@ -1,7 +1,7 @@
 import { bool, cleanEnv, makeValidator, num, port, str } from "envalid";
 
 // src/util/validate.env.ts
-import { Config } from "@/config/app.config.js";
+import type { Config } from "@/config/app.config.js";
 
 const commaSeparatedString = makeValidator((x) =>
     x.split(",").map((s) => s.trim()),

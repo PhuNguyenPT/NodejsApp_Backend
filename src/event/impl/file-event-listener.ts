@@ -2,10 +2,16 @@ import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 import { Logger } from "winston";
 
-import {
+import type {
     BatchScoreExtractionResult,
     FileScoreExtractionResult,
 } from "@/dto/ocr/score-extraction-result.js";
+import type { IFileEventListener } from "@/event/file-event-listener.interface.js";
+import type { OcrCreatedEvent } from "@/event/ocr-created.event.js";
+import type { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
+import type { IMistralService } from "@/service/mistral-service.interface.js";
+import type { IOcrResultService } from "@/service/ocr-result-service.interface.js";
+
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import {
@@ -15,16 +21,11 @@ import {
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
-import { IFileEventListener } from "@/event/file-event-listener.interface.js";
 import {
-    FilesCreatedEvent,
+    type FilesCreatedEvent,
     OcrEventSchema,
-    SingleFileCreatedEvent,
+    type SingleFileCreatedEvent,
 } from "@/event/file.event.js";
-import { OcrCreatedEvent } from "@/event/ocr-created.event.js";
-import { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
-import { IMistralService } from "@/service/mistral-service.interface.js";
-import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";

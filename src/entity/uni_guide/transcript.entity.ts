@@ -1,14 +1,14 @@
 import {
     Column,
     CreateDateColumn,
-    DeepPartial,
+    type DeepPartial,
     Entity,
     JoinColumn,
     ManyToOne,
     OneToMany,
     OneToOne,
     PrimaryGeneratedColumn,
-    Relation,
+    type Relation,
     UpdateDateColumn,
 } from "typeorm";
 

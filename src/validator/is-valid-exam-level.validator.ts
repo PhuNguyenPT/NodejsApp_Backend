@@ -1,10 +1,10 @@
 import {
-    ValidationArguments,
+    type ValidationArguments,
     ValidatorConstraint,
-    ValidatorConstraintInterface,
+    type ValidatorConstraintInterface,
 } from "class-validator";
 
-import { Exam, validateExamTypeScore } from "@/type/enum/exam-type.js";
+import { type Exam, validateExamTypeScore } from "@/type/enum/exam-type.js";
 
 /**
  * Custom validator constraint for Exam level.

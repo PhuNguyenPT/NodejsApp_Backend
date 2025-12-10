@@ -16,6 +16,12 @@ import {
 } from "tsoa";
 import { Logger } from "winston";
 
+import type { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
+import type { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
+import type { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
+import type { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
+import type { AuthenticatedRequest } from "@/type/express/express.js";
+
 import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
 import { UserInputL2 } from "@/dto/prediction/l2-request.dto.js";
 import { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
@@ -26,13 +32,8 @@ import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.ent
 import { PredictionResultMapper } from "@/mapper/prediction-result-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
-import { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
-import { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
-import { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
-import { AuthenticatedRequest } from "@/type/express/express.js";
 
 /**
  * Controller for handling university admission prediction requests.

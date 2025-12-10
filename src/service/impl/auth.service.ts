@@ -7,15 +7,17 @@ import jwt from "jsonwebtoken";
 import { Repository } from "typeorm";
 import { Logger } from "winston";
 
+import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { IAuthService } from "@/service/auth-service.interface.js";
+import type { IJwtService } from "@/service/jwt-service.interface.js";
+import type { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
+
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/config/jwt.config.js";
 import { LoginRequest, RegisterRequest } from "@/dto/auth/auth-request.js";
 import { AuthResponse } from "@/dto/auth/auth-response.js";
 import { User } from "@/dto/user/user.js";
 import { TokenType } from "@/entity/security/jwt.entity.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
-import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
-import { IAuthService } from "@/service/auth-service.interface.js";
-import { IJwtService } from "@/service/jwt-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { getDefaultPermissionsByRole, Role } from "@/type/enum/user.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
@@ -25,7 +27,6 @@ import { EntityExistsException } from "@/type/exception/entity-exists.exception.
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { HttpException } from "@/type/exception/http.exception.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
-import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 
 @injectable()
 export class AuthService implements IAuthService {

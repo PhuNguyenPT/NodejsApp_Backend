@@ -1,5 +1,6 @@
 // src/middleware/uuid.validation.middleware.ts
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
+
 import { validate as validateUuid } from "uuid";
 
 import { InvalidUuidException } from "@/type/exception/invalid-uuid.exception.js";

@@ -1,4 +1,4 @@
-import { ISubjectScore } from "@/dto/ocr/subject-score.interface.js";
+import type { ISubjectScore } from "@/dto/ocr/subject-score.interface.js";
 
 /**
  * The final, aggregated result containing outcomes for all processed files.

@@ -2,20 +2,21 @@
 import {
     Column,
     CreateDateColumn,
-    DeepPartial,
+    type DeepPartial,
     Entity,
     Index,
     JoinColumn,
     ManyToOne,
     OneToOne,
     PrimaryGeneratedColumn,
-    Relation,
+    type Relation,
     Unique,
     UpdateDateColumn,
 } from "typeorm";
 
+import type { ISubjectScore } from "@/dto/ocr/subject-score.interface.js";
+
 import { SubjectScore } from "@/dto/ocr/subject-score.dto.js";
-import { ISubjectScore } from "@/dto/ocr/subject-score.interface.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";

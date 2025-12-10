@@ -1,21 +1,46 @@
 // src/app/ioc-container.ts
-import { AxiosInstance } from "axios";
+import type { AxiosInstance } from "axios";
+import type { Options } from "multer";
+import type { RedisClientType } from "redis";
+import type { ZlibOptions } from "zlib";
+
 import { Container } from "inversify";
-import { Options } from "multer";
-import { RedisClientType } from "redis";
 import { DataSource, Repository } from "typeorm";
 import { Logger } from "winston";
-import { ZlibOptions } from "zlib";
+
+import type { Config } from "@/config/app.config.js";
+import type { IFileEventListener } from "@/event/file-event-listener.interface.js";
+import type { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
+import type { IStudentEventListener } from "@/event/student-event-listener.interface.js";
+import type { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
+import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { IUserRepository } from "@/repository/user-repository-interface.js";
+import type { IAdmissionService } from "@/service/admission-service.interface.js";
+import type { IAuthService } from "@/service/auth-service.interface.js";
+import type { IAwardService } from "@/service/award-service.interface.js";
+import type { ICertificationService } from "@/service/certification-service.interface.js";
+import type { IFileService } from "@/service/file-service.interface.js";
+import type { IJwtService } from "@/service/jwt-service.interface.js";
+import type { IMajorService } from "@/service/major-service.interface.js";
+import type { IMistralService } from "@/service/mistral-service.interface.js";
+import type { IOcrResultService } from "@/service/ocr-result-service.interface.js";
+import type { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
+import type { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
+import type { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
+import type { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
+import type { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
+import type { IStudentService } from "@/service/student-service.interface.js";
+import type { ITranscriptService } from "@/service/transcript-service.interface.js";
+import type { IUserService } from "@/service/user-service.interface.js";
 
 import AbstractApp from "@/app/app.abstract.js";
 import { App } from "@/app/app.js";
-import { Config } from "@/config/app.config.js";
 import { postgresDataSource } from "@/config/data-source.config.js";
 import { mutterOptions } from "@/config/file.config.js";
 import { logger } from "@/config/logger.config.js";
 import { PassportConfig } from "@/config/passport.config.js";
 import {
-    PredictionModelServiceConfig,
+    type PredictionModelServiceConfig,
     predictionModelServiceConfig,
     predictionServiceClientConfig,
 } from "@/config/prediction-model.config.js";
@@ -52,14 +77,10 @@ import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.e
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-component.entity.js";
 import { VsatExamEntity } from "@/entity/uni_guide/vsat-exam.entity.js";
-import { IFileEventListener } from "@/event/file-event-listener.interface.js";
 import { FileEventListener } from "@/event/impl/file-event-listener.js";
 import { OcrEventListener } from "@/event/impl/ocr-event-listener.js";
 import { StudentEventListener } from "@/event/impl/student-event-listener.js";
 import { TranscriptEventListener } from "@/event/impl/transcript-event-listener.js";
-import { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
-import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
-import { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
 import { DatabaseManager } from "@/manager/database.manager.js";
 import { LifecycleManager } from "@/manager/lifecycle.manager.js";
 import { MiddlewareManager } from "@/manager/middleware.manager.js";
@@ -67,13 +88,6 @@ import { RouteManager } from "@/manager/route.manager.js";
 import { ServerManager } from "@/manager/server.manager.js";
 import { JwtTokenRepository } from "@/repository/impl/jwt-repository.js";
 import { UserRepository } from "@/repository/impl/user-repository.js";
-import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
-import { IUserRepository } from "@/repository/user-repository-interface.js";
-import { IAdmissionService } from "@/service/admission-service.interface.js";
-import { IAuthService } from "@/service/auth-service.interface.js";
-import { IAwardService } from "@/service/award-service.interface.js";
-import { ICertificationService } from "@/service/certification-service.interface.js";
-import { IFileService } from "@/service/file-service.interface.js";
 import { AdmissionService } from "@/service/impl/admission.service.js";
 import { AuthService } from "@/service/impl/auth.service.js";
 import { AwardService } from "@/service/impl/award.service.js";
@@ -91,21 +105,9 @@ import { PredictionResultService } from "@/service/impl/prediction-result.servic
 import { StudentService } from "@/service/impl/student.service.js";
 import { TranscriptService } from "@/service/impl/transcript.service.js";
 import { UserService } from "@/service/impl/user.service.js";
-import { IJwtService } from "@/service/jwt-service.interface.js";
-import { IMajorService } from "@/service/major-service.interface.js";
-import { IMistralService } from "@/service/mistral-service.interface.js";
-import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
-import { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
-import { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
-import { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
-import { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
-import { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
-import { IStudentService } from "@/service/student-service.interface.js";
-import { ITranscriptService } from "@/service/transcript-service.interface.js";
-import { IUserService } from "@/service/user-service.interface.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import {
-    ClientConfig,
+    type ClientConfig,
     PredictionServiceClient,
 } from "@/type/class/prediction-service.client.js";
 import { TYPES } from "@/type/container/types.js";

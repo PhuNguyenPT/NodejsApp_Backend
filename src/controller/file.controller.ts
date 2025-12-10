@@ -23,6 +23,9 @@ import {
 } from "tsoa";
 import { Logger } from "winston";
 
+import type { IFileService } from "@/service/file-service.interface.js";
+import type { AuthenticatedRequest } from "@/type/express/express.js";
+
 import { CreateFileDTO } from "@/dto/file/create-file.js";
 import { FilesMetadataSchema } from "@/dto/file/file-metadata.js";
 import { FileResponse } from "@/dto/file/file-response.js";
@@ -31,12 +34,10 @@ import { FileEntity, FileType } from "@/entity/uni_guide/file.entity.js";
 import { FileMapper } from "@/mapper/file-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { IFileService } from "@/service/file-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { Role } from "@/type/enum/user.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
-import { AuthenticatedRequest } from "@/type/express/express.js";
 
 @injectable()
 @Route("files")

@@ -1,4 +1,5 @@
-import { Request, RequestHandler, Response } from "express";
+import type { Request, RequestHandler, Response } from "express";
+
 // src/config/morgan.config.ts
 import fs from "fs";
 import morgan from "morgan";

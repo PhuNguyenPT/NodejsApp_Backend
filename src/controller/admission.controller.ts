@@ -14,24 +14,25 @@ import {
     Tags,
 } from "tsoa";
 
+import type { AuthenticatedRequest } from "@/type/express/express.js";
+import type { Page } from "@/type/pagination/page.interface.js";
+
 import { AdmissionFieldResponse } from "@/dto/admission/admission-field-response.js";
 import { AdmissionResponse } from "@/dto/admission/admission-response.js";
 import { AdmissionSearchQuery } from "@/dto/admission/admission-search-query.dto.js";
 import {
     AdmissionEntity,
-    AdmissionField,
+    type AdmissionField,
 } from "@/entity/uni_guide/admission.entity.js";
 import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
-import { IAdmissionService } from "@/service/admission-service.interface.js";
+import { type IAdmissionService } from "@/service/admission-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
-import { AuthenticatedRequest } from "@/type/express/express.js";
 import { PageableQuery, PageRequest } from "@/type/pagination/page-request.js";
 import { PageResponse } from "@/type/pagination/page-response.js";
-import { Page } from "@/type/pagination/page.interface.js";
 
 /**
  * Controller responsible for handling admission-related HTTP requests.

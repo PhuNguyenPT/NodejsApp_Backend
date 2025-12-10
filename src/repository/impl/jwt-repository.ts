@@ -1,9 +1,10 @@
 import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
+import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+
 import { redisClient } from "@/config/redis.config.js";
 import { JwtEntity } from "@/entity/security/jwt.entity.js";
-import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
 import { TYPES } from "@/type/container/types.js";
 
 @injectable()

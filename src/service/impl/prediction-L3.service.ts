@@ -1,4 +1,4 @@
-import { AxiosError, AxiosInstance, isAxiosError } from "axios";
+import { AxiosError, type AxiosInstance, isAxiosError } from "axios";
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
@@ -6,9 +6,13 @@ import pLimit from "p-limit";
 import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
-import { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
+import type { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
+import type { ISubjectScore } from "@/dto/ocr/subject-score.interface.js";
+import type { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
+import type { NationalExamSubject } from "@/type/enum/national-exam-subject.js";
+import type { TalentExamSubject } from "@/type/enum/talent-exam-subject.js";
+
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
-import { ISubjectScore } from "@/dto/ocr/subject-score.interface.js";
 import { AwardEnglish } from "@/dto/prediction/award-english.dto.js";
 import { AwardQG } from "@/dto/prediction/award-qg.dto.js";
 import { DGNL } from "@/dto/prediction/dgnl.dto.js";
@@ -31,15 +35,12 @@ import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
-import { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
-import { CCQTType, ExamType, isCCQTType } from "@/type/enum/exam-type.js";
+import { type CCQTType, ExamType, isCCQTType } from "@/type/enum/exam-type.js";
 import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.js";
-import { NationalExamSubject } from "@/type/enum/national-exam-subject.js";
 import { NationalExcellentStudentExamSubject } from "@/type/enum/national-excellent-exam.js";
 import { Rank } from "@/type/enum/rank.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
-import { TalentExamSubject } from "@/type/enum/talent-exam-subject.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";

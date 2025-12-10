@@ -1,4 +1,5 @@
-import { ClientConfig } from "@/type/class/prediction-service.client.js";
+import type { ClientConfig } from "@/type/class/prediction-service.client.js";
+
 import { config } from "@/util/validate-env.js";
 
 export interface PredictionModelServiceConfig {

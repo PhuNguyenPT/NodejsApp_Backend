@@ -4,14 +4,15 @@ import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
+import type { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
+import type { ITranscriptService } from "@/service/transcript-service.interface.js";
+
 import { OcrRequest } from "@/dto/ocr/ocr-request.dto.js";
 import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.dto.js";
 import { SubjectScore } from "@/dto/ocr/subject-score.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
-import { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
-import { ITranscriptService } from "@/service/transcript-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { Role } from "@/type/enum/user.js";

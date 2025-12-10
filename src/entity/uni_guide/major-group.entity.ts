@@ -1,17 +1,17 @@
 import {
     Column,
     CreateDateColumn,
-    DeepPartial,
+    type DeepPartial,
     Entity,
     Index,
     OneToMany,
     PrimaryGeneratedColumn,
-    Relation,
+    type Relation,
     UpdateDateColumn,
 } from "typeorm";
 
 import { MajorEntity } from "@/entity/uni_guide/major.entity.js";
-import { MajorGroup, MajorGroupKey } from "@/type/enum/major.js";
+import { MajorGroup, type MajorGroupKey } from "@/type/enum/major.js";
 
 /**
  * Represents a Major Group (e.g., "714: Khoa học giáo dục và đào tạo giáo viên").

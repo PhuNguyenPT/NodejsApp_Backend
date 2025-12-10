@@ -1,4 +1,4 @@
-import { Exception } from "tsoa";
+import type { Exception } from "tsoa";
 
 /**
  * Base class for all HTTP-related exceptions.

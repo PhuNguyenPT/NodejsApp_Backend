@@ -1,5 +1,5 @@
 // src/config/validation.config.ts
-import { ValidatorOptions } from "class-validator";
+import type { ValidatorOptions } from "class-validator";
 
 /**
  * Default validator options for permissive validation.

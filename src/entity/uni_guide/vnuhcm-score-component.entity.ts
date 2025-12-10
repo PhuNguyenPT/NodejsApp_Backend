@@ -2,12 +2,12 @@
 import {
     Column,
     CreateDateColumn,
-    DeepPartial,
+    type DeepPartial,
     Entity,
     JoinColumn,
     OneToOne,
     PrimaryGeneratedColumn,
-    Relation,
+    type Relation,
     UpdateDateColumn,
 } from "typeorm";
 

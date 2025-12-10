@@ -1,7 +1,11 @@
 // src/service/jwt.service.ts
 import { inject, injectable } from "inversify";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 import { Logger } from "winston";
+
+import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { IJwtService } from "@/service/jwt-service.interface.js";
+import type { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 
 import {
     JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS,
@@ -10,11 +14,8 @@ import {
     verifyOptions,
 } from "@/config/jwt.config.js";
 import { JwtEntity, TokenType } from "@/entity/security/jwt.entity.js";
-import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
-import { IJwtService } from "@/service/jwt-service.interface.js";
 import { KeyStore } from "@/type/class/keystore.js";
 import { TYPES } from "@/type/container/types.js";
-import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 
 @injectable()
 export class JwtService implements IJwtService {

@@ -1,11 +1,15 @@
 // passport.config.ts
 
-import { Request } from "express";
+import type { Request } from "express";
+
 import { inject, injectable } from "inversify";
 import passport from "passport";
 import { Strategy as JwtStrategy } from "passport-jwt";
 import { Repository } from "typeorm";
 import { Logger } from "winston";
+
+import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 
 import {
     JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
@@ -13,9 +17,7 @@ import {
 } from "@/config/jwt.config.js";
 import { TokenType } from "@/entity/security/jwt.entity.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
-import { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
 import { TYPES } from "@/type/container/types.js";
-import { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 import { CacheKeys } from "@/util/cache-key.js";
 import { config } from "@/util/validate-env.js";
 

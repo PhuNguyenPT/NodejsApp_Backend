@@ -1,6 +1,6 @@
 import { Expose } from "class-transformer";
 
-import { AdmissionField } from "@/entity/uni_guide/admission.entity.js";
+import type { AdmissionField } from "@/entity/uni_guide/admission.entity.js";
 
 /**
  * Response DTO containing distinct field values for admission filtering.

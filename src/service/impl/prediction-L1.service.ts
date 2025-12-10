@@ -1,4 +1,4 @@
-import { AxiosError, AxiosInstance, isAxiosError } from "axios";
+import { AxiosError, type AxiosInstance, isAxiosError } from "axios";
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
@@ -6,7 +6,9 @@ import pLimit from "p-limit";
 import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
-import { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
+import type { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
+import type { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
+
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
 import { HsgSubject } from "@/dto/prediction/hsg-subject.enum.js";
 import {
@@ -17,7 +19,6 @@ import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
 import { AwardDTO } from "@/dto/student/award-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { getCodeByVietnameseName } from "@/type/enum/major.js";
 import { NationalExcellentStudentExamSubject } from "@/type/enum/national-excellent-exam.js";

@@ -1,9 +1,10 @@
 // src/middleware/error.middleware.ts
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
+
+import type { ErrorDetails } from "@/type/interface/error-details.interface.js";
 
 import { ExceptionHandlerRegistry } from "@/decorator/exception-handler.decorator.js";
 import { handleGenericError } from "@/handler/global-exception-handler.js";
-import { ErrorDetails } from "@/type/interface/error-details.interface.js";
 
 function ensureError(error: unknown): Error {
     if (error instanceof Error) {

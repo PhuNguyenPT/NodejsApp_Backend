@@ -1,4 +1,4 @@
-import { AxiosError, AxiosInstance, isAxiosError } from "axios";
+import { AxiosError, type AxiosInstance, isAxiosError } from "axios";
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
@@ -6,7 +6,9 @@ import pLimit from "p-limit";
 import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
-import { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
+import type { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
+import type { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
+
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
 import {
     L2BatchRequest,
@@ -18,7 +20,6 @@ import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import {
     AcademicPerformance,

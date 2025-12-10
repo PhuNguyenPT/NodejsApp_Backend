@@ -1,9 +1,14 @@
+import type { RedisClientType } from "redis";
+
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
-import { RedisClientType } from "redis";
 import { DataSource, EntityManager, In, IsNull } from "typeorm";
 import { Logger } from "winston";
+
+import type { IStudentEventListener } from "@/event/student-event-listener.interface.js";
+import type { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
+import type { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
 
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config.js";
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
@@ -18,19 +23,16 @@ import {
 } from "@/entity/uni_guide/prediction-result.entity.js";
 import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
 import {
-    StudentCreatedEvent,
+    type StudentCreatedEvent,
     StudentCreatedEventSchema,
 } from "@/event/student.event.js";
-import { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
-import { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { UniType } from "@/type/enum/uni-type.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { CacheKeys } from "@/util/cache-key.js";
-import { ExamScenario, PredictionUtil } from "@/util/prediction.util.js";
+import { type ExamScenario, PredictionUtil } from "@/util/prediction.util.js";
 
 @injectable()
 export class StudentEventListener implements IStudentEventListener {

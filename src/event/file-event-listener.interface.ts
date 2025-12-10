@@ -1,4 +1,4 @@
-import {
+import type {
     FilesCreatedEvent,
     SingleFileCreatedEvent,
 } from "@/event/file.event.js";

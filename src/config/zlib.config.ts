@@ -1,4 +1,4 @@
-import { ZlibOptions } from "zlib";
+import type { ZlibOptions } from "zlib";
 
 export const COMPRESSION_OPTIONS: ZlibOptions = {
     level: 6, // Balance between speed and compression ratio (0-9, default is 6)

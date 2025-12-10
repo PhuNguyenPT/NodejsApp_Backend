@@ -1,10 +1,12 @@
+import type { RedisClientType } from "redis";
+
 // src/manager/database.manager.ts
 import { inject, injectable } from "inversify";
-import { RedisClientType } from "redis";
 import { DataSource } from "typeorm";
 import { Logger } from "winston";
 
-import { Config } from "@/config/app.config.js";
+import type { Config } from "@/config/app.config.js";
+
 import { TYPES } from "@/type/container/types.js";
 
 export interface DatabaseConnection {
