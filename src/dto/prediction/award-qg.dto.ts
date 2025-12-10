@@ -1,7 +1,7 @@
 import { Expose } from "class-transformer";
 import { IsIn, IsInt, IsNotEmpty, IsString } from "class-validator";
 
-import { HsgSubject } from "./hsg-subject.enum.js";
+import { HsgSubject } from "@/dto/prediction/hsg-subject.enum.js";
 
 export class AwardQG {
     @Expose()

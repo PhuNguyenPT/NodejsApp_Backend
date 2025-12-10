@@ -1,9 +1,9 @@
 import { Exclude, Expose, Type } from "class-transformer";
 
-import { PageRequest } from "./page-request.js";
-import { Page } from "./page.interface.js";
-import { Pageable } from "./pageable.interface.js";
-import { Sort } from "./sort.js";
+import { PageRequest } from "@/type/pagination/page-request.js";
+import { Page } from "@/type/pagination/page.interface.js";
+import { Pageable } from "@/type/pagination/pageable.interface.js";
+import { Sort } from "@/type/pagination/sort.js";
 
 /**
  * The default concrete implementation of the Page interface, mimicking Spring Boot's Page object.

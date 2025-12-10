@@ -15,21 +15,20 @@ import {
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
+import { IFileEventListener } from "@/event/file-event-listener.interface.js";
+import {
+    FilesCreatedEvent,
+    OcrEventSchema,
+    SingleFileCreatedEvent,
+} from "@/event/file.event.js";
+import { OcrCreatedEvent } from "@/event/ocr-created.event.js";
+import { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
 import { IMistralService } from "@/service/mistral-service.interface.js";
 import { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
-
-import { IFileEventListener } from "../file-event-listener.interface.js";
-import {
-    FilesCreatedEvent,
-    OcrEventSchema,
-    SingleFileCreatedEvent,
-} from "../file.event.js";
-import { OcrCreatedEvent } from "../ocr-created.event.js";
-import { IOcrEventListener } from "../ocr-event-listener.interface.js";
 
 @injectable()
 export class FileEventListener implements IFileEventListener {

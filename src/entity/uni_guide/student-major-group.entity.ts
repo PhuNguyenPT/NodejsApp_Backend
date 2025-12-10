@@ -13,8 +13,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { MajorGroupEntity } from "./major-group.entity.js";
-import { StudentEntity } from "./student.entity.js";
+import { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
 @Entity({ name: "student_major_groups", schema: "uni_guide" })
 @Index("idx_student_major_groups_student_id", ["studentId"])

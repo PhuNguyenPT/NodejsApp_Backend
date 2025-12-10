@@ -1,4 +1,7 @@
-import { FilesCreatedEvent, SingleFileCreatedEvent } from "./file.event.js";
+import {
+    FilesCreatedEvent,
+    SingleFileCreatedEvent,
+} from "@/event/file.event.js";
 
 export interface IFileEventListener {
     handleFileCreatedEvent(

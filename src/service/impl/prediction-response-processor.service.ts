@@ -12,11 +12,10 @@ import {
 import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
+import { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
-
-import { IPredictionL3ProcessorService } from "../prediction-response-processor-service.interface.js";
 
 @injectable()
 export class PredictionL3ProcessorService

@@ -10,9 +10,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { AcademicPerformance } from "@/type/enum/academic-performance.js";
-
-import { StudentEntity } from "./student.entity.js";
 
 @Entity({ name: "academic_performances", schema: "uni_guide" })
 export class AcademicPerformanceEntity {

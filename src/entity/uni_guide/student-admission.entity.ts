@@ -12,8 +12,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { AdmissionEntity } from "./admission.entity.js";
-import { StudentEntity } from "./student.entity.js";
+import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
 @Entity({ name: "student_admissions", schema: "uni_guide" })
 @Index("idx_student_admissions_student_id", ["studentId"])

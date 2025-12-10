@@ -10,7 +10,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { StudentAdmissionEntity } from "./student-admission.entity.js";
+import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
 
 // Define field categories
 export const ADMISSION_TEXT_FIELDS = [

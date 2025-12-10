@@ -1,6 +1,6 @@
 import { Expose, Type } from "class-transformer";
 
-import { SubjectScore } from "./subject-score.dto.js";
+import { SubjectScore } from "@/dto/ocr/subject-score.dto.js";
 
 export class OcrResultResponse {
     /**

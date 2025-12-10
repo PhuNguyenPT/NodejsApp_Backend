@@ -12,9 +12,9 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { OcrResultEntity } from "./ocr-result.entity.js";
-import { StudentEntity } from "./student.entity.js";
-import { TranscriptSubjectEntity } from "./transcript-subject.entity.js";
+import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.entity.js";
 
 @Entity({ name: "transcripts", schema: "uni_guide" })
 export class TranscriptEntity {

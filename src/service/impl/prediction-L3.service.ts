@@ -31,6 +31,7 @@ import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
+import { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { CCQTType, ExamType, isCCQTType } from "@/type/enum/exam-type.js";
 import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.js";
@@ -46,8 +47,6 @@ import { ValidationException } from "@/type/exception/validation.exception.js";
 import { ConcurrencyUtil } from "@/util/concurrency.util.js";
 import { PredictionUtil } from "@/util/prediction.util.js";
 import { formatValidationErrors } from "@/util/validation.util.js";
-
-import { IPredictionL3Service } from "../prediction-L3-service.interface.js";
 
 @injectable()
 export class PredictionL3Service implements IPredictionL3Service {

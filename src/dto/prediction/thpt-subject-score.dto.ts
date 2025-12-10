@@ -1,9 +1,9 @@
 import { Expose } from "class-transformer";
 import { IsEnum, IsNumber, Max, Min } from "class-validator";
 
-import { ToTwoDecimals } from "@/decorator/to-two-decimals.decorator.js";
+import { L3NationalSubject } from "@/dto/prediction/l3-national-subject.enum.js";
 
-import { L3NationalSubject } from "./l3-national-subject.enum.js";
+import { ToTwoDecimals } from "../../transformer/to-two-decimals.decorator.js";
 
 export class THPTSubjectScore {
     @Expose()

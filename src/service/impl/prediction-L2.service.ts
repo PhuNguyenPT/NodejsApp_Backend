@@ -18,6 +18,7 @@ import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import {
     AcademicPerformance,
@@ -32,8 +33,6 @@ import { ValidationException } from "@/type/exception/validation.exception.js";
 import { ConcurrencyUtil } from "@/util/concurrency.util.js";
 import { PredictionUtil } from "@/util/prediction.util.js";
 import { formatValidationErrors } from "@/util/validation.util.js";
-
-import { IPredictionL2Service } from "../prediction-l2-service.interface.js";
 
 @injectable()
 export class PredictionL2Service implements IPredictionL2Service {

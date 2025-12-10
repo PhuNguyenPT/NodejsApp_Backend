@@ -11,7 +11,7 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
-import { AptitudeExamEntity } from "./aptitude-exam.entity.js";
+import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
 
 @Entity({ name: "vnuhcm_score_components", schema: "uni_guide" })
 export class VnuhcmScoreComponentEntity {

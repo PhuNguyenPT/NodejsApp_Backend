@@ -11,15 +11,14 @@ import {
     ValidateNested,
 } from "class-validator";
 
+import { AwardEnglish } from "@/dto/prediction/award-english.dto.js";
+import { AwardQG } from "@/dto/prediction/award-qg.dto.js";
+import { DGNL } from "@/dto/prediction/dgnl.dto.js";
+import { InterCer } from "@/dto/prediction/inter-cer.dto.js";
+import { NangKhieuScore } from "@/dto/prediction/nang-khieu-score.dto.js";
+import { TNTHPTScores } from "@/dto/prediction/tnthpt-scores.dto.js";
+import { TranscriptRecord } from "@/dto/prediction/transcript-record.dto.js";
 import { MajorGroupCodes } from "@/type/enum/major.js";
-
-import { AwardEnglish } from "./award-english.dto.js";
-import { AwardQG } from "./award-qg.dto.js";
-import { DGNL } from "./dgnl.dto.js";
-import { InterCer } from "./inter-cer.dto.js";
-import { NangKhieuScore } from "./nang-khieu-score.dto.js";
-import { TNTHPTScores } from "./tnthpt-scores.dto.js";
-import { TranscriptRecord } from "./transcript-record.dto.js";
 
 export class UserInputL3 {
     @Expose()

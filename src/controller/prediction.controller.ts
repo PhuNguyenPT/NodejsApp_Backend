@@ -21,7 +21,7 @@ import { UserInputL2 } from "@/dto/prediction/l2-request.dto.js";
 import { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
 import { L3PredictResult } from "@/dto/prediction/l3-predict-result.dto.js";
 import { UserInputL3 } from "@/dto/prediction/l3-request.dto.js";
-import { PredictionResultResponse } from "@/dto/prediction/prediciton-result-response.dto.js";
+import { PredictionResultResponse } from "@/dto/prediction/prediction-result-response.dto.js";
 import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
 import { PredictionResultMapper } from "@/mapper/prediction-result-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";

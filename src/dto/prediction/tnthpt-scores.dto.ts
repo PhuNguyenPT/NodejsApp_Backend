@@ -1,7 +1,7 @@
 import { Expose, Type } from "class-transformer";
 import { IsNotEmpty, ValidateNested } from "class-validator";
 
-import { THPTSubjectScore } from "./thpt-subject-score.dto.js";
+import { THPTSubjectScore } from "@/dto/prediction/thpt-subject-score.dto.js";
 
 export class TNTHPTScores {
     @Expose()
