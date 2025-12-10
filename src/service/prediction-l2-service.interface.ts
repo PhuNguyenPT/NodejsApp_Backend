@@ -1,6 +1,6 @@
-import { UserInputL2 } from "@/dto/prediction/l2-request.dto.js";
-import { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
-import { StudentInfoDTO } from "@/dto/student/student.dto.js";
+import type { UserInputL2 } from "@/dto/prediction/l2-request.dto.js";
+import type { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
+import type { StudentInfoDTO } from "@/dto/student/student.dto.js";
 
 export interface IPredictionL2Service {
     deduplicateByHighestScore(results: L2PredictResult[]): L2PredictResult[];

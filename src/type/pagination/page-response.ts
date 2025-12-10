@@ -1,5 +1,5 @@
-import { Page } from "@/type/pagination/page.interface.js";
-import { Sort } from "@/type/pagination/sort.js";
+import type { Page } from "@/type/pagination/page.interface.js";
+import type { Sort } from "@/type/pagination/sort.js";
 
 /**
  * Clean DTO for paginated responses without internal implementation details

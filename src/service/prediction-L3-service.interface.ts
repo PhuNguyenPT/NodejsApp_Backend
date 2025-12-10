@@ -1,5 +1,5 @@
-import { L3PredictResult } from "@/dto/prediction/l3-predict-result.dto.js";
-import { UserInputL3 } from "@/dto/prediction/l3-request.dto.js";
+import type { L3PredictResult } from "@/dto/prediction/l3-predict-result.dto.js";
+import type { UserInputL3 } from "@/dto/prediction/l3-request.dto.js";
 
 export interface IPredictionL3Service {
     getL3PredictResults(

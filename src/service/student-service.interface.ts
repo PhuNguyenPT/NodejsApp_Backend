@@ -1,7 +1,7 @@
-import { StudentRequest } from "@/dto/student/student-request.js";
-import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { Page } from "@/type/pagination/page.interface.js";
-import { Pageable } from "@/type/pagination/pageable.interface.js";
+import type { StudentRequest } from "@/dto/student/student-request.js";
+import type { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import type { Page } from "@/type/pagination/page.interface.js";
+import type { Pageable } from "@/type/pagination/pageable.interface.js";
 
 export interface IStudentService {
     createStudentEntity(

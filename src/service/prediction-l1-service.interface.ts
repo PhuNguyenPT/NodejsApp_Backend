@@ -1,6 +1,6 @@
-import { UserInputL1 } from "@/dto/prediction/l1-request.dto.js";
-import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
-import { StudentInfoDTO } from "@/dto/student/student.dto.js";
+import type { UserInputL1 } from "@/dto/prediction/l1-request.dto.js";
+import type { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
+import type { StudentInfoDTO } from "@/dto/student/student.dto.js";
 
 export interface IPredictionL1Service {
     combineL1Results(results: L1PredictResult[]): L1PredictResult[];

@@ -1,5 +1,5 @@
-import { Pageable } from "@/type/pagination/pageable.interface.js";
-import { Sort } from "@/type/pagination/sort.js";
+import type { Pageable } from "@/type/pagination/pageable.interface.js";
+import type { Sort } from "@/type/pagination/sort.js";
 
 /**
  * An interface representing a paginated chunk of data, matching Spring Data's Page.
