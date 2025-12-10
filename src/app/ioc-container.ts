@@ -7,6 +7,7 @@ import { DataSource, Repository } from "typeorm";
 import { Logger } from "winston";
 import { ZlibOptions } from "zlib";
 
+import AbstractApp from "@/app/app.abstract.js";
 import App from "@/app/app.js";
 import { Config } from "@/config/app.config.js";
 import { postgresDataSource } from "@/config/data-source.config.js";
@@ -115,7 +116,7 @@ import { config } from "@/util/validate-env.js";
 const iocContainer = new Container();
 
 // --- Core & Infrastructure Bindings ---
-iocContainer.bind<App>(TYPES.App).to(App).inSingletonScope();
+iocContainer.bind<AbstractApp>(TYPES.App).to(App).inSingletonScope();
 iocContainer
     .bind<Container>(TYPES.InversifyContainer)
     .toConstantValue(iocContainer);

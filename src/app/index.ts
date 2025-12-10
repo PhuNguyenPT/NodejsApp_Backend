@@ -1,7 +1,7 @@
 // src/app/index.ts
 import "reflect-metadata";
 
-import type App from "@/app/app.js";
+import type AbstractApp from "@/app/app.abstract.js";
 
 import { logger } from "@/config/logger.config.js";
 import { TYPES } from "@/type/container/types.js";
@@ -13,7 +13,7 @@ async function bootstrap() {
 
         const { iocContainer } = await import("@/app/ioc-container.js");
 
-        const app = iocContainer.get<App>(TYPES.App);
+        const app = iocContainer.get<AbstractApp>(TYPES.App);
 
         await app.initialize();
         logger.info(`Server will be available at: ${app.getServerUrl()}`);
