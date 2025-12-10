@@ -48,11 +48,14 @@
     "migration:run:staging": "npm run build && tsx --env-file .env.staging ./node_modules/typeorm/cli.js migration:run -d src/config/data-source.config.ts",
     "migration:revert:staging": "npm run build && tsx --env-file .env.staging ./node_modules/typeorm/cli.js migration:revert -d src/config/data-source.config.ts",
     "migration:show:staging": "tsx --env-file .env.staging ./node_modules/typeorm/cli.js migration:show -d src/config/data-source.config.ts",
-    "diagram:generate": "mkdir -p docs && tplant --input 'src/entity/**/*.entity.ts' --output docs/entities.puml && sed -i '/^+[a-zA-Z]/d' docs/entities.puml",
-    "diagram:svg": "npm run diagram:generate && plantuml -tsvg docs/entities.puml && xdg-open docs/entities.svg",
-    "diagram:associations": "mkdir -p docs && tplant --input 'src/entity/**/*.entity.ts' --output docs/entities-assoc.puml --associations && sed -i '/^+[a-zA-Z]/d' docs/entities-assoc.puml && plantuml -tsvg docs/entities-assoc.puml && xdg-open docs/entities-assoc.svg",
-    "diagram:clean": "sh -c 'rm -f docs/entities*.puml docs/entities*.svg'",
-    "diagram": "npm run diagram:svg"
+    "diagram:entities": "mkdir -p docs && tplant --input 'src/entity/**/*.entity.ts' --output docs/entities.puml --associations && sed -i '/^+[a-zA-Z]/d' docs/entities.puml && plantuml -tsvg docs/entities.puml",
+    "diagram:services": "mkdir -p docs && tplant --input 'src/service/**/*.ts' --output docs/services.puml && sed -i '/^+[a-zA-Z]/d' docs/services.puml && plantuml -tsvg docs/services.puml",
+    "diagram:controllers": "mkdir -p docs && tplant --input 'src/controller/**/*.ts' --output docs/controllers.puml && sed -i '/^+[a-zA-Z]/d' docs/controllers.puml && plantuml -tsvg docs/controllers.puml",
+    "diagram:repositories": "mkdir -p docs && tplant --input 'src/repository/**/*.ts' --output docs/repositories.puml && sed -i '/^+[a-zA-Z]/d' docs/repositories.puml && plantuml -tsvg docs/repositories.puml",
+    "diagram:all": "npm run diagram:entities && npm run diagram:services && npm run diagram:controllers && npm run diagram:repositories && echo '✅ All diagrams generated!' && ls -lh docs/*.svg",
+    "diagram:clean": "rm -f docs/*.puml docs/*.svg",
+    "diagram:open": "xdg-open docs/entities.svg",
+    "diagram": "npm run diagram:entities && npm run diagram:open"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

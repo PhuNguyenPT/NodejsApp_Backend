@@ -1,0 +1,1653 @@
+@startuml
+enum Permission {
+    ADMIN_ACCESS
+    ADMIN_SYSTEM_CONFIG
+    ADMIN_USER_MANAGEMENT
+    API_DELETE
+    API_READ
+    API_WRITE
+    FILE_CREATE
+    FILE_DELETE
+    FILE_READ
+    FILE_UPDATE
+    PROFILE_CREATE_OWN
+    PROFILE_READ_ANY
+    PROFILE_READ_OWN
+    PROFILE_UPDATE_ANY
+    PROFILE_UPDATE_OWN
+    USER_CREATE
+    USER_DELETE
+    USER_LIST
+    USER_READ
+    USER_UPDATE
+}
+enum Role {
+    ADMIN
+    ANONYMOUS
+    MODERATOR
+    USER
+}
+class Order {
+    +direction: SortDirection
+    +field: string
+    +ascending(): Order
+    +descending(): Order
+}
+class Sort {
+    +orders: Order[]
+    +and(sort: Sort): Sort
+    +ascending(): Sort
+    +descending(): Sort
+    +getOrderFor(property: string): Order | null
+    +isSorted(): boolean
+    +isUnsorted(): boolean
+    +toTypeOrmOrder(): Record<string, "ASC" | "DESC">
+    +{static} by(fields: string[]): Sort
+    +{static} by(orders: Order[]): Sort
+    +{static} by(args: (string | Order)[]): Sort
+    +{static} unsorted(): Sort
+}
+interface Pageable {
+    +first(): Pageable
+    +getOffset(): number
+    +getPageNumber(): number
+    +getPageSize(): number
+    +getSort(): Sort
+    +hasPrevious(): boolean
+    +isPaged(): boolean
+    +isUnpaged(): boolean
+    +next(): Pageable
+    +previousOrFirst(): Pageable
+}
+interface Page<T> {
+    +content: T[]
+    +first: boolean
+    +getPageNumber(): number
+    +hasContent(): boolean
+    +last: boolean
+    +nextPageable(): Pageable
+    +number: number
+    +numberOfElements: number
+    +previousPageable(): Pageable
+    +size: number
+    +sort: Sort
+    +totalElements: number
+    +totalPages: number
+}
+class UserEntity {
+    +accountNonExpired: boolean
+    +accountNonLocked: boolean
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +credentialsNonExpired: boolean
+    +email: string
+    +enabled: boolean
+    +id: string
+    +name?: string | undefined
+    +password: string
+    +permissions: Permission[]
+    +phoneNumbers?: string[] | undefined
+    +role: Role
+    +studentEntities?: StudentEntity[] | undefined
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+    +disableAccount(): void
+    +enableAccount(): void
+    +expireAccount(): void
+    +expireCredentials(): void
+    +getPermissions(): Permission[]
+    +hasAllPermissions(permissions: Permission[]): boolean
+    +hasAnyPermission(permissions: Permission[]): boolean
+    +hasPermission(permission: Permission): boolean
+    +isAccountActive(): boolean
+    +isAccountNonExpired(): boolean
+    +isAccountNonLocked(): boolean
+    +isCredentialsNonExpired(): boolean
+    +isEnabled(): boolean
+    +lockAccount(): void
+    +unlockAccount(): void
+}
+enum AcademicPerformance {
+    GOOD
+    NOT_PASSED
+    PASSED
+    SATISFACTORY
+}
+class AcademicPerformanceEntity {
+    +academicPerformance: AcademicPerformance
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +grade: number
+    +id: string
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class VnuhcmScoreComponentEntity {
+    +aptitudeExam: AptitudeExamEntity
+    +aptitudeExamId: string
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +languageScore: number
+    +mathScore: number
+    +scienceLogic: number
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+enum HttpStatus {
+    ACCEPTED
+    ALREADY_REPORTED
+    BAD_GATEWAY
+    BAD_REQUEST
+    CONFLICT
+    CONTINUE
+    CREATED
+    EARLY_HINTS
+    EXPECTATION_FAILED
+    FAILED_DEPENDENCY
+    FORBIDDEN
+    FOUND
+    GATEWAY_TIMEOUT
+    GONE
+    HTTP_VERSION_NOT_SUPPORTED
+    IM_A_TEAPOT
+    IM_USED
+    INSUFFICIENT_STORAGE
+    INTERNAL_SERVER_ERROR
+    LENGTH_REQUIRED
+    LOCKED
+    LOOP_DETECTED
+    METHOD_NOT_ALLOWED
+    MISDIRECTED_REQUEST
+    MOVED_PERMANENTLY
+    MULTI_STATUS
+    MULTIPLE_CHOICES
+    NETWORK_AUTHENTICATION_REQUIRED
+    NO_CONTENT
+    NON_AUTHORITATIVE_INFORMATION
+    NOT_ACCEPTABLE
+    NOT_EXTENDED
+    NOT_FOUND
+    NOT_IMPLEMENTED
+    NOT_MODIFIED
+    OK
+    PARTIAL_CONTENT
+    PAYLOAD_TOO_LARGE
+    PAYMENT_REQUIRED
+    PERMANENT_REDIRECT
+    PRECONDITION_FAILED
+    PRECONDITION_REQUIRED
+    PROCESSING
+    PROXY_AUTHENTICATION_REQUIRED
+    RANGE_NOT_SATISFIABLE
+    REQUEST_HEADER_FIELDS_TOO_LARGE
+    REQUEST_TIMEOUT
+    RESET_CONTENT
+    SEE_OTHER
+    SERVICE_UNAVAILABLE
+    SWITCHING_PROTOCOLS
+    TEMPORARY_REDIRECT
+    TOO_EARLY
+    TOO_MANY_REQUESTS
+    UNAUTHORIZED
+    UNAVAILABLE_FOR_LEGAL_REASONS
+    UNPROCESSABLE_ENTITY
+    UNSUPPORTED_MEDIA_TYPE
+    UPGRADE_REQUIRED
+    URI_TOO_LONG
+    USE_PROXY
+    VARIANT_ALSO_NEGOTIATES
+}
+class HttpException extends Error implements Exception {
+    +status: number
+}
+class ValidationException extends HttpException {
+    +validationErrors: Record<string, string>
+}
+enum ExamType {
+    A_Level
+    ACT
+    Duolingo_English_Test
+    HSA
+    IB
+    IELTS
+    JLPT
+    OSSD
+    PTE_Academic
+    SAT
+    TOEFL_CBT
+    TOEFL_iBT
+    TOEFL_Paper
+    TOEIC
+    TSA
+    VNUHCM
+}
+interface Exam {
+    +examType: ExamType
+    +level: string
+}
+class AptitudeExamEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +examType: ExamType
+    +id: string
+    +score: number
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+    +vnuhcmScoreComponents?: VnuhcmScoreComponentEntity | undefined
+}
+enum NationalExcellentExamType {
+    NATIONAL
+}
+enum NationalExcellentStudentExamSubject {
+    BIOLOGY
+    CHEMISTRY
+    CHINESE
+    ENGLISH
+    FRENCH
+    GEOGRAPHY
+    HISTORY
+    INFORMATION_TECHNOLOGY
+    JAPANESE
+    LITERATURE
+    MATHEMATICS
+    PHYSICS
+    RUSSIAN
+}
+enum Rank {
+    CONSOLATION
+    FIRST
+    SECOND
+    THIRD
+}
+class AwardEntity {
+    +category?: NationalExcellentStudentExamSubject | undefined
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +level?: Rank | undefined
+    +name?: NationalExcellentExamType | undefined
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+enum CEFR {
+    A1
+    A2
+    B1
+    B2
+    C1
+    C2
+}
+class CertificationEntity {
+    +cefr?: CEFR | undefined
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +examType?: ExamType | undefined
+    +id: string
+    +level?: string | undefined
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+enum Conduct {
+    GOOD
+    NOT_PASSED
+    PASSED
+    SATISFACTORY
+}
+class ConductEntity {
+    +conduct: Conduct
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +grade: number
+    +id: string
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+enum VietnameseSubject {
+    BIEU_DIEN_NGHE_THUAT
+    CHI_HUY_TAI_CHO
+    CHUNG_CHI_QUY_DOI_TIENG_ANH
+    CHUYEN_MON_AM_NHAC
+    CHUYEN_MON_AM_NHAC_1
+    CHUYEN_MON_AM_NHAC_2
+    CONG_NGHE
+    CONG_NGHE_CONG_NGHIEP
+    CONG_NGHE_NONG_NGHIEP
+    DIA_LY
+    DOC_DIEN_CAM
+    DOC_HIEU
+    GDKTPL
+    GHI_AM_XUONG_AM
+    HAT
+    HAT_BIEU_DIEN_NHAC_CU
+    HAT_MUA
+    HAT_XUONG_AM
+    HOA_HOC
+    HOA_THANH
+    KHOA_HOC_TU_NHIEN
+    KHOA_HOC_XA_HOI
+    KY_XUONG_AM
+    LICH_SU
+    NANG_KHIEU
+    NANG_KHIEU_1
+    NANG_KHIEU_2
+    NANG_KHIEU_AM_NHAC_1
+    NANG_KHIEU_AM_NHAC_2
+    NANG_KHIEU_ANH_BAO_CHI
+    NANG_KHIEU_BAO_CHI
+    NANG_KHIEU_BIEU_DIEN_NGHE_THUAT
+    NANG_KHIEU_KIEN_THUC_VAN_HOA_XA_HOI_NGHE_THUAT
+    NANG_KHIEU_MAM_NON
+    NANG_KHIEU_MAM_NON_1
+    NANG_KHIEU_MAM_NON_2
+    NANG_KHIEU_QUAY_PHIM_TRUYEN_HINH
+    NANG_KHIEU_SKDA_1
+    NANG_KHIEU_SKDA_2
+    NANG_KHIEU_TDTT
+    NANG_KHIEU_THUYET_TRINH
+    NANG_KHIEU_VE_1
+    NANG_KHIEU_VE_2
+    NGU_VAN
+    PHAT_TRIEN_CHU_DE_PHO_THO
+    SINH_HOC
+    TIENG_ANH
+    TIENG_DUC
+    TIENG_HAN
+    TIENG_NGA
+    TIENG_NHAT
+    TIENG_PHAP
+    TIENG_TRUNG
+    TIN_HOC
+    TOAN
+    TU_DUY_GIAI_QUYET_NGU_VAN_DE
+    VAT_LY
+    VE_HINH_HOA
+    VE_HINH_HOA_MY_THUAT
+    VE_MY_THUAT
+    VE_NANG_KHIEU
+    VE_TRANG_TRI
+    VE_TRANG_TRI_MAU
+    XAY_DUNG_KICH_BAN_SU_KIEN
+}
+enum TranscriptSubject {
+    CONG_NGHE
+    DIA_LY
+    GDKTPL
+    HOA_HOC
+    LICH_SU
+    NGU_VAN
+    SINH_HOC
+    TIENG_ANH
+    TIENG_DUC
+    TIENG_HAN
+    TIENG_NGA
+    TIENG_NHAT
+    TIENG_PHAP
+    TIENG_TRUNG
+    TIN_HOC
+    TOAN
+    VAT_LY
+}
+interface ISubjectScore {
+    +name: TranscriptSubject
+    +score: number
+}
+class SubjectScore implements ISubjectScore {
+    +name: TranscriptSubject
+    +score: number
+}
+class TranscriptSubjectEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +score: number
+    +subject: TranscriptSubject
+    +transcript: TranscriptEntity
+    +transcriptId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class TranscriptEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +grade?: number | undefined
+    +id: string
+    +ocrResult?: OcrResultEntity | undefined
+    +ocrResultId?: string | undefined
+    +semester?: number | undefined
+    +student: StudentEntity
+    +studentId: string
+    +transcriptSubjects?: TranscriptSubjectEntity[] | undefined
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+enum OcrStatus {
+    COMPLETED
+    FAILED
+    PROCESSING
+}
+interface OcrMetadata {
+    +extractedAt: Date
+    +failedFiles: number
+    +ocrModel?: string | undefined
+    +processingTimeMs: number
+    +successfulFiles: number
+    +totalFilesProcessed: number
+}
+class OcrResultEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +documentAnnotation?: string | undefined
+    +errorMessage?: string | undefined
+    +file: FileEntity
+    +fileId: string
+    +id: string
+    +metadata?: OcrMetadata | undefined
+    +scores?: SubjectScore[] | undefined
+    +status: OcrStatus
+    +student: StudentEntity
+    +studentId: string
+    +transcript?: TranscriptEntity | undefined
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+    +getAverageScore(): number | null
+    +getProcessingDuration(): string
+    +getScoreBySubject(subjectName: string): ISubjectScore | null
+    +getTotalScores(): number
+    +hasErrors(): boolean
+    +isSuccessful(): boolean
+}
+enum FileStatus {
+    ACTIVE
+    ARCHIVED
+    DELETED
+}
+enum FileType {
+    CERTIFICATE
+    DOCUMENT
+    IMAGE
+    OTHER
+    PORTFOLIO
+    RESUME
+    TRANSCRIPT
+}
+class FileEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +description?: string | undefined
+    +fileContent: Buffer
+    +fileName: string
+    +filePath: string
+    +fileSize: number
+    +fileType: FileType
+    +id: string
+    +metadata?: Record<string, unknown> | undefined
+    +mimeType: string
+    +ocrResult?: OcrResultEntity | undefined
+    +originalFileName: string
+    +status: FileStatus
+    +student: StudentEntity
+    +studentId: string
+    +tags?: string | undefined
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+    +getFileExtension(): string
+    +getHumanReadableFileSize(): string
+    +getTagsArray(): string[]
+    +isActive(): boolean
+    +isDocument(): boolean
+    +isImage(): boolean
+    +setTagsFromArray(tags: string[]): void
+}
+class NationalExamEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +name: VietnameseSubject.CONG_NGHE_CONG_NGHIEP | VietnameseSubject.CONG_NGHE_NONG_NGHIEP | VietnameseSubject.DIA_LY | VietnameseSubject.GDKTPL | VietnameseSubject.HOA_HOC | ... 12 more ... | VietnameseSubject.VAT_LY
+    +score: number
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class L1PredictResult {
+    +loai_uu_tien: string
+    +ma_xet_tuyen: Record<string, number>
+}
+class L2PredictResult {
+    +ma_xet_tuyen: string
+    +score: number
+}
+class L3PredictionItem {
+    +admission_code: string
+    +admission_type: string
+    +admission_type_name: string
+    +best_subject_combination_score: number
+    +best_subject_combination_total_score: number
+    +bonus_points: number
+    +id: string
+    +major_code: string
+    +major_group: number
+    +major_name: string
+    +province: string
+    +study_program: string
+    +subject_combination: string[]
+    +tuition_fee: number
+    +uni_code: string
+    +uni_name: string
+    +uni_score: number
+    +uni_type: string
+    +uni_web_link: string
+}
+class L3PredictResult {
+    +result: Record<string, L3PredictionItem[]>
+}
+enum PredictionResultStatus {
+    COMPLETED
+    FAILED
+    PARTIAL
+    PROCESSING
+}
+class PredictionResultEntity {
+    +createdAt: Date
+    +createdBy: string
+    +id: string
+    +l1PredictResults?: L1PredictResult[] | undefined
+    +l2PredictResults?: L2PredictResult[] | undefined
+    +l3PredictResults?: L3PredictResult[] | undefined
+    +status: PredictionResultStatus
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy: string
+}
+class MajorEntity {
+    +code: string
+    +createdAt: Date
+    +group: MajorGroupEntity
+    +group_id: string
+    +id: string
+    +name: string
+    +updatedAt: Date
+}
+enum MajorGroup {
+    AGRICULTURE_FORESTRY_FISHERIES
+    ARCHITECTURE_AND_CONSTRUCTION
+    ARTS
+    BUSINESS_AND_MANAGEMENT
+    COMPUTER_AND_IT
+    EDUCATION_AND_TEACHER_TRAINING
+    ENGINEERING
+    ENGINEERING_TECHNOLOGY
+    ENVIRONMENT_AND_PROTECTION
+    HEALTH
+    HUMANITIES
+    JOURNALISM_AND_INFORMATION
+    LAW
+    LIFE_SCIENCES
+    MANUFACTURING_AND_PROCESSING
+    MATHEMATICS_AND_STATISTICS
+    NATURAL_SCIENCES
+    OTHER
+    SECURITY_DEFENSE
+    SOCIAL_AND_BEHAVIORAL_SCIENCES
+    SOCIAL_SERVICES
+    TOURISM_HOSPITALITY_SPORTS_PERSONAL
+    TRANSPORT_SERVICES
+    VETERINARY
+}
+class MajorGroupEntity {
+    +code: string
+    +createdAt: Date
+    +englishName: "AGRICULTURE_FORESTRY_FISHERIES" | "ARCHITECTURE_AND_CONSTRUCTION" | "ARTS" | "BUSINESS_AND_MANAGEMENT" | "COMPUTER_AND_IT" | "EDUCATION_AND_TEACHER_TRAINING" | "ENGINEERING" | ... 16 more ... | "VETERINARY"
+    +id: string
+    +majors: MajorEntity[]
+    +name: MajorGroup
+    +updatedAt: Date
+}
+class StudentMajorGroupEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +majorGroup: MajorGroupEntity
+    +majorGroupId: string
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class TalentExamEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +name: VietnameseSubject.BIEU_DIEN_NGHE_THUAT | VietnameseSubject.CHI_HUY_TAI_CHO | VietnameseSubject.CHUYEN_MON_AM_NHAC | VietnameseSubject.CHUYEN_MON_AM_NHAC_1 | VietnameseSubject.CHUYEN_MON_AM_NHAC_2 | ... 36 more ... | VietnameseSubject.XAY_DUNG_KICH_BAN_SU_KIEN
+    +score: number
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class VsatExamEntity {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +id: string
+    +name: VietnameseSubject
+    +score: number
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+enum SpecialStudentCase {
+    ETHNIC_MINORITY_STUDENT
+    HEROES_AND_CONTRIBUTORS
+    TRANSFER_STUDENT
+    VERY_FEW_ETHNIC_MINORITY
+}
+enum UniType {
+    PRIVATE
+    PUBLIC
+}
+enum VietnamSouthernProvinces {
+    AN_GIANG
+    BAC_LIEU
+    BEN_TRE
+    BINH_DUONG
+    BINH_PHUOC
+    CA_MAU
+    CAN_THO
+    DA_LAT
+    DONG_NAI
+    DONG_THAP
+    HAU_GIANG
+    HO_CHI_MINH
+    KIEN_GIANG
+    LONG_AN
+    SOC_TRANG
+    TAY_NINH
+    TIEN_GIANG
+    TRA_VINH
+    VINH_LONG
+    VUNG_TAU
+}
+class StudentEntity {
+    +academicPerformances?: AcademicPerformanceEntity[] | undefined
+    +aptitudeExams?: AptitudeExamEntity[] | undefined
+    +awards?: AwardEntity[] | undefined
+    +certifications?: CertificationEntity[] | undefined
+    +conducts?: ConductEntity[] | undefined
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +files?: FileEntity[] | undefined
+    +id: string
+    +majors?: MajorGroup[] | undefined
+    +maxBudget?: number | undefined
+    +minBudget?: number | undefined
+    +nationalExams?: NationalExamEntity[] | undefined
+    +predictionResult?: PredictionResultEntity | undefined
+    +province?: VietnamSouthernProvinces | undefined
+    +specialStudentCases?: SpecialStudentCase[] | undefined
+    +studentAdmissions?: StudentAdmissionEntity[] | undefined
+    +studentMajorGroups?: StudentMajorGroupEntity[] | undefined
+    +talentExams?: TalentExamEntity[] | undefined
+    +transcripts?: TranscriptEntity[] | undefined
+    +uniType?: UniType | undefined
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+    +user?: UserEntity | undefined
+    +userId?: string | undefined
+    +vsatExams?: VsatExamEntity[] | undefined
+}
+class StudentAdmissionEntity {
+    +admission: AdmissionEntity
+    +admissionId: string
+    +createdAt: Date
+    +createdBy: string
+    +id: string
+    +student: StudentEntity
+    +studentId: string
+    +updatedAt: Date
+    +updatedBy?: string | undefined
+}
+class AdmissionEntity {
+    +admissionCode?: string | undefined
+    +admissionType?: string | undefined
+    +admissionTypeName?: string | undefined
+    +createdAt: Date
+    +id: string
+    +majorCode?: string | undefined
+    +majorGroup?: number | undefined
+    +majorName?: string | undefined
+    +province?: string | undefined
+    +score?: number | undefined
+    +studentAdmissions?: StudentAdmissionEntity[] | undefined
+    +studyProgram?: string | undefined
+    +subjectCombination?: string | undefined
+    +tuitionFee?: number | undefined
+    +uniCode?: string | undefined
+    +uniName?: string | undefined
+    +uniType?: string | undefined
+    +uniWebLink?: string | undefined
+    +updatedAt: Date
+}
+class AdmissionFieldResponse {
+    +fields: Record<"admissionCode" | "admissionType" | "admissionTypeName" | "majorName" | "province" | "studyProgram" | "subjectCombination" | "uniCode" | "uniName" | "uniType" | "uniWebLink" | "majorCode" | "tuitionFee", (string | number)[]>
+}
+class AdmissionResponse {
+    +admissionCode?: string | undefined
+    +admissionType?: string | undefined
+    +admissionTypeName?: string | undefined
+    +id: string
+    +majorCode?: string | undefined
+    +majorGroup?: number | undefined
+    +majorName?: string | undefined
+    +province?: string | undefined
+    +score?: number | undefined
+    +studyProgram?: string | undefined
+    +subjectCombination?: string | undefined
+    +tuitionFee?: number | undefined
+    +uniCode?: string | undefined
+    +uniName?: string | undefined
+    +uniType?: string | undefined
+    +uniWebLink?: string | undefined
+}
+interface Config {
+    +ADMIN_EMAIL: string
+    +ADMIN_NAME: string
+    +ADMIN_PASSWORD: string
+    +CACHE_TTL_ADMISSION_FIELDS: number
+    +CORS_CREDENTIALS: boolean
+    +CORS_ORIGIN: string[]
+    +DB_LOGGING: boolean
+    +DB_RUN_MIGRATIONS_ON_STARTUP: boolean
+    +DB_SYNCHRONIZE: boolean
+    +ENABLE_FILE_LOGGING: boolean
+    +FILE_SIZE: number
+    +JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS: number
+    +JWT_AUDIENCE: string
+    +JWT_ISSUER: string
+    +JWT_REFRESH_TOKEN_EXPIRATION_IN_SECONDS: number
+    +LOG_DIR: string
+    +LOG_LEVEL: "debug" | "error" | "http" | "info" | "warn"
+    +MISTRAL_API_KEY: string
+    +NODE_ENV: "development" | "production" | "staging"
+    +PAGINATION_DEFAULT_PAGE: number
+    +PAGINATION_DEFAULT_SIZE: number
+    +PAGINATION_MAX_SIZE: number
+    +PAGINATION_MIN_SIZE: number
+    +POSTGRES_DB: string
+    +POSTGRES_HOST: string
+    +POSTGRES_PASSWORD: string
+    +POSTGRES_PORT: number
+    +POSTGRES_USER: string
+    +PRIVATE_KEY_PATH: string
+    +PUBLIC_KEY_PATH: string
+    +REDIS_DB: number
+    +REDIS_HOST: string
+    +REDIS_PASSWORD?: string | undefined
+    +REDIS_PORT: number
+    +REDIS_USER_PASSWORD?: string | undefined
+    +REDIS_USERNAME?: string | undefined
+    +SERVER_BATCH_CONCURRENCY: number
+    +SERVER_HOSTNAME: string
+    +SERVER_PATH: string
+    +SERVER_PORT: number
+    +SERVER_TLS_PORT: number
+    +SERVICE_BATCH_CONCURRENCY: number
+    +SERVICE_INPUTS_PER_WORKER: number
+    +SERVICE_L1_CHUNK_DELAY_MS: number
+    +SERVICE_L1_CHUNK_SIZE_INPUT_ARRAY: number
+    +SERVICE_L2_CHUNK_DELAY_MS: number
+    +SERVICE_L2_CHUNK_SIZE_INPUT_ARRAY: number
+    +SERVICE_MAX_RETRIES: number
+    +SERVICE_MIN_BATCH_CONCURRENCY: number
+    +SERVICE_NETWORK_LATENCY_MS: number
+    +SERVICE_PREDICTION_CONCURRENCY: number
+    +SERVICE_REQUEST_DELAY_MS: number
+    +SERVICE_RETRY_BASE_DELAY_MS: number
+    +SERVICE_RETRY_ITERATION_DELAY_MS: number
+    +SERVICE_SERVER_HOSTNAME: string
+    +SERVICE_SERVER_PATH: string
+    +SERVICE_SERVER_PORT: number
+    +SERVICE_TIMEOUT_IN_MS: number
+    +TLS_CA_PATH: string
+    +TLS_CERT_PATH: string
+    +TLS_KEY_PATH: string
+}
+interface PaginationConfig {
+    +defaultPage: number
+    +defaultSize: number
+    +defaultSort?: string | undefined
+    +defaultSortDirection: "ASC" | "DESC"
+    +maxPageSize: number
+    +minPageSize: number
+}
+class PageableQuery {
+    +page?: number | undefined
+    +size?: number | undefined
+    +sort?: string | undefined
+}
+class PageRequest implements Pageable {
+    -page: number
+    -size: number
+    -sort: Sort
+    +first(): PageRequest
+    +getApiPageNumber(): number
+    +getOffset(): number
+    +getPageNumber(): number
+    +getPageSize(): number
+    +getSort(): Sort
+    +getValidationErrors(): Record<string, string>
+    +hasPrevious(): boolean
+    +hasValidationErrors(): boolean
+    +isPaged(): boolean
+    +isUnpaged(): boolean
+    +next(): PageRequest
+    +previousOrFirst(): PageRequest
+    +toTypeOrmOrder(): Record<string, "ASC" | "DESC">
+    +{static} fromQuery(query: PageableQuery): PageRequest
+    +{static} of(page: number, size: number, sort?: Sort | undefined): PageRequest
+    +{static} ofSize(size: number): PageRequest
+    +{static} unpaged(sort?: Sort | undefined): PageRequest
+    -{static} parseSortFromString(sortStr: string): Sort
+}
+interface TuitionFeeRange {
+    +max?: number | undefined
+    +min?: number | undefined
+}
+class AdmissionSearchQuery extends PageableQuery {
+    +admissionCode?: string[] | undefined
+    +admissionType?: string[] | undefined
+    +admissionTypeName?: string[] | undefined
+    +majorCode?: string[] | undefined
+    +majorName?: string[] | undefined
+    +province?: string[] | undefined
+    +studyProgram?: string[] | undefined
+    +subjectCombination?: string[] | undefined
+    +tuitionFeeMax?: number | undefined
+    +tuitionFeeMin?: number | undefined
+    +uniCode?: string[] | undefined
+    +uniName?: string[] | undefined
+    +uniType?: string[] | undefined
+    +uniWebLink?: string[] | undefined
+}
+class PageResponse<T> {
+    +content: T[]
+    +first: boolean
+    +last: boolean
+    +number: number
+    +numberOfElements: number
+    +size: number
+    +sort: Sort
+    +totalElements: number
+    +totalPages: number
+    +empty: boolean
+    +{static} fromPage(page: Page<T>): PageResponse<T>
+}
+class InvalidUuidException extends HttpException
+class EntityNotFoundException extends HttpException
+class PageImpl<T> implements Page {
+    +content: T[]
+    +first: boolean
+    +hasNext: boolean
+    +hasPrevious: boolean
+    +last: boolean
+    +number: number
+    +numberOfElements: number
+    +size: number
+    +sort: Sort
+    +totalElements: number
+    +totalPages: number
+    +empty: boolean
+    -pageable: Pageable
+    +getPageNumber(): number
+    +hasContent(): boolean
+    +nextPageable(): Pageable
+    +previousPageable(): Pageable
+    +{static} empty(pageable: Pageable): Page<T>
+    +{static} of(content: T[], totalElements: number, pageable: Pageable): Page<T>
+}
+interface AdmissionQueryOptions {
+    +searchQuery?: AdmissionSearchQuery | undefined
+    +userId?: string | undefined
+}
+interface AdmissionSearchOptions {
+    +filters?: Record<"admissionCode" | "admissionType" | "admissionTypeName" | "majorName" | "province" | "studyProgram" | "subjectCombination" | "uniCode" | "uniName" | "uniType" | "uniWebLink" | "majorCode" | "tuitionFee", string[]> | undefined
+    +tuitionFeeRange?: TuitionFeeRange | undefined
+}
+interface TuitionFeeRange {
+    +max?: number | undefined
+    +min?: number | undefined
+}
+interface ScholarshipTier {
+    +maxScore: number
+    +minScore: number
+    +percentage: number
+}
+class AdmissionService implements IAdmissionService {
+    -dataSource: DataSource
+    -redisClient: RedisClientType
+    -logger: Logger
+    +getAdmissionsPageByStudentIdAndUserId(studentId: string, pageable: Pageable, options: AdmissionQueryOptions): Promise<Page<AdmissionEntity>>
+    +getAllDistinctAdmissionFieldValues(studentId: string, userId?: string | undefined): Promise<Record<"admissionCode" | "admissionType" | "admissionTypeName" | "majorName" | "province" | "studyProgram" | "subjectCombination" | "uniCode" | "uniName" | "uniType" | "uniWebLink" | "majorCode" | "tuitionFee", (string | number)[]>>
+    -applyScholarshipDiscount(originalTuition: number, scholarshipPercentage: number): number
+    -applySearchFilters(queryBuilder: SelectQueryBuilder<StudentAdmissionEntity>, searchOptions?: AdmissionSearchOptions | undefined): void
+    -applySorting(queryBuilder: SelectQueryBuilder<StudentAdmissionEntity>, pageable: Pageable): Pageable
+    -applyUEFScholarshipAdjustments(entities: AdmissionEntity[], studentId: string, userId?: string | undefined): Promise<AdmissionEntity[]>
+    -buildBaseStudentAdmissionQuery(studentId: string, userId?: string | undefined): SelectQueryBuilder<StudentAdmissionEntity>
+    -buildSearchOptions(queryParams: AdmissionSearchQuery): AdmissionSearchOptions | undefined
+    -calculateSubjectCombinationScore(subjectScoreMap: Map<string, number>, subjectCombination: string): number | null
+    -calculateUEFScholarshipPercentage(totalScore: number): number
+    -validateStudentExists(studentId: string, userId?: string | undefined): Promise<void>
+}
+interface IAdmissionService {
+    +getAdmissionsPageByStudentIdAndUserId(studentId: string, pageable: Pageable, options: AdmissionQueryOptions): Promise<Page<AdmissionEntity>>
+    +getAllDistinctAdmissionFieldValues(studentId: string, userId?: string | undefined): Promise<Record<"admissionCode" | "admissionType" | "admissionTypeName" | "majorName" | "province" | "studyProgram" | "subjectCombination" | "uniCode" | "uniName" | "uniType" | "uniWebLink" | "majorCode" | "tuitionFee", (string | number)[]>>
+}
+class AdmissionController extends Controller {
+    -admissionService: IAdmissionService
+    +getAdmissionFieldsFilter(studentId: string, request: AuthenticatedRequest): Promise<AdmissionFieldResponse>
+    +getAdmissionFieldsFilterGuest(studentId: string): Promise<AdmissionFieldResponse>
+    +getAdmissionResponsePage(studentId: string, request: AuthenticatedRequest, searchQuery: AdmissionSearchQuery): Promise<PageResponse<AdmissionResponse>>
+    +getAdmissionResponsePageForGuest(studentId: string, searchQuery: AdmissionSearchQuery): Promise<PageResponse<AdmissionResponse>>
+}
+class LoginRequest {
+    +email: string
+    +password: string
+}
+class LogoutRequest {
+    +refreshToken?: string | undefined
+}
+class RefreshTokenRequest {
+    +refreshToken: string
+}
+class RegisterRequest {
+    +email: string
+    +password: string
+}
+class User {
+    +createdAt?: Date | undefined
+    +createdBy?: string | undefined
+    +email: string
+    +id: string
+    +name?: string | undefined
+    +password?: string | undefined
+    +phoneNumbers?: string[] | undefined
+    +updatedAt?: Date | undefined
+    +updatedBy?: string | undefined
+}
+class UserAdmin extends User {
+    +permissions: Permission[]
+    +role: Role
+}
+class AuthResponse {
+    +accessToken?: string | undefined
+    +expiresIn?: string | number | undefined
+    +message?: string | undefined
+    +refreshToken?: string | undefined
+    +success?: boolean | undefined
+    +tokenType: string
+    +user?: User | undefined
+}
+interface IAuthService {
+    +login(loginRequest: LoginRequest): Promise<AuthResponse>
+    +logout(accessToken: string, refreshToken?: string | undefined): Promise<{ message: string; success: boolean; }>
+    +refreshToken(refreshToken: string): Promise<AuthResponse>
+    +register(registerRequest: RegisterRequest): Promise<AuthResponse>
+}
+class JwtException extends HttpException
+class AuthController extends Controller {
+    -authService: IAuthService
+    -logger: Logger
+    +login(loginData: LoginRequest): Promise<AuthResponse>
+    +logout(request: AuthenticatedRequest, logoutRequest?: LogoutRequest | undefined): Promise<{ message: string; success: boolean; }>
+    +refreshToken(refreshData: RefreshTokenRequest): Promise<AuthResponse>
+    +register(registerData: RegisterRequest): Promise<AuthResponse>
+}
+class CreateFileDTO {
+    +createdBy: string
+    +description?: string | undefined
+    +fileContent: Buffer
+    +fileName: string
+    +filePath: string
+    +fileSize: number
+    +fileType: FileType
+    +metadata?: Record<string, unknown> | undefined
+    +mimeType: string
+    +originalFileName: string
+    +studentId: string
+    +tags?: string | undefined
+}
+class UpdateFileRequest {
+    +description?: string | undefined
+    +fileName?: string | undefined
+    +fileType?: FileType | undefined
+    +metadata?: Record<string, unknown> | undefined
+    +tags?: string | undefined
+}
+interface IFileService {
+    +createFile(createFileDTO: CreateFileDTO, userId?: string | undefined): Promise<FileEntity>
+    +createFiles(createFileDTOs: CreateFileDTO[], studentId: string, userId?: string | undefined): Promise<FileEntity[]>
+    +deleteFile(fileId: string, userId?: string | undefined): Promise<void>
+    +getFileById(fileId: string, userId?: string | undefined): Promise<FileEntity>
+    +getFilesMetadataByStudentId(studentId: string, userId?: string | undefined): Promise<FileEntity[]>
+    +updateFile(fileId: string, updateFileDTO: UpdateFileRequest, userId?: string | undefined): Promise<FileEntity>
+}
+class FileResponse {
+    +createdAt: Date
+    +createdBy?: string | undefined
+    +description?: string | undefined
+    +downloadUrl?: string | undefined
+    +fileName: string
+    +filePath?: string | undefined
+    +fileSize: string
+    +fileType: FileType
+    +id: string
+    +message?: string | undefined
+    +metadata?: Record<string, unknown> | undefined
+    +mimeType: string
+    +originalFileName: string
+    +previewUrl?: string | undefined
+    +status: string
+    +studentId: string
+    +tags?: string | undefined
+    +updatedAt: Date
+}
+class FileController extends Controller {
+    -fileService: IFileService
+    -logger: Logger
+    +deleteFile(fileId: string, request: AuthenticatedRequest): Promise<void>
+    +downloadFile(fileId: string, request: express.Request<ParamsDictionary, any, any, QueryString.ParsedQs, Record<string, any>>, authenticatedRequest: AuthenticatedRequest): Promise<void>
+    +downloadFileForGuest(fileId: string, request: express.Request<ParamsDictionary, any, any, QueryString.ParsedQs, Record<string, any>>): Promise<void>
+    +getFileById(fileId: string, request: AuthenticatedRequest): Promise<FileResponse>
+    +getFileByIdForGuest(fileId: string): Promise<FileResponse>
+    +getFilesByStudentId(studentId: string, request: AuthenticatedRequest): Promise<FileResponse[]>
+    +getFilesByStudentIdForGuest(studentId: string): Promise<FileResponse[]>
+    +previewFile(fileId: string, request: express.Request<ParamsDictionary, any, any, QueryString.ParsedQs, Record<string, any>>, authenticatedRequest: AuthenticatedRequest): Promise<void>
+    +previewFileForGuest(fileId: string, request: express.Request<ParamsDictionary, any, any, QueryString.ParsedQs, Record<string, any>>): Promise<void>
+    +updateFile(request: AuthenticatedRequest, fileId: string, updateFileDTO: UpdateFileRequest): Promise<FileResponse>
+    +uploadFile(studentId: string, request: AuthenticatedRequest, file: Express.Multer.File, fileType: FileType, fileName?: string | undefined, description?: string | undefined, tags?: string | undefined): Promise<FileResponse>
+    +uploadFileGuest(studentId: string, file: Express.Multer.File, fileType: FileType, fileName?: string | undefined, description?: string | undefined, tags?: string | undefined): Promise<FileResponse>
+    +uploadFiles(studentId: string, request: AuthenticatedRequest, files: Express.Multer.File[], filesMetadata: string): Promise<FileResponse[]>
+    +uploadFilesGuest(studentId: string, files: Express.Multer.File[], filesMetadata: string): Promise<FileResponse[]>
+    -getCorrectFilename(storedFileName: string, mimeType: string): string
+    -getExtensionFromMimeType(mimeType: string): string
+    -getValidExtensionsForMimeType(mimeType: string): string[]
+    -sanitizeFilename(filename: string): string
+    -setDownloadHeaders(response: express.Response<any, Record<string, any>>, mimeType: string, filename: string, contentLength: number): void
+    -setPreviewHeaders(response: express.Response<any, Record<string, any>>, mimeType: string, filename: string, contentLength: number): void
+    -validateFileExtension(filename: string, mimeType: string): void
+    -validateFilename(filename: string, user?: Express.User | undefined): void
+    -validateStringFields(fields: Record<string, string | undefined>): void
+}
+interface BatchScoreExtractionResult {
+    +error?: string | undefined
+    +ocrModel?: string | undefined
+    +results: FileScoreExtractionResult[]
+    +success: boolean
+}
+interface FileScoreExtractionResult {
+    +documentAnnotation?: string | undefined
+    +error?: string | undefined
+    +fileId: string
+    +fileName: string
+    +scores: ISubjectScore[]
+    +success: boolean
+}
+interface ScoreExtractionResult {
+    +documentAnnotation?: string | undefined
+    +error?: string | undefined
+    +scores: ISubjectScore[]
+    +success: boolean
+}
+interface IMistralService {
+    +extractSubjectScores(fileId: string, userId?: string | undefined): Promise<FileScoreExtractionResult>
+    +extractSubjectScoresBatch(student: StudentEntity, fileIds: string[], userId?: string | undefined): Promise<BatchScoreExtractionResult>
+    +extractSubjectScoresByUserId(studentId: string, userId: string): Promise<BatchScoreExtractionResult>
+}
+interface IOcrResultService {
+    +createInitialOcrResults(studentId: string, createdBy: string, files: FileEntity[]): Promise<OcrResultEntity[]>
+    +markAsFailed(results: OcrResultEntity[], errorMessage: string, startTime: Date): Promise<void>
+    +updateResults(initialResults: OcrResultEntity[], batchExtractionResult: BatchScoreExtractionResult, processingStartTime: Date): Promise<OcrResultEntity[]>
+}
+class OcrRequest {
+    +grade: number
+    +semester: number
+    +subjectScores: SubjectScore[]
+}
+class OcrUpdateRequest {
+    +subjectScores?: SubjectScore[] | undefined
+}
+interface ITranscriptService {
+    +findByStudentIdAndUserId(studentId: string, userId?: string | undefined): Promise<TranscriptEntity[]>
+    +patchByIdAndCreatedBy(id: string, ocrUpdateRequest: OcrUpdateRequest, createdBy?: string | undefined): Promise<{ id: string; subjectScores: SubjectScore[]; }>
+    +saveByStudentIdAndUserId(studentId: string, ocrRequest: OcrRequest, userId?: string | undefined): Promise<TranscriptEntity>
+}
+class OcrResultResponse {
+    +grade: number
+    +id: string
+    +semester: number
+    +subjectScores: SubjectScore[]
+}
+class OcrController extends Controller {
+    -mistralService: IMistralService
+    -ocrResultService: IOcrResultService
+    -transcriptService: ITranscriptService
+    -logger: Logger
+    +createTranscript(studentId: string, ocrRequest: OcrRequest, authenticatedRequest: AuthenticatedRequest): Promise<OcrResultResponse>
+    +createTranscriptGuest(studentId: string, ocrRequest: OcrRequest): Promise<OcrResultResponse>
+    +extractTranscriptScores(studentId: string, request: AuthenticatedRequest): Promise<BatchScoreExtractionResult>
+    +getExtractedScores(studentId: string, request: AuthenticatedRequest): Promise<OcrResultResponse[]>
+    +getExtractedScoresGuest(studentId: string): Promise<OcrResultResponse[]>
+    +patchExtractedScores(id: string, ocrUpdateRequest: OcrUpdateRequest, authenticatedRequest: AuthenticatedRequest): Promise<OcrResultResponse>
+    +patchExtractedScoresGuest(id: string, ocrUpdateRequest: OcrUpdateRequest): Promise<OcrResultResponse>
+}
+enum HsgSubject {
+    ANH
+    DIA
+    HOA
+    LY
+    SINH
+    SU
+    TIENG_NGA
+    TIENG_NHAT
+    TIENG_PHAP
+    TIENG_TRUNG
+    TIN
+    TOAN
+    VAN
+}
+class L1BatchRequest {
+    +items: UserInputL1[]
+}
+class UserInputL1 {
+    +ahld: number
+    +cong_lap: number
+    +dan_toc_thieu_so: number
+    +haimuoi_huyen_ngheo_tnb: number
+    +hoc_phi: number
+    +hsg_1?: number | HsgSubject | undefined
+    +hsg_2?: number | HsgSubject | undefined
+    +hsg_3?: number | HsgSubject | undefined
+    +nhom_nganh: number
+    +tinh_tp: string
+}
+class AcademicPerformanceDTO {
+    +academicPerformance: AcademicPerformance
+    +grade: number
+}
+class VnuhcmComponentDTO {
+    +languageScore: number
+    +mathScore: number
+    +scienceLogic: number
+}
+class IsValidExamTypeConstraint implements ValidatorConstraintInterface {
+    -examType: unknown
+    +defaultMessage(): string
+    +validate(examType: unknown): boolean
+}
+class IsValidCCNNExamTypeConstraint implements ValidatorConstraintInterface {
+    -examType: unknown
+    +defaultMessage(): string
+    +validate(examType: unknown): boolean
+    -getCCNNExamTypeValidationError(examType: unknown): string | null
+    -isValidCCNNExamType(examType: unknown): boolean
+}
+class IsValidDGNLExamTypeConstraint implements ValidatorConstraintInterface {
+    -examType: unknown
+    +defaultMessage(): string
+    +validate(examType: unknown): boolean
+    -getDGNLExamTypeValidationError(examType: unknown): string | null
+    -isValidDGNLExamType(examType: unknown): boolean
+}
+class IsValidCCQTExamTypeConstraint implements ValidatorConstraintInterface {
+    -examType: unknown
+    +defaultMessage(): string
+    +validate(examType: unknown): boolean
+    -getCCQTExamTypeValidationError(examType: unknown): string | null
+    -isValidCCQTExamType(examType: unknown): boolean
+}
+class IsValidCertificationExamTypeConstraint implements ValidatorConstraintInterface {
+    -examType: unknown
+    +defaultMessage(): string
+    +validate(examType: unknown): boolean
+}
+class VnuhcmComponentsNotAllowedConstraint implements ValidatorConstraintInterface {
+    +defaultMessage(args: ValidationArguments): string
+    +validate(_value: unknown, args: ValidationArguments): boolean
+}
+class AptitudeExamRequest {
+    +examType: ExamType
+    +languageScore?: number | undefined
+    +mathScore?: number | undefined
+    +scienceLogic?: number | undefined
+    +score: number
+}
+class IsValidAptitudeExamScoreConstraint implements ValidatorConstraintInterface {
+    +defaultMessage(args: ValidationArguments): string
+    +validate(score: string | number, args: ValidationArguments): boolean
+}
+class AptitudeExamDTO {
+    +examType: ExamType
+    +score: number
+    +vnuhcmComponents?: VnuhcmComponentDTO | undefined
+}
+class AwardDTO {
+    +category: NationalExcellentStudentExamSubject
+    +level: Rank
+    +name: NationalExcellentExamType
+}
+class CertificationDTO {
+    +cefr?: CEFR | undefined
+    +examType: ExamType
+    +level: string
+    +name?: string | undefined
+}
+class ConductDTO {
+    +conduct: Conduct
+    +grade: number
+}
+class ExamSubject {
+    +name: VietnameseSubject
+    +score: number
+}
+class NationalExam {
+    +name: VietnameseSubject.CONG_NGHE_CONG_NGHIEP | VietnameseSubject.CONG_NGHE_NONG_NGHIEP | VietnameseSubject.DIA_LY | VietnameseSubject.GDKTPL | VietnameseSubject.HOA_HOC | ... 12 more ... | VietnameseSubject.VAT_LY
+    +score: number
+}
+class TalentExam {
+    +name: VietnameseSubject.BIEU_DIEN_NGHE_THUAT | VietnameseSubject.CHI_HUY_TAI_CHO | VietnameseSubject.CHUYEN_MON_AM_NHAC | VietnameseSubject.CHUYEN_MON_AM_NHAC_1 | VietnameseSubject.CHUYEN_MON_AM_NHAC_2 | ... 36 more ... | VietnameseSubject.XAY_DUNG_KICH_BAN_SU_KIEN
+    +score: number
+}
+class VsatExam {
+    +name: VietnameseSubject
+    +score: number
+}
+class MajorGroupDTO {
+    +code: string
+    +name: MajorGroup
+}
+class StudentInfoDTO {
+    +academicPerformances: AcademicPerformanceDTO[]
+    +aptitudeExams?: AptitudeExamDTO[] | undefined
+    +awards?: AwardDTO[] | undefined
+    +certifications?: CertificationDTO[] | undefined
+    +conducts: ConductDTO[]
+    +majors: MajorGroup[]
+    +maxBudget: number
+    +minBudget: number
+    +nationalExams: NationalExam[]
+    +province: VietnamSouthernProvinces
+    +specialStudentCases?: SpecialStudentCase[] | undefined
+    +studentMajorGroups?: MajorGroupDTO[] | undefined
+    +talentExams?: TalentExam[] | undefined
+    +uniType: UniType
+    +vsatExams?: VsatExam[] | undefined
+    +getAptitudeTestScoresByExamType(type: "CCNN" | "CCQT" | "ĐGNL"): AptitudeExamDTO[]
+    +getCertificationsByExamType(type: "CCNN" | "CCQT" | "ĐGNL"): CertificationDTO[]
+    +getExamCategory(examType: ExamType): "CCNN" | "CCQT" | "ĐGNL" | null
+    +getMajorGroupCodes(): Set<string>
+    +getTotalVSATScore(): number
+    +hasCertificationExamType(type: "CCNN" | "CCQT" | "ĐGNL"): boolean
+    +hasValidNationalExam(): boolean
+    +hasValidVSATScores(): boolean
+}
+interface IPredictionL1Service {
+    +combineL1Results(results: L1PredictResult[]): L1PredictResult[]
+    +executeL1PredictionsWithRetry(userInputs: UserInputL1[], maxChunkSize: number): Promise<L1PredictResult[]>
+    +generateUserInputL1Combinations(studentInfoDTO: StudentInfoDTO): UserInputL1[]
+    +getL1PredictResults(studentId: string, userId?: string | undefined): Promise<L1PredictResult[]>
+    +getL1PredictResults(studentId: string, userId?: string | undefined): Promise<L1PredictResult[]>
+    +predictMajorsL1(userInput: UserInputL1): Promise<L1PredictResult[]>
+    +predictMajorsL1Batch(userInputs: UserInputL1[], dynamicConcurrency?: number | undefined): Promise<L1PredictResult[]>
+}
+class L2BatchRequest {
+    +items: UserInputL2[]
+}
+class UserInputL2 {
+    +cong_lap: number
+    +diem_ccta?: string | undefined
+    +diem_chuan: number
+    +hk10: number
+    +hk11: number
+    +hk12: number
+    +hl10: number
+    +hl11: number
+    +hl12: number
+    +hoc_phi: number
+    +nhom_nganh: number
+    +ten_ccta?: string | undefined
+    +tinh_tp: string
+    +to_hop_mon: string
+}
+interface IPredictionL2Service {
+    +deduplicateByHighestScore(results: L2PredictResult[]): L2PredictResult[]
+    +executeL2PredictionsWithRetry(userInputs: UserInputL2[], maxChunkSize: number): Promise<L2PredictResult[]>
+    +generateL2UserInputCombinations(studentInfoDTO: StudentInfoDTO): UserInputL2[]
+    +getL2PredictResults(studentId: string, userId?: string | undefined): Promise<L2PredictResult[]>
+    +predictMajorsByStudentIdAndUserId(userInput: UserInputL2): Promise<L2PredictResult[]>
+    +predictMajorsL2(userInput: UserInputL2): Promise<L2PredictResult[]>
+    +predictMajorsL2Batch(userInputs: UserInputL2[], dynamicConcurrency?: number | undefined): Promise<L2PredictResult[]>
+}
+class AwardEnglish {
+    +level: string
+}
+class AwardQG {
+    +level: number
+    +subject: HsgSubject
+}
+class DGNL {
+    +language_score: number
+    +math_score: number
+    +science_logic: number
+}
+enum InterCerEnum {
+    A_LEVEL
+    ACT
+    DOULINGO_ENGLISH_TEST
+    IB
+    OSSD
+    PTE_ACADEMIC
+    SAT
+}
+class InterCer {
+    +name: InterCerEnum
+    +score: string
+}
+class NangKhieuScore {
+    +BIEU_DIEN_NGHE_THUAT?: number | undefined
+    +CHI_HUY_TAI_CHO?: number | undefined
+    +CHUYEN_MON_AM_NHAC?: number | undefined
+    +CHUYEN_MON_AM_NHAC_1?: number | undefined
+    +CHUYEN_MON_AM_NHAC_2?: number | undefined
+    +DOC_DIEN_CAM?: number | undefined
+    +DOC_HIEU?: number | undefined
+    +GHI_AM_XUONG_AM?: number | undefined
+    +HAT?: number | undefined
+    +HAT_BIEU_DIEN_NHAC_CU?: number | undefined
+    +HAT_MUA?: number | undefined
+    +HAT_XUONG_AM?: number | undefined
+    +HOA_THANH?: number | undefined
+    +KY_XUONG_AM?: number | undefined
+    +NANG_KHIEU?: number | undefined
+    +NANG_KHIEU_1?: number | undefined
+    +NANG_KHIEU_2?: number | undefined
+    +NANG_KHIEU_AM_NHAC_1?: number | undefined
+    +NANG_KHIEU_AM_NHAC_2?: number | undefined
+    +NANG_KHIEU_ANH_BAO_CHI?: number | undefined
+    +NANG_KHIEU_BAO_CHI?: number | undefined
+    +NANG_KHIEU_BIEU_DIEN_NGHE_THUAT?: number | undefined
+    +NANG_KHIEU_KIEN_THUC_VAN_HOA_XA_HOI_NGHE_THUAT?: number | undefined
+    +NANG_KHIEU_MAM_NON?: number | undefined
+    +NANG_KHIEU_MAM_NON_1?: number | undefined
+    +NANG_KHIEU_MAM_NON_2?: number | undefined
+    +NANG_KHIEU_QUAY_PHIM_TRUYEN_HINH?: number | undefined
+    +NANG_KHIEU_SKDA_1?: number | undefined
+    +NANG_KHIEU_SKDA_2?: number | undefined
+    +NANG_KHIEU_TDTT?: number | undefined
+    +NANG_KHIEU_THUYET_TRINH?: number | undefined
+    +NANG_KHIEU_VE_1?: number | undefined
+    +NANG_KHIEU_VE_2?: number | undefined
+    +PHAT_TRIEN_CHU_DE_PHO_THO?: number | undefined
+    +TU_DUY_GIAI_QUYET_NGU_VAN_DE?: number | undefined
+    +VE_HINH_HOA?: number | undefined
+    +VE_HINH_HOA_MY_THUAT?: number | undefined
+    +VE_MY_THUAT?: number | undefined
+    +VE_NANG_KHIEU?: number | undefined
+    +VE_TRANG_TRI?: number | undefined
+    +VE_TRANG_TRI_MAU?: number | undefined
+    +XAY_DUNG_KICH_BAN_SU_KIEN?: number | undefined
+}
+enum L3NationalSubject {
+    CONG_NGHE_CONG_NGHIEP
+    CONG_NGHE_NONG_NGHIEP
+    DIA_LY
+    GDKTPL
+    HOA_HOC
+    LICH_SU
+    NGU_VAN
+    SINH_HOC
+    TIENG_ANH
+    TIENG_DUC
+    TIENG_HAN
+    TIENG_NGA
+    TIENG_NHAT
+    TIENG_PHAP
+    TIENG_TRUNG
+    TIN_HOC
+    TOAN
+    VAT_LY
+}
+class THPTSubjectScore {
+    +score: number
+    +subject_name: L3NationalSubject
+}
+class TNTHPTScores {
+    +elective_1_score: THPTSubjectScore
+    +elective_2_score: THPTSubjectScore
+    +literature_score: THPTSubjectScore
+    +math_score: THPTSubjectScore
+}
+class TranscriptSubjectScore {
+    +anh?: number | undefined
+    +cong_nghe?: number | undefined
+    +dia?: number | undefined
+    +gdkt_pl?: number | undefined
+    +hoa?: number | undefined
+    +ly?: number | undefined
+    +sinh?: number | undefined
+    +su?: number | undefined
+    +tieng_duc?: number | undefined
+    +tieng_han?: number | undefined
+    +tieng_nga?: number | undefined
+    +tieng_nhat?: number | undefined
+    +tieng_phap?: number | undefined
+    +tieng_trung?: number | undefined
+    +tin?: number | undefined
+    +toan: number
+    +van: number
+}
+class TranscriptRecord {
+    +grade_10: TranscriptSubjectScore
+    +grade_11: TranscriptSubjectScore
+    +grade_12: TranscriptSubjectScore
+}
+class UserInputL3 {
+    +award_english?: AwardEnglish | undefined
+    +award_qg?: AwardQG[] | undefined
+    +cong_lap: number
+    +dgnl?: DGNL | undefined
+    +hoc_ba: TranscriptRecord
+    +hoc_phi: number
+    +int_cer?: InterCer | undefined
+    +nang_khieu?: NangKhieuScore | undefined
+    +nhom_nganh: number
+    +priority_object: number
+    +priority_region: number
+    +thpt?: TNTHPTScores | undefined
+    +tinh_tp: string
+}
+interface IPredictionL3Service {
+    +getL3PredictResults(studentId: string, userId?: string | undefined): Promise<L3PredictResult[]>
+    +predictMajorsL3(userInput: UserInputL3): Promise<L3PredictResult>
+    +predictMajorsL3Batch(userInputs: UserInputL3[]): Promise<L3PredictResult[]>
+}
+interface IPredictionResultService {
+    +findByStudentIdAndUserId(studentId: string, userId?: string | undefined): Promise<PredictionResultEntity>
+}
+class PredictionResultResponse {
+    +id: string
+    +l1PredictResults?: L1PredictResult[] | undefined
+    +l2PredictResults?: L2PredictResult[] | undefined
+    +l3PredictResults?: L3PredictResult[] | undefined
+    +status: PredictionResultStatus
+    +studentId: string
+}
+class PredictionController extends Controller {
+    -predictionL1Service: IPredictionL1Service
+    -predictionL2Service: IPredictionL2Service
+    -predictionL3Service: IPredictionL3Service
+    -logger: Logger
+    -predictionResultService: IPredictionResultService
+    +getL1PredictResults(studentId: string, request: AuthenticatedRequest): Promise<L1PredictResult[]>
+    +getL2PredictResults(studentId: string, request: AuthenticatedRequest): Promise<L2PredictResult[]>
+    +getL3PredictResults(studentId: string, request: AuthenticatedRequest): Promise<L3PredictResult[]>
+    +getPredictedMajors(userInput: UserInputL2, studentId: string, request: AuthenticatedRequest): Promise<L2PredictResult[]>
+    +getPredictedMajorsL3(userInput: UserInputL3, studentId: string, request: AuthenticatedRequest): Promise<L3PredictResult>
+    +getPredictionResultEntityForAuthenticatedUser(studentId: string, request: AuthenticatedRequest): Promise<PredictionResultResponse>
+    +getPredictionResultEntityForGuest(studentId: string): Promise<PredictionResultResponse>
+}
+class AcademicPerformanceRequest {
+    +academicPerformance: AcademicPerformance
+    +grade: number
+}
+class AwardRequest {
+    +category: NationalExcellentStudentExamSubject
+    +level: Rank
+    +name: NationalExcellentExamType
+}
+class IsValidExamLevelConstraint implements ValidatorConstraintInterface {
+    +defaultMessage(args: ValidationArguments): string
+    +validate(level: string, args: ValidationArguments): boolean
+}
+class CertificationRequest {
+    +examType: ExamType
+    +level: string
+}
+class ConductRequest {
+    +conduct: Conduct
+    +grade: number
+}
+class StudentRequest {
+    +academicPerformances: AcademicPerformanceRequest[]
+    +aptitudeExams?: AptitudeExamRequest[] | undefined
+    +awards?: AwardRequest[] | undefined
+    +certifications?: CertificationRequest[] | undefined
+    +conducts: ConductRequest[]
+    +majors: MajorGroup[]
+    +maxBudget: number
+    +minBudget: number
+    +nationalExams: NationalExam[]
+    +province: VietnamSouthernProvinces
+    +specialStudentCases?: SpecialStudentCase[] | undefined
+    +talentExams?: TalentExam[] | undefined
+    +uniType: UniType
+    +vsatExams?: VsatExam[] | undefined
+}
+interface IStudentService {
+    +createStudentEntity(studentRequest: StudentRequest, userId?: string | undefined): Promise<StudentEntity>
+    +getAllStudentEntitiesByUserId(userId: string, pageable: Pageable): Promise<Page<StudentEntity>>
+    +getStudentEntityByIdAnUserId(id: string, userId?: string | undefined): Promise<StudentEntity>
+    +getStudentWithFiles(studentId: string, userId?: string | undefined): Promise<StudentEntity>
+}
+class AcademicPerformanceResponse {
+    +academicPerformance: AcademicPerformance
+    +grade: number
+}
+class AptitudeExamResponse {
+    +examType: ExamType
+    +languageScore?: number | undefined
+    +mathScore?: number | undefined
+    +scienceLogic?: number | undefined
+    +score: number
+}
+class AwardResponse {
+    +category: NationalExcellentStudentExamSubject
+    +id: string
+    +level: Rank
+    +name: NationalExcellentExamType
+}
+class CertificationResponse {
+    +cefr?: CEFR | undefined
+    +examType: ExamType
+    +id: string
+    +level: string
+    +name?: string | undefined
+}
+class ConductResponse {
+    +conduct: Conduct
+    +grade: number
+}
+class StudentProfileResponse {
+    +academicPerformances?: AcademicPerformanceResponse[] | undefined
+    +aptitudeExams?: AptitudeExamResponse[] | undefined
+    +awards?: AwardResponse[] | undefined
+    +certifications?: CertificationResponse[] | undefined
+    +conducts?: ConductResponse[] | undefined
+    +fileResponses: FileResponse[]
+    +id: string
+    +majors: MajorGroup[]
+    +maxBudget: number
+    +minBudget: number
+    +nationalExams: NationalExam[]
+    +province: VietnamSouthernProvinces
+    +specialStudentCases?: SpecialStudentCase[] | undefined
+    +talentExams?: TalentExam[] | undefined
+    +uniType: UniType
+    +userId: string
+    +vsatExams?: VsatExam[] | undefined
+}
+class StudentResponse {
+    +createdAt: Date
+    +id: string
+    +updatedAt: Date
+    +userId: string
+}
+class StudentController extends Controller {
+    -studentService: IStudentService
+    +createStudentProfile(studentRequest: StudentRequest): Promise<StudentProfileResponse>
+    +createStudentProfileForUser(request: AuthenticatedRequest, studentRequest: StudentRequest): Promise<StudentProfileResponse>
+    +getAllStudentProfilesByUserId(request: AuthenticatedRequest, pageableQuery: PageableQuery): Promise<PageResponse<StudentResponse>>
+    +getStudentGuest(studentId: string): Promise<StudentProfileResponse>
+    +getStudentProfileByUserId(studentId: string, request: AuthenticatedRequest): Promise<StudentProfileResponse>
+    +getStudentProfileGuestWithFiles(studentId: string): Promise<StudentProfileResponse>
+    +getStudentProfileWithFiles(studentId: string, request: AuthenticatedRequest): Promise<StudentProfileResponse>
+}
+class CreateUserDto {
+    +email: string
+    +name?: string | undefined
+    +password: string
+    +phoneNumbers?: string[] | undefined
+}
+class CreateUserAdminDTO extends CreateUserDto {
+    +role?: Role | undefined
+}
+class UpdateUserDTO {
+    +email?: string | undefined
+    +name?: string | undefined
+    +password?: string | undefined
+    +phoneNumbers?: string[] | undefined
+}
+class UpdateUserAdminDTO extends UpdateUserDTO {
+    +role?: Role | undefined
+}
+interface IUserService {
+    +create(createUserAdminDTO: CreateUserAdminDTO): Promise<UserEntity>
+    +delete(id: string): Promise<void>
+    +exists(id: string): Promise<boolean>
+    +getAll(): Promise<UserEntity[]>
+    +getById(id: string): Promise<UserEntity>
+    +getByIdAndName(id: string, name?: string | undefined): Promise<UserEntity>
+    +update(id: string, updateData: Partial<UpdateUserAdminDTO>, user: Express.User): Promise<UserEntity>
+}
+class UserController extends Controller {
+    -userService: IUserService
+    +checkUserExists(userId: string): Promise<{ exists: boolean; }>
+    +createUser(requestBody: CreateUserAdminDTO): Promise<UserAdmin>
+    +deleteUser(userId: string): Promise<void>
+    +getAllUsers(): Promise<UserAdmin[]>
+    +getUser(userId: string, name?: string | undefined): Promise<UserAdmin>
+    +getUserById(userId: string): Promise<UserAdmin>
+    +updateUser(userId: string, requestBody: UpdateUserAdminDTO, request: AuthenticatedRequest): Promise<UserAdmin>
+}
+@enduml
