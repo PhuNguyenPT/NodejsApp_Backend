@@ -4,9 +4,8 @@ import fs from "fs";
 import morgan from "morgan";
 import path from "path";
 
+import { logger } from "@/config/logger.config.js";
 import { config } from "@/util/validate-env.js";
-
-import { logger } from "./logger.config.js";
 
 // Extended request interface for custom properties
 interface ExtendedRequest extends Request {

@@ -17,6 +17,7 @@ import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
 import { AwardDTO } from "@/dto/student/award-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student.dto.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { getCodeByVietnameseName } from "@/type/enum/major.js";
 import { NationalExcellentStudentExamSubject } from "@/type/enum/national-excellent-exam.js";
@@ -29,8 +30,6 @@ import { ValidationException } from "@/type/exception/validation.exception.js";
 import { ConcurrencyUtil } from "@/util/concurrency.util.js";
 import { PredictionUtil } from "@/util/prediction.util.js";
 import { formatValidationErrors } from "@/util/validation.util.js";
-
-import { IPredictionL1Service } from "../prediction-l1-service.interface.js";
 
 @injectable()
 export class PredictionL1Service implements IPredictionL1Service {

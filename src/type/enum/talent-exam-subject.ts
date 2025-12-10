@@ -1,4 +1,4 @@
-import { VietnameseSubject } from "./subject.js";
+import { VietnameseSubject } from "@/type/enum/subject.js";
 
 const TalentExamSubjectsArray = [
     VietnameseSubject.BIEU_DIEN_NGHE_THUAT,

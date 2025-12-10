@@ -10,9 +10,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
-
-import { TranscriptEntity } from "./transcript.entity.js";
 
 @Entity({ name: "transcript_subjects", schema: "uni_guide" })
 export class TranscriptSubjectEntity {

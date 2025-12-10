@@ -11,9 +11,8 @@ import {
     ValidateNested,
 } from "class-validator";
 
+import { HsgSubject } from "@/dto/prediction/hsg-subject.enum.js";
 import { MajorGroupCodes } from "@/type/enum/major.js";
-
-import { HsgSubject } from "./hsg-subject.enum.js";
 
 /**
  * Batch request for L1 predictions - contains multiple User Inputs L1 for initial prioritization.

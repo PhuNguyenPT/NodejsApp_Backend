@@ -10,12 +10,11 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import {
     TalentExamSubject,
     TalentExamSubjects,
 } from "@/type/enum/talent-exam-subject.js";
-
-import { StudentEntity } from "./student.entity.js";
 
 @Entity({ name: "talent_exams", schema: "uni_guide" })
 export class TalentExamEntity {

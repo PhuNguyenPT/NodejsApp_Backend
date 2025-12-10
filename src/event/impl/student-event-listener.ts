@@ -18,6 +18,11 @@ import {
 } from "@/entity/uni_guide/prediction-result.entity.js";
 import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { IStudentEventListener } from "@/event/student-event-listener.interface.js";
+import {
+    StudentCreatedEvent,
+    StudentCreatedEventSchema,
+} from "@/event/student.event.js";
 import { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
 import { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
@@ -26,12 +31,6 @@ import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { CacheKeys } from "@/util/cache-key.js";
 import { ExamScenario, PredictionUtil } from "@/util/prediction.util.js";
-
-import { IStudentEventListener } from "../student-event-listener.interface.js";
-import {
-    StudentCreatedEvent,
-    StudentCreatedEventSchema,
-} from "../student.event.js";
 
 @injectable()
 export class StudentEventListener implements IStudentEventListener {

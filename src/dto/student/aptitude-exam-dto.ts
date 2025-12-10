@@ -6,12 +6,11 @@ import {
     ValidateNested,
 } from "class-validator";
 
+import { VnuhcmComponentDTO } from "@/dto/student/vnuhcm-component.dto.js";
 import { ExamType } from "@/type/enum/exam-type.js";
 import { IsValidAptitudeExamScoreConstraint } from "@/validator/is-valid-aptitude-exam-score.validator.js";
 import { IsValidDGNLExamTypeConstraint } from "@/validator/is-valid-exam-type.validator.js";
 import { ValidateVnuhcmComponents } from "@/validator/vnuhcm-components-not-allowed.validator.js";
-
-import { VnuhcmComponentDTO } from "./vnuhcm-component.dto.js";
 
 /**
  * DTO for aptitude test information containing both type and score

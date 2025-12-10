@@ -2,9 +2,8 @@ import { Transform, Type } from "class-transformer";
 import { IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
 import { defaultPaginationConfig } from "@/config/pagination.config.js";
-
-import { Pageable } from "./pageable.interface.js";
-import { Order, Sort } from "./sort.js";
+import { Pageable } from "@/type/pagination/pageable.interface.js";
+import { Order, Sort } from "@/type/pagination/sort.js";
 
 /**
  * DTO for handling pagination and sorting query parameters.

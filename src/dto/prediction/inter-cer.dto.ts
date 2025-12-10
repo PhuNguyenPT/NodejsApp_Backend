@@ -1,7 +1,7 @@
 import { Expose } from "class-transformer";
 import { IsNotEmpty, IsString } from "class-validator";
 
-import { InterCerEnum } from "./inter-cert.enum.js";
+import { InterCerEnum } from "@/dto/prediction/inter-cert.enum.js";
 
 export class InterCer {
     @Expose()

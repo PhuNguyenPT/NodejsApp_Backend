@@ -1,7 +1,7 @@
 import { Expose } from "class-transformer";
 import { IsNumber, IsOptional, Max, Min } from "class-validator";
 
-import { ToTwoDecimals } from "@/decorator/to-two-decimals.decorator.js";
+import { ToTwoDecimals } from "../../transformer/to-two-decimals.decorator.js";
 
 export class TranscriptSubjectScore {
     @Expose()

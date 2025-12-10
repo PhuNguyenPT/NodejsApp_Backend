@@ -1,4 +1,4 @@
-import { VietnameseSubject } from "./subject.js";
+import { VietnameseSubject } from "@/type/enum/subject.js";
 
 /**
  * National exam subjects required for graduation

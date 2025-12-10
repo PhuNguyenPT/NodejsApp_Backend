@@ -19,6 +19,7 @@ import { AwardDTO } from "@/dto/student/award-dto.js";
 import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import { NationalExam, TalentExam, VsatExam } from "@/dto/student/exam.dto.js";
+import { MajorGroupDTO } from "@/dto/student/major-group.dto.js";
 import {
     ExamType,
     isCCNNType,
@@ -32,8 +33,6 @@ import { UniType } from "@/type/enum/uni-type.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese-provinces.js";
 import { IsArrayUnique } from "@/validator/is-array-unique.validator.js";
 import { IsValidNationalExamSubjects } from "@/validator/is-national-exam-subject.validator.js";
-
-import { MajorGroupDTO } from "./major-group.dto.js";
 
 export class StudentInfoDTO {
     /**

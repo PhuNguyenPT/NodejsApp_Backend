@@ -1,7 +1,7 @@
 import { Expose, Type } from "class-transformer";
 import { IsNotEmpty, ValidateNested } from "class-validator";
 
-import { TranscriptSubjectScore } from "./transcript-subject-score.dto.js";
+import { TranscriptSubjectScore } from "@/dto/prediction/transcript-subject-score.dto.js";
 
 export class TranscriptRecord {
     @Expose()

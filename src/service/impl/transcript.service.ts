@@ -11,13 +11,12 @@ import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
+import { ITranscriptService } from "@/service/transcript-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
-
-import { ITranscriptService } from "../transcript-service.interface.js";
 
 @injectable()
 export class TranscriptService implements ITranscriptService {

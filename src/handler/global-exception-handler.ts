@@ -3,7 +3,7 @@
 import { AxiosError } from "axios";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
-import jwt from "jsonwebtoken"; // Corrected import
+import jwt from "jsonwebtoken";
 import { MulterError } from "multer";
 import { ValidateError } from "tsoa";
 import { EntityMetadataNotFoundError } from "typeorm";

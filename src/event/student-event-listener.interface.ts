@@ -1,4 +1,4 @@
-import { StudentCreatedEvent } from "./student.event.js";
+import { StudentCreatedEvent } from "@/event/student.event.js";
 
 export interface IStudentEventListener {
     handleStudentCreatedEvent(event: StudentCreatedEvent): Promise<void>;

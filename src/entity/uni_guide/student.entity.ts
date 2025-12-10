@@ -14,24 +14,23 @@ import {
 } from "typeorm";
 
 import { UserEntity } from "@/entity/security/user.entity.js";
+import { AcademicPerformanceEntity } from "@/entity/uni_guide/academic-performance.entity.js";
+import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
 import { AwardEntity } from "@/entity/uni_guide/award.entity.js";
 import { CertificationEntity } from "@/entity/uni_guide/certification.entity.js";
+import { ConductEntity } from "@/entity/uni_guide/conduct.entity.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
+import { NationalExamEntity } from "@/entity/uni_guide/national-exam.enity.js";
 import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
+import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
+import { StudentMajorGroupEntity } from "@/entity/uni_guide/student-major-group.entity.js";
+import { TalentExamEntity } from "@/entity/uni_guide/talent-exam.entity.js";
+import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
+import { VsatExamEntity } from "@/entity/uni_guide/vsat-exam.entity.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
 import { UniType } from "@/type/enum/uni-type.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese-provinces.js";
-
-import { AcademicPerformanceEntity } from "./academic-performance.entity.js";
-import { AptitudeExamEntity } from "./aptitude-exam.entity.js";
-import { ConductEntity } from "./conduct.entity.js";
-import { NationalExamEntity } from "./national-exam.enity.js";
-import { StudentAdmissionEntity } from "./student-admission.entity.js";
-import { StudentMajorGroupEntity } from "./student-major-group.entity.js";
-import { TalentExamEntity } from "./talent-exam.entity.js";
-import { TranscriptEntity } from "./transcript.entity.js";
-import { VsatExamEntity } from "./vsat-exam.entity.js";
 
 @Entity({ name: "students", schema: "uni_guide" })
 @Index("idx_students_user_id", ["userId"])
