@@ -1,6 +1,6 @@
 // src/repository/user.repository.interface.ts
-import { User, UserAdmin } from "@/dto/user/user.js";
-import { UserEntity } from "@/entity/security/user.entity.js";
+import type { User, UserAdmin } from "@/dto/user/user.js";
+import type { UserEntity } from "@/entity/security/user.entity.js";
 
 export interface IUserRepository {
     createUser(user: Partial<User>): UserEntity;
