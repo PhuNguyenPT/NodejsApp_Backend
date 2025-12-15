@@ -48,9 +48,6 @@ RUN HUSKY=0 npm ci --omit=dev
 # Copy the compiled code from the builder stage
 COPY --from=builder --chown=appuser:appgroup /app/dist ./dist
 
-# Copy the entrypoint script from scripts directory
-COPY --chmod=755 scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-
 # Create logs directory with proper ownership
 RUN mkdir -p logs && chown appuser:appgroup logs
 

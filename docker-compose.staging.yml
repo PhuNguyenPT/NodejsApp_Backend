@@ -50,6 +50,7 @@ services:
       - tls_ca
     volumes:
       - app_logs_staging:/app/logs
+      - ./scripts/docker-entrypoint.sh:/usr/local/bin/docker-entrypoint.sh:ro
     environment:
       # Point to copied secrets (entrypoint handles the copying)
       - PRIVATE_KEY_PATH=/tmp/secrets/keys/private.pem
