@@ -1,11 +1,11 @@
 networks:
-  frontend-network: # For frontend ↔ backend only
+  frontend-network:
     driver: bridge
     name: frontend-network
-  backend-network: # For backend ↔ DB ↔ Redis
+  backend-network:
     driver: bridge
     name: backend-network
-  app-shared-network: # For backend ↔ ML service
+  app-shared-network:
     external: true
     name: app-shared-network
 
@@ -14,7 +14,6 @@ secrets:
     file: ${PRIVATE_KEY_PATH}
   public_key:
     file: ${PUBLIC_KEY_PATH}
-  # TLS certificates for backend HTTPS server
   tls_key:
     file: ${TLS_KEY_PATH}
   tls_cert:
@@ -52,12 +51,12 @@ services:
     volumes:
       - app_logs_staging:/app/logs
     environment:
-      - PRIVATE_KEY_PATH=/run/secrets/private_key
-      - PUBLIC_KEY_PATH=/run/secrets/public_key
-      - TLS_KEY_PATH=/run/secrets/tls_key
-      - TLS_CERT_PATH=/run/secrets/tls_cert
-      - TLS_CA_PATH=/run/secrets/tls_ca
-      - SERVER_TLS_PORT=${SERVER_TLS_PORT}
+      # Point to copied secrets (entrypoint handles the copying)
+      - PRIVATE_KEY_PATH=/tmp/secrets/keys/private.pem
+      - PUBLIC_KEY_PATH=/tmp/secrets/keys/public.pem
+      - TLS_KEY_PATH=/tmp/secrets/tls/backend.key
+      - TLS_CERT_PATH=/tmp/secrets/tls/backend.crt
+      - TLS_CA_PATH=/tmp/secrets/tls/ca.crt
     healthcheck:
       test:
         [
@@ -109,7 +108,7 @@ services:
     volumes:
       - redis_data_staging:/data
     networks:
-      - backend-network # Only backend can reach
+      - backend-network
     healthcheck:
       test:
         [
