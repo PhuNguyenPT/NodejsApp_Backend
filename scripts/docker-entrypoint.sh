@@ -37,6 +37,14 @@ chmod -R 644 /tmp/secrets/keys/* /tmp/secrets/tls/* 2>/dev/null || true
 chown -R appuser:appgroup /tmp/secrets
 
 echo "✅ Secrets ready"
+
+# Fix logs directory permissions (in case volume mount changed ownership)
+echo "📝 Setting up logs directory..."
+mkdir -p /app/logs
+chown -R appuser:appgroup /app/logs
+chmod -R 755 /app/logs
+echo "✓ Logs directory ready"
+
 echo "🚀 Starting application as appuser..."
 
 # Switch to appuser and execute the main command
