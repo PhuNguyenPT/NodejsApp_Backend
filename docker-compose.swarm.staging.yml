@@ -1,0 +1,181 @@
+networks:
+  frontend-swarm-network-staging:
+    driver: overlay
+    external: true
+    name: frontend-swarm-network-staging
+  backend-swarm-network-staging:
+    driver: overlay
+    external: true
+    name: backend-swarm-network-staging
+  app-shared-network-staging:
+    driver: overlay
+    external: true
+    name: app-shared-network-staging
+
+secrets:
+  private_key:
+    file: ${PRIVATE_KEY_PATH}
+  public_key:
+    file: ${PUBLIC_KEY_PATH}
+  tls_key:
+    file: ${TLS_KEY_PATH}
+  tls_cert:
+    file: ${TLS_CERT_PATH}
+  tls_ca:
+    file: ${TLS_CA_PATH}
+
+services:
+  backend-staging:
+    image: phunpt01/nodejs-backend:latest
+    env_file:
+      - .env.staging
+    networks:
+      frontend-swarm-network-staging:
+        aliases:
+          - backend
+      backend-swarm-network-staging: {}
+      app-shared-network-staging: {}
+    secrets:
+      - private_key
+      - public_key
+      - tls_key
+      - tls_cert
+      - tls_ca
+    volumes:
+      - app_logs_staging:/app/logs
+      - ./scripts/docker-entrypoint.sh:/usr/local/bin/docker-entrypoint.sh:ro
+    environment:
+      - PRIVATE_KEY_PATH=/tmp/secrets/keys/private.pem
+      - PUBLIC_KEY_PATH=/tmp/secrets/keys/public.pem
+      - TLS_KEY_PATH=/tmp/secrets/tls/backend.key
+      - TLS_CERT_PATH=/tmp/secrets/tls/backend.crt
+      - TLS_CA_PATH=/tmp/secrets/tls/ca.crt
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --fail http://localhost:${SERVER_PORT}/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+      # Port configuration for Swarm
+      endpoint_mode: vip
+    ports:
+      - target: ${SERVER_PORT}
+        published: ${SERVER_PORT}
+        protocol: tcp
+        mode: ingress
+      - target: ${SERVER_TLS_PORT}
+        published: ${SERVER_TLS_PORT}
+        protocol: tcp
+        mode: ingress
+
+  postgres-staging:
+    image: ${POSTGRES_IMAGE}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      PGDATA: /var/lib/postgresql/${POSTGRES_VERSION}/docker
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql
+    networks:
+      - backend-swarm-network-staging
+      - app-shared-network-staging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+    ports:
+      - target: 5432
+        published: ${POSTGRES_EXTERNAL_PORT}
+        protocol: tcp
+        mode: ingress
+
+  redis-staging:
+    image: ${REDIS_IMAGE}
+    command: >
+      sh -c "
+      redis-server 
+      --requirepass ${REDIS_PASSWORD} 
+      --user ${REDIS_USERNAME} on '>${REDIS_USER_PASSWORD}' '~*' '&*' '+@all'
+      "
+    volumes:
+      - redis_data_staging:/data
+    networks:
+      - backend-swarm-network-staging
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "-h",
+          "localhost",
+          "-p",
+          "6379",
+          "--user",
+          "${REDIS_USERNAME}",
+          "--pass",
+          "${REDIS_USER_PASSWORD}",
+          "ping",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+    ports:
+      - target: 6379
+        published: ${REDIS_EXTERNAL_PORT}
+        protocol: tcp
+        mode: ingress
+
+volumes:
+  postgres_data_staging:
+    driver: local
+    name: postgres_data_staging
+  redis_data_staging:
+    driver: local
+    name: redis_data_staging
+  app_logs_staging:
+    driver: local
+    name: app_logs_staging
