@@ -373,6 +373,7 @@ export class AdmissionService implements IAdmissionService {
         const student = await this.dataSource
             .getRepository(StudentEntity)
             .findOne({
+                transaction: true,
                 where: { id: studentId, userId: userId ?? IsNull() },
             });
 

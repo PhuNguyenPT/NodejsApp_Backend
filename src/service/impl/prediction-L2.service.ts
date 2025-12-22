@@ -329,6 +329,7 @@ export class PredictionL2Service implements IPredictionL2Service {
                 "talentExams",
                 "vsatExams",
             ],
+            transaction: true,
             where: {
                 id: studentId,
                 userId: userId ?? IsNull(), // Handle both authenticated and anonymous

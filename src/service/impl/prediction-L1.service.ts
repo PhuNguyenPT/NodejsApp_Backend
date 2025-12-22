@@ -246,6 +246,7 @@ export class PredictionL1Service implements IPredictionL1Service {
     ): Promise<L1PredictResult[]> {
         const student = await this.studentRepository.findOne({
             relations: ["awards", "studentMajorGroups.majorGroup"],
+            transaction: true,
             where: {
                 id: studentId,
                 userId: userId ?? IsNull(),

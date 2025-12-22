@@ -288,6 +288,7 @@ export class FileService implements IFileService {
             StudentEntity,
             {
                 lock: { mode: "pessimistic_write" },
+                transaction: true,
                 where: { id: studentId, userId: userId ?? IsNull() },
             },
         );

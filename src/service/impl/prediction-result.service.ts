@@ -24,6 +24,7 @@ export class PredictionResultService implements IPredictionResultService {
         const predictionResultEntity: null | PredictionResultEntity =
             await this.predictionResultEntityRepository.findOne({
                 relations: ["student"],
+                transaction: true,
                 where: {
                     studentId: studentId,
                 },

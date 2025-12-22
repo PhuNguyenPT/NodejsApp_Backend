@@ -273,6 +273,7 @@ export class PredictionL3Service implements IPredictionL3Service {
                 "transcripts",
                 "transcripts.transcriptSubjects",
             ],
+            transaction: true,
             where: {
                 id: studentId,
                 userId: userId ?? IsNull(),
@@ -295,6 +296,7 @@ export class PredictionL3Service implements IPredictionL3Service {
         // Fetch files with OCR results separately - this is now a much simpler query
         const fileEntities: FileEntity[] = await this.fileRepository.find({
             relations: ["ocrResult"],
+            transaction: true,
             where: {
                 status: FileStatus.ACTIVE,
                 studentId: studentId,
