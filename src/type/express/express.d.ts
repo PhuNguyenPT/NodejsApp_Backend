@@ -16,7 +16,5 @@ declare global {
         }
     }
 }
-export interface AuthenticatedRequest extends Express.Request {
-    user: Express.User; // Required, not optional
-}
+
 export {};

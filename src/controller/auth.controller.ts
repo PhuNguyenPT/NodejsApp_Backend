@@ -17,7 +17,6 @@ import {
 import { Logger } from "winston";
 
 import type { IAuthService } from "@/service/auth-service.interface.js";
-import type { AuthenticatedRequest } from "@/type/express/express.js";
 
 import {
     LoginRequest,
@@ -128,7 +127,7 @@ export class AuthController extends Controller {
     @Security("bearerAuth")
     @SuccessResponse("200", "Logout successful")
     public async logout(
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
         @Body() logoutRequest?: LogoutRequest,
     ): Promise<{
         message: string;

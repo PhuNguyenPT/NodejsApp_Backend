@@ -24,7 +24,6 @@ import {
 import { Logger } from "winston";
 
 import type { IFileService } from "@/service/file-service.interface.js";
-import type { AuthenticatedRequest } from "@/type/express/express.js";
 
 import { CreateFileDTO } from "@/dto/file/create-file.js";
 import { FilesMetadataSchema } from "@/dto/file/file-metadata.js";
@@ -71,7 +70,7 @@ export class FileController extends Controller {
     @SuccessResponse(HttpStatus.NO_CONTENT, "File deleted successfully")
     public async deleteFile(
         @Path() fileId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<void> {
         const user: Express.User = request.user;
         await this.fileService.deleteFile(fileId, user.id);
@@ -103,7 +102,7 @@ export class FileController extends Controller {
     public async downloadFile(
         @Path() fileId: string,
         @Request() request: express.Request,
-        @Request() authenticatedRequest: AuthenticatedRequest,
+        @Request() authenticatedRequest: Express.AuthenticatedRequest,
     ): Promise<void> {
         const user: Express.User = authenticatedRequest.user;
         const file: FileEntity = await this.fileService.getFileById(
@@ -245,7 +244,7 @@ export class FileController extends Controller {
     @SuccessResponse(HttpStatus.OK, "File retrieved successfully")
     public async getFileById(
         @Path() fileId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<FileResponse> {
         const user: Express.User = request.user;
         const file: FileEntity = await this.fileService.getFileById(
@@ -304,7 +303,7 @@ export class FileController extends Controller {
     @SuccessResponse(HttpStatus.OK, "Files retrieved successfully")
     public async getFilesByStudentId(
         @Path() studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<FileResponse[]> {
         const user: Express.User = request.user;
         const files: FileEntity[] =
@@ -372,7 +371,7 @@ export class FileController extends Controller {
     public async previewFile(
         @Path() fileId: string,
         @Request() request: express.Request,
-        @Request() authenticatedRequest: AuthenticatedRequest,
+        @Request() authenticatedRequest: Express.AuthenticatedRequest,
     ): Promise<void> {
         const user: Express.User = authenticatedRequest.user;
         const file: FileEntity = await this.fileService.getFileById(
@@ -499,7 +498,7 @@ export class FileController extends Controller {
     @Security("bearerAuth", ["file:update"])
     @SuccessResponse(HttpStatus.OK, "File updated successfully")
     public async updateFile(
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
         @Path() fileId: string,
         @Body() updateFileDTO: UpdateFileRequest,
     ): Promise<FileResponse> {
@@ -566,7 +565,7 @@ export class FileController extends Controller {
     @SuccessResponse(HttpStatus.CREATED, "File uploaded successfully")
     public async uploadFile(
         @Path() studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
         @UploadedFile("file") file: Express.Multer.File,
         /**
          * File type - must be one of: certificate, document, image, other, portfolio, resume, transcript
@@ -774,7 +773,7 @@ export class FileController extends Controller {
     @SuccessResponse(HttpStatus.CREATED, "File uploaded successfully")
     public async uploadFiles(
         @Path() studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
         @UploadedFiles("files") files: Express.Multer.File[],
         /**
          * JSON string containing metadata for each file. Must be an array with same length as files.

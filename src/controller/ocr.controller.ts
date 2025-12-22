@@ -21,7 +21,6 @@ import type { BatchScoreExtractionResult } from "@/dto/ocr/score-extraction-resu
 import type { IMistralService } from "@/service/mistral-service.interface.js";
 import type { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import type { ITranscriptService } from "@/service/transcript-service.interface.js";
-import type { AuthenticatedRequest } from "@/type/express/express.js";
 
 import { OcrRequest } from "@/dto/ocr/ocr-request.dto.js";
 import { OcrResultResponse } from "@/dto/ocr/ocr-result-response.dto.js";
@@ -61,7 +60,7 @@ export class OcrController extends Controller {
     public async createTranscript(
         @Path("studentId") studentId: string,
         @Body() ocrRequest: OcrRequest,
-        @Request() authenticatedRequest: AuthenticatedRequest,
+        @Request() authenticatedRequest: Express.AuthenticatedRequest,
     ): Promise<OcrResultResponse> {
         const user = authenticatedRequest.user;
 
@@ -138,7 +137,7 @@ export class OcrController extends Controller {
     @SuccessResponse(HttpStatus.OK, "Scores successfully extracted")
     public async extractTranscriptScores(
         @Path("studentId") studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<BatchScoreExtractionResult> {
         this.logger.info(
             `Starting OCR extraction for student with id ${studentId}`,
@@ -164,7 +163,7 @@ export class OcrController extends Controller {
     @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
     public async getExtractedScores(
         @Path("studentId") studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<OcrResultResponse[]> {
         const user: Express.User = request.user;
         const userId: string = user.id;
@@ -259,7 +258,7 @@ export class OcrController extends Controller {
     public async patchExtractedScores(
         @Path("id") id: string,
         @Body() ocrUpdateRequest: OcrUpdateRequest,
-        @Request() authenticatedRequest: AuthenticatedRequest,
+        @Request() authenticatedRequest: Express.AuthenticatedRequest,
     ): Promise<OcrResultResponse> {
         const user = authenticatedRequest.user;
         const createdBy: string = user.email;

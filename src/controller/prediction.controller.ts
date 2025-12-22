@@ -20,7 +20,6 @@ import type { IPredictionL1Service } from "@/service/prediction-l1-service.inter
 import type { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
 import type { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
 import type { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
-import type { AuthenticatedRequest } from "@/type/express/express.js";
 
 import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
 import { UserInputL2 } from "@/dto/prediction/l2-request.dto.js";
@@ -79,7 +78,7 @@ export class PredictionController extends Controller {
      * student academic performance and profile information.
      * @summary TEST ENDPOINT for student profile of an authenticated user
      * @param {string} studentId - UUID of the student profile
-     * @param {AuthenticatedRequest} request - Authenticated request containing user information
+     * @param {Express.AuthenticatedRequest} request - Authenticated request containing user information
      * @returns {Promise<L1PredictResult[]>} Array of L1 prediction results
      */
     @Get("model/v1/{studentId}")
@@ -91,7 +90,7 @@ export class PredictionController extends Controller {
     @SuccessResponse(HttpStatus.OK, "Predict result created successfully")
     public async getL1PredictResults(
         @Path() studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<L1PredictResult[]> {
         const user: Express.User = request.user;
         const predictResults: L1PredictResult[] =
@@ -111,7 +110,7 @@ export class PredictionController extends Controller {
      *
      * @summary TEST ENDPOINT for student profile of an authenticated user
      * @param {string} studentId - UUID of the student profile
-     * @param {AuthenticatedRequest} request - Authenticated request containing user information
+     * @param {Express.AuthenticatedRequest} request - Authenticated request containing user information
      * @returns {Promise<L2PredictResult[]>} Array of L2 prediction results with detailed scenarios
      */
     @Get("model/v2/{studentId}")
@@ -123,7 +122,7 @@ export class PredictionController extends Controller {
     @SuccessResponse(HttpStatus.OK, "Predict result created successfully")
     public async getL2PredictResults(
         @Path() studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<L2PredictResult[]> {
         const user: Express.User = request.user;
         const predictResults: L2PredictResult[] =
@@ -144,7 +143,7 @@ export class PredictionController extends Controller {
      *
      * @summary TEST ENDPOINT for student profile of an authenticated user
      * @param {string} studentId - UUID of the student profile
-     * @param {AuthenticatedRequest} request - Authenticated request containing user information
+     * @param {Express.AuthenticatedRequest} request - Authenticated request containing user information
      * @returns {Promise<L3PredictResult[]>} Array of L3 prediction results with comprehensive analysis
      */
     @Get("model/v3/{studentId}")
@@ -156,7 +155,7 @@ export class PredictionController extends Controller {
     @SuccessResponse(HttpStatus.OK, "L3 predict results retrieved successfully")
     public async getL3PredictResults(
         @Path() studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<L3PredictResult[]> {
         const user: Express.User = request.user;
         const predictResults: L3PredictResult[] =
@@ -177,7 +176,7 @@ export class PredictionController extends Controller {
      * @summary TEST ENDPOINT for student profile of an authenticated user
      * @param {UserInputL2} userInput - Custom input parameters for prediction generation
      * @param {string} studentId - UUID of the student profile to base predictions on
-     * @param {AuthenticatedRequest} request - Authenticated request containing user information
+     * @param {Express.AuthenticatedRequest} request - Authenticated request containing user information
      * @returns {Promise<L2PredictResult[]>} Array of L2 prediction results based on custom inputs
      */
     @Middlewares(validateUuidParams("studentId"), validateDTO(UserInputL2))
@@ -191,7 +190,7 @@ export class PredictionController extends Controller {
     public async getPredictedMajors(
         @Body() userInput: UserInputL2,
         @Path() studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<L2PredictResult[]> {
         const user: Express.User = request.user;
         const predictResults: L2PredictResult[] =
@@ -215,7 +214,7 @@ export class PredictionController extends Controller {
      * @summary TEST ENDPOINT for customized L3 predictions for authenticated user
      * @param {UserInputL3} userInput - Custom input parameters for L3 prediction generation
      * @param {string} studentId - UUID of the student profile to base predictions on
-     * @param {AuthenticatedRequest} request - Authenticated request containing user information
+     * @param {Express.AuthenticatedRequest} request - Authenticated request containing user information
      * @returns {Promise<L3PredictResult>} L3 prediction result based on custom inputs
      */
     @Middlewares(validateUuidParams("studentId"), validateDTO(UserInputL3))
@@ -229,7 +228,7 @@ export class PredictionController extends Controller {
     public async getPredictedMajorsL3(
         @Body() userInput: UserInputL3,
         @Path() studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<L3PredictResult> {
         const user: Express.User = request.user;
         const predictResult: L3PredictResult =
@@ -251,7 +250,7 @@ export class PredictionController extends Controller {
      *
      * @summary Retrieve prediction result for student profile of an authenticated user
      * @param {string} studentId - UUID of the student profile
-     * @param {AuthenticatedRequest} request - Authenticated request containing user information
+     * @param {Express.AuthenticatedRequest} request - Authenticated request containing user information
      * @returns {Promise<PredictionResultEntity>} The prediction result entity with metadata
      */
     @Get("result/{studentId}")
@@ -264,7 +263,7 @@ export class PredictionController extends Controller {
     @SuccessResponse(HttpStatus.OK, "Fetching prediction result successfully")
     public async getPredictionResultEntityForAuthenticatedUser(
         @Path() studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<PredictionResultResponse> {
         const user: Express.User = request.user;
 
