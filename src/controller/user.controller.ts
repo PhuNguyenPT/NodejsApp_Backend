@@ -19,7 +19,6 @@ import {
 } from "tsoa";
 
 import type { IUserService } from "@/service/user-service.interface.js";
-import type { AuthenticatedRequest } from "@/type/express/express.js";
 
 import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
@@ -160,7 +159,7 @@ export class UserController extends Controller {
     public async updateUser(
         @Path() userId: string,
         @Body() requestBody: UpdateUserAdminDTO,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<UserAdmin> {
         const user: Express.User = request.user;
         const userEntity = await this.userService.update(

@@ -14,7 +14,6 @@ import {
     Tags,
 } from "tsoa";
 
-import type { AuthenticatedRequest } from "@/type/express/express.js";
 import type { Page } from "@/type/pagination/page.interface.js";
 
 import { AdmissionFieldResponse } from "@/dto/admission/admission-field-response.js";
@@ -93,7 +92,7 @@ export class AdmissionController extends Controller {
     )
     public async getAdmissionFieldsFilter(
         @Path() studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
     ): Promise<AdmissionFieldResponse> {
         const user: Express.User = request.user;
         const userId = user.id;
@@ -178,7 +177,7 @@ export class AdmissionController extends Controller {
     )
     public async getAdmissionResponsePage(
         @Path() studentId: string,
-        @Request() request: AuthenticatedRequest,
+        @Request() request: Express.AuthenticatedRequest,
         @Queries() searchQuery: AdmissionSearchQuery,
     ): Promise<PageResponse<AdmissionResponse>> {
         // Convert PageableQuery to PageRequest
