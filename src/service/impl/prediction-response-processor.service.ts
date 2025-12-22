@@ -39,6 +39,7 @@ export class PredictionL3ProcessorService
     ): Promise<void> {
         const studentEntity = await manager.findOne(StudentEntity, {
             relations: ["predictionResult", "user", "studentAdmissions"],
+            transaction: true,
             where: {
                 id: studentId,
                 userId: userId ?? IsNull(),

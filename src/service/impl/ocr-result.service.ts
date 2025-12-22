@@ -102,6 +102,7 @@ export class OcrResultService implements IOcrResultService {
     ): Promise<OcrResultEntity> {
         const ocrResultEntity: null | OcrResultEntity =
             await this.ocrResultRepository.findOne({
+                transaction: true,
                 where: {
                     createdBy: username ?? Role.ANONYMOUS,
                     id,

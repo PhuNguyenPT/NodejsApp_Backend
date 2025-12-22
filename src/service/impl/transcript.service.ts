@@ -44,6 +44,7 @@ export class TranscriptService implements ITranscriptService {
         userId?: string,
     ): Promise<TranscriptEntity[]> {
         const student = await this.studentRepository.findOne({
+            transaction: true,
             where: {
                 id: studentId,
                 userId: userId ?? IsNull(),
@@ -62,6 +63,7 @@ export class TranscriptService implements ITranscriptService {
                 semester: "ASC",
             },
             relations: ["transcriptSubjects", "ocrResult", "ocrResult.file"],
+            transaction: true,
             where: {
                 studentId: studentId,
             },
@@ -105,6 +107,7 @@ export class TranscriptService implements ITranscriptService {
                     "student",
                     "student.transcripts",
                 ],
+                transaction: true,
                 where: {
                     createdBy: createdBy ?? Role.ANONYMOUS,
                     id,
@@ -170,6 +173,7 @@ export class TranscriptService implements ITranscriptService {
 
         const updatedStudent = await this.studentRepository.findOne({
             relations: ["transcripts"],
+            transaction: true,
             where: { id: transcript.student.id },
         });
 
@@ -198,6 +202,7 @@ export class TranscriptService implements ITranscriptService {
                     "files",
                     "user",
                 ],
+                transaction: true,
                 where: {
                     id: studentId,
                     userId: userId ?? IsNull(),
@@ -267,6 +272,7 @@ export class TranscriptService implements ITranscriptService {
         // Reload student with updated transcripts count
         const updatedStudent = await this.studentRepository.findOne({
             relations: ["transcripts"],
+            transaction: true,
             where: {
                 id: studentId,
                 userId: userId ?? IsNull(),

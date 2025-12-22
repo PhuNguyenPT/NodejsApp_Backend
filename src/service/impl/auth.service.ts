@@ -45,7 +45,10 @@ export class AuthService implements IAuthService {
 
         try {
             // Find user by email - will throw EntityNotFoundException if not found
-            const user = await this.userRepository.findOneBy({ email });
+            const user = await this.userRepository.findOne({
+                transaction: true,
+                where: { email },
+            });
 
             if (!user) {
                 throw new BadCredentialsException();
@@ -306,8 +309,8 @@ export class AuthService implements IAuthService {
             }
 
             // 4. IMPORTANT: Check the user's current status in the database
-            const user = await this.userRepository.findOneBy({
-                id: payload.id,
+            const user = await this.userRepository.findOne({
+                where: { id: payload.id },
             });
 
             if (!user) {
