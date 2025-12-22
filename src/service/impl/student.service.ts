@@ -89,6 +89,7 @@ export class StudentService implements IStudentService {
 
         if (userId) {
             userEntity = await this.userRepository.findOne({
+                transaction: true,
                 where: { id: userId },
             });
 
@@ -183,6 +184,7 @@ export class StudentService implements IStudentService {
                     "talentExams",
                     "vsatExams",
                 ],
+                transaction: true,
                 where: {
                     id,
                     userId: userId ?? IsNull(),
@@ -230,12 +232,14 @@ export class StudentService implements IStudentService {
             userId,
         );
 
-        // 2. Fetch ONLY the active files using a dedicated, fast query
-        const activeFilesMetadata = await this.fileRepository
-            .createQueryBuilder("files")
-            .where("files.studentId = :studentId", { studentId })
-            .andWhere("files.status = :status", { status: FileStatus.ACTIVE })
-            .getMany();
+        // 2. Fetch ONLY the active files using find
+        const activeFilesMetadata = await this.fileRepository.find({
+            transaction: true,
+            where: {
+                status: FileStatus.ACTIVE,
+                studentId: studentId,
+            },
+        });
 
         // 3. Attach the result
         student.files = activeFilesMetadata;
