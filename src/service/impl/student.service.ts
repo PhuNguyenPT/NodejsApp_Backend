@@ -1,3 +1,5 @@
+import type { RedisClientType } from "redis";
+
 import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
@@ -29,6 +31,7 @@ import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { PageImpl } from "@/type/pagination/page-impl.js";
+import { CacheKeys } from "@/util/cache-key.js";
 @injectable()
 export class StudentService implements IStudentService {
     constructor(
@@ -62,6 +65,8 @@ export class StudentService implements IStudentService {
         private readonly studentEventListener: IStudentEventListener,
         @inject(TYPES.IMajorService)
         private readonly majorService: IMajorService,
+        @inject(TYPES.RedisPublisher)
+        private readonly redis: RedisClientType,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
     ) {}
@@ -146,15 +151,31 @@ export class StudentService implements IStudentService {
         id: string,
         userId?: string,
     ): Promise<StudentEntity> {
+        const cacheKey = CacheKeys.studentProfile(id, userId);
+
+        // 1. Try to get from cache
+        try {
+            const cached = await this.redis.get(cacheKey);
+            if (cached) {
+                this.logger.debug(`Cache HIT for ${cacheKey}`);
+                return JSON.parse(cached) as StudentEntity;
+            }
+        } catch (error) {
+            this.logger.warn(`Redis cache read error for ${cacheKey}:`, error);
+        }
+
+        // 2. Cache miss - query database
+        this.logger.debug(`Cache MISS for ${cacheKey}`);
+
         const studentEntity: null | StudentEntity =
             await this.studentRepository.findOne({
                 relations: [
                     "academicPerformances",
                     "aptitudeExams",
+                    "aptitudeExams.vnuhcmScoreComponents",
                     "awards",
                     "certifications",
                     "conducts",
-                    "studentMajorGroups.majorGroup",
                     "nationalExams",
                     "talentExams",
                     "vsatExams",
@@ -164,11 +185,25 @@ export class StudentService implements IStudentService {
                     userId: userId ?? IsNull(),
                 },
             });
+
         if (!studentEntity) {
             throw new EntityNotFoundException(
                 `Student profile with id: ${id} not found`,
             );
         }
+
+        // 3. Store in cache
+        try {
+            await this.redis.setEx(
+                cacheKey,
+                3600,
+                JSON.stringify(studentEntity),
+            );
+            this.logger.debug(`Cached student ${id}`);
+        } catch (error) {
+            this.logger.warn(`Redis cache write error for ${cacheKey}:`, error);
+        }
+
         return studentEntity;
     }
 

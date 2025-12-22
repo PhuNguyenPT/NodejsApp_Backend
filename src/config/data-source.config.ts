@@ -1,19 +1,57 @@
-// src/config/data.source.config.ts
+import type { LogLevel } from "typeorm";
+
 import { DataSource } from "typeorm";
 
 import { redisConfig } from "@/config/redis.config.js";
 import { config } from "@/util/validate-env.js";
 
+/**
+ * Get logging configuration based on environment and configuration
+ */
+const getLogging = (): boolean | LogLevel[] => {
+    if (!config.DB_LOGGING) {
+        return false;
+    }
+
+    // If custom levels are specified, use them
+    if (config.DB_LOGGING_LEVELS) {
+        const levels = config.DB_LOGGING_LEVELS.split(",").map(
+            (s) => s.trim() as LogLevel,
+        );
+
+        return levels.length > 0 ? levels : false;
+    }
+
+    // Otherwise, auto-detect based on NODE_ENV
+    switch (config.NODE_ENV) {
+        case "development":
+            return [
+                "query",
+                "error",
+                "warn",
+                "info",
+                "log",
+                "schema",
+                "migration",
+            ];
+
+        case "production":
+            return ["error", "warn"];
+
+        case "staging":
+            return ["query", "error", "warn", "info"];
+
+        default:
+            return false;
+    }
+};
+
 export const postgresDataSource = new DataSource({
     cache: {
-        // Enable caching by default for all queries (optional)
-        alwaysEnabled: false, // Set to true if you want all queries cached by default
-        // Default cache duration (1 hour)
-        duration: 60 * 60 * 1000, // 1 hour in milliseconds
-        // Ignore cache errors and continue with database queries
+        alwaysEnabled: false,
+        duration: 60 * 60 * 1000,
         ignoreErrors: true,
         options: redisConfig,
-        // Cache table name for fallback database caching
         tableName: "query_result_cache",
         type: "redis",
     },
@@ -30,7 +68,7 @@ export const postgresDataSource = new DataSource({
         min: 5,
     },
     host: config.POSTGRES_HOST,
-    logging: config.DB_LOGGING,
+    logging: getLogging(),
     maxQueryExecutionTime: 5000,
     migrations: [
         config.NODE_ENV === "development"
