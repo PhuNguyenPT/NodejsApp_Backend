@@ -1,5 +1,6 @@
 import type { RedisClientType } from "redis";
 
+import { plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
@@ -158,7 +159,9 @@ export class StudentService implements IStudentService {
             const cached = await this.redis.get(cacheKey);
             if (cached) {
                 this.logger.debug(`Cache HIT for ${cacheKey}`);
-                return JSON.parse(cached) as StudentEntity;
+                const parsed: unknown = JSON.parse(cached);
+                const entity = plainToInstance(StudentEntity, parsed);
+                return entity;
             }
         } catch (error) {
             this.logger.warn(`Redis cache read error for ${cacheKey}:`, error);
