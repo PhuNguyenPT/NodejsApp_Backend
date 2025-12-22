@@ -1,13 +1,13 @@
+import type { RedisClientType } from "redis";
+
 import bcrypt from "bcrypt";
-import { plainToInstance } from "class-transformer";
-// src/service/user.service.ts
 import { inject, injectable } from "inversify";
-import { EntityMetadataNotFoundError } from "typeorm";
+import { Repository } from "typeorm";
 import { Logger } from "winston";
 
-import type { IUserRepository } from "@/repository/user-repository-interface.js";
 import type { IUserService } from "@/service/user-service.interface.js";
 
+import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config.js";
 import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
@@ -15,204 +15,146 @@ import { TYPES } from "@/type/container/types.js";
 import { getDefaultPermissionsByRole } from "@/type/enum/user.js";
 import { EntityExistsException } from "@/type/exception/entity-exists.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
-import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
-
+import { CacheKeys } from "@/util/cache-key.js";
 @injectable()
 export class UserService implements IUserService {
     private readonly SALT_ROUNDS = 12;
 
     constructor(
-        @inject(TYPES.IUserRepository)
-        private readonly userRepository: IUserRepository,
+        @inject(TYPES.UserRepository)
+        private readonly userRepository: Repository<UserEntity>,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
+        @inject(TYPES.RedisPublisher)
+        private readonly redisClient: RedisClientType,
     ) {}
 
     public async create(
         createUserAdminDTO: CreateUserAdminDTO,
     ): Promise<UserEntity> {
-        try {
-            this.logger.info("Creating new user", {
-                email: createUserAdminDTO.email,
-            });
+        this.logger.info("Creating new user", {
+            email: createUserAdminDTO.email,
+        });
 
-            // Hash the password before saving
-            createUserAdminDTO.password = await bcrypt.hash(
-                createUserAdminDTO.password,
-                this.SALT_ROUNDS,
-            );
-            const newUser: UserEntity = plainToInstance(
-                UserEntity,
-                createUserAdminDTO,
-            );
-            newUser.permissions = getDefaultPermissionsByRole(newUser.role);
+        const exists = await this.userRepository.exists({
+            transaction: true,
+            where: { email: createUserAdminDTO.email },
+        });
 
-            const savedEntity: UserEntity =
-                await this.userRepository.saveUser(newUser);
-            this.logger.info("User created successfully", {
-                userId: savedEntity.id,
-            });
-            return savedEntity;
-        } catch (error) {
-            if (
-                error instanceof IllegalArgumentException ||
-                error instanceof EntityMetadataNotFoundError ||
-                error instanceof EntityExistsException
-            ) {
-                throw error;
-            }
-            this.logger.error("Error creating user", {
-                createUserAdminDTO,
-                error: error instanceof Error ? error.message : String(error),
-            });
-            throw new Error("Failed to create user");
+        if (exists) {
+            throw new EntityExistsException(
+                `User with email ${createUserAdminDTO.email} already exists`,
+            );
         }
+
+        // Hash the password before saving
+        createUserAdminDTO.password = await bcrypt.hash(
+            createUserAdminDTO.password,
+            this.SALT_ROUNDS,
+        );
+        const newUser: UserEntity =
+            this.userRepository.create(createUserAdminDTO);
+
+        newUser.permissions = getDefaultPermissionsByRole(newUser.role);
+
+        const savedEntity: UserEntity = await this.userRepository.save(newUser);
+
+        this.logger.info("User created successfully", {
+            userId: savedEntity.id,
+        });
+        return savedEntity;
     }
 
     public async delete(id: string): Promise<void> {
-        try {
-            this.logger.info("Deleting user", { userId: id });
+        this.logger.info("Deleting user", { userId: id });
 
-            await this.userRepository.delete(id);
+        await this.userRepository.delete(id);
 
-            this.logger.info("User deleted successfully", { userId: id });
-        } catch (error) {
-            if (error instanceof EntityMetadataNotFoundError) {
-                throw error;
-            }
-            this.logger.error("Error deleting user", {
-                error: error instanceof Error ? error.message : String(error),
-                userId: id,
-            });
-            throw new Error(`Failed to delete user with id ${id}`);
-        }
+        // Invalidate cache for the deleted user
+        await this.invalidateUserCache(id);
+
+        this.logger.info("User deleted successfully", { userId: id });
     }
 
     public async exists(id: string): Promise<boolean> {
-        try {
-            this.logger.info("Checking if user exists", { userId: id });
+        this.logger.info("Checking if user exists", { userId: id });
 
-            const exists: boolean = await this.userRepository.exists(id);
+        const exists: boolean = await this.userRepository.exists({
+            where: { id },
+        });
 
-            this.logger.info("User existence check completed", {
-                exists,
-                userId: id,
-            });
-            return exists;
-        } catch (error) {
-            if (error instanceof EntityMetadataNotFoundError) {
-                throw error;
-            }
-            this.logger.error("Error checking user existence", {
-                error: error instanceof Error ? error.message : String(error),
-                userId: id,
-            });
-            throw new Error(`Failed to check if user with id ${id} exists`);
-        }
+        this.logger.info("User existence check completed", {
+            exists,
+            userId: id,
+        });
+        return exists;
     }
 
     public async getAll(): Promise<UserEntity[]> {
-        try {
-            this.logger.info("Retrieving all users");
+        this.logger.info("Retrieving all users");
 
-            const userEntities: UserEntity[] =
-                await this.userRepository.findAll();
+        const userEntities: UserEntity[] = await this.userRepository.find({});
 
-            this.logger.info("All users retrieved successfully", {
-                count: userEntities.length,
-            });
-            return userEntities;
-        } catch (error) {
-            if (error instanceof EntityMetadataNotFoundError) {
-                throw error;
-            }
-            this.logger.error("Error retrieving all users", {
-                error: error instanceof Error ? error.message : String(error),
-                originalError:
-                    error instanceof Error ? error.name : String(error),
-            });
-            throw new Error("Failed to retrieve users");
-        }
+        this.logger.info("All users retrieved successfully", {
+            count: userEntities.length,
+        });
+        return userEntities;
     }
 
     public async getById(id: string): Promise<UserEntity> {
-        try {
-            this.logger.info("Retrieving user by id", { userId: id });
+        this.logger.info("Retrieving user by id", { userId: id });
 
-            const userEntity: null | UserEntity =
-                await this.userRepository.findById(id);
+        const userEntity: null | UserEntity = await this.userRepository.findOne(
+            {
+                cache: {
+                    id: CacheKeys.user(id),
+                    milliseconds: JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
+                },
+                where: { id },
+            },
+        );
 
-            if (!userEntity) {
-                this.logger.warn("User not found by id", { userId: id });
-                throw new EntityNotFoundException(
-                    `User with id ${id} not found`,
-                );
-            }
-
-            this.logger.info("User retrieved successfully by id", {
-                userId: userEntity.id,
-            });
-            return userEntity;
-        } catch (error) {
-            if (
-                error instanceof EntityNotFoundException ||
-                error instanceof EntityMetadataNotFoundError
-            ) {
-                throw error;
-            }
-
-            this.logger.error("Unexpected error retrieving user by id", {
-                error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined,
-                userId: id,
-            });
-            throw new Error(`Failed to retrieve user with id ${id}`);
+        if (!userEntity) {
+            this.logger.warn("User not found by id", { userId: id });
+            throw new EntityNotFoundException(`User with id ${id} not found`);
         }
+
+        this.logger.info("User retrieved successfully by id", {
+            userId: userEntity.id,
+        });
+        return userEntity;
     }
 
     public async getByIdAndName(
         id: string,
         name?: string,
     ): Promise<UserEntity> {
-        try {
-            this.logger.info("Retrieving user", { name, userId: id });
+        this.logger.info("Retrieving user", { name, userId: id });
 
-            const userEntity: null | UserEntity =
-                await this.userRepository.findByIdAndName(id, name);
+        const userEntity: null | UserEntity = await this.userRepository.findOne(
+            {
+                cache: {
+                    id: CacheKeys.user(id),
+                    milliseconds: JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
+                },
+                transaction: true,
+                where: { id, name },
+            },
+        );
 
-            if (!userEntity) {
-                const errorMsg = name
-                    ? `User with id ${id} and name ${name} not found`
-                    : `User with id ${id} not found`;
-                this.logger.warn("User not found", { name, userId: id });
-                throw new EntityNotFoundException(errorMsg);
-            }
-
-            this.logger.info("User retrieved successfully", {
-                name,
-                userId: id,
-            });
-            return userEntity;
-        } catch (error) {
-            if (
-                error instanceof EntityNotFoundException ||
-                error instanceof EntityMetadataNotFoundError
-            ) {
-                throw error;
-            }
-
-            this.logger.error("Unexpected error retrieving user", {
-                error: error instanceof Error ? error.message : String(error),
-                name,
-                stack: error instanceof Error ? error.stack : undefined,
-                userId: id,
-            });
-
+        if (!userEntity) {
             const errorMsg = name
-                ? `Failed to retrieve user with id ${id} and name ${name}`
-                : `Failed to retrieve user with id ${id}`;
-            throw new Error(errorMsg);
+                ? `User with id ${id} and name ${name} not found`
+                : `User with id ${id} not found`;
+            this.logger.warn("User not found", { name, userId: id });
+            throw new EntityNotFoundException(errorMsg);
         }
+
+        this.logger.info("User retrieved successfully", {
+            name,
+            userId: id,
+        });
+        return userEntity;
     }
 
     public async update(
@@ -220,58 +162,70 @@ export class UserService implements IUserService {
         updateData: Partial<UpdateUserAdminDTO>,
         user: Express.User,
     ): Promise<UserEntity> {
-        try {
-            this.logger.info("Updating user", {
-                updatedFields: Object.keys(updateData),
-                userId: id,
-            });
+        this.logger.info("Updating user", {
+            updatedFields: Object.keys(updateData),
+            userId: id,
+        });
 
-            if (updateData.password) {
-                updateData.password = await bcrypt.hash(
-                    updateData.password,
-                    this.SALT_ROUNDS,
-                );
-            }
+        // Fetch existing user
+        const existingUser = await this.userRepository.findOne({
+            cache: {
+                id: CacheKeys.user(id),
+                milliseconds: JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS,
+            },
+            transaction: true,
+            where: { id },
+        });
 
-            const userEntity: UserEntity = plainToInstance(
-                UserEntity,
-                updateData,
-            );
-            userEntity.updatedBy = user.email;
-
-            // Only update permissions if role is explicitly provided in update data
-            if (updateData.role !== undefined) {
-                userEntity.permissions = getDefaultPermissionsByRole(
-                    updateData.role,
-                );
-                this.logger.info("Role updated, refreshing permissions", {
-                    newPermissions: userEntity.permissions,
-                    newRole: updateData.role,
-                    userId: id,
-                });
-            }
-
-            const updatedEntity: UserEntity = await this.userRepository.update(
-                id,
-                userEntity,
-            );
-
-            this.logger.info("User updated successfully", { userId: id });
-            return updatedEntity;
-        } catch (error) {
-            if (
-                error instanceof IllegalArgumentException ||
-                error instanceof EntityMetadataNotFoundError ||
-                error instanceof EntityExistsException
-            ) {
-                throw error;
-            }
-            this.logger.error("Error updating user", {
-                error: error instanceof Error ? error.message : String(error),
-                updateData,
-                userId: id,
-            });
-            throw new Error(`Failed to update user with id ${id}`);
+        if (!existingUser) {
+            throw new EntityNotFoundException(`User with id ${id} not found`);
         }
+
+        // Hash password if provided
+        if (updateData.password) {
+            updateData.password = await bcrypt.hash(
+                updateData.password,
+                this.SALT_ROUNDS,
+            );
+        }
+
+        // Merge updates into existing entity
+        Object.assign(existingUser, updateData);
+        existingUser.updatedBy = user.email;
+
+        // Only update permissions if role is explicitly provided
+        if (updateData.role !== undefined) {
+            existingUser.permissions = getDefaultPermissionsByRole(
+                updateData.role,
+            );
+            this.logger.info("Role updated, refreshing permissions", {
+                newPermissions: existingUser.permissions,
+                newRole: updateData.role,
+                userId: id,
+            });
+        }
+
+        // Save the updated entity
+        const updatedEntity = await this.userRepository.save(existingUser);
+
+        // Invalidate cache for this user
+        await this.invalidateUserCache(id);
+
+        this.logger.info("User updated successfully", { userId: id });
+        return updatedEntity;
+    }
+
+    /**
+     * Invalidate all cache entries related to a user
+     * @param userId - The user's UUID
+     */
+    private async invalidateUserCache(userId: string): Promise<void> {
+        const cacheKey = CacheKeys.user(userId);
+        await this.redisClient.del(cacheKey);
+
+        this.logger.info("User cache invalidated", {
+            cacheKey,
+            userId,
+        });
     }
 }
