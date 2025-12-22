@@ -40,6 +40,16 @@ export const CacheKeys = {
     },
 
     /**
+     * Cache key for student profile data
+     * @param studentId - The student's UUID
+     * @param userId - The user's UUID or undefined for guest/anonymous users
+     * @returns Cache key string
+     */
+    studentProfile(studentId: string, userId?: string): string {
+        return `student_profile:${studentId}:${userId ?? "guest"}`;
+    },
+
+    /**
      * Cache key for user data
      * @param userId - The user's UUID
      * @returns Cache key string
@@ -47,4 +57,4 @@ export const CacheKeys = {
     user(userId: string): string {
         return `user_cache_${userId}`;
     },
-};
+} as const;

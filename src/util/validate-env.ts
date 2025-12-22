@@ -22,6 +22,10 @@ export const config: Config = cleanEnv(process.env, {
 
     // Database connection settings
     DB_LOGGING: bool({ default: false }),
+    DB_LOGGING_LEVELS: str({
+        default: "",
+        desc: "Comma-separated database log levels (query,error,warn,info,log,schema,migration). Empty = auto-detect based on NODE_ENV",
+    }),
     // Migration settings
     DB_RUN_MIGRATIONS_ON_STARTUP: bool({ default: false }),
 

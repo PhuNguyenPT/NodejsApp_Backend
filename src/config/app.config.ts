@@ -13,6 +13,8 @@ export interface Config {
 
     // Database connection settings
     DB_LOGGING: boolean;
+    DB_LOGGING_LEVELS: string;
+
     // Migration settings
     DB_RUN_MIGRATIONS_ON_STARTUP: boolean;
 
