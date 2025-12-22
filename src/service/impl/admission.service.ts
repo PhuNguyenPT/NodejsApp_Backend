@@ -199,7 +199,7 @@ export class AdmissionService implements IAdmissionService {
         try {
             await this.redisClient.setEx(
                 cacheKey,
-                config.CACHE_TTL_ADMISSION_FIELDS,
+                config.CACHE_TTL_ADMISSION_FIELDS_IN_SECONDS,
                 JSON.stringify(finalResult),
             );
         } catch (error: unknown) {

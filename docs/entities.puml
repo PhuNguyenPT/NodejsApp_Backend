@@ -49,7 +49,7 @@ interface Config {
     +ADMIN_EMAIL: string
     +ADMIN_NAME: string
     +ADMIN_PASSWORD: string
-    +CACHE_TTL_ADMISSION_FIELDS: number
+    +CACHE_TTL_ADMISSION_FIELDS_IN_SECONDS: number
     +CORS_CREDENTIALS: boolean
     +CORS_ORIGIN: string[]
     +DB_LOGGING: boolean
