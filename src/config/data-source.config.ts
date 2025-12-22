@@ -2,7 +2,6 @@ import type { LogLevel } from "typeorm";
 
 import { DataSource } from "typeorm";
 
-import { redisConfig } from "@/config/redis.config.js";
 import { config } from "@/util/validate-env.js";
 
 /**
@@ -46,14 +45,21 @@ const getLogging = (): boolean | LogLevel[] => {
     }
 };
 
+// Redis configuration for TypeORM cache using ioredis
+const typeormRedisConfig = {
+    db: config.REDIS_DB,
+    host: config.REDIS_HOST,
+    password: config.REDIS_USER_PASSWORD,
+    port: config.REDIS_PORT,
+    username: config.REDIS_USERNAME,
+} as const;
+
 export const postgresDataSource = new DataSource({
     cache: {
-        alwaysEnabled: false,
         duration: 60 * 60 * 1000,
-        ignoreErrors: true,
-        options: redisConfig,
+        options: typeormRedisConfig,
         tableName: "query_result_cache",
-        type: "redis",
+        type: "ioredis", // Changed from "redis" to "ioredis"
     },
     database: config.POSTGRES_DB,
     entities: [

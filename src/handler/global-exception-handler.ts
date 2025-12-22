@@ -441,7 +441,7 @@ class ExceptionHandlers {
     @ExceptionHandler(SyntaxError)
     handleSyntaxError(error: SyntaxError): ErrorDetails {
         const status = HttpStatus.BAD_REQUEST;
-        const message = "Invalid request format or malformed data";
+        const message = error.message;
 
         const response: ErrorResponse = {
             message,

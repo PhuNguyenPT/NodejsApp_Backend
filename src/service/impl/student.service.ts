@@ -1,10 +1,10 @@
 import type { RedisClientType } from "redis";
 
-import { plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
 
+import type { Config } from "@/config/app.config.js";
 import type { IStudentEventListener } from "@/event/student-event-listener.interface.js";
 import type { StudentCreatedEvent } from "@/event/student.event.js";
 import type { ICertificationService } from "@/service/certification-service.interface.js";
@@ -36,6 +36,7 @@ import { CacheKeys } from "@/util/cache-key.js";
 @injectable()
 export class StudentService implements IStudentService {
     constructor(
+        @inject(TYPES.Config) private readonly config: Config,
         @inject(TYPES.StudentRepository)
         private readonly studentRepository: Repository<StudentEntity>,
         @inject(TYPES.UserRepository)
@@ -155,24 +156,13 @@ export class StudentService implements IStudentService {
     ): Promise<StudentEntity> {
         const cacheKey = CacheKeys.studentProfile(id, userId);
 
-        // 1. Try to get from cache
-        try {
-            const cached = await this.redis.get(cacheKey);
-            if (cached) {
-                this.logger.debug(`Cache HIT for ${cacheKey}`);
-                const parsed: unknown = JSON.parse(cached);
-                const entity = plainToInstance(StudentEntity, parsed);
-                return entity;
-            }
-        } catch (error) {
-            this.logger.warn(`Redis cache read error for ${cacheKey}:`, error);
-        }
-
-        // 2. Cache miss - query database
-        this.logger.debug(`Cache MISS for ${cacheKey}`);
-
         const studentEntity: null | StudentEntity =
             await this.studentRepository.findOne({
+                cache: {
+                    id: cacheKey,
+                    milliseconds:
+                        this.config.CACHE_TTL_STUDENT_IN_SECONDS * 1000,
+                },
                 relations: [
                     "academicPerformances",
                     "aptitudeExams",
@@ -195,18 +185,6 @@ export class StudentService implements IStudentService {
             throw new EntityNotFoundException(
                 `Student profile with id: ${id} not found`,
             );
-        }
-
-        // 3. Store in cache
-        try {
-            await this.redis.setEx(
-                cacheKey,
-                3600,
-                JSON.stringify(studentEntity),
-            );
-            this.logger.debug(`Cached student ${id}`);
-        } catch (error) {
-            this.logger.warn(`Redis cache write error for ${cacheKey}:`, error);
         }
 
         return studentEntity;

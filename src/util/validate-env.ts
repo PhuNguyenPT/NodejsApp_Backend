@@ -14,8 +14,8 @@ export const config: Config = cleanEnv(process.env, {
     ADMIN_PASSWORD: str(),
 
     // Cache TTL Configuration (in seconds)
-    CACHE_TTL_ADMISSION_FIELDS: num({ default: 1800 }), // 30 minutes
-
+    CACHE_TTL_ADMISSION_FIELDS_IN_SECONDS: num({ default: 1800 }), // 30 minutes
+    CACHE_TTL_STUDENT_IN_SECONDS: num({ default: 3600 }), // 1h
     // CORS Configuration
     CORS_CREDENTIALS: bool({ default: true }), // Use bool validator
     CORS_ORIGIN: commaSeparatedString({ default: ["http://localhost:3000"] }),

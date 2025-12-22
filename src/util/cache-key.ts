@@ -55,6 +55,6 @@ export const CacheKeys = {
      * @returns Cache key string
      */
     user(userId: string): string {
-        return `user_cache_${userId}`;
+        return `user:${userId}`;
     },
 } as const;
