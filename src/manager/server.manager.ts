@@ -192,18 +192,16 @@ export class ServerManager {
             );
 
             // Optional: Log TLS connections for debugging
-            if (this.config.NODE_ENV === "development") {
-                (httpsServer.server as https.Server).on(
-                    "secureConnection",
-                    (tlsSocket) => {
-                        this.logger.debug("🔐 TLS Connection established:", {
-                            authorized: tlsSocket.authorized,
-                            cipher: tlsSocket.getCipher().name,
-                            protocol: tlsSocket.getProtocol(),
-                        });
-                    },
-                );
-            }
+            (httpsServer.server as https.Server).on(
+                "secureConnection",
+                (tlsSocket) => {
+                    this.logger.debug("🔐 TLS Connection established:", {
+                        authorized: tlsSocket.authorized,
+                        cipher: tlsSocket.getCipher().name,
+                        protocol: tlsSocket.getProtocol(),
+                    });
+                },
+            );
 
             this.servers.push(httpsServer);
         } catch (error) {
