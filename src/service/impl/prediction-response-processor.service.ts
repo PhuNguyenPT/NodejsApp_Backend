@@ -108,7 +108,6 @@ export class PredictionL3ProcessorService
             this.logger.info("Admission IDs analysis", {
                 existingCount: existingAdmissionIds.size,
                 l3Count: l3AdmissionIds.size,
-                newAdmissionIds,
                 newToAddCount: newAdmissionIds.length,
                 studentId,
             });
@@ -203,8 +202,6 @@ export class PredictionL3ProcessorService
                             this.logger.info(
                                 "Created new StudentAdmissionEntity records",
                                 {
-                                    admissionIds:
-                                        Array.from(validAdmissionIdSet),
                                     count: studentAdmissionsToCreate.length,
                                     studentId,
                                 },
