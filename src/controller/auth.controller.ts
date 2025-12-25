@@ -1,4 +1,3 @@
-// src/controller/auth.controller.ts
 import { inject, injectable } from "inversify";
 import { ExtractJwt } from "passport-jwt";
 import {
@@ -27,17 +26,19 @@ import {
 import { AuthResponse } from "@/dto/auth/auth-response.js";
 import validateDTO from "@/middleware/validation-middleware.js";
 import { TYPES } from "@/type/container/types.js";
+import { HttpStatus } from "@/type/enum/http-status.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
 
 /**
  * Controller responsible for handling authentication-related HTTP requests.
  * Provides endpoints for user authentication, registration, token management, and session handling.
  *
- * This controller implements JWT-based authentication with refresh token rotation
- * and comprehensive security measures including token blacklisting and family invalidation.
- *
- * @class AuthController
- * @extends {Controller}
+ * This controller implements JWT-based authentication with refresh token rotation,
+ * token family tracking, and comprehensive security measures including:
+ * - Token blacklisting for logout
+ * - Token reuse detection with automatic family invalidation
+ * - Secure token rotation on refresh
+ * - Account status validation on each request
  */
 @injectable()
 @Route("auth")
@@ -46,9 +47,8 @@ export class AuthController extends Controller {
     /**
      * Creates an instance of AuthController.
      *
-     * @param {AuthService} authService - Service for handling authentication business logic
-     * @param {Logger} logger - Winston logger for request/response logging
-     * @memberof AuthController
+     * @param authService - Service for handling authentication business logic
+     * @param logger - Winston logger for request/response logging
      */
     constructor(
         @inject(TYPES.IAuthService) private authService: IAuthService,
@@ -58,74 +58,73 @@ export class AuthController extends Controller {
     }
 
     /**
-     * Authenticates a user with email and password credentials.
-     * Upon successful authentication, returns access and refresh tokens along with user information.
+     * Authenticate a user with email and password credentials.
      *
-     * @summary Authenticates a user with email and password credentials
-     * @param {LoginRequest} loginData - User credentials containing email and password
-     * @returns {Promise<AuthResponse>} Authentication response with tokens and user data
+     * Upon successful authentication:
+     * - Verifies email and password using bcrypt comparison
+     * - Generates a new token family ID for this authentication session
+     * - Creates access and refresh tokens with matching family IDs
+     * - Stores both tokens in Redis with appropriate TTLs
+     * - Returns tokens along with user information
      *
-     * @throws {ValidationException} When request body validation fails
-     * @throws {BadCredentialsException} When email or password is incorrect
-     * @throws {HttpException} When account is inactive or internal error occurs
+     * The access token is used for subsequent API requests, while the refresh token
+     * is used to obtain new access tokens when they expire. Both tokens share the
+     * same family ID to enable family-based invalidation for security.
      *
-     * @example
-     * POST /auth/login
-     * Content-Type: application/json
-     * {
-     *   "email": "jane.doe@example.com",
-     *   "password": "SecurePass123!"
-     * }
-     *
-     * @memberof AuthController
+     * @summary Authenticate user with credentials
+     * @param loginData User credentials containing email and password
+     * @returns {AuthResponse} Authentication response with tokens and user data
+     * @throws {ValidationException} When request body validation fails (invalid email format, missing fields)
+     * @throws {BadCredentialsException} When email or password is incorrect, or user doesn't exist
+     * @throws {HttpException} When internal error occurs during authentication
      */
     @Middlewares(validateDTO(LoginRequest))
     @Post("login")
     @Produces("application/json")
-    @Response("400", "Validation error")
-    @Response("401", "Invalid credentials")
-    @SuccessResponse("200", "Login successful")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Invalid credentials")
+    @SuccessResponse(HttpStatus.OK, "Login successful")
     public async login(@Body() loginData: LoginRequest): Promise<AuthResponse> {
         const authResponse: AuthResponse =
             await this.authService.login(loginData);
-        this.setStatus(200);
+        this.setStatus(HttpStatus.OK);
         return authResponse;
     }
 
     /**
-     * Logs out an authenticated user by blacklisting their access and/or refresh tokens.
-     * This endpoint invalidates the current session and prevents further use of the provided tokens.
+     * Log out an authenticated user by blacklisting their tokens.
      *
-     * The client should send the refresh token in the request body for complete logout.
-     * The access token is automatically extracted from the Authorization header.
+     * This endpoint invalidates the current session through the following process:
+     * 1. Extracts access token from Authorization header (required)
+     * 2. Validates the access token exists in Redis and retrieves its family ID
+     * 3. If refresh token provided, validates it belongs to the same token family
+     * 4. Blacklists both tokens by:
+     *    - Marking them as blacklisted in Redis
+     *    - Setting short TTL (60 seconds) for blacklist entry persistence
+     *    - Removing token IDs from the family set
+     * 5. Prevents further use of these tokens
      *
-     * @summary Logs out an authenticated user by blacklisting their access and/or refresh tokens.
-     * @param {AuthenticatedRequest} request - Express request object with authenticated user context
-     * @param {RefreshTokenRequest} logoutRequest - Request containing the refresh token
-     * @returns {Promise<{message: string; success: boolean}>} Logout confirmation response
+     * Security features:
+     * - Requires matching family IDs between access and refresh tokens
+     * - Logs warning if family IDs don't match (ignores refresh token)
+     * - Gracefully handles already blacklisted or expired tokens
+     * - Uses atomic Redis pipeline operations for consistency
      *
+     * @summary Log out authenticated user
+     * @param request Express request object with authenticated user context
+     * @param logoutRequest Request containing the refresh token to blacklist (optional but recommended)
+     * @returns {object} Logout confirmation response with success status
+     * @throws {JwtException} When access token is missing from Authorization header
      * @throws {ValidationException} When request body validation fails
-     * @throws {JwtException} When refresh token is missing, invalid, expired, or reused
-     * @throws {AuthenticationException} When the user no longer exists
-     * @throws {AccessDeniedException} When the user account is inactive
-     * @throws {HttpException} When JWT verification fails or internal error occurs
-     *
-     * @example
-     * POST /auth/logout
-     * Authorization: Bearer <access_token>
-     * Content-Type: application/json
-     * {
-     *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-     * }
-     *
-     * @memberof AuthController
+     * @throws {HttpException} When internal error occurs during logout
      */
     @Middlewares(validateDTO(LogoutRequest))
     @Post("logout")
     @Produces("application/json")
-    @Response("400", "No access token provided")
+    @Response<string>(HttpStatus.BAD_REQUEST, "No access token provided")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
     @Security("bearerAuth")
-    @SuccessResponse("200", "Logout successful")
+    @SuccessResponse(HttpStatus.OK, "Logout successful")
     public async logout(
         @Request() request: Express.AuthenticatedRequest,
         @Body() logoutRequest?: LogoutRequest,
@@ -140,11 +139,10 @@ export class AuthController extends Controller {
             ExtractJwt.fromAuthHeaderAsBearerToken()(request);
 
         if (!accessToken) {
-            this.setStatus(400);
+            this.setStatus(HttpStatus.BAD_REQUEST);
             throw new JwtException("No access token provided");
         }
 
-        // Extract refresh token from request body (client should send it)
         this.logger.info(`User logging out: ${user.email} (ID: ${user.id})`);
 
         // Call auth service to handle token blacklisting
@@ -153,97 +151,113 @@ export class AuthController extends Controller {
             logoutRequest?.refreshToken,
         );
 
-        this.setStatus(200);
+        this.setStatus(HttpStatus.OK);
         return result;
     }
 
     /**
-     * Refreshes an expired or expiring access token using a valid refresh token.
-     * This endpoint implements secure token rotation - the old refresh token is invalidated
-     * and new access and refresh tokens are issued with the same token family ID.
+     * Refresh an expired or expiring access token using a valid refresh token.
      *
-     * Token reuse detection: If a blacklisted or expired refresh token is used,
-     * the entire token family is invalidated as a security measure.
+     * This endpoint implements secure token rotation with the following process:
+     * 1. Validates refresh token exists in Redis and checks its validity
+     * 2. Detects token reuse (security feature):
+     *    - If token is blacklisted: SECURITY ALERT - invalidates entire token family
+     *    - If token is expired: logs warning and invalidates family
+     * 3. Verifies JWT signature and claims
+     * 4. Validates user still exists and account is active
+     * 5. Blacklists the old refresh token immediately to prevent reuse
+     * 6. Generates new access and refresh tokens with the SAME family ID
+     * 7. Stores new tokens in Redis with appropriate TTLs
+     * 8. Returns fresh tokens with updated user data from database
      *
-     * @summary  Refreshes an expired or expiring access token using a valid refresh token
-     * @param {RefreshTokenRequest} refreshData - Request containing the refresh token
-     * @returns {Promise<AuthResponse>} New authentication response with fresh tokens
+     * Token Family Security:
+     * - All tokens in a login session share the same family ID
+     * - If a blacklisted or expired token is reused (indicating possible token theft),
+     *   the entire token family is invalidated as a security measure
+     * - This prevents attackers from using any stolen tokens from that session
      *
-     * @throws {ValidationException} When request body validation fails
-     * @throws {JwtException} When refresh token is missing, invalid, expired, or reused
+     * Database Validation:
+     * - Fetches fresh user data from database on each refresh
+     * - Validates account is still active
+     * - Ensures user still exists
+     * - New tokens contain up-to-date user information
+     *
+     * @summary Refresh access token
+     * @param refreshData Request containing the refresh token
+     * @returns {AuthResponse} New authentication response with fresh access and refresh tokens
+     * @throws {JwtException} When refresh token is missing, invalid, expired, blacklisted, or reused
      * @throws {AuthenticationException} When the user no longer exists
      * @throws {AccessDeniedException} When the user account is inactive
+     * @throws {ValidationException} When request body validation fails
      * @throws {HttpException} When JWT verification fails or internal error occurs
-     *
-     * @example
-     * POST /auth/refresh
-     * Content-Type: application/json
-     * {
-     *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-     * }
-     *
-     * @memberof AuthController
      */
     @Middlewares(validateDTO(RefreshTokenRequest))
     @Post("refresh")
     @Produces("application/json")
-    @Response("400", "Validation error")
-    @Response("401", "Invalid refresh token")
-    @SuccessResponse("200", "Token refresh successful")
+    @Response<string>(HttpStatus.BAD_REQUEST, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Invalid refresh token")
+    @SuccessResponse(HttpStatus.OK, "Token refresh successful")
     public async refreshToken(
         @Body() refreshData: RefreshTokenRequest,
     ): Promise<AuthResponse> {
         const { refreshToken } = refreshData;
 
         if (!refreshToken) {
-            this.setStatus(400);
+            this.setStatus(HttpStatus.BAD_REQUEST);
             throw new JwtException("Refresh token is required");
         }
 
         // Pass refresh token from request body to service
         const authResponse: AuthResponse =
             await this.authService.refreshToken(refreshToken);
-        this.setStatus(200);
+        this.setStatus(HttpStatus.OK);
         return authResponse;
     }
 
     /**
-     * Registers a new user account with email and password.
-     * Upon successful registration, the user is automatically logged in and receives
-     * access and refresh tokens along with their user profile information.
+     * Register a new user account with email and password.
      *
-     * New users are created with default USER role and HAPPY status.
-     * Passwords are securely hashed using bcrypt with 12 salt rounds.
+     * This endpoint creates a new user account through the following process:
+     * 1. Validates email format and password strength
+     * 2. Uses database transaction with pessimistic write lock to prevent race conditions
+     * 3. Checks if user already exists (throws error if duplicate email)
+     * 4. Hashes password using bcrypt with 12 salt rounds
+     * 5. Creates user with default USER role and permissions
+     * 6. Saves user to database within transaction
+     * 7. Generates new token family ID
+     * 8. Creates access and refresh tokens with matching family IDs
+     * 9. Stores tokens in Redis with appropriate TTLs
+     * 10. Automatically logs in user and returns tokens
      *
-     * @summary  Registers a new user account with email and password
-     * @param {RegisterRequest} registerData - Registration data containing email and password
-     * @returns {Promise<AuthResponse>} Authentication response with tokens and new user data
+     * Security features:
+     * - Pessimistic write lock prevents concurrent registration with same email
+     * - Password never stored in plain text
+     * - Uses bcrypt with 12 salt rounds for strong password hashing
+     * - Automatic login after registration for seamless user experience
      *
-     * @throws {ValidationException} When request body validation fails
+     * Default user settings:
+     * - Role: USER
+     * - Permissions: Default USER role permissions
+     * - Account active by default
+     *
+     * @summary Register new user account
+     * @param registerData Registration data containing email and password
+     * @returns {AuthResponse} Authentication response with tokens and new user data
+     * @throws {ValidationException} When request body validation fails (invalid email format, weak password)
      * @throws {EntityExistsException} When a user with the email already exists
-     * @throws {HttpException} When internal error occurs during registration
-     *
-     * @example
-     * POST /auth/register
-     * Content-Type: application/json
-     * {
-     *   "email": "jane.doe@example.com",
-     *   "password": "SecurePass123!"
-     * }
-     *
-     * @memberof AuthController
+     * @throws {HttpException} When internal error occurs during registration or token generation
      */
     @Middlewares(validateDTO(RegisterRequest))
     @Post("register")
     @Produces("application/json")
-    @Response("400", "Validation error")
-    @Response("409", "User already exists")
-    @SuccessResponse("201", "Registration successful")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.CONFLICT, "User already exists")
+    @SuccessResponse(HttpStatus.CREATED, "Registration successful")
     public async register(
         @Body() registerData: RegisterRequest,
     ): Promise<AuthResponse> {
         const result = await this.authService.register(registerData);
-        this.setStatus(201);
+        this.setStatus(HttpStatus.CREATED);
         return result;
     }
 }
