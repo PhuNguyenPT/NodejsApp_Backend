@@ -40,9 +40,6 @@ import { HttpStatus } from "@/type/enum/http-status.js";
  * This controller provides endpoints for generating and retrieving prediction results
  * using L1 (Level 1), L2 (Level 2), and L3 (Level 3) prediction models, as well as managing
  * prediction result entities.
- *
- * @class PredictionController
- * @extends Controller
  */
 @Route("predict")
 @Tags("Prediction Model Service")
@@ -50,11 +47,11 @@ export class PredictionController extends Controller {
     /**
      * Creates an instance of PredictionController.
      *
-     * @param {IPredictionL1Service} predictionL1Service - Service for handling L1 prediction operations
-     * @param {IPredictionL2Service} predictionL2Service - Service for handling L2 prediction operations
-     * @param {IPredictionL3Service} predictionL3Service - Service for handling L3 prediction operations
-     * @param {Logger} logger - Logger instance for logging operations
-     * @param {IPredictionResultService} predictionResultService - Service for managing prediction results
+     * @param predictionL1Service - Service for handling L1 prediction operations
+     * @param predictionL2Service - Service for handling L2 prediction operations
+     * @param predictionL3Service - Service for handling L3 prediction operations
+     * @param logger - Logger instance for logging operations
+     * @param predictionResultService - Service for managing prediction results
      */
     constructor(
         @inject(TYPES.IPredictionL1Service)
@@ -72,24 +69,26 @@ export class PredictionController extends Controller {
     }
 
     /**
-     * TEST: Retrieves Level 1 (L1) prediction results for a specific student.
-     *
+     * Retrieve Level 1 (L1) prediction results for a specific student profile.
      * L1 predictions provide basic admission probability estimates based on
      * student academic performance and profile information.
-     * @summary TEST ENDPOINT for student profile of an authenticated user
-     * @param {string} studentId - UUID of the student profile
-     * @param {Express.AuthenticatedRequest} request - Authenticated request containing user information
-     * @returns {Promise<L1PredictResult[]>} Array of L1 prediction results
+     * This is a TEST endpoint for development and validation purposes.
+     * @summary Get L1 predictions for authenticated user
+     * @param studentId The UUID of the student profile.
+     * @param request The authenticated Express request object.
+     * @returns {L1PredictResult[]} Array of L1 prediction results with basic admission probabilities.
+     * @throws {EntityNotFoundException} If the student profile is not found or access is denied.
      */
     @Get("model/v1/{studentId}")
     @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "Student profile not found")
     @Security("bearerAuth", ["api:read"])
-    @SuccessResponse(HttpStatus.OK, "Predict result created successfully")
+    @SuccessResponse(HttpStatus.OK, "Predict result retrieved successfully")
     public async getL1PredictResults(
-        @Path() studentId: string,
+        @Path("studentId") studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<L1PredictResult[]> {
         const user: Express.User = request.user;
@@ -102,26 +101,27 @@ export class PredictionController extends Controller {
     }
 
     /**
-     * TEST: Retrieves Level 2 (L2) prediction results for a specific student.
-     *
+     * Retrieve Level 2 (L2) prediction results for a specific student profile.
      * L2 predictions provide more detailed admission probability estimates
      * including various exam scenarios (CCQT, DGNL, national exams, etc.)
      * and subject group combinations.
-     *
-     * @summary TEST ENDPOINT for student profile of an authenticated user
-     * @param {string} studentId - UUID of the student profile
-     * @param {Express.AuthenticatedRequest} request - Authenticated request containing user information
-     * @returns {Promise<L2PredictResult[]>} Array of L2 prediction results with detailed scenarios
+     * This is a TEST endpoint for development and validation purposes.
+     * @summary Get L2 predictions for authenticated user
+     * @param studentId The UUID of the student profile.
+     * @param request The authenticated Express request object.
+     * @returns {L2PredictResult[]} Array of L2 prediction results with detailed exam scenarios.
+     * @throws {EntityNotFoundException} If the student profile is not found or access is denied.
      */
     @Get("model/v2/{studentId}")
     @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "Student profile not found")
     @Security("bearerAuth", ["api:read"])
-    @SuccessResponse(HttpStatus.OK, "Predict result created successfully")
+    @SuccessResponse(HttpStatus.OK, "Predict result retrieved successfully")
     public async getL2PredictResults(
-        @Path() studentId: string,
+        @Path("studentId") studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<L2PredictResult[]> {
         const user: Express.User = request.user;
@@ -134,27 +134,28 @@ export class PredictionController extends Controller {
     }
 
     /**
-     * TEST: Retrieves Level 3 (L3) prediction results for a specific student.
-     *
+     * Retrieve Level 3 (L3) prediction results for a specific student profile.
      * L3 predictions provide comprehensive admission analysis including transcript scores,
      * national exam results, certifications (CCNN, CCQT), DGNL scores, talent exams,
      * and awards. This model considers all available student data for the most
      * accurate predictions.
-     *
-     * @summary TEST ENDPOINT for student profile of an authenticated user
-     * @param {string} studentId - UUID of the student profile
-     * @param {Express.AuthenticatedRequest} request - Authenticated request containing user information
-     * @returns {Promise<L3PredictResult[]>} Array of L3 prediction results with comprehensive analysis
+     * This is a TEST endpoint for development and validation purposes.
+     * @summary Get L3 predictions for authenticated user
+     * @param studentId The UUID of the student profile.
+     * @param request The authenticated Express request object.
+     * @returns {L3PredictResult[]} Array of L3 prediction results with comprehensive analysis.
+     * @throws {EntityNotFoundException} If the student profile is not found or access is denied.
      */
     @Get("model/v3/{studentId}")
     @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "Student profile not found")
     @Security("bearerAuth", ["api:read"])
     @SuccessResponse(HttpStatus.OK, "L3 predict results retrieved successfully")
     public async getL3PredictResults(
-        @Path() studentId: string,
+        @Path("studentId") studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<L3PredictResult[]> {
         const user: Express.User = request.user;
@@ -167,29 +168,30 @@ export class PredictionController extends Controller {
     }
 
     /**
-     * TEST: Generates customized L2 prediction results based on user input parameters.
-     *
+     * Generate customized L2 prediction results based on user input parameters.
      * This endpoint allows users to override default student parameters and generate
      * predictions with specific exam scores, subject combinations, or other custom inputs.
      * Useful for "what-if" scenarios and exploring different academic pathways.
-     *
-     * @summary TEST ENDPOINT for student profile of an authenticated user
-     * @param {UserInputL2} userInput - Custom input parameters for prediction generation
-     * @param {string} studentId - UUID of the student profile to base predictions on
-     * @param {Express.AuthenticatedRequest} request - Authenticated request containing user information
-     * @returns {Promise<L2PredictResult[]>} Array of L2 prediction results based on custom inputs
+     * This is a TEST endpoint for development and validation purposes.
+     * @summary Generate custom L2 predictions for authenticated user
+     * @param userInput Custom input parameters for prediction generation including exam scores and subject groups.
+     * @param studentId The UUID of the student profile to base predictions on.
+     * @param request The authenticated Express request object.
+     * @returns {L2PredictResult[]} Array of L2 prediction results based on custom inputs.
+     * @throws {EntityNotFoundException} If the student profile is not found or access is denied.
+     * @throws {ValidationException} If the input parameters are invalid.
      */
     @Middlewares(validateUuidParams("studentId"), validateDTO(UserInputL2))
     @Post("model/v2/{studentId}")
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
-    @Response(HttpStatus.NOT_FOUND, "Not found")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "Student profile not found")
     @Security("bearerAuth", ["api:read"])
     @SuccessResponse(HttpStatus.OK, "Predict result created successfully")
     public async getPredictedMajors(
         @Body() userInput: UserInputL2,
-        @Path() studentId: string,
+        @Path("studentId") studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<L2PredictResult[]> {
         const user: Express.User = request.user;
@@ -199,35 +201,37 @@ export class PredictionController extends Controller {
             );
         this.logger.info("Predict major successfully for user", {
             id: user.id,
+            studentId,
         });
         return predictResults;
     }
 
     /**
-     * TEST: Generates customized L3 prediction results based on user input parameters.
-     *
+     * Generate customized L3 prediction results based on user input parameters.
      * This endpoint allows users to override default student parameters and generate
      * predictions with specific transcript scores, exam results, certifications,
      * and other comprehensive inputs. Useful for "what-if" scenarios and exploring
      * different academic pathways with complete student profiles.
-     *
-     * @summary TEST ENDPOINT for customized L3 predictions for authenticated user
-     * @param {UserInputL3} userInput - Custom input parameters for L3 prediction generation
-     * @param {string} studentId - UUID of the student profile to base predictions on
-     * @param {Express.AuthenticatedRequest} request - Authenticated request containing user information
-     * @returns {Promise<L3PredictResult>} L3 prediction result based on custom inputs
+     * This is a TEST endpoint for development and validation purposes.
+     * @summary Generate custom L3 predictions for authenticated user
+     * @param userInput Custom input parameters for L3 prediction generation including comprehensive student data.
+     * @param studentId The UUID of the student profile to base predictions on.
+     * @param request The authenticated Express request object.
+     * @returns {L3PredictResult} L3 prediction result based on custom inputs.
+     * @throws {EntityNotFoundException} If the student profile is not found or access is denied.
+     * @throws {ValidationException} If the input parameters are invalid.
      */
     @Middlewares(validateUuidParams("studentId"), validateDTO(UserInputL3))
     @Post("model/v3/{studentId}")
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
-    @Response(HttpStatus.NOT_FOUND, "Not found")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "Student profile not found")
     @Security("bearerAuth", ["api:read"])
     @SuccessResponse(HttpStatus.OK, "L3 predict result created successfully")
     public async getPredictedMajorsL3(
         @Body() userInput: UserInputL3,
-        @Path() studentId: string,
+        @Path("studentId") studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<L3PredictResult> {
         const user: Express.User = request.user;
@@ -242,27 +246,26 @@ export class PredictionController extends Controller {
     }
 
     /**
-     * Retrieves the prediction result entity for an authenticated user.
-     *
+     * Retrieve the prediction result entity for an authenticated user's student profile.
      * This endpoint returns the stored prediction result entity, which contains
      * metadata about completed prediction operations, processing status, and
      * result summaries for a specific student profile.
-     *
-     * @summary Retrieve prediction result for student profile of an authenticated user
-     * @param {string} studentId - UUID of the student profile
-     * @param {Express.AuthenticatedRequest} request - Authenticated request containing user information
-     * @returns {Promise<PredictionResultEntity>} The prediction result entity with metadata
+     * @summary Get prediction result for authenticated user
+     * @param studentId The UUID of the student profile.
+     * @param request The authenticated Express request object.
+     * @returns {PredictionResultResponse} The prediction result entity with metadata.
+     * @throws {EntityNotFoundException} If the student profile or prediction result is not found, or access is denied.
      */
     @Get("result/{studentId}")
     @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
-    @Response(HttpStatus.NOT_FOUND, "Not found")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "Prediction result not found")
     @Security("bearerAuth", ["api:read"])
     @SuccessResponse(HttpStatus.OK, "Fetching prediction result successfully")
     public async getPredictionResultEntityForAuthenticatedUser(
-        @Path() studentId: string,
+        @Path("studentId") studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<PredictionResultResponse> {
         const user: Express.User = request.user;
@@ -277,25 +280,23 @@ export class PredictionController extends Controller {
     }
 
     /**
-     * Retrieves the prediction result entity for guest users (unauthenticated access).
-     *
+     * Retrieve the prediction result entity for a guest user's student profile (unauthenticated access).
      * This endpoint allows access to prediction results without authentication,
      * typically used for public or shared prediction results. The student profile
-     * must be configured to allow guest access.
-     *
-     * @summary Retrieve prediction result for student profile of a guest user
-     * @param {string} studentId - UUID of the student profile
-     * @returns {Promise<PredictionResultEntity>} The prediction result entity accessible to guests
+     * must not be owned by any authenticated user to allow guest access.
+     * @summary Get prediction result for guest user
+     * @param studentId The UUID of the student profile.
+     * @returns {PredictionResultResponse} The prediction result entity accessible to guests.
+     * @throws {EntityNotFoundException} If the student profile or prediction result is not found, or the profile is owned by an authenticated user.
      */
     @Get("result/guest/{studentId}")
     @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
-    @Response(HttpStatus.NOT_FOUND, "Not found")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.NOT_FOUND, "Prediction result not found")
     @SuccessResponse(HttpStatus.OK, "Fetching prediction result successfully")
     public async getPredictionResultEntityForGuest(
-        @Path() studentId: string,
+        @Path("studentId") studentId: string,
     ): Promise<PredictionResultResponse> {
         const predictionResultEntity: PredictionResultEntity =
             await this.predictionResultService.findByStudentIdAndUserId(

@@ -47,14 +47,16 @@ export class StudentController extends Controller {
     /**
      * Create a student profile as a guest user (no authentication required).
      * This endpoint allows anonymous users to submit their profile information.
+     * Uses TypeORM cascades to save the student and their related awards/certifications in a single operation.
      * @summary Create guest student profile
      * @param studentRequest The student profile data to create.
-     * @returns The newly created student profile.
+     * @returns {StudentProfileResponse} The newly created student profile.
+     * @throws {ValidationException} If the min budget is greater than the max budget.
      */
     @Middlewares(validateDTO(StudentRequest))
     @Post("guest")
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
     @SuccessResponse(HttpStatus.CREATED, "Successfully create student")
     public async createStudentProfile(
         @Body() studentRequest: StudentRequest,
@@ -67,16 +69,20 @@ export class StudentController extends Controller {
     /**
      * Create a student profile for the currently authenticated user.
      * The user is identified via their JWT bearer token.
+     * Uses TypeORM cascades to save the student and their related awards/certifications in a single operation.
      * @summary Create student profile for authenticated user
      * @param request The authenticated Express request object, containing user details.
      * @param studentRequest The student profile data to create.
-     * @returns The newly created student profile linked to the user.
+     * @returns {StudentProfileResponse} The newly created student profile linked to the user.
+     * @throws {ValidationException} If the min budget is greater than the max budget.
+     * @throws {EntityNotFoundException} If the user is not found.
      */
     @Middlewares(validateDTO(StudentRequest))
     @Post()
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "User not found")
     @Security("bearerAuth", ["profile:create:own"])
     @SuccessResponse(HttpStatus.CREATED, "Successfully create student profile")
     public async createStudentProfileForUser(
@@ -100,13 +106,13 @@ export class StudentController extends Controller {
      * @summary Get all profiles for current user
      * @param request The authenticated Express request object.
      * @param pageableQuery Pagination and sorting parameters.
-     * @returns A paginated list of the user's student profiles.
+     * @returns {PageResponse<StudentResponse>} A paginated list of the user's student profiles.
+     * @throws {ValidationException} If pagination parameters are invalid.
      */
     @Get()
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
-    @Response(HttpStatus.NOT_FOUND, "Not found")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getAllStudentProfilesByUserId(
@@ -135,18 +141,20 @@ export class StudentController extends Controller {
 
     /**
      * Retrieve a single student profile by its ID for a guest user.
+     * Ensures the profile is not owned by any authenticated user.
      * @summary Get a single guest profile by ID
      * @param studentId The UUID of the student profile to retrieve.
-     * @returns The full student profile including awards and certifications.
+     * @returns {StudentProfileResponse} The full student profile including awards and certifications.
+     * @throws {EntityNotFoundException} If no matching student profile is found.
      */
     @Get("guest/{studentId}")
     @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.NOT_FOUND, "Not found")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.NOT_FOUND, "Not found")
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getStudentGuest(
-        @Path() studentId: string,
+        @Path("studentId") studentId: string,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
             await this.studentService.getStudentEntityByIdAnUserId(studentId);
@@ -159,18 +167,19 @@ export class StudentController extends Controller {
      * @summary Get a single profile by ID for current user
      * @param studentId The UUID of the student profile to retrieve.
      * @param request The authenticated Express request object.
-     * @returns The full student profile including awards and certifications.
+     * @returns {StudentProfileResponse} The full student profile including awards and certifications.
+     * @throws {EntityNotFoundException} If no matching student profile is found.
      */
     @Get("{studentId}")
     @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
-    @Response(HttpStatus.NOT_FOUND, "Not found")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "Not found")
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getStudentProfileByUserId(
-        @Path() studentId: string,
+        @Path("studentId") studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
@@ -184,22 +193,24 @@ export class StudentController extends Controller {
 
     /**
      * Retrieve a single student profile along with its associated active files for a guest user.
+     * Fetches the student profile and only the files with 'active' status.
+     * Ensures the profile is not owned by any authenticated user.
      * @summary Get a guest profile with files by ID
      * @param studentId The UUID of the student profile to retrieve.
-     * @returns The full student profile including associated files.
+     * @returns {StudentProfileResponse} The full student profile including associated active files.
+     * @throws {EntityNotFoundException} If no matching student profile is found.
      */
     @Get("guest/{studentId}/with-files")
     @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
-    @Response(HttpStatus.NOT_FOUND, "Not found")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.NOT_FOUND, "Not found")
     @SuccessResponse(
         HttpStatus.OK,
         "Successfully retrieve student profile with files",
     )
     public async getStudentProfileGuestWithFiles(
-        @Path() studentId: string,
+        @Path("studentId") studentId: string,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
             await this.studentService.getStudentWithFiles(studentId);
@@ -209,24 +220,26 @@ export class StudentController extends Controller {
     /**
      * Retrieve a single student profile along with its associated active files for an authenticated user.
      * The endpoint verifies that the requested profile belongs to the authenticated user.
+     * Fetches the student profile and only the files with 'active' status.
      * @summary Get a profile with files by ID for current user
      * @param studentId The UUID of the student profile to retrieve.
      * @param request The authenticated Express request object.
-     * @returns The full student profile including associated files.
+     * @returns {StudentProfileResponse} The full student profile including associated active files.
+     * @throws {EntityNotFoundException} If no matching student profile is found or access is denied.
      */
     @Get("{studentId}/with-files")
     @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
-    @Response(HttpStatus.BAD_REQUEST, "Validation error")
-    @Response(HttpStatus.UNAUTHORIZED, "Authentication required")
-    @Response(HttpStatus.NOT_FOUND, "Not found")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "Not found")
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(
         HttpStatus.OK,
         "Successfully retrieve student profile with files",
     )
     public async getStudentProfileWithFiles(
-        @Path() studentId: string,
+        @Path("studentId") studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;

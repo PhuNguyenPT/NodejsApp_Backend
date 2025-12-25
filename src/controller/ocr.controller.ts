@@ -8,6 +8,7 @@ import {
     Post,
     Produces,
     Request,
+    Response,
     Route,
     Security,
     SuccessResponse,
@@ -50,11 +51,20 @@ export class OcrController extends Controller {
     }
 
     /**
-     * Manually create a transcript for an authenticated user's student
+     * Create a transcript manually for the authenticated user's student profile.
+     * This endpoint allows users to input transcript data directly without OCR processing.
+     * @summary Create transcript for authenticated user
+     * @param studentId The UUID of the student profile to create a transcript for.
+     * @param ocrRequest The transcript data including grade, semester, and subject scores.
+     * @param authenticatedRequest The authenticated Express request object, containing user details.
+     * @returns {OcrResultResponse} The newly created transcript with subject scores.
      */
     @Middlewares(validateUuidParams("studentId"), validateDTO(OcrRequest))
     @Post("{studentId}")
     @Produces("application/json")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "Student profile not found")
     @Security("bearerAuth", ["profile:update:own"])
     @SuccessResponse(HttpStatus.CREATED, "Transcript successfully created")
     public async createTranscript(
@@ -63,7 +73,6 @@ export class OcrController extends Controller {
         @Request() authenticatedRequest: Express.AuthenticatedRequest,
     ): Promise<OcrResultResponse> {
         const user = authenticatedRequest.user;
-
         const transcript =
             await this.transcriptService.saveByStudentIdAndUserId(
                 studentId,
@@ -85,17 +94,24 @@ export class OcrController extends Controller {
             transcript,
             { excludeExtraneousValues: true },
         );
-
         ocrResultResponse.subjectScores = subjectScores;
+
         return ocrResultResponse;
     }
 
     /**
-     * Manually create a transcript for a guest student
+     * Create a transcript manually for a guest user's student profile.
+     * This endpoint allows anonymous users to input transcript data without authentication.
+     * @summary Create transcript for guest user
+     * @param studentId The UUID of the guest student profile to create a transcript for.
+     * @param ocrRequest The transcript data including grade, semester, and subject scores.
+     * @returns {OcrResultResponse} The newly created transcript with subject scores.
      */
     @Middlewares(validateUuidParams("studentId"), validateDTO(OcrRequest))
     @Post("guest/{studentId}")
     @Produces("application/json")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.NOT_FOUND, "Student profile not found")
     @SuccessResponse(HttpStatus.CREATED, "Transcript successfully created")
     public async createTranscriptGuest(
         @Path("studentId") studentId: string,
@@ -121,18 +137,29 @@ export class OcrController extends Controller {
             transcript,
             { excludeExtraneousValues: true },
         );
-
         ocrResultResponse.subjectScores = subjectScores;
+
         return ocrResultResponse;
     }
 
     /**
-     * Extracts subject scores from transcript images for a given student.
-     * The files must belong to the authenticated user.
+     * Extract subject scores from transcript images using OCR for an authenticated user.
+     * This endpoint processes uploaded transcript images and extracts grade and subject score data.
+     * The files must belong to the authenticated user's student profile.
+     * @summary Extract scores from transcript images via OCR
+     * @param studentId The UUID of the student profile whose transcript images to process.
+     * @param request The authenticated Express request object.
+     * @returns {BatchScoreExtractionResult} Batch extraction results containing scores for each processed image.
      */
     @Middlewares(validateUuidParams("studentId"))
     @Post("{studentId}/transcripts/ocr")
     @Produces("application/json")
+    @Response<string>(
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        "Validation error or extraction failed",
+    )
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "Student profile not found")
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Scores successfully extracted")
     public async extractTranscriptScores(
@@ -144,21 +171,35 @@ export class OcrController extends Controller {
         );
 
         const user: Express.User = request.user;
-
         const result = await this.mistralService.extractSubjectScoresByUserId(
             studentId,
             user.id,
         );
 
         if (!result.success) {
-            this.setStatus(HttpStatus.BAD_REQUEST);
+            this.setStatus(HttpStatus.UNPROCESSABLE_ENTITY);
         }
+
         return result;
     }
 
+    /**
+     * Retrieve all extracted transcript scores for an authenticated user's student profile.
+     * Returns all previously created or OCR-extracted transcripts with their subject scores.
+     * @summary Get all transcripts for authenticated user
+     * @param studentId The UUID of the student profile to retrieve transcripts for.
+     * @param request The authenticated Express request object.
+     * @returns {OcrResultResponse[]} Array of transcript results with subject scores.
+     */
     @Get("{studentId}")
     @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(
+        HttpStatus.NOT_FOUND,
+        "Student profile or transcripts not found",
+    )
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
     public async getExtractedScores(
@@ -195,11 +236,12 @@ export class OcrController extends Controller {
                     transcriptEntity,
                     { excludeExtraneousValues: true },
                 );
-
                 ocrResultResponse.subjectScores = subjectScores;
+
                 return ocrResultResponse;
             },
         );
+
         this.logger.info(
             "Retrieving OCR results successfully for authorized student",
             { length: ocrResultResponses.length, studentId, userId },
@@ -208,9 +250,21 @@ export class OcrController extends Controller {
         return ocrResultResponses;
     }
 
+    /**
+     * Retrieve all extracted transcript scores for a guest user's student profile.
+     * Returns all previously created or OCR-extracted transcripts without authentication.
+     * @summary Get all transcripts for guest user
+     * @param studentId The UUID of the guest student profile to retrieve transcripts for.
+     * @returns {OcrResultResponse[]} Array of transcript results with subject scores.
+     */
     @Get("guest/{studentId}")
     @Middlewares(validateUuidParams("studentId"))
     @Produces("application/json")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(
+        HttpStatus.NOT_FOUND,
+        "Student profile or transcripts not found",
+    )
     @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
     public async getExtractedScoresGuest(
         @Path("studentId") studentId: string,
@@ -218,6 +272,7 @@ export class OcrController extends Controller {
         this.logger.info("Retrieving OCR result for guest student", {
             studentId,
         });
+
         const transcriptEntities: TranscriptEntity[] =
             await this.transcriptService.findByStudentIdAndUserId(studentId);
 
@@ -237,11 +292,12 @@ export class OcrController extends Controller {
                     transcriptEntity,
                     { excludeExtraneousValues: true },
                 );
-
                 ocrResultResponse.subjectScores = subjectScores;
+
                 return ocrResultResponse;
             },
         );
+
         this.logger.info(
             "Retrieving OCR results successfully for guest student",
             { length: ocrResultResponses.length, studentId },
@@ -250,9 +306,21 @@ export class OcrController extends Controller {
         return ocrResultResponses;
     }
 
+    /**
+     * Update subject scores for an existing transcript for an authenticated user.
+     * This endpoint allows users to correct or modify previously extracted or entered scores.
+     * @summary Update transcript scores for authenticated user
+     * @param id The UUID of the transcript to update.
+     * @param ocrUpdateRequest The updated subject scores.
+     * @param authenticatedRequest The authenticated Express request object.
+     * @returns {OcrResultResponse} The updated transcript with modified subject scores.
+     */
     @Middlewares(validateUuidParams("id"), validateDTO(OcrUpdateRequest))
     @Patch("{id}")
     @Produces("application/json")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "Transcript not found")
     @Security("bearerAuth", ["profile:update:own"])
     @SuccessResponse(HttpStatus.OK, "Scores successfully updated")
     public async patchExtractedScores(
@@ -283,9 +351,19 @@ export class OcrController extends Controller {
         );
     }
 
+    /**
+     * Update subject scores for an existing transcript for a guest user.
+     * This endpoint allows anonymous users to correct or modify previously extracted or entered scores.
+     * @summary Update transcript scores for guest user
+     * @param id The UUID of the transcript to update.
+     * @param ocrUpdateRequest The updated subject scores.
+     * @returns {OcrResultResponse} The updated transcript with modified subject scores.
+     */
     @Middlewares(validateUuidParams("id"), validateDTO(OcrUpdateRequest))
     @Patch("guest/{id}")
     @Produces("application/json")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.NOT_FOUND, "Transcript not found")
     @SuccessResponse(HttpStatus.OK, "Scores successfully updated")
     public async patchExtractedScoresGuest(
         @Path("id") id: string,
