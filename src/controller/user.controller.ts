@@ -1,5 +1,4 @@
 import { inject, injectable } from "inversify";
-// src/users/usersController.ts
 import {
     Body,
     Controller,
@@ -12,6 +11,7 @@ import {
     Produces,
     Query,
     Request,
+    Response,
     Route,
     Security,
     SuccessResponse,
@@ -28,9 +28,10 @@ import { UserMapper } from "@/mapper/user-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
 import { TYPES } from "@/type/container/types.js";
+import { HttpStatus } from "@/type/enum/http-status.js";
 
 /**
- * Manages user-related operations.
+ * Manages user-related operations including CRUD operations for user accounts.
  */
 @injectable()
 @Route("users")
@@ -44,32 +45,42 @@ export class UserController extends Controller {
     }
 
     /**
-     * Checks if a user exists in the system.
-     * @param userId The unique identifier of the user to check.
-     * @returns Boolean indicating whether the user exists.
+     * Check if a user exists in the system by their ID.
+     * This is useful for validation before performing operations that require an existing user.
+     * @summary Check user existence
+     * @param userId The UUID of the user to check.
+     * @returns {object} Boolean indicating whether the user exists.
      */
     @Get("{userId}/exists")
     @Middlewares(validateUuidParams("userId"))
     @Produces("application/json")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
     @Security("bearerAuth", ["user:read"])
-    @SuccessResponse("200", "Successfully checked user existence")
+    @SuccessResponse(HttpStatus.OK, "Successfully checked user existence")
     public async checkUserExists(
-        @Path() userId: string,
+        @Path("userId") userId: string,
     ): Promise<{ exists: boolean }> {
         const exists = await this.userService.exists(userId);
         return { exists };
     }
 
     /**
-     * Creates a new user in the system.
-     * The request body will be validated to ensure it contains all required user fields.
-     * @param requestBody The user information needed to create a new user.
+     * Create a new user in the system.
+     * The password will be hashed before storage, and default permissions will be assigned based on the user's role.
+     * @summary Create new user
+     * @param requestBody The user information including email, password, name, and role.
+     * @returns {UserAdmin} The newly created user with assigned permissions.
+     * @throws {EntityExistsException} If a user with the same email already exists.
      */
     @Middlewares(validateDTO(CreateUserAdminDTO))
     @Post()
     @Produces("application/json")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.CONFLICT, "User with email already exists")
     @Security("bearerAuth", ["user:create"])
-    @SuccessResponse("201", "Created")
+    @SuccessResponse(HttpStatus.CREATED, "Created")
     public async createUser(
         @Body() requestBody: CreateUserAdminDTO,
     ): Promise<UserAdmin> {
@@ -80,26 +91,34 @@ export class UserController extends Controller {
     }
 
     /**
-     * Deletes a user from the system.
-     * This operation cannot be undone.
-     * @param userId The unique identifier of the user to delete.
+     * Delete a user from the system permanently.
+     * This operation cannot be undone and will also invalidate all cached user data.
+     * @summary Delete user
+     * @param userId The UUID of the user to delete.
+     * @throws {EntityNotFoundException} If the user is not found.
      */
     @Delete("{userId}")
     @Middlewares(validateUuidParams("userId"))
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "User not found")
     @Security("bearerAuth", ["user:delete"])
-    @SuccessResponse("204", "Successfully deleted user")
-    public async deleteUser(@Path() userId: string): Promise<void> {
+    @SuccessResponse(HttpStatus.NO_CONTENT, "Successfully deleted user")
+    public async deleteUser(@Path("userId") userId: string): Promise<void> {
         await this.userService.delete(userId);
     }
 
     /**
-     * Retrieves all users in the system.
-     * @returns An array of all users.
+     * Retrieve all users in the system.
+     * This endpoint returns the complete list of users without pagination.
+     * @summary Get all users
+     * @returns {UserAdmin[]} An array of all users in the system.
      */
     @Get()
     @Produces("application/json")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
     @Security("bearerAuth", ["user:read", "user:list"])
-    @SuccessResponse("200", "Successfully retrieved all users")
+    @SuccessResponse(HttpStatus.OK, "Successfully retrieved all users")
     public async getAllUsers(): Promise<UserAdmin[]> {
         const userEntities: UserEntity[] = await this.userService.getAll();
         const responseArray: UserAdmin[] =
@@ -108,18 +127,25 @@ export class UserController extends Controller {
     }
 
     /**
-     * Retrieves the details of a specific user with optional name filtering.
+     * Retrieve a specific user by ID with optional name filtering.
      * This endpoint allows querying by both ID and name for more specific searches.
-     * @param userId The unique identifier of the user (UUID).
-     * @param name Optional. A query to filter by the user's name.
+     * Results are cached to improve performance.
+     * @summary Get user by ID and optional name
+     * @param userId The UUID of the user to retrieve.
+     * @param name Optional name filter to match against the user's name.
+     * @returns {UserAdmin} The user matching the provided criteria.
+     * @throws {EntityNotFoundException} If no user matches the provided criteria.
      */
     @Get("{userId}/search")
     @Middlewares(validateUuidParams("userId"))
     @Produces("application/json")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "User not found")
     @Security("bearerAuth", ["user:read"])
-    @SuccessResponse("200", "Successfully retrieved user")
+    @SuccessResponse(HttpStatus.OK, "Successfully retrieved user")
     public async getUser(
-        @Path() userId: string,
+        @Path("userId") userId: string,
         @Query() name?: string,
     ): Promise<UserAdmin> {
         const userEntity: UserEntity = await this.userService.getByIdAndName(
@@ -131,33 +157,52 @@ export class UserController extends Controller {
     }
 
     /**
-     * Retrieves the details of a specific user by ID.
-     * @param userId The unique identifier of the user (UUID).
+     * Retrieve a specific user by their ID.
+     * Results are cached to improve performance on repeated queries.
+     * @summary Get user by ID
+     * @param userId The UUID of the user to retrieve.
+     * @returns {UserAdmin} The user details.
+     * @throws {EntityNotFoundException} If the user is not found.
      */
     @Get("{userId}")
     @Middlewares(validateUuidParams("userId"))
     @Produces("application/json")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "User not found")
     @Security("bearerAuth", ["user:read"])
-    @SuccessResponse("200", "Successfully retrieved user")
-    public async getUserById(@Path() userId: string): Promise<UserAdmin> {
+    @SuccessResponse(HttpStatus.OK, "Successfully retrieved user")
+    public async getUserById(
+        @Path("userId") userId: string,
+    ): Promise<UserAdmin> {
         const userEntity: UserEntity = await this.userService.getById(userId);
         const responseDTO: UserAdmin = UserMapper.toUserAdmin(userEntity);
         return responseDTO;
     }
 
     /**
-     * Updates an existing user's information.
+     * Update an existing user's information.
      * Only provided fields will be updated, others will remain unchanged.
-     * @param userId The unique identifier of the user to update.
+     * If the password is updated, it will be hashed before storage.
+     * If the role is updated, permissions will be automatically refreshed based on the new role.
+     * The user cache will be invalidated after update.
+     * @summary Update user
+     * @param userId The UUID of the user to update.
      * @param requestBody Partial user data containing the fields to update.
+     * @param request The authenticated request containing the user performing the update.
+     * @returns {UserAdmin} The updated user details.
+     * @throws {EntityNotFoundException} If the user is not found.
      */
     @Middlewares(validateUuidParams("userId"), validateDTO(UpdateUserAdminDTO))
     @Patch("{userId}")
     @Produces("application/json")
+    @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
+    @Response<string>(HttpStatus.UNAUTHORIZED, "Authentication required")
+    @Response<string>(HttpStatus.NOT_FOUND, "User not found")
     @Security("bearerAuth", ["user:update"])
-    @SuccessResponse("200", "Successfully updated user")
+    @SuccessResponse(HttpStatus.OK, "Successfully updated user")
     public async updateUser(
-        @Path() userId: string,
+        @Path("userId") userId: string,
         @Body() requestBody: UpdateUserAdminDTO,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<UserAdmin> {
