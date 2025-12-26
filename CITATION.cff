@@ -40,5 +40,5 @@ references:
     title: "SeaLab Project - Frontend"
     repository-code: "https://github.com/PhuNguyenPT/ReactJS_Frontend.git"
   - type: software
-    title: "SeaLab Project - KHKT"
+    title: "SeaLab Project - ML API"
     repository-code: "https://github.com/th-mimifufu/ptnk.khkt_project.git"
