@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Vuong"
+    given-names: "Khanh-Linh"
+    affiliation: "Vietnamese-German University"
+  - family-names: "Trinh"
+    given-names: "Mai-Phuong"
+    affiliation: "Vietnamese-German University"
+  - family-names: "Nguyen"
+    given-names: "Thien-Phu Phuoc"
+    email: "phu.npt01@gmail.com"
+    affiliation: "Vietnamese-German University"
+  - family-names: "Vo"
+    given-names: "Dang-Khoa"
+    affiliation: "Vietnamese-German University"
+  - family-names: "Nguyen"
+    given-names: "Nha-Vy"
+    affiliation: "Vietnamese-German University"
+  - family-names: "Trinh"
+    given-names: "Anh-Duc"
+    email: "ducta@nhg.vn"
+    affiliation: "Vietnamese-German University"
+  - family-names: "Tran"
+    given-names: "Hong-Ngoc"
+    email: "ngoc.th@vgu.edu.vn"
+    affiliation: "Vietnamese-German University"
+title: "SeaLab Project - Backend API"
+version: 0.0.3
+date-released: 2025-12-26
+url: "https://admission.edu.vn"
+repository-code: "https://github.com/PhuNguyenPT/NodejsApp_Backend.git"
+keywords:
+  - "SeaLab"
+  - "Backend"
+  - "Node.js"
+  - "API"
+references:
+  - type: software
+    title: "SeaLab Project - Frontend"
+    repository-code: "https://github.com/PhuNguyenPT/ReactJS_Frontend.git"
+  - type: software
+    title: "SeaLab Project - KHKT"
+    repository-code: "https://github.com/th-mimifufu/ptnk.khkt_project.git"
