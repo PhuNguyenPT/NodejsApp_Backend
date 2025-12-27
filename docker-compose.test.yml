@@ -1,0 +1,83 @@
+# docker-compose.yml
+networks:
+  frontend-network-test: # For frontend ↔ backend only
+    driver: bridge
+    external: true
+    name: frontend-network-test
+  backend-network-test: # For backend ↔ DB ↔ Redis
+    driver: bridge
+    external: true
+    name: backend-network-test
+  app-shared-network-test: # For backend ↔ ML service
+    driver: bridge
+    external: true
+    name: app-shared-network-test
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE}
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/${POSTGRES_VERSION}/docker
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+    ports:
+      - "${POSTGRES_EXTERNAL_PORT}:5432"
+    volumes:
+      - postgres_data_test:/var/lib/postgresql
+    networks:
+      - backend-network-test
+      - app-shared-network-test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  redis:
+    image: ${REDIS_IMAGE}
+    container_name: redis
+    restart: always
+    command: >
+      sh -c "
+      redis-server 
+      --requirepass ${REDIS_PASSWORD} 
+      --user ${REDIS_USERNAME} on '>${REDIS_USER_PASSWORD}' '~*' '&*' '+@all'
+      "
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_USERNAME: ${REDIS_USERNAME}
+      REDIS_USER_PASSWORD: ${REDIS_USER_PASSWORD}
+    ports:
+      - "${REDIS_EXTERNAL_PORT}:6379"
+    volumes:
+      - redis_data_test:/data
+    networks:
+      - backend-network-test # Only backend can reach
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "--user",
+          "${REDIS_USERNAME}",
+          "--pass",
+          "${REDIS_USER_PASSWORD}",
+          "ping",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  postgres_data_test:
+    driver: local
+    name: postgres_data_test
+  redis_data_test:
+    driver: local
+    name: redis_data_test

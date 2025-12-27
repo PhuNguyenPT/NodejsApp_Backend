@@ -1,13 +1,16 @@
 networks:
-  frontend-network: # For frontend ↔ backend only
+  frontend-network-prod: # For frontend ↔ backend only
     driver: bridge
-    name: frontend-network
-  backend-network: # For backend ↔ DB ↔ Redis
-    driver: bridge
-    name: backend-network
-  app-shared-network: # For backend ↔ ML service
     external: true
-    name: app-shared-network
+    name: frontend-network-prod
+  backend-network-prod: # For backend ↔ DB ↔ Redis
+    driver: bridge
+    external: true
+    name: backend-network-prod
+  app-shared-network-prod: # For backend ↔ ML service
+    driver: bridge
+    external: true
+    name: app-shared-network-prod
 
 secrets:
   private_key:
@@ -32,11 +35,11 @@ services:
       - "${SERVER_PORT}:${SERVER_PORT}" # HTTP port (3000)
       - "${SERVER_TLS_PORT}:${SERVER_TLS_PORT}" # HTTPS port (3443)
     networks:
-      frontend-network:
+      frontend-network-prod:
         aliases:
           - backend
-      backend-network: {}
-      app-shared-network: {}
+      backend-network-prod: {}
+      app-shared-network-prod: {}
     depends_on:
       postgres-prod:
         condition: service_healthy
@@ -85,8 +88,8 @@ services:
     volumes:
       - postgres_data_prod:/var/lib/postgresql
     networks:
-      - backend-network
-      - app-shared-network
+      - backend-network-prod
+      - app-shared-network-prod
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -109,7 +112,7 @@ services:
     volumes:
       - redis_data_prod:/data
     networks:
-      - backend-network
+      - backend-network-prod
     healthcheck:
       test:
         [
