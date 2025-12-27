@@ -58,7 +58,7 @@ export const config: Config = cleanEnv(process.env, {
 
     // Environment config
     NODE_ENV: str({
-        choices: ["development", "production", "staging"],
+        choices: ["development", "production", "staging", "test"],
     }),
     // Pagination Configuration (Spring Boot style)
     PAGINATION_DEFAULT_PAGE: num({ default: 1 }),

@@ -45,6 +45,41 @@ const getLogging = (): boolean | LogLevel[] => {
     }
 };
 
+/**
+ * Get entities path configuration based on environment
+ */
+const getEntitiesPath = (): string => {
+    const srcPath = "src/entity/**/*.ts";
+    const distPath = "dist/entity/**/*.js";
+    switch (config.NODE_ENV) {
+        case "development":
+            return srcPath;
+        case "production":
+            return distPath;
+        case "staging":
+            return distPath;
+        case "test":
+            return distPath;
+    }
+};
+
+/**
+ * Get migration path configuration based on environment
+ */
+const getMigrationPath = (): string => {
+    const srcPath = "src/migration/**/*.ts";
+    const distPath = "dist/migration/**/*.js";
+    switch (config.NODE_ENV) {
+        case "development":
+            return srcPath;
+        case "production":
+            return distPath;
+        case "staging":
+            return distPath;
+        case "test":
+            return distPath;
+    }
+};
 // Redis configuration for TypeORM cache using ioredis
 const typeormRedisConfig = {
     db: config.REDIS_DB,
@@ -62,11 +97,7 @@ export const postgresDataSource = new DataSource({
         type: "ioredis", // Changed from "redis" to "ioredis"
     },
     database: config.POSTGRES_DB,
-    entities: [
-        config.NODE_ENV === "development"
-            ? "src/entity/**/*.ts"
-            : "dist/entity/**/*.js",
-    ],
+    entities: [getEntitiesPath()],
     extra: {
         acquire: 30000,
         idle: 10000,
@@ -76,11 +107,7 @@ export const postgresDataSource = new DataSource({
     host: config.POSTGRES_HOST,
     logging: getLogging(),
     maxQueryExecutionTime: 5000,
-    migrations: [
-        config.NODE_ENV === "development"
-            ? "src/migration/**/*.ts"
-            : "dist/migration/**/*.js",
-    ],
+    migrations: [getMigrationPath()],
     migrationsRun: config.DB_RUN_MIGRATIONS_ON_STARTUP,
     migrationsTableName: "typeorm_migrations",
     password: config.POSTGRES_PASSWORD,
