@@ -38,7 +38,7 @@ export interface Config {
     MISTRAL_API_KEY: string;
 
     // Environment config
-    NODE_ENV: "development" | "production" | "staging";
+    NODE_ENV: "development" | "production" | "staging" | "test";
 
     // Pagination Configuration (Spring Boot style)
     PAGINATION_DEFAULT_PAGE: number;
