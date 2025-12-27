@@ -102,13 +102,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
+      - name: Use Node.js from .nvmrc
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "npm"
-
       - name: Install dependencies
         run: npm ci
 
@@ -122,3 +120,5 @@ jobs:
 
       - name: Run tests
         run: npm test
+      - run: npm run lint
+      - run: npm run format:check
