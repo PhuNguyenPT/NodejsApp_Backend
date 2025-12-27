@@ -14,9 +14,9 @@ networks:
     name: app-shared-network-test
 
 services:
-  postgres:
+  postgres-test:
     image: ${POSTGRES_IMAGE}
-    container_name: postgres
+    container_name: postgres-test
     restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -38,9 +38,9 @@ services:
       retries: 3
       start_period: 10s
 
-  redis:
+  redis-test:
     image: ${REDIS_IMAGE}
-    container_name: redis
+    container_name: redis-test
     restart: always
     command: >
       sh -c "

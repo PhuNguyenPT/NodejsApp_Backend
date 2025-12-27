@@ -1,19 +1,19 @@
 # docker-compose.yml
 networks:
-  frontend-network: # For frontend ↔ backend only
+  frontend-network-dev: # For frontend ↔ backend only
     driver: bridge
-    name: frontend-network
-  backend-network: # For backend ↔ DB ↔ Redis
+    name: frontend-network-dev
+  backend-network-dev: # For backend ↔ DB ↔ Redis
     driver: bridge
-    name: backend-network
-  app-shared-network: # For backend ↔ ML service
+    name: backend-network-dev
+  app-shared-network-dev: # For backend ↔ ML service
     external: true
-    name: app-shared-network
+    name: app-shared-network-dev
 
 services:
-  postgres:
+  postgres-dev:
     image: ${POSTGRES_IMAGE}
-    container_name: postgres
+    container_name: postgres-dev
     restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -26,8 +26,8 @@ services:
     volumes:
       - postgres_data_dev:/var/lib/postgresql
     networks:
-      - backend-network
-      - app-shared-network
+      - backend-network-dev
+      - app-shared-network-dev
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -35,9 +35,9 @@ services:
       retries: 3
       start_period: 10s
 
-  redis:
+  redis-dev:
     image: ${REDIS_IMAGE}
-    container_name: redis
+    container_name: redis-dev
     restart: always
     command: >
       sh -c "
@@ -54,7 +54,7 @@ services:
     volumes:
       - redis_data_dev:/data
     networks:
-      - backend-network # Only backend can reach
+      - backend-network-dev # Only backend can reach
     healthcheck:
       test:
         [

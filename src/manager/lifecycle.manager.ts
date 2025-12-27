@@ -2,6 +2,8 @@
 import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
+import type { Config } from "@/config/app.config.js";
+
 import { keyStore } from "@/config/key.config.js";
 import { PassportConfig } from "@/config/passport.config.js";
 import { DatabaseManager } from "@/manager/database.manager.js";
@@ -15,6 +17,7 @@ export class LifecycleManager {
 
     constructor(
         @inject(TYPES.Logger) private readonly logger: Logger,
+        @inject(TYPES.Config) private readonly config: Config,
         @inject(TYPES.PassportConfig)
         private readonly passportConfig: PassportConfig,
         @inject(TYPES.PredictionServiceClient)
@@ -184,6 +187,11 @@ export class LifecycleManager {
      * Initialize prediction model server with retry logic
      */
     private async initializePredictModelServer(): Promise<void> {
+        if (this.config.CI) {
+            this.logger.warn("⚠️ Predict Model Server: Skipped (CI/Test mode)");
+            return;
+        }
+
         try {
             this.logger.info("🔗 Predict Model Server: Initializing...");
 

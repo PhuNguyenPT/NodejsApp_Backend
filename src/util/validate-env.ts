@@ -16,6 +16,8 @@ export const config: Config = cleanEnv(process.env, {
     // Cache TTL Configuration (in seconds)
     CACHE_TTL_ADMISSION_FIELDS_IN_SECONDS: num({ default: 1800 }), // 30 minutes
     CACHE_TTL_STUDENT_IN_SECONDS: num({ default: 3600 }), // 1h
+
+    CI: bool({ default: false }),
     // CORS Configuration
     CORS_CREDENTIALS: bool({ default: true }), // Use bool validator
     CORS_ORIGIN: commaSeparatedString({ default: ["http://localhost:3000"] }),
@@ -58,7 +60,7 @@ export const config: Config = cleanEnv(process.env, {
 
     // Environment config
     NODE_ENV: str({
-        choices: ["development", "production", "staging"],
+        choices: ["development", "production", "staging", "test"],
     }),
     // Pagination Configuration (Spring Boot style)
     PAGINATION_DEFAULT_PAGE: num({ default: 1 }),
