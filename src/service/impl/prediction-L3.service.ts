@@ -1398,21 +1398,20 @@ export class PredictionL3Service implements IPredictionL3Service {
         });
 
         // Assign the first 2 elective subjects to elective_1_score and elective_2_score
-        if (electiveSubjects.length >= 2) {
-            thptScores.elective_1_score = plainToInstance(THPTSubjectScore, {
-                score: electiveSubjects[0].score,
-                subject_name: electiveSubjects[0].subject_name,
-            });
-
-            thptScores.elective_2_score = plainToInstance(THPTSubjectScore, {
-                score: electiveSubjects[1].score,
-                subject_name: electiveSubjects[1].subject_name,
-            });
-        } else {
+        if (electiveSubjects.length < 2) {
             throw new IllegalArgumentException(
                 "THPTSubjectScore is required with 2 electives but no valid data is available",
             );
         }
+        thptScores.elective_1_score = plainToInstance(THPTSubjectScore, {
+            score: electiveSubjects[0].score,
+            subject_name: electiveSubjects[0].subject_name,
+        });
+
+        thptScores.elective_2_score = plainToInstance(THPTSubjectScore, {
+            score: electiveSubjects[1].score,
+            subject_name: electiveSubjects[1].subject_name,
+        });
         this.logger.debug("L3 Prediction: THPTSubjectScore", thptScores);
 
         // Priority 1: Check if transcripts with grade exist
