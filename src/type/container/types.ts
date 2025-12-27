@@ -58,7 +58,6 @@ export const RepositoryTypes = {
     ConductRepository: Symbol.for("ConductRepository"),
     FileRepository: Symbol.for("FileRepository"),
     IJwtTokenRepository: Symbol.for("IJwtTokenRepository"),
-    IUserRepository: Symbol.for("IUserRepository"),
     MajorGroupRepository: Symbol.for("MajorGroupRepository"),
     MajorRepository: Symbol.for("MajorRepository"),
     NationalExamRepository: Symbol.for("NationalExamRepository"),

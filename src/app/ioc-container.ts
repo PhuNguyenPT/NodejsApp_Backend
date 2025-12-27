@@ -14,7 +14,6 @@ import type { IOcrEventListener } from "@/event/ocr-event-listener.interface.js"
 import type { IStudentEventListener } from "@/event/student-event-listener.interface.js";
 import type { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
 import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
-import type { IUserRepository } from "@/repository/user-repository-interface.js";
 import type { IAdmissionService } from "@/service/admission-service.interface.js";
 import type { IAuthService } from "@/service/auth-service.interface.js";
 import type { IAwardService } from "@/service/award-service.interface.js";
@@ -87,7 +86,6 @@ import { MiddlewareManager } from "@/manager/middleware.manager.js";
 import { RouteManager } from "@/manager/route.manager.js";
 import { ServerManager } from "@/manager/server.manager.js";
 import { JwtTokenRepository } from "@/repository/impl/jwt-repository.js";
-import { UserRepository } from "@/repository/impl/user-repository.js";
 import { AdmissionService } from "@/service/impl/admission.service.js";
 import { AuthService } from "@/service/impl/auth.service.js";
 import { AwardService } from "@/service/impl/award.service.js";
@@ -197,10 +195,6 @@ iocContainer
 iocContainer.bind<Options>(TYPES.MulterOptions).toConstantValue(mutterOptions);
 
 // --- Repository Bindings ---
-iocContainer
-    .bind<IUserRepository>(TYPES.IUserRepository)
-    .to(UserRepository)
-    .inSingletonScope();
 iocContainer
     .bind<IJwtTokenRepository>(TYPES.IJwtTokenRepository)
     .to(JwtTokenRepository)
