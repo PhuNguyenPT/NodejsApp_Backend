@@ -8,6 +8,8 @@ export interface Config {
     CACHE_TTL_ADMISSION_FIELDS_IN_SECONDS: number;
     CACHE_TTL_STUDENT_IN_SECONDS: number;
 
+    CI: boolean;
+
     // CORS Configuration
     CORS_CREDENTIALS: boolean;
     CORS_ORIGIN: string[];

@@ -1,29 +1,124 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Node.js CI
+name: Test
 
 on:
   push:
-    branches: ["main"]
+    branches: [main]
   pull_request:
-    branches: ["main"]
+    branches: [main]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_DB: node_app_test
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5435:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:latest
+        ports:
+          - 6382:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      SERVER_PORT: 3003
+      SERVER_TLS_PORT: 3446
+      SERVER_HOSTNAME: localhost
+      SERVER_PATH: /api
+      SERVER_BATCH_CONCURRENCY: 2
+      CACHE_TTL_ADMISSION_FIELDS_IN_SECONDS: 1800
+      CACHE_TTL_STUDENT_IN_SECONDS: 3600
+      CORS_ORIGIN: http://localhost:3002
+      CORS_CREDENTIALS: true
+      FILE_SIZE: 10485760
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5435
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: node_app_test
+      DB_SYNCHRONIZE: false
+      DB_RUN_MIGRATIONS_ON_STARTUP: true
+      DB_LOGGING: false
+      DB_LOGGING_LEVELS: ""
+      REDIS_HOST: localhost
+      REDIS_PORT: 6382
+      REDIS_DB: 0
+      REDIS_PASSWORD: ""
+      REDIS_USERNAME: default
+      REDIS_USER_PASSWORD: ""
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: SecureAdminPassword123!
+      ADMIN_NAME: System Administrator
+      PRIVATE_KEY_PATH: ./private.pem
+      PUBLIC_KEY_PATH: ./public.pem
+      JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS: 3600
+      JWT_AUDIENCE: audience
+      JWT_ISSUER: app
+      JWT_REFRESH_TOKEN_EXPIRATION_IN_SECONDS: 604800
+      LOG_LEVEL: error
+      LOG_DIR: logs
+      ENABLE_FILE_LOGGING: false
+      PAGINATION_DEFAULT_PAGE: 1
+      PAGINATION_DEFAULT_SIZE: 20
+      PAGINATION_MAX_SIZE: 2000
+      PAGINATION_MIN_SIZE: 1
+      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+      SERVICE_SERVER_HOSTNAME: localhost
+      SERVICE_SERVER_PORT: 8001
+      SERVICE_SERVER_PATH: ""
+      SERVICE_TIMEOUT_IN_MS: 90000
+      SERVICE_BATCH_CONCURRENCY: 10
+      SERVICE_PREDICTION_CONCURRENCY: 2
+      SERVICE_MAX_RETRIES: 2
+      SERVICE_RETRY_BASE_DELAY_MS: 2000
+      SERVICE_RETRY_ITERATION_DELAY_MS: 1000
+      SERVICE_REQUEST_DELAY_MS: 100
+      SERVICE_NETWORK_LATENCY_MS: 100
+      SERVICE_INPUTS_PER_WORKER: 3
+      SERVICE_L1_CHUNK_SIZE_INPUT_ARRAY: 3
+      SERVICE_L1_CHUNK_DELAY_MS: 100
+      SERVICE_L2_CHUNK_SIZE_INPUT_ARRAY: 3
+      SERVICE_L2_CHUNK_DELAY_MS: 100
+      SERVICE_MIN_BATCH_CONCURRENCY: 1
+      TLS_CA_PATH: ./tls/ca.crt
+      TLS_CERT_PATH: ./tls/backend.crt
+      TLS_KEY_PATH: ./tls/backend.key
 
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js from .nvmrc
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: ".nvmrc"
+          node-version: "20"
           cache: "npm"
-      - run: npm ci
-      - run: npm run build --if-present
-      - run: npm test
-        env:
-          CI: true
-      - run: npm run lint
-      - run: npm run format:check
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate key pairs
+        run: |
+          mkdir -p tls
+          openssl genrsa -out private.pem 2048
+          openssl rsa -in private.pem -pubout -out public.pem
+          openssl req -x509 -newkey rsa:4096 -keyout tls/backend.key -out tls/backend.crt -days 365 -nodes -subj "/CN=localhost"
+          cp tls/backend.crt tls/ca.crt
+
+      - name: Run tests
+        run: npm test

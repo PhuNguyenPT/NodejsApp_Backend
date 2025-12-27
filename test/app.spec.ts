@@ -10,9 +10,7 @@ import { postgresDataSource } from "@/config/data-source.config.js";
 import { redisClient, redisSubscriber } from "@/config/redis.config.js";
 import { TYPES } from "@/type/container/types.js";
 
-const isCI = process.env.CI === "true";
-
-describe.skipIf(isCI)("App Integration Test", () => {
+describe("App Integration Test", () => {
     let app: AbstractApp;
 
     beforeAll(async () => {
