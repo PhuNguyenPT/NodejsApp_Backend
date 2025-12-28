@@ -50,6 +50,11 @@ services:
       - TLS_KEY_PATH=/tmp/secrets/tls/backend.key
       - TLS_CERT_PATH=/tmp/secrets/tls/backend.crt
       - TLS_CA_PATH=/tmp/secrets/tls/ca.crt
+    sysctls:
+      - net.ipv4.tcp_keepalive_time=600 # Send keepalive after 10 min idle
+      - net.ipv4.tcp_keepalive_intvl=60 # Send keepalive every 60s
+      - net.ipv4.tcp_keepalive_probes=9 # Send 9 probes before giving up
+      - net.netfilter.nf_conntrack_tcp_timeout_established=432000 # 5 days
     healthcheck:
       test:
         [
