@@ -181,7 +181,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
             pipeline.sRem(familyIndexKey, jwtEntity.id);
 
             const results = await pipeline.exec();
-            const deleted = results[0]?.[1] === 1;
+            const deleted = Array.isArray(results[0]) && results[0][1] === 1;
 
             if (deleted) {
                 this.logger.debug(`JWT token deleted: ${id}`);

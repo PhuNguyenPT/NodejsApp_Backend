@@ -2,11 +2,14 @@
 networks:
   frontend-network-dev: # For frontend ↔ backend only
     driver: bridge
+    external: true
     name: frontend-network-dev
   backend-network-dev: # For backend ↔ DB ↔ Redis
     driver: bridge
+    external: true
     name: backend-network-dev
   app-shared-network-dev: # For backend ↔ ML service
+    driver: bridge
     external: true
     name: app-shared-network-dev
 

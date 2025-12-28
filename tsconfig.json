@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": ".",
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "strict": true,
     "esModuleInterop": true,
     "module": "nodenext",
