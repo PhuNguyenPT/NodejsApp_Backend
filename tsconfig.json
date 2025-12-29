@@ -12,6 +12,7 @@
     "incremental": true,
     "module": "nodenext",
     "moduleResolution": "nodenext",
+    "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
