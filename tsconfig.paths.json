@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@/app/*": ["./src/app/*"],
+      "@/config/*": ["./src/config/*"],
+      "@/controller/*": ["./src/controller/*"],
+      "@/data/*": ["./src/data/*"],
+      "@/decorator/*": ["./src/decorator/*"],
+      "@/dto/*": ["./src/dto/*"],
+      "@/entity/*": ["./src/entity/*"],
+      "@/event/*": ["./src/event/*"],
+      "@/generated/*": ["./src/generated/*"],
+      "@/handler/*": ["./src/handler/*"],
+      "@/job/*": ["./src/job/*"],
+      "@/manager/*": ["./src/manager/*"],
+      "@/mapper/*": ["./src/mapper/*"],
+      "@/middleware/*": ["./src/middleware/*"],
+      "@/migration/*": ["./src/migration/*"],
+      "@/repository/*": ["./src/repository/*"],
+      "@/service/*": ["./src/service/*"],
+      "@/test/*": ["./test/*"],
+      "@/type/*": ["./src/type/*"],
+      "@/util/*": ["./src/util/*"],
+      "@/validator/*": ["./src/validator/*"]
+    }
+  }
+}

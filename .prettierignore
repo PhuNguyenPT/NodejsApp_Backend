@@ -1,5 +1,42 @@
+# Build outputs
 dist
-.husky/
-node_modules/
-coverage/
-.vscode/
+coverage
+
+# Dependencies
+node_modules
+
+# Generated files
+src/generated
+
+# Git hooks
+.husky
+
+# IDE
+.vscode
+.idea
+
+# Lock files (don't format these)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+logs
+
+# Build artifacts
+*.tsbuildinfo
+
+# PlantUML diagrams (from your diagram scripts)
+*.puml
+*.svg
+docs/*.puml
+docs/*.svg
+
+# Keys
+*.pem
+tls
