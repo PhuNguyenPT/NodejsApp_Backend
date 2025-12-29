@@ -45,7 +45,6 @@ import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
-import { ConcurrencyUtil } from "@/util/concurrency.util.js";
 import { PredictionUtil } from "@/util/prediction.util.js";
 import { formatValidationErrors } from "@/util/validation.util.js";
 
@@ -178,8 +177,6 @@ export class PredictionL3Service implements IPredictionL3Service {
         private readonly fileRepository: Repository<FileEntity>,
         @inject(TYPES.PredictHttpClient)
         private readonly httpClient: AxiosInstance,
-        @inject(TYPES.ConcurrencyUtil)
-        private readonly concurrencyUtil: ConcurrencyUtil,
         @inject(TYPES.PredictionUtil)
         private readonly predictionUtil: PredictionUtil,
     ) {}

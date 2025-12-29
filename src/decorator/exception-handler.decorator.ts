@@ -45,8 +45,8 @@ export const ExceptionHandlerRegistry = {
 
 export function ExceptionHandler(exceptionType: ErrorConstructor) {
     return function (
-        target: object,
-        propertyKey: string | symbol,
+        _target: object,
+        _propertyKey: string | symbol,
         descriptor: PropertyDescriptor,
     ): void {
         const handler = descriptor.value as ExceptionHandlerFn;

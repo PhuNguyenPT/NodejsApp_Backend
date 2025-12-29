@@ -52,7 +52,7 @@ morgan.token("response-time-colored", (req: Request, res: Response) => {
 });
 
 // Custom token for status code with color coding
-morgan.token("status-colored", (req: Request, res: Response) => {
+morgan.token("status-colored", (_req: Request, res: Response) => {
     const status = res.statusCode;
     const statusStr = status.toString();
 
@@ -63,7 +63,7 @@ morgan.token("status-colored", (req: Request, res: Response) => {
 });
 
 // Custom token for content length with fallback
-morgan.token("content-length-safe", (req: Request, res: Response) => {
+morgan.token("content-length-safe", (_req: Request, res: Response) => {
     return res.getHeader("content-length")?.toString() ?? "0";
 });
 
@@ -162,7 +162,8 @@ export const getMorganConfig = (): RequestHandler[] => {
             // Separate error logging
             middlewares.push(
                 morgan(detailedFormat, {
-                    skip: (req: Request, res: Response) => res.statusCode < 400,
+                    skip: (_req: Request, res: Response) =>
+                        res.statusCode < 400,
                     stream: {
                         write: (message: string) => {
                             logger.error(`HTTP Error: ${message.trim()}`);

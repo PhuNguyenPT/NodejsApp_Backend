@@ -1,5 +1,3 @@
-import type { RedisClientType } from "redis";
-
 import { inject, injectable } from "inversify";
 import { IsNull, Repository } from "typeorm";
 import { Logger } from "winston";
@@ -67,8 +65,6 @@ export class StudentService implements IStudentService {
         private readonly studentEventListener: IStudentEventListener,
         @inject(TYPES.IMajorService)
         private readonly majorService: IMajorService,
-        @inject(TYPES.RedisPublisher)
-        private readonly redis: RedisClientType,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
     ) {}

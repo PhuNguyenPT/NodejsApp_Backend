@@ -36,7 +36,7 @@ const formatValidationErrors = (
  * This properly handles async validation and prevents invalid data from passing through.
  */
 function validateDTO<T extends object>(type: ClassConstructor<T>) {
-    return (req: Request, res: Response, next: NextFunction): void => {
+    return (req: Request, _res: Response, next: NextFunction): void => {
         // Use an async IIFE to handle the validation - explicitly void it to satisfy ESLint
         void (async () => {
             try {

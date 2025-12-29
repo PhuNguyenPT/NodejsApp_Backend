@@ -1,6 +1,5 @@
 import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
-import { Logger } from "winston";
 
 import type { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
 
@@ -13,8 +12,6 @@ export class PredictionResultService implements IPredictionResultService {
     constructor(
         @inject(TYPES.PredictionResultEntityRepository)
         private readonly predictionResultEntityRepository: Repository<PredictionResultEntity>,
-        @inject(TYPES.Logger)
-        private readonly logger: Logger,
     ) {}
 
     public async findByStudentIdAndUserId(

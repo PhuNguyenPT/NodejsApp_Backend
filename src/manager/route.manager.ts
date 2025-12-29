@@ -28,7 +28,7 @@ export class RouteManager {
     public initializeHealthRoute(app: Express): void {
         this.logger.info("Initializing health check route...");
 
-        app.get("/health", (req, res) => {
+        app.get("/health", (_req, res) => {
             const dbStatus = this.databaseManager.getConnectionStatus();
             const isHealthy = this.databaseManager.isHealthy();
 

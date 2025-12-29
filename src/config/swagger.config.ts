@@ -38,19 +38,19 @@ function swaggerDocs(app: Express, serverUrl: string): void {
     app.get(
         "/api/v3/api-docs",
         helmetMiddleware,
-        (req: Request, res: Response) => {
+        (_req: Request, res: Response) => {
             res.setHeader("Content-Type", "application/json");
             res.send(swaggerSpec);
         },
     );
 
-    app.get("/api-docs", helmetMiddleware, (req: Request, res: Response) => {
+    app.get("/api-docs", helmetMiddleware, (_req: Request, res: Response) => {
         res.setHeader("Content-Type", "application/json");
         res.send(swaggerSpec);
     });
 
     // Root redirect to swagger-ui (like Spring Boot)
-    app.get("/", (req: Request, res: Response) => {
+    app.get("/", (_req: Request, res: Response) => {
         res.redirect("/api/swagger-ui/");
     });
 
