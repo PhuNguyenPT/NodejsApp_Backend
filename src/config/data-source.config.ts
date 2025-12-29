@@ -1,4 +1,5 @@
 import type { LogLevel } from "typeorm";
+import type { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions.js";
 
 import { DataSource } from "typeorm";
 
@@ -80,6 +81,7 @@ const getMigrationPath = (): string => {
             return distPath;
     }
 };
+
 // Redis configuration for TypeORM cache using ioredis
 const typeormRedisConfig = {
     db: config.REDIS_DB,
@@ -89,31 +91,46 @@ const typeormRedisConfig = {
     username: config.REDIS_USERNAME,
 } as const;
 
-export const postgresDataSource = new DataSource({
+// PostgreSQL DataSource configuration
+const postgresConnectionOptions: PostgresConnectionOptions = {
+    // Query result cache using Redis
     cache: {
-        duration: 60 * 60 * 1000,
+        duration: 60 * 60 * 1000, // 1 hour
         options: typeormRedisConfig,
         tableName: "query_result_cache",
-        type: "ioredis", // Changed from "redis" to "ioredis"
+        type: "ioredis",
     },
+    // PostgreSQL-specific connection timeout
+    connectTimeoutMS: 10000, // 10 seconds max to establish connection
     database: config.POSTGRES_DB,
+    // Entity and migration configuration
     entities: [getEntitiesPath()],
+    // PostgreSQL connection pool options (pg driver options)
     extra: {
-        acquire: 30000,
-        idle: 10000,
-        max: 20,
-        min: 5,
+        idleTimeoutMillis: 10000, // 10 seconds idle timeout
+        max: 20, // Maximum pool size
+        min: 5, // Minimum pool size
     },
     host: config.POSTGRES_HOST,
+
+    // Logging configuration
     logging: getLogging(),
     maxQueryExecutionTime: 5000,
     migrations: [getMigrationPath()],
+
+    // Migration settings
     migrationsRun: config.DB_RUN_MIGRATIONS_ON_STARTUP,
     migrationsTableName: "typeorm_migrations",
     password: config.POSTGRES_PASSWORD,
+
     port: config.POSTGRES_PORT,
     subscribers: [],
+
     synchronize: config.DB_SYNCHRONIZE,
+
     type: "postgres",
+
     username: config.POSTGRES_USER,
-});
+};
+
+export const postgresDataSource = new DataSource(postgresConnectionOptions);
