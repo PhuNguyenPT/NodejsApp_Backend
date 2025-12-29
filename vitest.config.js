@@ -8,5 +8,40 @@ export default defineConfig({
     globals: true,
     environment: "node",
     env: loadEnv("test", process.cwd(), ""),
+
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html", "lcov"],
+      reportsDirectory: "./coverage",
+      exclude: [
+        "node_modules/**",
+        "dist/**",
+        "**/*.config.{js,ts}",
+        "**/*.d.ts",
+        "**/generated/**",
+        "**/*.{spec,test}.ts",
+        "src/migration/**",
+        "src/type/**",
+      ],
+      include: ["src/**/*.ts"],
+      thresholds: {
+        lines: 15,
+        functions: 15,
+        branches: 40,
+        statements: 15,
+      },
+      all: true,
+    },
+
+    include: ["test/**/*.{test,spec}.ts"],
+    exclude: ["node_modules", "dist", "**/*.d.ts"],
+
+    testTimeout: 10000,
+    hookTimeout: 10000,
+
+    reporters: ["default", "html"],
+    outputFile: {
+      html: "./coverage/test-results.html",
+    },
   },
 });
