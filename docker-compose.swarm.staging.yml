@@ -73,11 +73,17 @@ x-backend-common: &backend-common
       max_attempts: 3
     update_config:
       parallelism: 1
-      delay: 10s
+      delay: 30s
       order: start-first
+      failure_action: rollback
+      monitor: 60s
+      max_failure_ratio: 0.3
     rollback_config:
       parallelism: 1
-      delay: 5s
+      delay: 10s
+      failure_action: pause
+      monitor: 30s
+      order: stop-first
     resources:
       limits:
         cpus: "1"
