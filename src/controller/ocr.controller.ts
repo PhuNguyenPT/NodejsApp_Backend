@@ -20,7 +20,6 @@ import { Logger } from "winston";
 
 import type { BatchScoreExtractionResult } from "@/dto/ocr/score-extraction-result.js";
 import type { IMistralService } from "@/service/mistral-service.interface.js";
-import type { IOcrResultService } from "@/service/ocr-result-service.interface.js";
 import type { ITranscriptService } from "@/service/transcript-service.interface.js";
 
 import { OcrRequest } from "@/dto/ocr/ocr-request.dto.js";
@@ -40,8 +39,6 @@ export class OcrController extends Controller {
     constructor(
         @inject(TYPES.IMistralService)
         private readonly mistralService: IMistralService,
-        @inject(TYPES.IOcrResultService)
-        private readonly ocrResultService: IOcrResultService,
         @inject(TYPES.ITranscriptService)
         private readonly transcriptService: ITranscriptService,
         @inject(TYPES.Logger)

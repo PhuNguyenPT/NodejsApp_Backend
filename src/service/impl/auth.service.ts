@@ -547,37 +547,6 @@ export class AuthService implements IAuthService {
     }
 
     /**
-     * Determine if refresh token should be rotated
-     * You can customize this logic based on your security requirements
-     */
-    private shouldRotateRefreshToken(
-        exp: number,
-        thresholdHours = 24,
-    ): boolean {
-        try {
-            const now = Date.now();
-            const tokenExpiryMs = exp * 1000;
-            const timeUntilExpiry = tokenExpiryMs - now;
-            const thresholdMs = thresholdHours * 60 * 60 * 1000;
-
-            const isExpiringSoon = timeUntilExpiry < thresholdMs;
-
-            this.logger.debug("Token expiration check", {
-                isExpiringSoon,
-                thresholdHours,
-                timeUntilExpiryHours: Math.floor(
-                    timeUntilExpiry / (60 * 60 * 1000),
-                ),
-                tokenExpiresAt: new Date(tokenExpiryMs).toISOString(),
-            });
-            return isExpiringSoon;
-        } catch (error) {
-            this.logger.error("Error checking token for rotation", { error });
-            return true; // Default to rotation on error
-        }
-    }
-
-    /**
      * Validates that a token has the expected type
      * @param token - The JWT token to validate
      * @param expectedType - The expected token type (ACCESS or REFRESH)
