@@ -16,9 +16,9 @@ COPY package*.json ./
 # Install all dependencies, including devDependencies needed for the build
 RUN npm ci
 
-# Copy the rest of your application's source code
+# Copy the rest of application's source code
 COPY src ./src
-COPY tsconfig.build.json tsconfig.json tsoa.json vitest.config.js .nvmrc ./
+COPY tsconfig*.json *.config.* *.json .nvmrc ./
 
 # Run the build script defined in package.json
 RUN npm run build
