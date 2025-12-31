@@ -7,6 +7,35 @@ const commaSeparatedString = makeValidator((x) =>
     x.split(",").map((s) => s.trim()),
 );
 
+/**
+ * Custom validator for trust proxy setting
+ * Accepts: number (0-10), "true", "false"
+ * Returns: number | boolean
+ */
+const trustProxyValidator = makeValidator<boolean | number>((input) => {
+    const lower = input.toLowerCase().trim();
+
+    // Handle boolean strings
+    if (lower === "true") return true;
+    if (lower === "false") return false;
+
+    // Handle numbers
+    const parsed = parseInt(input, 10);
+    if (isNaN(parsed)) {
+        throw new Error(
+            `TRUST_PROXY_LEVEL must be a number (0-10), "true", or "false". Got: "${input}"`,
+        );
+    }
+
+    if (parsed < 0 || parsed > 10) {
+        throw new Error(
+            `TRUST_PROXY_LEVEL must be between 0-10. Got: ${parsed.toString()}`,
+        );
+    }
+
+    return parsed;
+});
+
 // Validate and export the typed config object
 export const config: Config = cleanEnv(process.env, {
     ADMIN_EMAIL: str(),
@@ -117,6 +146,12 @@ export const config: Config = cleanEnv(process.env, {
     TLS_CA_PATH: str(),
     TLS_CERT_PATH: str(),
     TLS_KEY_PATH: str(),
+
+    // Proxy Configuration
+    TRUST_PROXY_LEVEL: trustProxyValidator({
+        default: 2,
+        desc: "Number of proxies to trust (0-10), or 'true'/'false'. For Cloudflare + nginx setup, use 2. Default: 2",
+    }),
 });
 
 // Function to create safe config object excluding sensitive password fields

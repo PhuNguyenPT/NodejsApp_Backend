@@ -1,6 +1,5 @@
 import type { Request, RequestHandler, Response } from "express";
 
-// src/config/morgan.config.ts
 import fs from "fs";
 import morgan from "morgan";
 import path from "path";
@@ -8,22 +7,45 @@ import path from "path";
 import { logger } from "@/config/logger.config.js";
 import { config } from "@/util/validate-env.js";
 
-// Extended request interface for custom properties
 interface ExtendedRequest extends Request {
     requestId?: string;
 }
-// Custom token to get real IP address
-morgan.token("real-ip", (req: Request) => {
-    const forwardedFor = req.headers["x-forwarded-for"];
-    const realIp = req.headers["x-real-ip"];
 
-    return (
-        (Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor) ??
-        (typeof realIp === "string" ? realIp : undefined) ??
-        req.socket.remoteAddress ??
-        req.ip ??
-        "unknown"
-    );
+// Custom token to get real client IP from Cloudflare headers
+morgan.token("real-ip", (req: Request) => {
+    // Priority order for getting real client IP
+    // 1. CF-Connecting-IP (set by Cloudflare, most reliable)
+    // 2. True-Client-IP (Cloudflare Enterprise)
+    // 3. X-Real-IP (set by nginx from CF-Connecting-IP)
+    // 4. First IP in X-Forwarded-For
+    // 5. Fallback to socket address
+
+    const cfConnectingIp = req.headers["cf-connecting-ip"];
+    const trueClientIp = req.headers["true-client-ip"];
+    const realIp = req.headers["x-real-ip"];
+    const forwardedFor = req.headers["x-forwarded-for"];
+
+    // Return first valid IP found
+    if (typeof cfConnectingIp === "string" && cfConnectingIp) {
+        return cfConnectingIp;
+    }
+
+    if (typeof trueClientIp === "string" && trueClientIp) {
+        return trueClientIp;
+    }
+
+    if (typeof realIp === "string" && realIp) {
+        return realIp;
+    }
+
+    if (forwardedFor) {
+        const firstIp = Array.isArray(forwardedFor)
+            ? forwardedFor[0]
+            : forwardedFor.split(",")[0];
+        if (firstIp) return firstIp.trim();
+    }
+
+    return req.socket.remoteAddress ?? req.ip ?? "unknown";
 });
 
 morgan.token(
@@ -67,11 +89,20 @@ morgan.token("content-length-safe", (_req: Request, res: Response) => {
     return res.getHeader("content-length")?.toString() ?? "0";
 });
 
-// Custom format for production (structured) - FIXED
-const productionFormat =
-    '{"timestamp":":date[iso]","id":":request-id","ip":":real-ip","method":":method","url":":url","status":":status","responseTime":":response-time","contentLength":":content-length-safe","userAgent":":user-agent"}';
+// Add Cloudflare metadata tokens
+morgan.token("cf-ray", (req: Request) => {
+    return req.headers["cf-ray"]?.toString() ?? "-";
+});
 
-// Update your other formats to use the safe token as well:
+morgan.token("cf-country", (req: Request) => {
+    return req.headers["cf-ipcountry"]?.toString() ?? "-";
+});
+
+// Custom format for production (structured) with Cloudflare data
+const productionFormat =
+    '{"timestamp":":date[iso]","id":":request-id","ip":":real-ip","cfRay":":cf-ray","country":":cf-country","method":":method","url":":url","status":":status","responseTime":":response-time","contentLength":":content-length-safe","userAgent":":user-agent"}';
+
+// Detailed format with real client IP
 const detailedFormat =
     ':request-id :real-ip - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :content-length-safe ":referrer" ":user-agent" - :response-time ms';
 
@@ -116,7 +147,6 @@ export const getMorganConfig = (): RequestHandler[] => {
                     skip: skipHealthChecks,
                     stream: {
                         write: (message: string) => {
-                            // Remove trailing newline and log through our logger
                             logger.http(message.trim());
                         },
                     },
@@ -149,11 +179,10 @@ export const getMorganConfig = (): RequestHandler[] => {
                 }),
             );
 
-            // All requests to file in structured format - FIXED: Remove .replace()
+            // All requests to file in structured format
             if (logStream) {
                 middlewares.push(
                     morgan(productionFormat, {
-                        // <-- Remove the .replace(/"/g, "") here
                         stream: logStream,
                     }),
                 );
