@@ -42,7 +42,9 @@ echo "✅ Secrets ready"
 echo "📝 Setting up logs directory..."
 mkdir -p /app/logs
 chown -R appuser:appgroup /app/logs
-chmod -R 755 /app/logs
+chmod 750 /app/logs              # Directory: rwxr-x--- (needs execute for directory access)
+# Individual log files will get 640 from rotating-file-stream
+
 echo "✓ Logs directory ready"
 
 echo "🚀 Starting application as appuser..."
