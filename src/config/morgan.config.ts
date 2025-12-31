@@ -183,6 +183,7 @@ export const getMorganConfig = (): RequestHandler[] => {
             if (logStream) {
                 middlewares.push(
                     morgan(productionFormat, {
+                        skip: skipHealthChecks,
                         stream: logStream,
                     }),
                 );
@@ -219,6 +220,7 @@ export const getMorganConfig = (): RequestHandler[] => {
             if (logStream) {
                 middlewares.push(
                     morgan(detailedFormat, {
+                        skip: skipHealthChecks,
                         stream: logStream,
                     }),
                 );
