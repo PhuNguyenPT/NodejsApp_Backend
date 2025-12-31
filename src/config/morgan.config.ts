@@ -3,6 +3,7 @@ import type { Request, RequestHandler, Response } from "express";
 import fs from "fs";
 import morgan from "morgan";
 import path from "path";
+import { createStream } from "rotating-file-stream";
 
 import { logger } from "@/config/logger.config.js";
 import { config } from "@/util/validate-env.js";
@@ -109,7 +110,7 @@ const detailedFormat =
 const devFormat =
     "\x1b[35m:request-id\x1b[0m \x1b[36m:method\x1b[0m \x1b[37m:url\x1b[0m :status-colored :response-time-colored - :content-length-safe bytes";
 
-// Stream configuration for file logging
+// Stream configuration for file logging with rotation
 const getLogStream = () => {
     if (!config.ENABLE_FILE_LOGGING) return undefined;
 
@@ -120,9 +121,30 @@ const getLogStream = () => {
         fs.mkdirSync(logDir, { recursive: true });
     }
 
-    const logFile = path.join(logDir, "access.log");
+    // Create rotating stream
+    return createStream("access.log", {
+        // Compression & permissions
+        compress: "gzip", // Compress old logs
+        encoding: "utf8",
+        // Optional: tracking
+        history: path.join(logDir, ".rotation-history"),
 
-    return fs.createWriteStream(logFile, { flags: "a" });
+        immutable: true, // Don't modify rotated files
+        // Rotation timing
+        interval: "1d", // Rotate daily
+        intervalBoundary: true, // At midnight UTC
+
+        intervalUTC: true, // Use UTC time
+        // File management
+        maxFiles: 14, // Keep 14 days
+        maxSize: "200M", // Max 200MB total disk usage
+
+        mode: 0o640, // rw-r----- permissions
+        // Path & encoding
+        path: logDir,
+
+        size: "10M", // Also rotate if reaches 10MB
+    });
 };
 
 // Skip function for health checks and static assets
