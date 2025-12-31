@@ -98,4 +98,18 @@ export interface Config {
     TLS_CA_PATH: string;
     TLS_CERT_PATH: string;
     TLS_KEY_PATH: string;
+
+    // Proxy Configuration
+    /**
+     * Number of proxies to trust in the chain, or boolean
+     *
+     * Examples:
+     * - 0 or false: No proxies (development)
+     * - 1: Single proxy (nginx only)
+     * - 2: Cloudflare + nginx (standard production setup)
+     * - true: Trust all proxies (use with caution)
+     *
+     * For Cloudflare + nginx setup, use 2 to get real client IP in req.ip
+     */
+    TRUST_PROXY_LEVEL: boolean | number;
 }
