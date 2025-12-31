@@ -8,6 +8,7 @@ import {
     type LoggerOptions,
     transports,
 } from "winston";
+import DailyRotateFile from "winston-daily-rotate-file";
 
 // Configuration interface for logger options
 export interface LoggerConfig {
@@ -97,47 +98,62 @@ function createLoggerOptions(loggerConfig: LoggerConfig): LoggerOptions {
         }),
     ];
 
-    // Add file transports based on configuration
+    // Add file transports with rotation
     if (enableFileLogging || isProduction) {
+        // Error log with rotation
         loggerTransports.push(
-            new transports.File({
-                filename: `${logDir}/error.log`,
+            new DailyRotateFile({
+                datePattern: "YYYY-MM-DD",
+                filename: `${logDir}/error-%DATE%.log`,
                 format: productionFormat,
                 level: "error",
-                maxFiles: 5,
-                maxsize: 5242880, // 5MB
-                tailable: true, // Better for log rotation
+                maxFiles: "14d",
+                maxSize: "10m",
+                utc: true,
+                zippedArchive: true,
             }),
-            new transports.File({
-                filename: `${logDir}/combined.log`,
+        );
+
+        // Combined log with rotation
+        loggerTransports.push(
+            new DailyRotateFile({
+                datePattern: "YYYY-MM-DD",
+                filename: `${logDir}/combined-%DATE%.log`,
                 format: productionFormat,
-                maxFiles: 5,
-                maxsize: 5242880, // 5MB
-                tailable: true,
+                maxFiles: "14d",
+                maxSize: "10m",
+                utc: true,
+                zippedArchive: true,
             }),
         );
     }
 
-    // Exception handlers
+    // Exception handlers with rotation
     const exceptionHandlers: Transport[] = [];
     const rejectionHandlers: Transport[] = [];
 
     if (enableFileLogging || isProduction) {
         exceptionHandlers.push(
-            new transports.File({
-                filename: `${logDir}/exceptions.log`,
-                format: productionFormat, // Add format
-                maxFiles: 5,
-                maxsize: 5242880,
+            new DailyRotateFile({
+                datePattern: "YYYY-MM-DD",
+                filename: `${logDir}/exceptions-%DATE%.log`,
+                format: productionFormat,
+                maxFiles: "14d",
+                maxSize: "10m",
+                utc: true,
+                zippedArchive: true,
             }),
         );
 
         rejectionHandlers.push(
-            new transports.File({
-                filename: `${logDir}/rejections.log`,
-                format: productionFormat, // Add format
-                maxFiles: 5,
-                maxsize: 5242880,
+            new DailyRotateFile({
+                datePattern: "YYYY-MM-DD",
+                filename: `${logDir}/rejections-%DATE%.log`,
+                format: productionFormat,
+                maxFiles: "14d",
+                maxSize: "10m",
+                utc: true,
+                zippedArchive: true,
             }),
         );
 
