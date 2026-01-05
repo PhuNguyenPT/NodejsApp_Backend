@@ -12,7 +12,4 @@ if ! docker network ls --format '{{.Name}}' | grep -q '^frontend-swarm-network-s
     docker network create --driver overlay --attachable frontend-swarm-network-staging
 fi
 
-if ! docker network ls --format '{{.Name}}' | grep -q '^app-shared-network-staging$'; then
-    docker network create --driver overlay --attachable app-shared-network-staging
-fi
 docker stack deploy -c docker-compose.swarm.staging.yml backend-swarm-staging --detach=false
