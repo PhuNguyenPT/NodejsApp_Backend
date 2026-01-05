@@ -7,10 +7,6 @@ networks:
     driver: overlay
     external: true
     name: backend-swarm-network-staging
-  app-shared-network-staging:
-    driver: overlay
-    external: true
-    name: app-shared-network-staging
 
 secrets:
   private_key:
@@ -34,7 +30,6 @@ x-backend-common: &backend-common
       aliases:
         - backend
     backend-swarm-network-staging: {}
-    app-shared-network-staging: {}
   secrets:
     - private_key
     - public_key
@@ -91,7 +86,6 @@ x-backend-common: &backend-common
       reservations:
         cpus: "0.5"
         memory: 512M
-    endpoint_mode: vip
 
 services:
   # Backend Instance 1
@@ -189,6 +183,8 @@ services:
 
   postgres-staging:
     image: ${POSTGRES_IMAGE}
+    env_file:
+      - .env.staging
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -200,7 +196,6 @@ services:
       - postgres_data_staging:/var/lib/postgresql
     networks:
       - backend-swarm-network-staging
-      - app-shared-network-staging
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -222,6 +217,8 @@ services:
 
   redis-staging:
     image: ${REDIS_IMAGE}
+    env_file:
+      - .env.staging
     command: >
       sh -c "
       redis-server 

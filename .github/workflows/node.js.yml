@@ -35,6 +35,28 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      ml-api:
+        image: khanhlinh02/ml-service:latest
+        env:
+          MODEL_DIR: models
+          DATA_DIR: data
+          L2_THRESHOLD: 0.5
+          MAX_BATCH_CONCURRENCY: 6
+          BATCH_MAX_ITEMS: 50
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: node_app_test
+        ports:
+          - 8001:8000
+        options: >-
+          --health-cmd "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"
+          --health-interval 30s
+          --health-timeout 10s
+          --health-retries 3
+          --health-start-period 40s
+
     env:
       NODE_ENV: test
       SERVER_PORT: 3003
