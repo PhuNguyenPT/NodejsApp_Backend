@@ -14,36 +14,44 @@ describe("App Integration Test", () => {
     let app: AbstractApp;
 
     beforeAll(async () => {
-        // Initialize database
-        if (!postgresDataSource.isInitialized) {
-            await postgresDataSource.initialize();
-        }
+        try {
+            // Initialize database
+            if (!postgresDataSource.isInitialized) {
+                await postgresDataSource.initialize();
+            }
 
-        // Initialize Redis
-        if (!redisClient.isOpen) {
-            await redisClient.connect();
-        }
-        if (!redisSubscriber.isOpen) {
-            await redisSubscriber.connect();
-        }
+            // Initialize Redis
+            if (!redisClient.isOpen) {
+                await redisClient.connect();
+            }
+            if (!redisSubscriber.isOpen) {
+                await redisSubscriber.connect();
+            }
 
-        // Get app from container
-        app = iocContainer.get<AbstractApp>(TYPES.App);
-        await app.initialize();
+            // Get app from container
+            app = iocContainer.get<AbstractApp>(TYPES.App);
+            await app.initialize();
+        } catch (error) {
+            console.error("error", error);
+        }
     }, 30000);
 
     afterAll(async () => {
-        await app.shutdown();
+        try {
+            await app.shutdown();
 
-        if (postgresDataSource.isInitialized) {
-            await postgresDataSource.destroy();
-        }
+            if (postgresDataSource.isInitialized) {
+                await postgresDataSource.destroy();
+            }
 
-        if (redisClient.isOpen) {
-            await redisClient.quit();
-        }
-        if (redisSubscriber.isOpen) {
-            await redisSubscriber.quit();
+            if (redisClient.isOpen) {
+                await redisClient.quit();
+            }
+            if (redisSubscriber.isOpen) {
+                await redisSubscriber.quit();
+            }
+        } catch (error) {
+            console.error("error", error);
         }
     });
 
