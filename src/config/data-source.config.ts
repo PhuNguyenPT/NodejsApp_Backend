@@ -61,6 +61,8 @@ const getEntitiesPath = (): string => {
             return distPath;
         case "test":
             return distPath;
+        default:
+            return srcPath;
     }
 };
 
@@ -79,6 +81,8 @@ const getMigrationPath = (): string => {
             return distPath;
         case "test":
             return distPath;
+        default:
+            return srcPath;
     }
 };
 

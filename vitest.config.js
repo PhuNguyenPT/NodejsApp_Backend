@@ -3,12 +3,19 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { loadEnv } from "vite";
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  plugins: [
+    tsconfigPaths({
+      projects: ["./tsconfig.test.json"],
+    }),
+  ],
+  setupFiles: ["./test/setup.ts"],
+  resolve: {
+    extensions: [".ts", ".js", ".json"],
+  },
   test: {
     globals: true,
     environment: "node",
     env: loadEnv("test", process.cwd(), ""),
-
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html", "lcov"],
@@ -34,7 +41,7 @@ export default defineConfig({
     },
 
     include: ["test/**/*.{test,spec}.ts"],
-    exclude: ["node_modules", "dist", "**/*.d.ts"],
+    exclude: ["node_modules", "**/*.d.ts"],
 
     testTimeout: 10000,
     hookTimeout: 10000,

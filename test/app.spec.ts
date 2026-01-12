@@ -1,5 +1,4 @@
 // test/app.spec.ts
-import "reflect-metadata";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type AbstractApp from "@/app/app.abstract.js";
