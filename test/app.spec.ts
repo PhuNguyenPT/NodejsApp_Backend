@@ -1,58 +1,24 @@
 // test/app.spec.ts
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import type AbstractApp from "@/app/app.abstract.js";
 import type { Config } from "@/config/app.config.js";
 
 import { iocContainer } from "@/app/ioc-container.js";
 import { postgresDataSource } from "@/config/data-source.config.js";
-import { redisClient, redisSubscriber } from "@/config/redis.config.js";
+import { redisClient } from "@/config/redis.config.js";
 import { TYPES } from "@/type/container/types.js";
 
+import { getApp } from "./setup.js";
+
 describe("App Integration Test", () => {
-    let app: AbstractApp;
-
-    beforeAll(async () => {
-        try {
-            // Initialize database
-            if (!postgresDataSource.isInitialized) {
-                await postgresDataSource.initialize();
-            }
-
-            // Initialize Redis
-            if (!redisClient.isOpen) {
-                await redisClient.connect();
-            }
-            if (!redisSubscriber.isOpen) {
-                await redisSubscriber.connect();
-            }
-
-            // Get app from container
-            app = iocContainer.get<AbstractApp>(TYPES.App);
-            await app.initialize();
-        } catch (error) {
-            console.error("error", error);
+    // App is initialized by setup.ts
+    const getTestApp = () => {
+        const app = getApp();
+        if (!app) {
+            throw new Error("App not initialized by setup.ts");
         }
-    }, 30000);
-
-    afterAll(async () => {
-        try {
-            await app.shutdown();
-
-            if (postgresDataSource.isInitialized) {
-                await postgresDataSource.destroy();
-            }
-
-            if (redisClient.isOpen) {
-                await redisClient.quit();
-            }
-            if (redisSubscriber.isOpen) {
-                await redisSubscriber.quit();
-            }
-        } catch (error) {
-            console.error("error", error);
-        }
-    });
+        return app;
+    };
 
     describe("Infrastructure", () => {
         it("should initialize database", () => {
@@ -64,6 +30,7 @@ describe("App Integration Test", () => {
         });
 
         it("should create app instance", () => {
+            const app = getTestApp();
             expect(app).toBeDefined();
             expect(app.express).toBeDefined();
         });
@@ -71,21 +38,25 @@ describe("App Integration Test", () => {
 
     describe("Configuration", () => {
         it("should have correct port from config", () => {
+            const app = getTestApp();
             const config = iocContainer.get<Config>(TYPES.Config);
             expect(app.port).toBe(config.SERVER_PORT);
         });
 
         it("should have correct hostname from config", () => {
+            const app = getTestApp();
             const config = iocContainer.get<Config>(TYPES.Config);
             expect(app.hostname).toBe(config.SERVER_HOSTNAME);
         });
 
         it("should have correct base path from config", () => {
+            const app = getTestApp();
             const config = iocContainer.get<Config>(TYPES.Config);
             expect(app.basePath).toBe(config.SERVER_PATH);
         });
 
         it("should generate correct server URL", () => {
+            const app = getTestApp();
             const config = iocContainer.get<Config>(TYPES.Config);
             const url = app.getServerUrl();
             const expected = `http://${config.SERVER_HOSTNAME}:${config.SERVER_PORT.toString()}${config.SERVER_PATH}`;

@@ -30,6 +30,16 @@
       "name": "pg-staging",
       "database": "node_app_staging",
       "username": "staging_user"
+    },
+    {
+      "ssh": "Disabled",
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5435,
+      "driver": "PostgreSQL",
+      "name": "pg-test",
+      "username": "myuser",
+      "database": "node_app_test"
     }
   ],
 }

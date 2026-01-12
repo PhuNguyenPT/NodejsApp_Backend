@@ -181,6 +181,17 @@ export class UserService implements IUserService {
             throw new EntityNotFoundException(`User with id ${id} not found`);
         }
 
+        if (updateData.email && updateData.email !== existingUser.email) {
+            const emailExists = await this.userRepository.exists({
+                where: { email: updateData.email },
+            });
+            if (emailExists) {
+                throw new EntityExistsException(
+                    `User with email ${updateData.email} already exists`,
+                );
+            }
+        }
+
         // Hash password if provided
         if (updateData.password) {
             updateData.password = await bcrypt.hash(

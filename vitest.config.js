@@ -12,6 +12,12 @@ export default defineConfig({
   resolve: {
     extensions: [".ts", ".js", ".json"],
   },
+  pool: "forks",
+  poolOptions: {
+    forks: {
+      singleFork: true,
+    },
+  },
   test: {
     globals: true,
     environment: "node",
