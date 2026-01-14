@@ -139,7 +139,8 @@ jobs:
           openssl rsa -in private.pem -pubout -out public.pem
           openssl req -x509 -newkey rsa:4096 -keyout tls/backend.key -out tls/backend.crt -days 365 -nodes -subj "/CN=localhost"
           cp tls/backend.crt tls/ca.crt
-
+      - name: Build project
+        run: npm run build
       - name: Run tests
         run: npm test
       - run: npm run lint

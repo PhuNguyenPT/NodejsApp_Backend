@@ -3,6 +3,39 @@ import type { PostgresConnectionOptions } from "typeorm/driver/postgres/Postgres
 
 import { DataSource } from "typeorm";
 
+import { L2Entity } from "@/entity/machine_learning/l2.entity.js";
+import { TranscriptSubjectGroupEntity } from "@/entity/machine_learning/transcript-subject-group.entity.js";
+import { UniL1Entity } from "@/entity/machine_learning/uni_l1.entity.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
+import { AcademicPerformanceEntity } from "@/entity/uni_guide/academic-performance.entity.js";
+import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
+import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
+import { AwardEntity } from "@/entity/uni_guide/award.entity.js";
+import { CertificationEntity } from "@/entity/uni_guide/certification.entity.js";
+import { ConductEntity } from "@/entity/uni_guide/conduct.entity.js";
+import { FileEntity } from "@/entity/uni_guide/file.entity.js";
+import { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
+import { MajorEntity } from "@/entity/uni_guide/major.entity.js";
+import { NationalExamEntity } from "@/entity/uni_guide/national-exam.enity.js";
+import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
+import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
+import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
+import { StudentMajorGroupEntity } from "@/entity/uni_guide/student-major-group.entity.js";
+import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { TalentExamEntity } from "@/entity/uni_guide/talent-exam.entity.js";
+import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.entity.js";
+import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
+import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-component.entity.js";
+import { VsatExamEntity } from "@/entity/uni_guide/vsat-exam.entity.js";
+import { CreateSchemas1754794900000 } from "@/migration/1754794900000-create-schemas.js";
+import { InitialSchema1754794905473 } from "@/migration/1754794905473-initial-schema.js";
+import { CreateDefaultAdmin1754794920377 } from "@/migration/1754794920377-create-default-admin.js";
+import { MajorData1755086125584 } from "@/migration/1755086125584-major-data.js";
+import { AdmissionData1757342612756 } from "@/migration/1757342612756-admission-data.js";
+import { L2Data1760411108656 } from "@/migration/1760411108656-l2-data.js";
+import { TranscriptSubjectGroup1760934064921 } from "@/migration/1760934064921-transcript-subject-group.js";
+import { UniItemL1Data1761452875227 } from "@/migration/1761452875227-uni-item-l1-data.js";
+import { Transcript1764903586789 } from "@/migration/1764903586789-transcript.js";
 import { config } from "@/util/validate-env.js";
 
 /**
@@ -46,42 +79,6 @@ const getLogging = (): boolean | LogLevel[] => {
     }
 };
 
-/**
- * Get entities path configuration based on environment
- */
-const getEntitiesPath = (): string => {
-    const srcPath = "src/entity/**/*.ts";
-    const distPath = "dist/entity/**/*.js";
-    switch (config.NODE_ENV) {
-        case "development":
-            return srcPath;
-        case "production":
-            return distPath;
-        case "staging":
-            return distPath;
-        case "test":
-            return distPath;
-    }
-};
-
-/**
- * Get migration path configuration based on environment
- */
-const getMigrationPath = (): string => {
-    const srcPath = "src/migration/**/*.ts";
-    const distPath = "dist/migration/**/*.js";
-    switch (config.NODE_ENV) {
-        case "development":
-            return srcPath;
-        case "production":
-            return distPath;
-        case "staging":
-            return distPath;
-        case "test":
-            return distPath;
-    }
-};
-
 // Redis configuration for TypeORM cache using ioredis
 const typeormRedisConfig = {
     db: config.REDIS_DB,
@@ -104,7 +101,32 @@ const postgresConnectionOptions: PostgresConnectionOptions = {
     connectTimeoutMS: 10000, // 10 seconds max to establish connection
     database: config.POSTGRES_DB,
     // Entity and migration configuration
-    entities: [getEntitiesPath()],
+    entities: [
+        AcademicPerformanceEntity,
+        AdmissionEntity,
+        AptitudeExamEntity,
+        AwardEntity,
+        CertificationEntity,
+        ConductEntity,
+        FileEntity,
+        MajorGroupEntity,
+        MajorEntity,
+        NationalExamEntity,
+        OcrResultEntity,
+        PredictionResultEntity,
+        StudentAdmissionEntity,
+        StudentMajorGroupEntity,
+        StudentEntity,
+        TalentExamEntity,
+        TranscriptSubjectEntity,
+        TranscriptEntity,
+        VnuhcmScoreComponentEntity,
+        VsatExamEntity,
+        UserEntity,
+        L2Entity,
+        TranscriptSubjectGroupEntity,
+        UniL1Entity,
+    ],
     // PostgreSQL connection pool options (pg driver options)
     extra: {
         idleTimeoutMillis: 10000, // 10 seconds idle timeout
@@ -116,7 +138,17 @@ const postgresConnectionOptions: PostgresConnectionOptions = {
     // Logging configuration
     logging: getLogging(),
     maxQueryExecutionTime: 5000,
-    migrations: [getMigrationPath()],
+    migrations: [
+        CreateSchemas1754794900000,
+        InitialSchema1754794905473,
+        CreateDefaultAdmin1754794920377,
+        MajorData1755086125584,
+        AdmissionData1757342612756,
+        L2Data1760411108656,
+        TranscriptSubjectGroup1760934064921,
+        UniItemL1Data1761452875227,
+        Transcript1764903586789,
+    ],
 
     // Migration settings
     migrationsRun: config.DB_RUN_MIGRATIONS_ON_STARTUP,

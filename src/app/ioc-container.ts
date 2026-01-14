@@ -113,279 +113,301 @@ import { ConcurrencyUtil } from "@/util/concurrency.util.js";
 import { PredictionUtil } from "@/util/prediction.util.js";
 import { config } from "@/util/validate-env.js";
 
-const iocContainer = new Container();
+// Prevent multiple container initialization
+declare global {
+    var __IOC_CONTAINER__: Container | undefined;
+    var __IOC_INITIALIZED__: boolean | undefined;
+}
 
-// --- Core & Infrastructure Bindings ---
-iocContainer.bind<AbstractApp>(TYPES.App).to(App).inSingletonScope();
-iocContainer
-    .bind<Container>(TYPES.InversifyContainer)
-    .toConstantValue(iocContainer);
-iocContainer.bind<Logger>(TYPES.Logger).toConstantValue(logger);
-iocContainer
-    .bind<DataSource>(TYPES.DataSource)
-    .toConstantValue(postgresDataSource);
-iocContainer
-    .bind<RedisClientType>(TYPES.RedisPublisher)
-    .toConstantValue(redisClient);
-iocContainer
-    .bind<RedisClientType>(TYPES.RedisSubscriber)
-    .toConstantValue(redisSubscriber);
-iocContainer
-    .bind<PredictionServiceClient>(TYPES.PredictionServiceClient)
-    .to(PredictionServiceClient)
-    .inSingletonScope();
-iocContainer
-    .bind<AxiosInstance>(TYPES.PredictHttpClient)
-    .toDynamicValue((context) => {
-        const predictServer = context.get<PredictionServiceClient>(
-            TYPES.PredictionServiceClient,
+// Create or reuse container
+const iocContainer = global.__IOC_CONTAINER__ ?? new Container();
+global.__IOC_CONTAINER__ ??= iocContainer;
+
+// Only initialize bindings once
+if (!global.__IOC_INITIALIZED__) {
+    global.__IOC_INITIALIZED__ = true;
+    // --- Core & Infrastructure Bindings ---
+    iocContainer.bind<AbstractApp>(TYPES.App).to(App).inSingletonScope();
+    iocContainer
+        .bind<Container>(TYPES.InversifyContainer)
+        .toConstantValue(iocContainer);
+    iocContainer.bind<Logger>(TYPES.Logger).toConstantValue(logger);
+    iocContainer
+        .bind<DataSource>(TYPES.DataSource)
+        .toConstantValue(postgresDataSource);
+    iocContainer
+        .bind<RedisClientType>(TYPES.RedisPublisher)
+        .toConstantValue(redisClient);
+    iocContainer
+        .bind<RedisClientType>(TYPES.RedisSubscriber)
+        .toConstantValue(redisSubscriber);
+    iocContainer
+        .bind<PredictionServiceClient>(TYPES.PredictionServiceClient)
+        .to(PredictionServiceClient)
+        .inSingletonScope();
+    iocContainer
+        .bind<AxiosInstance>(TYPES.PredictHttpClient)
+        .toDynamicValue((context) => {
+            const predictServer = context.get<PredictionServiceClient>(
+                TYPES.PredictionServiceClient,
+            );
+            return predictServer.getHttpClient();
+        })
+        .inSingletonScope();
+    iocContainer.bind<KeyStore>(TYPES.KeyStore).to(KeyStore).inSingletonScope();
+
+    // --- Manager Bindings ---
+    iocContainer
+        .bind<DatabaseManager>(TYPES.DatabaseManager)
+        .to(DatabaseManager)
+        .inSingletonScope();
+
+    iocContainer
+        .bind<ServerManager>(TYPES.ServerManager)
+        .to(ServerManager)
+        .inSingletonScope();
+
+    iocContainer
+        .bind<MiddlewareManager>(TYPES.MiddlewareManager)
+        .to(MiddlewareManager)
+        .inSingletonScope();
+
+    iocContainer
+        .bind<RouteManager>(TYPES.RouteManager)
+        .to(RouteManager)
+        .inSingletonScope();
+
+    iocContainer
+        .bind<LifecycleManager>(TYPES.LifecycleManager)
+        .to(LifecycleManager)
+        .inSingletonScope();
+
+    // --- Configuration Bindings ---
+    iocContainer.bind<Config>(TYPES.Config).toConstantValue(config);
+    iocContainer
+        .bind<PredictionModelServiceConfig>(TYPES.PredictionModelServiceConfig)
+        .toConstantValue(predictionModelServiceConfig);
+    iocContainer
+        .bind<ClientConfig>(TYPES.ClientConfig)
+        .toConstantValue(predictionServiceClientConfig);
+    iocContainer
+        .bind<PassportConfig>(TYPES.PassportConfig)
+        .to(PassportConfig)
+        .inSingletonScope();
+    iocContainer
+        .bind<ZlibOptions>(TYPES.CompressionOptions)
+        .toConstantValue(COMPRESSION_OPTIONS);
+    iocContainer
+        .bind<ZlibOptions>(TYPES.DecompressionOptions)
+        .toConstantValue(DECOMPRESSION_OPTIONS);
+    iocContainer
+        .bind<Set<string>>(TYPES.IncompressibleMimeTypes)
+        .toConstantValue(INCOMPRESSIBLE_MIME_TYPES);
+    iocContainer
+        .bind<Options>(TYPES.MulterOptions)
+        .toConstantValue(mutterOptions);
+
+    // --- Repository Bindings ---
+    iocContainer
+        .bind<IJwtTokenRepository>(TYPES.IJwtTokenRepository)
+        .to(JwtTokenRepository)
+        .inSingletonScope();
+    iocContainer
+        .bind<Repository<UserEntity>>(TYPES.UserRepository)
+        .toConstantValue(postgresDataSource.getRepository(UserEntity));
+    iocContainer
+        .bind<Repository<StudentEntity>>(TYPES.StudentRepository)
+        .toConstantValue(postgresDataSource.getRepository(StudentEntity));
+    iocContainer
+        .bind<
+            Repository<AcademicPerformanceEntity>
+        >(TYPES.AcademicPerformanceRepository)
+        .toConstantValue(
+            postgresDataSource.getRepository(AcademicPerformanceEntity),
         );
-        return predictServer.getHttpClient();
-    })
-    .inSingletonScope();
-iocContainer.bind<KeyStore>(TYPES.KeyStore).to(KeyStore).inSingletonScope();
+    iocContainer
+        .bind<Repository<AptitudeExamEntity>>(TYPES.AptitudeExamRepository)
+        .toConstantValue(postgresDataSource.getRepository(AptitudeExamEntity));
+    iocContainer
+        .bind<
+            Repository<VnuhcmScoreComponentEntity>
+        >(TYPES.VnuhcmScoreComponentRepository)
+        .toConstantValue(
+            postgresDataSource.getRepository(VnuhcmScoreComponentEntity),
+        );
+    iocContainer
+        .bind<Repository<AwardEntity>>(TYPES.AwardRepository)
+        .toConstantValue(postgresDataSource.getRepository(AwardEntity));
+    iocContainer
+        .bind<Repository<CertificationEntity>>(TYPES.CertificationRepository)
+        .toConstantValue(postgresDataSource.getRepository(CertificationEntity));
+    iocContainer
+        .bind<Repository<ConductEntity>>(TYPES.ConductRepository)
+        .toConstantValue(postgresDataSource.getRepository(ConductEntity));
+    iocContainer
+        .bind<Repository<FileEntity>>(TYPES.FileRepository)
+        .toConstantValue(postgresDataSource.getRepository(FileEntity));
+    iocContainer
+        .bind<Repository<MajorGroupEntity>>(TYPES.MajorGroupRepository)
+        .toConstantValue(postgresDataSource.getRepository(MajorGroupEntity));
+    iocContainer
+        .bind<
+            Repository<StudentMajorGroupEntity>
+        >(TYPES.StudentMajorGroupRepository)
+        .toConstantValue(
+            postgresDataSource.getRepository(StudentMajorGroupEntity),
+        );
+    iocContainer
+        .bind<Repository<MajorEntity>>(TYPES.MajorRepository)
+        .toConstantValue(postgresDataSource.getRepository(MajorEntity));
+    iocContainer
+        .bind<Repository<NationalExamEntity>>(TYPES.NationalExamRepository)
+        .toConstantValue(postgresDataSource.getRepository(NationalExamEntity));
+    iocContainer
+        .bind<Repository<TalentExamEntity>>(TYPES.TalentExamRepository)
+        .toConstantValue(postgresDataSource.getRepository(TalentExamEntity));
+    iocContainer
+        .bind<Repository<VsatExamEntity>>(TYPES.VsatExamRepository)
+        .toConstantValue(postgresDataSource.getRepository(VsatExamEntity));
+    iocContainer
+        .bind<Repository<OcrResultEntity>>(TYPES.OcrResultRepository)
+        .toConstantValue(postgresDataSource.getRepository(OcrResultEntity));
+    iocContainer
+        .bind<
+            Repository<TranscriptSubjectEntity>
+        >(TYPES.TranscriptSubjectRepository)
+        .toConstantValue(
+            postgresDataSource.getRepository(TranscriptSubjectEntity),
+        );
+    iocContainer
+        .bind<Repository<TranscriptEntity>>(TYPES.TranscriptRepository)
+        .toConstantValue(postgresDataSource.getRepository(TranscriptEntity));
+    iocContainer
+        .bind<
+            Repository<PredictionResultEntity>
+        >(TYPES.PredictionResultEntityRepository)
+        .toConstantValue(
+            postgresDataSource.getRepository(PredictionResultEntity),
+        );
+    iocContainer
+        .bind<Repository<AdmissionEntity>>(TYPES.AdmissionRepository)
+        .toConstantValue(postgresDataSource.getRepository(AdmissionEntity));
 
-// --- Manager Bindings ---
-iocContainer
-    .bind<DatabaseManager>(TYPES.DatabaseManager)
-    .to(DatabaseManager)
-    .inSingletonScope();
+    // --- Service Bindings ---
+    iocContainer
+        .bind<IUserService>(TYPES.IUserService)
+        .to(UserService)
+        .inSingletonScope();
+    iocContainer
+        .bind<IJwtService>(TYPES.IJwtService)
+        .to(JwtService)
+        .inSingletonScope();
+    iocContainer
+        .bind<IAuthService>(TYPES.IAuthService)
+        .to(AuthService)
+        .inSingletonScope();
+    iocContainer
+        .bind<IAwardService>(TYPES.IAwardService)
+        .to(AwardService)
+        .inSingletonScope();
+    iocContainer
+        .bind<ICertificationService>(TYPES.ICertificationService)
+        .to(CertificationService)
+        .inSingletonScope();
+    iocContainer
+        .bind<IFileService>(TYPES.IFileService)
+        .to(FileService)
+        .inSingletonScope();
+    iocContainer
+        .bind<IStudentService>(TYPES.IStudentService)
+        .to(StudentService)
+        .inSingletonScope();
+    iocContainer
+        .bind<IMajorService>(TYPES.IMajorService)
+        .to(MajorService)
+        .inSingletonScope();
+    iocContainer
+        .bind<IMistralService>(TYPES.IMistralService)
+        .to(MistralService)
+        .inSingletonScope();
+    iocContainer
+        .bind<IOcrResultService>(TYPES.IOcrResultService)
+        .to(OcrResultService)
+        .inSingletonScope();
+    iocContainer
+        .bind<ITranscriptService>(TYPES.ITranscriptService)
+        .to(TranscriptService)
+        .inSingletonScope();
+    iocContainer
+        .bind<IPredictionResultService>(TYPES.IPredictionResultService)
+        .to(PredictionResultService)
+        .inSingletonScope();
+    iocContainer
+        .bind<IPredictionL1Service>(TYPES.IPredictionL1Service)
+        .to(PredictionL1Service)
+        .inSingletonScope();
+    iocContainer
+        .bind<IPredictionL2Service>(TYPES.IPredictionL2Service)
+        .to(PredictionL2Service)
+        .inSingletonScope();
+    iocContainer
+        .bind<IPredictionL3Service>(TYPES.IPredictionL3Service)
+        .to(PredictionL3Service)
+        .inSingletonScope();
+    iocContainer
+        .bind<IAdmissionService>(TYPES.IAdmissionService)
+        .to(AdmissionService)
+        .inSingletonScope();
+    iocContainer
+        .bind<IPredictionL3ProcessorService>(
+            TYPES.IPredictionL3ProcessorService,
+        )
+        .to(PredictionL3ProcessorService)
+        .inSingletonScope();
+    // --- Utility Bindings ---
+    iocContainer
+        .bind<PredictionUtil>(TYPES.PredictionUtil)
+        .to(PredictionUtil)
+        .inSingletonScope();
+    iocContainer
+        .bind<ConcurrencyUtil>(TYPES.ConcurrencyUtil)
+        .to(ConcurrencyUtil)
+        .inSingletonScope();
 
-iocContainer
-    .bind<ServerManager>(TYPES.ServerManager)
-    .to(ServerManager)
-    .inSingletonScope();
-
-iocContainer
-    .bind<MiddlewareManager>(TYPES.MiddlewareManager)
-    .to(MiddlewareManager)
-    .inSingletonScope();
-
-iocContainer
-    .bind<RouteManager>(TYPES.RouteManager)
-    .to(RouteManager)
-    .inSingletonScope();
-
-iocContainer
-    .bind<LifecycleManager>(TYPES.LifecycleManager)
-    .to(LifecycleManager)
-    .inSingletonScope();
-
-// --- Configuration Bindings ---
-iocContainer.bind<Config>(TYPES.Config).toConstantValue(config);
-iocContainer
-    .bind<PredictionModelServiceConfig>(TYPES.PredictionModelServiceConfig)
-    .toConstantValue(predictionModelServiceConfig);
-iocContainer
-    .bind<ClientConfig>(TYPES.ClientConfig)
-    .toConstantValue(predictionServiceClientConfig);
-iocContainer
-    .bind<PassportConfig>(TYPES.PassportConfig)
-    .to(PassportConfig)
-    .inSingletonScope();
-iocContainer
-    .bind<ZlibOptions>(TYPES.CompressionOptions)
-    .toConstantValue(COMPRESSION_OPTIONS);
-iocContainer
-    .bind<ZlibOptions>(TYPES.DecompressionOptions)
-    .toConstantValue(DECOMPRESSION_OPTIONS);
-iocContainer
-    .bind<Set<string>>(TYPES.IncompressibleMimeTypes)
-    .toConstantValue(INCOMPRESSIBLE_MIME_TYPES);
-iocContainer.bind<Options>(TYPES.MulterOptions).toConstantValue(mutterOptions);
-
-// --- Repository Bindings ---
-iocContainer
-    .bind<IJwtTokenRepository>(TYPES.IJwtTokenRepository)
-    .to(JwtTokenRepository)
-    .inSingletonScope();
-iocContainer
-    .bind<Repository<UserEntity>>(TYPES.UserRepository)
-    .toConstantValue(postgresDataSource.getRepository(UserEntity));
-iocContainer
-    .bind<Repository<StudentEntity>>(TYPES.StudentRepository)
-    .toConstantValue(postgresDataSource.getRepository(StudentEntity));
-iocContainer
-    .bind<
-        Repository<AcademicPerformanceEntity>
-    >(TYPES.AcademicPerformanceRepository)
-    .toConstantValue(
-        postgresDataSource.getRepository(AcademicPerformanceEntity),
-    );
-iocContainer
-    .bind<Repository<AptitudeExamEntity>>(TYPES.AptitudeExamRepository)
-    .toConstantValue(postgresDataSource.getRepository(AptitudeExamEntity));
-iocContainer
-    .bind<
-        Repository<VnuhcmScoreComponentEntity>
-    >(TYPES.VnuhcmScoreComponentRepository)
-    .toConstantValue(
-        postgresDataSource.getRepository(VnuhcmScoreComponentEntity),
-    );
-iocContainer
-    .bind<Repository<AwardEntity>>(TYPES.AwardRepository)
-    .toConstantValue(postgresDataSource.getRepository(AwardEntity));
-iocContainer
-    .bind<Repository<CertificationEntity>>(TYPES.CertificationRepository)
-    .toConstantValue(postgresDataSource.getRepository(CertificationEntity));
-iocContainer
-    .bind<Repository<ConductEntity>>(TYPES.ConductRepository)
-    .toConstantValue(postgresDataSource.getRepository(ConductEntity));
-iocContainer
-    .bind<Repository<FileEntity>>(TYPES.FileRepository)
-    .toConstantValue(postgresDataSource.getRepository(FileEntity));
-iocContainer
-    .bind<Repository<MajorGroupEntity>>(TYPES.MajorGroupRepository)
-    .toConstantValue(postgresDataSource.getRepository(MajorGroupEntity));
-iocContainer
-    .bind<
-        Repository<StudentMajorGroupEntity>
-    >(TYPES.StudentMajorGroupRepository)
-    .toConstantValue(postgresDataSource.getRepository(StudentMajorGroupEntity));
-iocContainer
-    .bind<Repository<MajorEntity>>(TYPES.MajorRepository)
-    .toConstantValue(postgresDataSource.getRepository(MajorEntity));
-iocContainer
-    .bind<Repository<NationalExamEntity>>(TYPES.NationalExamRepository)
-    .toConstantValue(postgresDataSource.getRepository(NationalExamEntity));
-iocContainer
-    .bind<Repository<TalentExamEntity>>(TYPES.TalentExamRepository)
-    .toConstantValue(postgresDataSource.getRepository(TalentExamEntity));
-iocContainer
-    .bind<Repository<VsatExamEntity>>(TYPES.VsatExamRepository)
-    .toConstantValue(postgresDataSource.getRepository(VsatExamEntity));
-iocContainer
-    .bind<Repository<OcrResultEntity>>(TYPES.OcrResultRepository)
-    .toConstantValue(postgresDataSource.getRepository(OcrResultEntity));
-iocContainer
-    .bind<
-        Repository<TranscriptSubjectEntity>
-    >(TYPES.TranscriptSubjectRepository)
-    .toConstantValue(postgresDataSource.getRepository(TranscriptSubjectEntity));
-iocContainer
-    .bind<Repository<TranscriptEntity>>(TYPES.TranscriptRepository)
-    .toConstantValue(postgresDataSource.getRepository(TranscriptEntity));
-iocContainer
-    .bind<
-        Repository<PredictionResultEntity>
-    >(TYPES.PredictionResultEntityRepository)
-    .toConstantValue(postgresDataSource.getRepository(PredictionResultEntity));
-iocContainer
-    .bind<Repository<AdmissionEntity>>(TYPES.AdmissionRepository)
-    .toConstantValue(postgresDataSource.getRepository(AdmissionEntity));
-
-// --- Service Bindings ---
-iocContainer
-    .bind<IUserService>(TYPES.IUserService)
-    .to(UserService)
-    .inSingletonScope();
-iocContainer
-    .bind<IJwtService>(TYPES.IJwtService)
-    .to(JwtService)
-    .inSingletonScope();
-iocContainer
-    .bind<IAuthService>(TYPES.IAuthService)
-    .to(AuthService)
-    .inSingletonScope();
-iocContainer
-    .bind<IAwardService>(TYPES.IAwardService)
-    .to(AwardService)
-    .inSingletonScope();
-iocContainer
-    .bind<ICertificationService>(TYPES.ICertificationService)
-    .to(CertificationService)
-    .inSingletonScope();
-iocContainer
-    .bind<IFileService>(TYPES.IFileService)
-    .to(FileService)
-    .inSingletonScope();
-iocContainer
-    .bind<IStudentService>(TYPES.IStudentService)
-    .to(StudentService)
-    .inSingletonScope();
-iocContainer
-    .bind<IMajorService>(TYPES.IMajorService)
-    .to(MajorService)
-    .inSingletonScope();
-iocContainer
-    .bind<IMistralService>(TYPES.IMistralService)
-    .to(MistralService)
-    .inSingletonScope();
-iocContainer
-    .bind<IOcrResultService>(TYPES.IOcrResultService)
-    .to(OcrResultService)
-    .inSingletonScope();
-iocContainer
-    .bind<ITranscriptService>(TYPES.ITranscriptService)
-    .to(TranscriptService)
-    .inSingletonScope();
-iocContainer
-    .bind<IPredictionResultService>(TYPES.IPredictionResultService)
-    .to(PredictionResultService)
-    .inSingletonScope();
-iocContainer
-    .bind<IPredictionL1Service>(TYPES.IPredictionL1Service)
-    .to(PredictionL1Service)
-    .inSingletonScope();
-iocContainer
-    .bind<IPredictionL2Service>(TYPES.IPredictionL2Service)
-    .to(PredictionL2Service)
-    .inSingletonScope();
-iocContainer
-    .bind<IPredictionL3Service>(TYPES.IPredictionL3Service)
-    .to(PredictionL3Service)
-    .inSingletonScope();
-iocContainer
-    .bind<IAdmissionService>(TYPES.IAdmissionService)
-    .to(AdmissionService)
-    .inSingletonScope();
-iocContainer
-    .bind<IPredictionL3ProcessorService>(TYPES.IPredictionL3ProcessorService)
-    .to(PredictionL3ProcessorService)
-    .inSingletonScope();
-// --- Utility Bindings ---
-iocContainer
-    .bind<PredictionUtil>(TYPES.PredictionUtil)
-    .to(PredictionUtil)
-    .inSingletonScope();
-iocContainer
-    .bind<ConcurrencyUtil>(TYPES.ConcurrencyUtil)
-    .to(ConcurrencyUtil)
-    .inSingletonScope();
-
-// --- Event Listener Bindings ---
-iocContainer
-    .bind<IFileEventListener>(TYPES.IFileEventListener)
-    .to(FileEventListener)
-    .inSingletonScope();
-iocContainer
-    .bind<IStudentEventListener>(TYPES.IStudentEventListener)
-    .to(StudentEventListener)
-    .inSingletonScope();
-iocContainer
-    .bind<IOcrEventListener>(TYPES.IOcrEventListener)
-    .to(OcrEventListener)
-    .inSingletonScope();
-iocContainer
-    .bind<ITranscriptEventListener>(TYPES.ITranscriptEventListener)
-    .to(TranscriptEventListener)
-    .inSingletonScope();
-// ############## --- Controller Bindings --- ##############
-iocContainer.bind<UserController>(UserController).toSelf().inRequestScope();
-iocContainer.bind<AuthController>(AuthController).toSelf().inRequestScope();
-iocContainer
-    .bind<StudentController>(StudentController)
-    .toSelf()
-    .inRequestScope();
-iocContainer.bind<FileController>(FileController).toSelf().inRequestScope();
-iocContainer.bind<OcrController>(OcrController).toSelf().inRequestScope();
-iocContainer
-    .bind<PredictionController>(PredictionController)
-    .toSelf()
-    .inRequestScope();
-iocContainer
-    .bind<AdmissionController>(AdmissionController)
-    .toSelf()
-    .inRequestScope();
+    // --- Event Listener Bindings ---
+    iocContainer
+        .bind<IFileEventListener>(TYPES.IFileEventListener)
+        .to(FileEventListener)
+        .inSingletonScope();
+    iocContainer
+        .bind<IStudentEventListener>(TYPES.IStudentEventListener)
+        .to(StudentEventListener)
+        .inSingletonScope();
+    iocContainer
+        .bind<IOcrEventListener>(TYPES.IOcrEventListener)
+        .to(OcrEventListener)
+        .inSingletonScope();
+    iocContainer
+        .bind<ITranscriptEventListener>(TYPES.ITranscriptEventListener)
+        .to(TranscriptEventListener)
+        .inSingletonScope();
+    // ############## --- Controller Bindings --- ##############
+    iocContainer.bind<UserController>(UserController).toSelf().inRequestScope();
+    iocContainer.bind<AuthController>(AuthController).toSelf().inRequestScope();
+    iocContainer
+        .bind<StudentController>(StudentController)
+        .toSelf()
+        .inRequestScope();
+    iocContainer.bind<FileController>(FileController).toSelf().inRequestScope();
+    iocContainer.bind<OcrController>(OcrController).toSelf().inRequestScope();
+    iocContainer
+        .bind<PredictionController>(PredictionController)
+        .toSelf()
+        .inRequestScope();
+    iocContainer
+        .bind<AdmissionController>(AdmissionController)
+        .toSelf()
+        .inRequestScope();
+}
 
 export { iocContainer };
