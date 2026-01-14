@@ -14,31 +14,42 @@ declare global {
 }
 
 /**
- * CRITICAL: Synchronous lock BEFORE any async work
- * This prevents race conditions when multiple test files load simultaneously
+ * WORKER SETUP - Runs ONCE per worker thread
+ *
+ * IMPORTANT NOTES:
+ * - globalSetup already ran migrations in the main process
+ * - Each worker gets its own instance of this file
+ * - The lock ensures this worker only initializes once
+ * - Multiple test files in the same worker share this initialization
  */
+
+// Get worker ID for debugging
+const workerId = process.env.VITEST_WORKER_ID ?? "main";
+
 if (!globalThis.__TEST_SETUP_LOCK__) {
-    // Set lock IMMEDIATELY (synchronous - no race possible)
     globalThis.__TEST_SETUP_LOCK__ = true;
 
-    console.log("🚀 Test Setup: Starting initialization...");
+    console.log(`🔧 Worker ${workerId}: Starting worker initialization...`);
 
     globalThis.__TEST_INIT_PROMISE__ = (async () => {
         try {
-            // Get app from IOC container (bindings protected in ioc-container.ts)
             const app = iocContainer.get<AbstractApp>(TYPES.App);
 
-            console.log("⏳ Initializing application components...");
+            console.log(
+                `🔧 Worker ${workerId}: Initializing application components...`,
+            );
+
+            // Initialize app - connects to the database that was already
+            // initialized in global-setup.ts (migrations already ran)
             await app.initialize();
 
-            // Verify infrastructure
             if (!postgresDataSource.isInitialized) {
                 throw new Error("PostgreSQL DataSource failed to initialize");
             }
 
             const entityCount = postgresDataSource.entityMetadatas.length;
             console.log(
-                `✅ Loaded ${entityCount.toString()} entity metadata entries`,
+                `✅ Worker ${workerId}: Loaded ${entityCount.toString()} entity metadata entries`,
             );
 
             if (entityCount === 0) {
@@ -47,20 +58,24 @@ if (!globalThis.__TEST_SETUP_LOCK__) {
                 );
             }
 
-            console.log("✅ Test Setup: Application initialized and ready");
+            console.log(`✅ Worker ${workerId}: Ready to run tests`);
 
             globalThis.__TEST_APP__ = app;
         } catch (error) {
-            console.error("❌ Test Setup: Initialization failed:", error);
-            // Clear both lock and promise so it can be retried
-            globalThis.__TEST_SETUP_LOCK__ = undefined;
-            globalThis.__TEST_INIT_PROMISE__ = undefined;
+            console.error(
+                `❌ Worker ${workerId}: Initialization failed:`,
+                error,
+            );
             throw error;
         }
     })();
+} else {
+    console.log(
+        `🔧 Worker ${workerId}: Waiting for existing initialization...`,
+    );
 }
 
-// Wait for initialization (all test files wait for the same promise)
+// Wait for initialization
 if (globalThis.__TEST_INIT_PROMISE__) {
     await globalThis.__TEST_INIT_PROMISE__;
 }
