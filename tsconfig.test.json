@@ -4,8 +4,9 @@
     "rootDir": ".",
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "sourceMap": true
+    "sourceMap": true,
+    "types": ["vitest/globals", "node"]
   },
-  "include": ["test/**/*", "src/**/*"],
+  "include": ["test/**/*", "test/**/*.d.ts", "src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

@@ -113,7 +113,15 @@ import { ConcurrencyUtil } from "@/util/concurrency.util.js";
 import { PredictionUtil } from "@/util/prediction.util.js";
 import { config } from "@/util/validate-env.js";
 
-const iocContainer = new Container();
+// Prevent multiple container initialization in test environment
+declare global {
+    var __IOC_CONTAINER__: Container | undefined;
+}
+
+// Use existing container if available (for test environment)
+const iocContainer = global.__IOC_CONTAINER__ ?? new Container();
+// Store in global for reuse
+global.__IOC_CONTAINER__ ??= iocContainer;
 
 // --- Core & Infrastructure Bindings ---
 iocContainer.bind<AbstractApp>(TYPES.App).to(App).inSingletonScope();
