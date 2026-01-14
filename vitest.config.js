@@ -1,3 +1,4 @@
+// vitest.config.js
 import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { loadEnv } from "vite";

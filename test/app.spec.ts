@@ -11,15 +11,6 @@ import { TYPES } from "@/type/container/types.js";
 import { getApp } from "./setup.js";
 
 describe("App Integration Test", () => {
-    // App is initialized by setup.ts
-    const getTestApp = () => {
-        const app = getApp();
-        if (!app) {
-            throw new Error("App not initialized by setup.ts");
-        }
-        return app;
-    };
-
     describe("Infrastructure", () => {
         it("should initialize database", () => {
             expect(postgresDataSource.isInitialized).toBe(true);
@@ -30,7 +21,7 @@ describe("App Integration Test", () => {
         });
 
         it("should create app instance", () => {
-            const app = getTestApp();
+            const app = getApp();
             expect(app).toBeDefined();
             expect(app.express).toBeDefined();
         });
@@ -38,25 +29,25 @@ describe("App Integration Test", () => {
 
     describe("Configuration", () => {
         it("should have correct port from config", () => {
-            const app = getTestApp();
+            const app = getApp();
             const config = iocContainer.get<Config>(TYPES.Config);
             expect(app.port).toBe(config.SERVER_PORT);
         });
 
         it("should have correct hostname from config", () => {
-            const app = getTestApp();
+            const app = getApp();
             const config = iocContainer.get<Config>(TYPES.Config);
             expect(app.hostname).toBe(config.SERVER_HOSTNAME);
         });
 
         it("should have correct base path from config", () => {
-            const app = getTestApp();
+            const app = getApp();
             const config = iocContainer.get<Config>(TYPES.Config);
             expect(app.basePath).toBe(config.SERVER_PATH);
         });
 
         it("should generate correct server URL", () => {
-            const app = getTestApp();
+            const app = getApp();
             const config = iocContainer.get<Config>(TYPES.Config);
             const url = app.getServerUrl();
             const expected = `http://${config.SERVER_HOSTNAME}:${config.SERVER_PORT.toString()}${config.SERVER_PATH}`;
