@@ -9,20 +9,19 @@ export default defineConfig({
       projects: ["./tsconfig.test.json"],
     }),
   ],
+
   setupFiles: ["./test/setup.ts"],
+
   resolve: {
     extensions: [".ts", ".js", ".json"],
   },
-  pool: "forks",
-  poolOptions: {
-    forks: {
-      singleFork: true,
-    },
-  },
+
   test: {
     globals: true,
     environment: "node",
     env: loadEnv("test", process.cwd(), ""),
+    fileParallelism: false,
+    pool: "forks",
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html", "lcov"],
