@@ -1,12 +1,14 @@
+import type { RedisClientType } from "redis";
+import type { DataSource } from "typeorm";
+
 // test/integration/service/user.service.integration.spec.ts
 import bcrypt from "bcrypt";
 import { v4 } from "uuid";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { IUserService } from "@/service/user-service.interface.js";
 
 import { iocContainer } from "@/app/ioc-container.js";
-import { redisClient } from "@/config/redis.config.js";
 import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
@@ -22,31 +24,85 @@ import { EntityNotFoundException } from "@/type/exception/entity-not-found.excep
 import { CacheKeys } from "@/util/cache-key.js";
 
 describe("UserService Integration Tests", () => {
-    beforeAll(() => {
+    let dataSource: DataSource;
+    let redisClient: RedisClientType;
+    let userService: IUserService;
+    const createdUserIds: string[] = [];
+
+    beforeAll(async () => {
         getApp();
-    });
 
-    // Get service from IOC container (infrastructure initialized by setup.ts)
-    const userService: IUserService = iocContainer.get<IUserService>(
-        TYPES.IUserService,
-    );
+        dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
+        redisClient = iocContainer.get<RedisClientType>(TYPES.RedisPublisher);
+        userService = iocContainer.get<IUserService>(TYPES.IUserService);
 
-    let createdUserIds: string[] = [];
+        // Clean up cache from previous test runs
+        console.log("🧹 Cleaning up cache from previous test runs...");
+        const cacheKeys = await redisClient.keys("user:*");
+        if (cacheKeys.length > 0) {
+            await redisClient.del(cacheKeys);
+            console.log(
+                `✅ Deleted ${cacheKeys.length.toString()} cached entries`,
+            );
+        }
 
-    beforeEach(() => {
-        // Reset tracking array
-        createdUserIds = [];
+        // Clean up database - preserve system-created users
+        console.log("🧹 Cleaning up database from previous test runs...");
+        const userRepository = dataSource.getRepository(UserEntity);
+        const result = await userRepository
+            .createQueryBuilder()
+            .delete()
+            .where("created_by != :systemCreator", { systemCreator: "system" })
+            .execute();
+
+        const deleted = result.affected ?? 0;
+        if (deleted > 0) {
+            console.log(`✅ Deleted ${deleted.toString()} leftover test users`);
+        }
     });
 
     afterAll(async () => {
-        // Cleanup all created test users (NOT infrastructure - setup.ts handles that)
+        console.log(
+            `🧹 Cleaning up ${createdUserIds.length.toString()} test users...`,
+        );
+
+        // Delete users created in tests
         for (const userId of createdUserIds) {
             try {
                 await userService.delete(userId);
-            } catch (_error) {
-                // Ignore errors during cleanup
+                console.log(`✅ Deleted user: ${userId}`);
+            } catch (error) {
+                console.error(`❌ Failed to delete user ${userId}:`, error);
             }
         }
+
+        // Final cache cleanup
+        console.log("🧹 Final cache cleanup...");
+        const cacheKeys = await redisClient.keys("user:*");
+        if (cacheKeys.length > 0) {
+            await redisClient.del(cacheKeys);
+            console.log(
+                `✅ Deleted ${cacheKeys.length.toString()} cached entries`,
+            );
+        }
+
+        // Final database cleanup
+        console.log("🧹 Final database cleanup...");
+        const userRepository = dataSource.getRepository(UserEntity);
+        const result = await userRepository
+            .createQueryBuilder()
+            .delete()
+            .where("created_by != :systemCreator", { systemCreator: "system" })
+            .execute();
+
+        const deleted = result.affected ?? 0;
+        if (deleted > 0) {
+            console.log(
+                `✅ Deleted ${deleted.toString()} remaining test users`,
+            );
+        }
+
+        console.log("✅ Cleanup complete!");
     });
 
     describe("create", () => {
