@@ -27,10 +27,9 @@ describe("UserService Integration Tests", () => {
     });
 
     // Get service from IOC container (infrastructure initialized by setup.ts)
-    const getUserService = (): IUserService => {
-        const service = iocContainer.get<IUserService>(TYPES.IUserService);
-        return service;
-    };
+    const userService: IUserService = iocContainer.get<IUserService>(
+        TYPES.IUserService,
+    );
 
     let createdUserIds: string[] = [];
 
@@ -41,7 +40,6 @@ describe("UserService Integration Tests", () => {
 
     afterAll(async () => {
         // Cleanup all created test users (NOT infrastructure - setup.ts handles that)
-        const userService = getUserService();
         for (const userId of createdUserIds) {
             try {
                 await userService.delete(userId);
@@ -53,8 +51,6 @@ describe("UserService Integration Tests", () => {
 
     describe("create", () => {
         it("should create a new user with all fields", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -86,8 +82,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should hash password when creating user", async () => {
-            const userService = getUserService();
-
             // Arrange
             const plainPassword = "SecurePass123!";
             const createDto: CreateUserAdminDTO = {
@@ -111,8 +105,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should assign default permissions based on role", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -132,8 +124,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should create user with minimal required fields", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -153,8 +143,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should throw EntityExistsException for duplicate email", async () => {
-            const userService = getUserService();
-
             // Arrange
             const email = `test-${Date.now().toString()}@example.com`;
             const createDto: CreateUserAdminDTO = {
@@ -176,8 +164,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should create users with different roles", async () => {
-            const userService = getUserService();
-
             // Arrange & Act
             const roles = [
                 Role.USER,
@@ -213,8 +199,6 @@ describe("UserService Integration Tests", () => {
 
     describe("getById", () => {
         it("should retrieve existing user by id", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -236,8 +220,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should throw EntityNotFoundException for non-existent user", async () => {
-            const userService = getUserService();
-
             // Arrange
             const nonExistentId = "00000000-0000-0000-0000-000000000000";
 
@@ -251,8 +233,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should use cache on second retrieval", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -279,8 +259,6 @@ describe("UserService Integration Tests", () => {
 
     describe("getByIdAndName", () => {
         it("should retrieve user by id and name", async () => {
-            const userService = getUserService();
-
             // Arrange
             const name = "Specific Name User";
             const createDto: CreateUserAdminDTO = {
@@ -302,8 +280,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should retrieve user by id only when name is undefined", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -323,8 +299,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should throw EntityNotFoundException for wrong name", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -344,8 +318,6 @@ describe("UserService Integration Tests", () => {
 
     describe("getAll", () => {
         it("should retrieve all users", async () => {
-            const userService = getUserService();
-
             // Arrange
             const initialCount = (await userService.getAll()).length;
 
@@ -375,8 +347,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should return array of users", async () => {
-            const userService = getUserService();
-
             const result = await userService.getAll();
             expect(Array.isArray(result)).toBe(true);
         });
@@ -384,8 +354,6 @@ describe("UserService Integration Tests", () => {
 
     describe("exists", () => {
         it("should return true for existing user", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -403,8 +371,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should return false for non-existent user", async () => {
-            const userService = getUserService();
-
             // Arrange
             const nonExistentId = "00000000-0000-0000-0000-000000000000";
 
@@ -418,8 +384,6 @@ describe("UserService Integration Tests", () => {
 
     describe("update", () => {
         it("should update user basic fields", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -459,8 +423,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should hash new password when updating", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -498,8 +460,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should update permissions when role changes", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -537,8 +497,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should not update permissions when role is not changed", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -574,8 +532,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should throw EntityNotFoundException for non-existent user", async () => {
-            const userService = getUserService();
-
             // Arrange
             const nonExistentId = "00000000-0000-0000-0000-000000000000";
             const mockUser: Express.User = {
@@ -595,8 +551,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should invalidate cache after update", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -632,8 +586,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should handle partial updates correctly", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -672,8 +624,6 @@ describe("UserService Integration Tests", () => {
 
     describe("delete", () => {
         it("should delete existing user", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -694,8 +644,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should invalidate cache after deletion", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -719,8 +667,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should not throw error when deleting non-existent user", async () => {
-            const userService = getUserService();
-
             // Arrange
             const nonExistentId = "00000000-0000-0000-0000-000000000000";
 
@@ -733,8 +679,6 @@ describe("UserService Integration Tests", () => {
 
     describe("Complex Scenarios", () => {
         it("should handle multiple updates in sequence", async () => {
-            const userService = getUserService();
-
             // Arrange
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -777,8 +721,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should maintain data integrity across create-read-update-delete cycle", async () => {
-            const userService = getUserService();
-
             // Create
             const createDto: CreateUserAdminDTO = {
                 email: `test-${Date.now().toString()}@example.com`,
@@ -815,8 +757,6 @@ describe("UserService Integration Tests", () => {
         });
 
         it("should throw EntityExistsException when updating to duplicate email", async () => {
-            const userService = getUserService();
-
             // Arrange
             const user1 = await userService.create({
                 email: `user1-${Date.now().toString()}@example.com`,
@@ -851,8 +791,6 @@ describe("UserService Integration Tests", () => {
 
         describe("Edge Cases", () => {
             it("should handle empty phone numbers array", async () => {
-                const userService = getUserService();
-
                 const createDto: CreateUserAdminDTO = {
                     email: `test-${Date.now().toString()}@example.com`,
                     password: "SecurePass123!",
@@ -867,8 +805,6 @@ describe("UserService Integration Tests", () => {
             });
 
             it("should handle updating to same email (no-op case)", async () => {
-                const userService = getUserService();
-
                 const created = await userService.create({
                     email: `test-${Date.now().toString()}@example.com`,
                     password: "Pass123!",
@@ -893,8 +829,6 @@ describe("UserService Integration Tests", () => {
             });
 
             it("should handle role update to same role", async () => {
-                const userService = getUserService();
-
                 const created = await userService.create({
                     email: `test-${Date.now().toString()}@example.com`,
                     password: "Pass123!",
