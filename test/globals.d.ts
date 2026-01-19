@@ -9,6 +9,8 @@ declare global {
     var __IOC_INITIALIZED__: boolean | undefined;
     var __TEST_INIT_PROMISE__: Promise<void> | undefined;
     var __TEST_SETUP_LOCK__: boolean | undefined;
+    var __MIGRATIONS_RUN__: boolean | undefined;
+    var __MIGRATION_PROMISE__: Promise<void> | undefined;
 }
 
 export {};

@@ -1,7 +1,7 @@
+// test/integration/service/user-service.integration.spec.ts
 import type { RedisClientType } from "redis";
 import type { DataSource } from "typeorm";
 
-// test/integration/service/user.service.integration.spec.ts
 import bcrypt from "bcrypt";
 import { v4 } from "uuid";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
