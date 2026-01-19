@@ -1,16 +1,15 @@
-// vitest.config.js
+// vitest.config.ts
 import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { loadEnv } from "vite";
 
 /**
- * PARALLEL EXECUTION WITH GLOBAL SETUP
+ * PARALLEL EXECUTION WITH SETUP FILES
  *
  * Architecture:
- * 1. globalSetup runs ONCE in main process - initializes DB and runs migrations
- * 2. Multiple worker threads start
- * 3. Each worker runs setup.ts ONCE per worker
- * 4. Tests run in parallel across workers
+ * 1. First worker runs migrations (others wait)
+ * 2. Each worker initializes its own app instance
+ * 3. Tests run in parallel across workers
  */
 export default defineConfig({
   plugins: [
@@ -18,7 +17,6 @@ export default defineConfig({
       projects: ["./tsconfig.test.json"],
     }),
   ],
-  globalSetup: ["./test/global-setup.ts"],
   setupFiles: ["./test/setup.ts"],
   resolve: {
     extensions: [".ts", ".js", ".json"],
@@ -31,14 +29,20 @@ export default defineConfig({
 
     pool: "threads",
     poolOptions: {
+      forks: {
+        singleFork: false,
+        maxForks: 3,
+        minForks: 1,
+        isolate: true,
+      },
       threads: {
         singleThread: false,
-        maxThreads: 2,
+        maxThreads: 3,
         minThreads: 1,
         isolate: true,
       },
     },
-    fileParallelism: false,
+    fileParallelism: true,
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html", "lcov"],

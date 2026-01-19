@@ -39,6 +39,24 @@ import { Transcript1764903586789 } from "@/migration/1764903586789-transcript.js
 import { config } from "@/util/validate-env.js";
 
 /**
+ * Determine if we should auto-run migrations on initialization
+ *
+ * IMPORTANT: In test mode, we NEVER auto-run migrations
+ * - Global-setup explicitly calls runMigrations()
+ * - Workers just connect without running migrations
+ */
+const shouldRunMigrations = (): boolean => {
+    if (config.NODE_ENV === "test") {
+        // NEVER auto-run in test mode
+        // setup.ts will explicitly call dataSource.runMigrations()
+        return false;
+    }
+
+    // Production/development - use config setting
+    return config.DB_RUN_MIGRATIONS_ON_STARTUP;
+};
+
+/**
  * Get logging configuration based on environment and configuration
  */
 const getLogging = (): boolean | LogLevel[] => {
@@ -151,7 +169,7 @@ const postgresConnectionOptions: PostgresConnectionOptions = {
     ],
 
     // Migration settings
-    migrationsRun: config.DB_RUN_MIGRATIONS_ON_STARTUP,
+    migrationsRun: shouldRunMigrations(),
     migrationsTableName: "typeorm_migrations",
     password: config.POSTGRES_PASSWORD,
 
