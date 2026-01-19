@@ -27,17 +27,17 @@ export default defineConfig({
     environment: "node",
     env: loadEnv("test", process.cwd(), ""),
 
-    pool: "threads",
+    pool: "forks",
     poolOptions: {
       forks: {
         singleFork: false,
-        maxForks: 3,
+        maxForks: 4,
         minForks: 1,
         isolate: true,
       },
       threads: {
         singleThread: false,
-        maxThreads: 3,
+        maxThreads: 4,
         minThreads: 1,
         isolate: true,
       },
