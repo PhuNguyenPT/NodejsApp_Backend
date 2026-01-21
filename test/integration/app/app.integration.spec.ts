@@ -1,4 +1,4 @@
-// test/app.spec.ts
+// test/integration/app/app.integration.spec.ts
 import type { RedisClientType } from "redis";
 
 import { DataSource } from "typeorm";
@@ -9,7 +9,7 @@ import type { Config } from "@/config/app.config.js";
 import { iocContainer } from "@/app/ioc-container.js";
 import { TYPES } from "@/type/container/types.js";
 
-import { getApp } from "./setup.js";
+import { getApp } from "../../setup.js";
 
 describe("App Integration Test", () => {
     describe("Infrastructure", () => {
