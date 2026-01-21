@@ -20,12 +20,7 @@ import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import { NationalExam, TalentExam, VsatExam } from "@/dto/student/exam.dto.js";
 import { MajorGroupDTO } from "@/dto/student/major-group.dto.js";
-import {
-    ExamType,
-    isCCNNType,
-    isCCQTType,
-    isDGNLType,
-} from "@/type/enum/exam-type.js";
+import { getExamCategory } from "@/type/enum/exam-type.js";
 import { MajorGroup } from "@/type/enum/major.js";
 import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
 import { VietnameseSubject } from "@/type/enum/subject.js";
@@ -401,7 +396,7 @@ export class StudentInfoDTO {
         if (!this.aptitudeExams) return [];
 
         return this.aptitudeExams.filter(
-            (cert) => this.getExamCategory(cert.examType) === type,
+            (cert) => getExamCategory(cert.examType) === type,
         );
     }
 
@@ -411,21 +406,8 @@ export class StudentInfoDTO {
         if (!this.certifications) return [];
 
         return this.certifications.filter(
-            (cert) => this.getExamCategory(cert.examType) === type,
+            (cert) => getExamCategory(cert.examType) === type,
         );
-    }
-
-    getExamCategory(examType: ExamType): "CCNN" | "CCQT" | "ĐGNL" | null {
-        if (isCCNNType(examType)) {
-            return "CCNN";
-        }
-        if (isCCQTType(examType)) {
-            return "CCQT";
-        }
-        if (isDGNLType(examType)) {
-            return "ĐGNL";
-        }
-        return null;
     }
 
     /**

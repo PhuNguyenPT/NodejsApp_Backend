@@ -93,7 +93,13 @@ export class CertificationService implements ICertificationService {
     private get_IELTS_CEFR_level(level: number): CEFR | undefined {
         if (level < 1.0 || level > 9.0) {
             return undefined;
-        } else if (level < 3.5) {
+        }
+        // Validate 0.5 increments
+        if ((level * 2) % 1 !== 0) {
+            return undefined;
+        }
+
+        if (level < 3.5) {
             return CEFR.A1;
         } else if (level < 4.0) {
             return CEFR.A2;
@@ -112,7 +118,13 @@ export class CertificationService implements ICertificationService {
     private get_TOEFL_CBT_level(level: number): CEFR | undefined {
         if (level < 33 || level > 300) {
             return undefined;
-        } else if (level <= 60) {
+        }
+        // Validate whole number
+        if (level % 1 !== 0) {
+            return undefined;
+        }
+
+        if (level <= 60) {
             return CEFR.A1;
         } else if (level <= 90) {
             return CEFR.A2;
@@ -131,7 +143,13 @@ export class CertificationService implements ICertificationService {
     private get_TOEFL_iBT_level(level: number): CEFR | undefined {
         if (level < 0 || level > 120) {
             return undefined;
-        } else if (level < 7) {
+        }
+        // Validate whole number
+        if (level % 1 !== 0) {
+            return undefined;
+        }
+
+        if (level < 7) {
             return CEFR.A1;
         } else if (level < 14) {
             return CEFR.A2;
@@ -150,7 +168,13 @@ export class CertificationService implements ICertificationService {
     private get_TOEFL_Paper_level(level: number): CEFR | undefined {
         if (level < 310 || level > 677) {
             return undefined;
-        } else if (level < 347) {
+        }
+        // Validate whole number
+        if (level % 1 !== 0) {
+            return undefined;
+        }
+
+        if (level < 347) {
             return CEFR.A1;
         } else if (level < 397) {
             return CEFR.A2;
@@ -169,7 +193,13 @@ export class CertificationService implements ICertificationService {
     private get_TOEIC_level(level: number): CEFR | undefined {
         if (level < 60 || level > 990) {
             return undefined;
-        } else if (level < 225) {
+        }
+        // Validate multiple of 5
+        if (level % 5 !== 0) {
+            return undefined;
+        }
+
+        if (level < 225) {
             return CEFR.A1;
         } else if (level < 550) {
             return CEFR.A2;
