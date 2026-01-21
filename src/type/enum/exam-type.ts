@@ -28,7 +28,7 @@ export const CCNNTypes = [
     ExamType.TOEFL_iBT,
     ExamType.TOEFL_Paper,
     ExamType.TOEIC,
-] as const;
+] as const satisfies readonly ExamType[];
 
 export const CCQTTypes = [
     ExamType.A_Level,
@@ -38,9 +38,13 @@ export const CCQTTypes = [
     ExamType.OSSD,
     ExamType.PTE_Academic,
     ExamType.SAT,
-] as const;
+] as const satisfies readonly ExamType[];
 
-export const DGNLTypes = [ExamType.HSA, ExamType.TSA, ExamType.VNUHCM] as const;
+export const DGNLTypes = [
+    ExamType.HSA,
+    ExamType.TSA,
+    ExamType.VNUHCM,
+] as const satisfies readonly ExamType[];
 
 export type CCNNType = (typeof CCNNTypes)[number];
 export type CCQTType = (typeof CCQTTypes)[number];
@@ -53,11 +57,11 @@ export interface Exam {
 
 export function getExamCategory(
     examType: ExamType,
-): "CCNN" | "CCQT" | "ĐGNL" | null {
+): "CCNN" | "CCQT" | "ĐGNL" | undefined {
     if (isCCNNType(examType)) return "CCNN";
     if (isCCQTType(examType)) return "CCQT";
     if (isDGNLType(examType)) return "ĐGNL";
-    return null;
+    return undefined;
 }
 
 /**
@@ -105,6 +109,7 @@ export function validateExamTypeScore(
     level: string,
 ): Record<string, string | undefined> {
     const errors: Record<string, string | undefined> = {};
+    const trimmedLevel = level.trim();
 
     const setErrorMessage = (message: string) => {
         errors.level = message;
@@ -112,7 +117,7 @@ export function validateExamTypeScore(
 
     if (examType === ExamType.A_Level) {
         const validGrades = ["A", "A*", "B", "C", "D", "E", "F", "N", "O", "U"];
-        if (!validGrades.includes(level.toUpperCase())) {
+        if (!validGrades.includes(trimmedLevel)) {
             setErrorMessage(`Level must be one of: ${validGrades.join(", ")}.`);
         }
         return errors;
@@ -121,7 +126,7 @@ export function validateExamTypeScore(
     // Handle JLPT separately
     if (examType === ExamType.JLPT) {
         const validJLPTGrades = ["N1", "N2", "N3", "N4", "N5"];
-        if (!validJLPTGrades.includes(level.toUpperCase())) {
+        if (!validJLPTGrades.includes(trimmedLevel)) {
             setErrorMessage(
                 `Level must be one of: ${validJLPTGrades.join(", ")}`,
             );
@@ -129,7 +134,8 @@ export function validateExamTypeScore(
         return errors;
     }
 
-    const parsedLevel = parseFloat(level);
+    const parsedLevel = parseFloat(trimmedLevel);
+
     if (isNaN(parsedLevel)) {
         setErrorMessage("Level must be a valid number.");
         return errors;
