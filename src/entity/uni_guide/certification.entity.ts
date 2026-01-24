@@ -13,7 +13,7 @@ import {
 } from "typeorm";
 
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { ExamType } from "@/type/enum/exam-type.js";
+import { ExamType } from "@/type/enum/exam-type.enum.js";
 
 export enum CEFR {
     A1 = "A1",

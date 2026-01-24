@@ -16,7 +16,7 @@ import {
     OcrStatus,
 } from "@/entity/uni_guide/ocr-result.entity.js";
 import { TYPES } from "@/type/container/types.js";
-import { Role } from "@/type/enum/user.js";
+import { Role } from "@/type/enum/user.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 
 @injectable()

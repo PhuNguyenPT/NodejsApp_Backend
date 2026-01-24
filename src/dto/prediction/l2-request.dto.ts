@@ -11,7 +11,7 @@ import {
     ValidateNested,
 } from "class-validator";
 
-import { MajorGroupCodes } from "@/type/enum/major.js";
+import { MajorGroupCodes } from "@/type/enum/major.enum.js";
 
 /**
  * User input for prediction - contains student academic information and preferences.

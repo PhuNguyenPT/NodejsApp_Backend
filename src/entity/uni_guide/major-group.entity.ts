@@ -11,7 +11,7 @@ import {
 } from "typeorm";
 
 import { MajorEntity } from "@/entity/uni_guide/major.entity.js";
-import { MajorGroup, type MajorGroupKey } from "@/type/enum/major.js";
+import { MajorGroup, type MajorGroupKey } from "@/type/enum/major.enum.js";
 
 /**
  * Represents a Major Group (e.g., "714: Khoa học giáo dục và đào tạo giáo viên").

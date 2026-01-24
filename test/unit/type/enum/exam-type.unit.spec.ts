@@ -12,7 +12,7 @@ import {
     isCCQTType,
     isDGNLType,
     validateExamTypeScore,
-} from "@/type/enum/exam-type.js";
+} from "@/type/enum/exam-type.enum.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 
 describe("ExamType Enum and Utilities", () => {

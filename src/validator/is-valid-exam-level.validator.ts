@@ -4,7 +4,10 @@ import {
     type ValidatorConstraintInterface,
 } from "class-validator";
 
-import { type Exam, validateExamTypeScore } from "@/type/enum/exam-type.js";
+import {
+    type Exam,
+    validateExamTypeScore,
+} from "@/type/enum/exam-type.enum.js";
 
 /**
  * Custom validator constraint for Exam level.

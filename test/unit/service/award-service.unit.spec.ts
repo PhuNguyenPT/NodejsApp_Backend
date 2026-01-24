@@ -10,9 +10,9 @@ import { AwardService } from "@/service/impl/award.service.js";
 import {
     NationalExcellentExamType,
     NationalExcellentStudentExamSubject,
-} from "@/type/enum/national-excellent-exam.js";
-import { Rank } from "@/type/enum/rank.js";
-import { Role } from "@/type/enum/user.js";
+} from "@/type/enum/national-excellent-exam.enum.js";
+import { Rank } from "@/type/enum/rank.enum.js";
+import { Role } from "@/type/enum/user.enum.js";
 
 describe("AwardService Business Logic Tests", () => {
     let awardService: AwardService;

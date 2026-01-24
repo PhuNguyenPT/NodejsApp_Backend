@@ -21,7 +21,7 @@ import type { ValidationResponse } from "@/type/interface/validation-response.in
 import { logger } from "@/config/logger.config.js";
 import { ExceptionHandler } from "@/decorator/exception-handler.decorator.js";
 import { HTTPValidationError } from "@/dto/prediction/validation-error.dto.js";
-import { HttpStatus } from "@/type/enum/http-status.js";
+import { HttpStatus } from "@/type/enum/http-status.enum.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { AuthenticationException } from "@/type/exception/authentication.exception.js";
 import { BadCredentialsException } from "@/type/exception/bad-credentials.exception.js";

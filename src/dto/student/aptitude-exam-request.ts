@@ -8,7 +8,7 @@ import {
     ValidateIf,
 } from "class-validator";
 
-import { ExamType } from "@/type/enum/exam-type.js";
+import { ExamType } from "@/type/enum/exam-type.enum.js";
 import { IsValidAptitudeExamScoreConstraint } from "@/validator/is-valid-aptitude-exam-score.validator.js";
 import { IsValidDGNLExamTypeConstraint } from "@/validator/is-valid-exam-type.validator.js";
 import { ValidateVnuhcmComponents } from "@/validator/vnuhcm-components-not-allowed.validator.js";

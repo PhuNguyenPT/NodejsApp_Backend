@@ -16,8 +16,8 @@ import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import {
     NationalExcellentExamType,
     NationalExcellentStudentExamSubject,
-} from "@/type/enum/national-excellent-exam.js";
-import { Rank } from "@/type/enum/rank.js";
+} from "@/type/enum/national-excellent-exam.enum.js";
+import { Rank } from "@/type/enum/rank.enum.js";
 
 @Entity({ name: "awards", schema: "uni_guide" })
 @Index("idx_award_student_id", ["studentId"])

@@ -18,7 +18,7 @@ import {
     getDefaultPermissionsByRole,
     Permission,
     Role,
-} from "@/type/enum/user.js";
+} from "@/type/enum/user.enum.js";
 import { EntityExistsException } from "@/type/exception/entity-exists.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { CacheKeys } from "@/util/cache-key.js";

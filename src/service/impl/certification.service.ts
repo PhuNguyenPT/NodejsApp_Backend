@@ -13,8 +13,8 @@ import {
     ExamType,
     handleExamValidation,
     isCCNNType,
-} from "@/type/enum/exam-type.js";
-import { Role } from "@/type/enum/user.js";
+} from "@/type/enum/exam-type.enum.js";
+import { Role } from "@/type/enum/user.enum.js";
 
 @injectable()
 export class CertificationService implements ICertificationService {

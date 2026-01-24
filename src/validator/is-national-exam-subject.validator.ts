@@ -7,8 +7,8 @@ import {
 import {
     isNationalExamSubjects,
     NationalExamSubjects,
-} from "@/type/enum/national-exam-subject.js";
-import { VietnameseSubject } from "@/type/enum/subject.js";
+} from "@/type/enum/national-exam-subject.enum.js";
+import { VietnameseSubject } from "@/type/enum/subject.enum.js";
 
 // Detailed validator with specific error messages
 export function IsValidNationalExamSubjects(

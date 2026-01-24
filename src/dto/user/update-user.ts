@@ -10,7 +10,7 @@ import {
     Matches,
 } from "class-validator";
 
-import { Role } from "@/type/enum/user.js";
+import { Role } from "@/type/enum/user.enum.js";
 
 /**
  * Data Transfer Object for updating a new user

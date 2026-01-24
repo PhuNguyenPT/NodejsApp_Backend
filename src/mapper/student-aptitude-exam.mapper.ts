@@ -2,7 +2,7 @@ import { plainToInstance } from "class-transformer";
 
 import { AptitudeExamResponse } from "@/dto/student/aptitude-exam-response.js";
 import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
-import { ExamType } from "@/type/enum/exam-type.js";
+import { ExamType } from "@/type/enum/exam-type.enum.js";
 
 export const StudentAptitudeExamMapper = {
     /**

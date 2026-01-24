@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
+import { TranscriptSubject } from "@/type/enum/transcript-subject.enum.js";
 
 export interface ISubjectScore {
     name: TranscriptSubject;

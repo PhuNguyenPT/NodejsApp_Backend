@@ -19,7 +19,7 @@ import { User } from "@/dto/user/user.js";
 import { TokenType } from "@/entity/security/jwt.entity.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { TYPES } from "@/type/container/types.js";
-import { getDefaultPermissionsByRole, Role } from "@/type/enum/user.js";
+import { getDefaultPermissionsByRole, Role } from "@/type/enum/user.enum.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { AuthenticationException } from "@/type/exception/authentication.exception.js";
 import { BadCredentialsException } from "@/type/exception/bad-credentials.exception.js";

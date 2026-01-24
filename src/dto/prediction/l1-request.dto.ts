@@ -12,7 +12,7 @@ import {
 } from "class-validator";
 
 import { HsgSubject } from "@/dto/prediction/hsg-subject.enum.js";
-import { MajorGroupCodes } from "@/type/enum/major.js";
+import { MajorGroupCodes } from "@/type/enum/major.enum.js";
 
 /**
  * User input for L1 prediction - contains high-level student information and preferences.

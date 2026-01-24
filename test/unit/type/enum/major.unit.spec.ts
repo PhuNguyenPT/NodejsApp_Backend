@@ -16,7 +16,7 @@ import {
     type MajorGroupCodeKey,
     MajorGroupCodes,
     type MajorGroupKey,
-} from "@/type/enum/major.js";
+} from "@/type/enum/major.enum.js";
 
 describe("Major Group Enum and Utilities", () => {
     describe("MajorGroup Enum", () => {

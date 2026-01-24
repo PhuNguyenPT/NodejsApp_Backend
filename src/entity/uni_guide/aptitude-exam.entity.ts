@@ -14,7 +14,7 @@ import {
 
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-component.entity.js";
-import { ExamType } from "@/type/enum/exam-type.js";
+import { ExamType } from "@/type/enum/exam-type.enum.js";
 
 @Entity({ name: "aptitude_exams", schema: "uni_guide" })
 export class AptitudeExamEntity {

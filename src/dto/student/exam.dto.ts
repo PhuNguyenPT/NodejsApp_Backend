@@ -4,16 +4,16 @@ import { IsEnum, IsNotEmpty, IsNumber, Max, Min } from "class-validator";
 import {
     type NationalExamSubject,
     NationalExamSubjects,
-} from "@/type/enum/national-exam-subject.js";
-import { VietnameseSubject } from "@/type/enum/subject.js"; // Import VietnameseSubject enum
+} from "@/type/enum/national-exam-subject.enum.js";
+import { VietnameseSubject } from "@/type/enum/subject.enum.js"; // Import VietnameseSubject enum
 import {
     type TalentExamSubject,
     TalentExamSubjects,
-} from "@/type/enum/talent-exam-subject.js";
+} from "@/type/enum/talent-exam-subject.enum.js";
 import {
     type VsatExamSubject,
     VsatExamSubjects,
-} from "@/type/enum/vsat-exam-subject.js";
+} from "@/type/enum/vsat-exam-subject.enum.js";
 
 /**
  * Represents a single exam subject and its score

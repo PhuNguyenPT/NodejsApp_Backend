@@ -8,7 +8,7 @@ import {
     getDefaultPermissionsByRole,
     Permission,
     Role,
-} from "@/type/enum/user.js";
+} from "@/type/enum/user.enum.js";
 
 describe("UserService Business Logic Tests", () => {
     describe("UserEntity", () => {

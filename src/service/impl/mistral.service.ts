@@ -22,7 +22,7 @@ import {
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
-import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
+import { TranscriptSubject } from "@/type/enum/transcript-subject.enum.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 
 const gunzipAsync = promisify(gunzip);

@@ -5,7 +5,7 @@ import express from "express";
 import passport from "passport";
 
 import { authenticateOptions } from "@/config/jwt.config.js";
-import { Permission } from "@/type/enum/user.js";
+import { Permission } from "@/type/enum/user.enum.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { AuthenticationException } from "@/type/exception/authentication.exception.js";
 import { ExpiredJwtException } from "@/type/exception/expired-jwt.exception.js";

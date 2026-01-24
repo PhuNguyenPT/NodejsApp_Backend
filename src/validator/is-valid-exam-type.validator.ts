@@ -11,7 +11,7 @@ import {
     isCCNNType,
     isCCQTType,
     isDGNLType,
-} from "@/type/enum/exam-type.js";
+} from "@/type/enum/exam-type.enum.js";
 
 @ValidatorConstraint({ async: false, name: "isValidExamType" })
 export class IsValidExamTypeConstraint implements ValidatorConstraintInterface {

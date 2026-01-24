@@ -1,7 +1,7 @@
 import { Expose } from "class-transformer";
 import { IsEnum, IsInt, IsNotEmpty, Max, Min } from "class-validator";
 
-import { AcademicPerformance } from "@/type/enum/academic-performance.js";
+import { AcademicPerformance } from "@/type/enum/academic-performance.enum.js";
 
 /**
  * Data Transfer Object for student academic performance assessment.

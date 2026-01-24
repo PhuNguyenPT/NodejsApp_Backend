@@ -4,8 +4,8 @@ import { IsEnum, IsNotEmpty } from "class-validator";
 import {
     NationalExcellentExamType,
     NationalExcellentStudentExamSubject,
-} from "@/type/enum/national-excellent-exam.js";
-import { Rank } from "@/type/enum/rank.js";
+} from "@/type/enum/national-excellent-exam.enum.js";
+import { Rank } from "@/type/enum/rank.enum.js";
 
 /**
  * Data Transfer Object for Award information

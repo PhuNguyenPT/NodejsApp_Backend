@@ -11,7 +11,7 @@ import {
 } from "typeorm";
 
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { Conduct } from "@/type/enum/conduct.js";
+import { Conduct } from "@/type/enum/conduct.enum.js";
 
 @Entity({ name: "conducts", schema: "uni_guide" })
 export class ConductEntity {

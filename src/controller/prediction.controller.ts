@@ -32,7 +32,7 @@ import { PredictionResultMapper } from "@/mapper/prediction-result-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
 import { TYPES } from "@/type/container/types.js";
-import { HttpStatus } from "@/type/enum/http-status.js";
+import { HttpStatus } from "@/type/enum/http-status.enum.js";
 
 /**
  * Controller for handling university admission prediction requests.

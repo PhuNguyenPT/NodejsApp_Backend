@@ -26,7 +26,7 @@ import {
 import { AuthResponse } from "@/dto/auth/auth-response.js";
 import validateDTO from "@/middleware/validation-middleware.js";
 import { TYPES } from "@/type/container/types.js";
-import { HttpStatus } from "@/type/enum/http-status.js";
+import { HttpStatus } from "@/type/enum/http-status.enum.js";
 import { JwtException } from "@/type/exception/jwt.exception.js";
 
 /**

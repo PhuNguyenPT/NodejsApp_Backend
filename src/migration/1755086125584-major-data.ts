@@ -5,7 +5,7 @@ import { MajorEntity } from "@/entity/uni_guide/major.entity.js";
 import {
     getEnglishKeyByVietnameseName,
     MajorGroup,
-} from "@/type/enum/major.js";
+} from "@/type/enum/major.enum.js";
 
 // Raw data extracted from the PDF
 const majorData = [
