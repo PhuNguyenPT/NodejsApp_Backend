@@ -34,8 +34,8 @@ import { FileMapper } from "@/mapper/file-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
 import { TYPES } from "@/type/container/types.js";
-import { HttpStatus } from "@/type/enum/http-status.js";
-import { Role } from "@/type/enum/user.js";
+import { HttpStatus } from "@/type/enum/http-status.enum.js";
+import { Role } from "@/type/enum/user.enum.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 
 @injectable()
@@ -1384,7 +1384,7 @@ export class FileController extends Controller {
         fields: Record<string, string | undefined>,
     ): void {
         for (const [fieldName, value] of Object.entries(fields)) {
-            if (value !== undefined && value.trim() === "") {
+            if (value?.trim() === "") {
                 throw new ValidationException({
                     [fieldName]: `${fieldName} cannot be an empty string`,
                 });

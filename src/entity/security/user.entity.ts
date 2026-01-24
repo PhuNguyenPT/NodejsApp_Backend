@@ -12,7 +12,7 @@ import {
 } from "typeorm";
 
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { Permission, Role } from "@/type/enum/user.js";
+import { Permission, Role } from "@/type/enum/user.enum.js";
 
 @Entity({ name: "users", schema: "security" })
 @Index("idx_user_id_name", ["id", "name"])

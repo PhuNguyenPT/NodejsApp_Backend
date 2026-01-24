@@ -4,7 +4,7 @@ import * as bcrypt from "bcrypt";
 
 import { logger } from "@/config/logger.config.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
-import { getDefaultPermissionsByRole, Role } from "@/type/enum/user.js";
+import { getDefaultPermissionsByRole, Role } from "@/type/enum/user.enum.js";
 import { config } from "@/util/validate-env.js";
 
 export class CreateDefaultAdmin1754794920377 implements MigrationInterface {

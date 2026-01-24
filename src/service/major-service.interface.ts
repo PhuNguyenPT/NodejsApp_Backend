@@ -1,5 +1,5 @@
 import type { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
-import type { MajorGroup } from "@/type/enum/major.js";
+import type { MajorGroup } from "@/type/enum/major.enum.js";
 
 export interface IMajorService {
     findMajorGroupEntitiesBy(

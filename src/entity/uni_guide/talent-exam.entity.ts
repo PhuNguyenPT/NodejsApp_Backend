@@ -14,7 +14,7 @@ import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import {
     type TalentExamSubject,
     TalentExamSubjects,
-} from "@/type/enum/talent-exam-subject.js";
+} from "@/type/enum/talent-exam-subject.enum.js";
 
 @Entity({ name: "talent_exams", schema: "uni_guide" })
 export class TalentExamEntity {

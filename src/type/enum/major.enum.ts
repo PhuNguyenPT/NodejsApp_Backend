@@ -28,7 +28,7 @@ export enum MajorGroup {
 
 export type MajorGroupKey = keyof typeof MajorGroup;
 
-export const MajorGroupCode = {
+export const MajorGroupCode: Record<number, string> = {
     714: "Khoa học giáo dục và đào tạo giáo viên",
     721: "Nghệ thuật",
     722: "Nhân văn",
@@ -55,73 +55,85 @@ export const MajorGroupCode = {
     790: "Khác",
 } as const;
 
-// Type for major group codes
 export type MajorGroupCodeKey = keyof typeof MajorGroupCode;
 export const MajorGroupCodes = Object.keys(MajorGroupCode).map(Number);
 
-// Helper function to get code by English key
+// Create reverse lookups for O(1) performance
+const vietnameseNameToCode = new Map<string, number>(
+    Object.entries(MajorGroupCode).map(([code, name]) => [name, Number(code)]),
+);
+
+const vietnameseNameToEnglishKey = new Map<string, MajorGroupKey>(
+    (Object.entries(MajorGroup) as [MajorGroupKey, string][]).map(
+        ([key, name]) => [name, key],
+    ),
+);
+
+const codeToEnglishKey = new Map<number, MajorGroupKey>(
+    Object.entries(MajorGroupCode)
+        .map(([code, name]) => {
+            const englishKey = vietnameseNameToEnglishKey.get(name);
+            if (englishKey === undefined) {
+                return null;
+            }
+            return [Number(code), englishKey] as const;
+        })
+        .filter(
+            (entry): entry is readonly [number, MajorGroupKey] =>
+                entry !== null,
+        ),
+);
+
+// Helper function to get code by English key - O(1)
 export function getCodeByEnglishKey(
     englishKey: MajorGroupKey,
 ): MajorGroupCodeKey | undefined {
-    const vietnameseName = MajorGroup[englishKey];
-    const foundKey = Object.keys(MajorGroupCode).find(
-        (key) =>
-            MajorGroupCode[Number(key) as MajorGroupCodeKey] === vietnameseName,
-    );
-    return foundKey ? (Number(foundKey) as MajorGroupCodeKey) : undefined;
+    const vietnameseName: string = MajorGroup[englishKey];
+    const code = vietnameseNameToCode.get(vietnameseName);
+    return code;
 }
 
-// Helper function to get code by Vietnamese name
+// Helper function to get code by Vietnamese name - O(1)
 export function getCodeByVietnameseName(
     vietnameseName: string,
 ): MajorGroupCodeKey | undefined {
-    const foundKey = Object.keys(MajorGroupCode).find(
-        (key) =>
-            MajorGroupCode[Number(key) as MajorGroupCodeKey] === vietnameseName,
-    );
-    return foundKey ? (Number(foundKey) as MajorGroupCodeKey) : undefined;
+    const code = vietnameseNameToCode.get(vietnameseName);
+    return code;
 }
 
+// O(1)
 export function getEnglishKeyByCode(
     code: MajorGroupCodeKey,
 ): MajorGroupKey | undefined {
-    const vietnameseName = MajorGroupCode[code];
-    return Object.keys(MajorGroup).find(
-        (key) => MajorGroup[key as MajorGroupKey] === vietnameseName,
-    ) as MajorGroupKey | undefined;
+    return codeToEnglishKey.get(code);
 }
 
-// Helper function to get English key by Vietnamese name
+// O(1)
 export function getEnglishKeyByVietnameseName(
     vietnameseName: string,
 ): MajorGroupKey | undefined {
-    const entries = Object.entries(MajorGroup) as [MajorGroupKey, string][];
-    const found = entries.find(([, value]) => value === vietnameseName);
-    return found?.[0];
+    return vietnameseNameToEnglishKey.get(vietnameseName);
 }
 
+// O(1)
 export function getMajorGroupByCode(
     code: MajorGroupCodeKey,
 ): string | undefined {
     return MajorGroupCode[code];
 }
 
-// Helper function to get all major group keys (equivalent to Object.keys but typed)
 export function getMajorGroupKeys(): MajorGroupKey[] {
     return Object.keys(MajorGroup) as MajorGroupKey[];
 }
 
-// Helper function to get all major group values (equivalent to Object.values but typed)
-export function getMajorGroupValues(): MajorGroup[] {
+export function getMajorGroupValues(): string[] {
     return Object.values(MajorGroup);
 }
 
-// Helper function to check if a string is a valid major group key
 export function isMajorGroupKey(key: string): key is MajorGroupKey {
     return key in MajorGroup;
 }
 
-// Helper function to check if a string is a valid major group value
 export function isMajorGroupValue(value: string): value is MajorGroup {
-    return Object.values(MajorGroup).includes(value as MajorGroup);
+    return vietnameseNameToEnglishKey.has(value);
 }

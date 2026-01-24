@@ -1,4 +1,4 @@
-import { VietnameseSubject } from "@/type/enum/subject.js";
+import { VietnameseSubject } from "@/type/enum/subject.enum.js";
 
 const VsatExamSubjectsArray: VietnameseSubject[] = [
     VietnameseSubject.TOAN,

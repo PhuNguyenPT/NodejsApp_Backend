@@ -9,8 +9,8 @@ import { Logger } from "winston";
 import type { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
 import type { ISubjectScore } from "@/dto/ocr/subject-score.interface.js";
 import type { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
-import type { NationalExamSubject } from "@/type/enum/national-exam-subject.js";
-import type { TalentExamSubject } from "@/type/enum/talent-exam-subject.js";
+import type { NationalExamSubject } from "@/type/enum/national-exam-subject.enum.js";
+import type { TalentExamSubject } from "@/type/enum/talent-exam-subject.enum.js";
 
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
 import { AwardEnglish } from "@/dto/prediction/award-english.dto.js";
@@ -36,12 +36,16 @@ import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { TYPES } from "@/type/container/types.js";
-import { type CCQTType, ExamType, isCCQTType } from "@/type/enum/exam-type.js";
-import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.js";
-import { NationalExcellentStudentExamSubject } from "@/type/enum/national-excellent-exam.js";
-import { Rank } from "@/type/enum/rank.js";
-import { VietnameseSubject } from "@/type/enum/subject.js";
-import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
+import {
+    type CCQTType,
+    ExamType,
+    isCCQTType,
+} from "@/type/enum/exam-type.enum.js";
+import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.enum.js";
+import { NationalExcellentStudentExamSubject } from "@/type/enum/national-excellent-exam.enum.js";
+import { Rank } from "@/type/enum/rank.enum.js";
+import { VietnameseSubject } from "@/type/enum/subject.enum.js";
+import { TranscriptSubject } from "@/type/enum/transcript-subject.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";

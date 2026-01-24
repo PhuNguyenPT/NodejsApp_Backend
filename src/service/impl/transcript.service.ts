@@ -14,8 +14,8 @@ import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { TYPES } from "@/type/container/types.js";
-import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
-import { Role } from "@/type/enum/user.js";
+import { TranscriptSubject } from "@/type/enum/transcript-subject.enum.js";
+import { Role } from "@/type/enum/user.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 

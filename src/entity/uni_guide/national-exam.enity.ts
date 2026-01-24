@@ -14,7 +14,7 @@ import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import {
     type NationalExamSubject,
     NationalExamSubjects,
-} from "@/type/enum/national-exam-subject.js";
+} from "@/type/enum/national-exam-subject.enum.js";
 
 @Entity({ name: "national_exams", schema: "uni_guide" })
 export class NationalExamEntity {

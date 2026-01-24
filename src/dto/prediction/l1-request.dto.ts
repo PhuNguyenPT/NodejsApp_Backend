@@ -12,19 +12,7 @@ import {
 } from "class-validator";
 
 import { HsgSubject } from "@/dto/prediction/hsg-subject.enum.js";
-import { MajorGroupCodes } from "@/type/enum/major.js";
-
-/**
- * Batch request for L1 predictions - contains multiple User Inputs L1 for initial prioritization.
- */
-export class L1BatchRequest {
-    @Expose()
-    @IsArray()
-    @IsNotEmpty()
-    @Type(() => UserInputL1)
-    @ValidateNested({ each: true })
-    items!: UserInputL1[];
-}
+import { MajorGroupCodes } from "@/type/enum/major.enum.js";
 
 /**
  * User input for L1 prediction - contains high-level student information and preferences.
@@ -145,4 +133,16 @@ export class UserInputL1 {
     @Expose()
     @IsString()
     tinh_tp!: string;
+}
+
+/**
+ * Batch request for L1 predictions - contains multiple User Inputs L1 for initial prioritization.
+ */
+export class L1BatchRequest {
+    @Expose()
+    @IsArray()
+    @IsNotEmpty()
+    @Type(() => UserInputL1)
+    @ValidateNested({ each: true })
+    items!: UserInputL1[];
 }

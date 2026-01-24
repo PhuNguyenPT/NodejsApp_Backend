@@ -5,7 +5,7 @@ import type { IMajorService } from "@/service/major-service.interface.js";
 
 import { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
 import { TYPES } from "@/type/container/types.js";
-import { MajorGroup } from "@/type/enum/major.js";
+import { MajorGroup } from "@/type/enum/major.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 
 @injectable()

@@ -14,7 +14,7 @@ import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import {
     type VsatExamSubject,
     VsatExamSubjects,
-} from "@/type/enum/vsat-exam-subject.js";
+} from "@/type/enum/vsat-exam-subject.enum.js";
 
 @Entity({ name: "vsat_exams", schema: "uni_guide" })
 export class VsatExamEntity {

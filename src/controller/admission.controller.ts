@@ -28,7 +28,7 @@ import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import { type IAdmissionService } from "@/service/admission-service.interface.js";
 import { TYPES } from "@/type/container/types.js";
-import { HttpStatus } from "@/type/enum/http-status.js";
+import { HttpStatus } from "@/type/enum/http-status.enum.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { PageableQuery, PageRequest } from "@/type/pagination/page-request.js";
 import { PageResponse } from "@/type/pagination/page-response.js";

@@ -248,9 +248,7 @@ export class PageRequest implements Pageable {
         const orders = sortStr.split(";").map((sortPart) => {
             const [field, direction] = sortPart.split(",");
             const sortDirection =
-                direction && direction.trim().toUpperCase() === "DESC"
-                    ? "DESC"
-                    : "ASC";
+                direction.trim().toUpperCase() === "DESC" ? "DESC" : "ASC";
             return new Order(field.trim(), sortDirection);
         });
 

@@ -28,8 +28,8 @@ import {
     StudentCreatedEventSchema,
 } from "@/event/student.event.js";
 import { TYPES } from "@/type/container/types.js";
-import { UniType } from "@/type/enum/uni-type.js";
-import { Role } from "@/type/enum/user.js";
+import { UniType } from "@/type/enum/uni-type.enum.js";
+import { Role } from "@/type/enum/user.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { CacheKeys } from "@/util/cache-key.js";
 import { type ExamScenario, PredictionUtil } from "@/util/prediction.util.js";

@@ -22,7 +22,7 @@ import { TYPES } from "@/type/container/types.js";
 import {
     getGroupSubjects,
     isValidSubjectGroupKey,
-} from "@/type/enum/subject.js";
+} from "@/type/enum/subject.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { PageImpl } from "@/type/pagination/page-impl.js";
 import { PageRequest } from "@/type/pagination/page-request.js";

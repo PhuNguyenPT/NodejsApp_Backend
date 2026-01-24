@@ -3,7 +3,7 @@ import { IsEnum, IsNumber, Max, Min } from "class-validator";
 
 import type { ISubjectScore } from "@/dto/ocr/subject-score.interface.js";
 
-import { TranscriptSubject } from "@/type/enum/transcript-subject.js";
+import { TranscriptSubject } from "@/type/enum/transcript-subject.enum.js";
 
 export class SubjectScore implements ISubjectScore {
     @Expose()

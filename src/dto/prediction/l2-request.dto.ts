@@ -11,18 +11,7 @@ import {
     ValidateNested,
 } from "class-validator";
 
-import { MajorGroupCodes } from "@/type/enum/major.js";
-
-/**
- * Batch request for L2 predictions - contains multiple User Inputs L2 for initial prioritization.
- */
-export class L2BatchRequest {
-    @IsArray()
-    @IsNotEmpty()
-    @Type(() => UserInputL2)
-    @ValidateNested({ each: true })
-    items!: UserInputL2[];
-}
+import { MajorGroupCodes } from "@/type/enum/major.enum.js";
 
 /**
  * User input for prediction - contains student academic information and preferences.
@@ -164,4 +153,15 @@ export class UserInputL2 {
     @IsNotEmpty()
     @IsString()
     to_hop_mon!: string;
+}
+
+/**
+ * Batch request for L2 predictions - contains multiple User Inputs L2 for initial prioritization.
+ */
+export class L2BatchRequest {
+    @IsArray()
+    @IsNotEmpty()
+    @Type(() => UserInputL2)
+    @ValidateNested({ each: true })
+    items!: UserInputL2[];
 }

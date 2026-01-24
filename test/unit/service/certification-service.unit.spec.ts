@@ -10,8 +10,8 @@ import {
     CertificationEntity,
 } from "@/entity/uni_guide/certification.entity.js";
 import { CertificationService } from "@/service/impl/certification.service.js";
-import { ExamType } from "@/type/enum/exam-type.js";
-import { Role } from "@/type/enum/user.js";
+import { ExamType } from "@/type/enum/exam-type.enum.js";
+import { Role } from "@/type/enum/user.enum.js";
 
 describe("CertificationService Business Logic Tests", () => {
     let certificationService: CertificationService;

@@ -1,7 +1,7 @@
 // src/dto/user/user.ts
 import { Exclude, Expose, Type } from "class-transformer";
 
-import { Permission, Role } from "@/type/enum/user.js";
+import { Permission, Role } from "@/type/enum/user.enum.js";
 
 /**
  * Data Transfer Object for user response

@@ -8,16 +8,14 @@ import {
 } from "class-validator";
 
 import { AptitudeExamRequest } from "@/dto/student/aptitude-exam-request.js";
-import { ExamType } from "@/type/enum/exam-type.js";
+import { ExamType } from "@/type/enum/exam-type.enum.js";
 
 /**
  * Custom validator to ensure VNUHCM component scores are only provided for VNUHCM exams
  * and are rejected for other exam types.
  */
 @ValidatorConstraint({ async: false, name: "vnuhcmComponentsNotAllowed" })
-export class VnuhcmComponentsNotAllowedConstraint
-    implements ValidatorConstraintInterface
-{
+export class VnuhcmComponentsNotAllowedConstraint implements ValidatorConstraintInterface {
     defaultMessage(args: ValidationArguments): string {
         const aptitudeExam = args.object as AptitudeExamRequest;
         const { examType, languageScore, mathScore, scienceLogic } =

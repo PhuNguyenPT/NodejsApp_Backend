@@ -11,7 +11,7 @@ import {
     isCCNNType,
     isCCQTType,
     isDGNLType,
-} from "@/type/enum/exam-type.js";
+} from "@/type/enum/exam-type.enum.js";
 
 @ValidatorConstraint({ async: false, name: "isValidExamType" })
 export class IsValidExamTypeConstraint implements ValidatorConstraintInterface {
@@ -49,9 +49,7 @@ export function isValidExamType(examType: unknown): examType is ExamType {
 }
 
 @ValidatorConstraint({ async: false, name: "isValidCCNNExamType" })
-export class IsValidCCNNExamTypeConstraint
-    implements ValidatorConstraintInterface
-{
+export class IsValidCCNNExamTypeConstraint implements ValidatorConstraintInterface {
     private examType: unknown;
 
     defaultMessage() {
@@ -89,9 +87,7 @@ export class IsValidCCNNExamTypeConstraint
 }
 
 @ValidatorConstraint({ async: false, name: "isValidDGNLExamType" })
-export class IsValidDGNLExamTypeConstraint
-    implements ValidatorConstraintInterface
-{
+export class IsValidDGNLExamTypeConstraint implements ValidatorConstraintInterface {
     private examType: unknown;
 
     defaultMessage() {
@@ -129,9 +125,7 @@ export class IsValidDGNLExamTypeConstraint
 }
 
 @ValidatorConstraint({ async: false, name: "isValidCCQTExamType" })
-export class IsValidCCQTExamTypeConstraint
-    implements ValidatorConstraintInterface
-{
+export class IsValidCCQTExamTypeConstraint implements ValidatorConstraintInterface {
     private examType: unknown;
 
     defaultMessage() {
@@ -169,9 +163,7 @@ export class IsValidCCQTExamTypeConstraint
 }
 
 @ValidatorConstraint({ async: false, name: "isValidCertificationExamType" })
-export class IsValidCertificationExamTypeConstraint
-    implements ValidatorConstraintInterface
-{
+export class IsValidCertificationExamTypeConstraint implements ValidatorConstraintInterface {
     private examType: unknown;
 
     defaultMessage(): string {

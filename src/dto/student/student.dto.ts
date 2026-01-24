@@ -20,12 +20,12 @@ import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import { NationalExam, TalentExam, VsatExam } from "@/dto/student/exam.dto.js";
 import { MajorGroupDTO } from "@/dto/student/major-group.dto.js";
-import { getExamCategory } from "@/type/enum/exam-type.js";
-import { MajorGroup } from "@/type/enum/major.js";
-import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
-import { VietnameseSubject } from "@/type/enum/subject.js";
-import { UniType } from "@/type/enum/uni-type.js";
-import { VietnamSouthernProvinces } from "@/type/enum/vietnamese-provinces.js";
+import { getExamCategory } from "@/type/enum/exam-type.enum.js";
+import { MajorGroup } from "@/type/enum/major.enum.js";
+import { SpecialStudentCase } from "@/type/enum/special-student-case.enum.js";
+import { VietnameseSubject } from "@/type/enum/subject.enum.js";
+import { UniType } from "@/type/enum/uni-type.enum.js";
+import { VietnamSouthernProvinces } from "@/type/enum/vietnamese-provinces.enum.js";
 import { IsArrayUnique } from "@/validator/is-array-unique.validator.js";
 import { IsValidNationalExamSubjects } from "@/validator/is-national-exam-subject.validator.js";
 

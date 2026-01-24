@@ -27,7 +27,7 @@ import {
     type SingleFileCreatedEvent,
 } from "@/event/file.event.js";
 import { TYPES } from "@/type/container/types.js";
-import { Role } from "@/type/enum/user.js";
+import { Role } from "@/type/enum/user.enum.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 
@@ -330,7 +330,7 @@ export class FileEventListener implements IFileEventListener {
                             (f) => f.id === ocrResultEntity.fileId,
                         );
 
-                        if (!file || file.studentId !== studentId) {
+                        if (file?.studentId !== studentId) {
                             this.logger.error(
                                 `Data integrity error: File ${ocrResultEntity.fileId} does not belong to student ${studentId}`,
                             );

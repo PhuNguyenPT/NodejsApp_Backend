@@ -24,10 +24,10 @@ import { TYPES } from "@/type/container/types.js";
 import {
     AcademicPerformance,
     getRankByAcademicPerformance,
-} from "@/type/enum/academic-performance.js";
-import { Conduct, getRankByConduct } from "@/type/enum/conduct.js";
-import { ExamType } from "@/type/enum/exam-type.js";
-import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.js";
+} from "@/type/enum/academic-performance.enum.js";
+import { Conduct, getRankByConduct } from "@/type/enum/conduct.enum.js";
+import { ExamType } from "@/type/enum/exam-type.enum.js";
+import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";

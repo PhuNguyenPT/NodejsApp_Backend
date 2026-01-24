@@ -1,4 +1,4 @@
-import { VietnameseSubject } from "@/type/enum/subject.js";
+import { VietnameseSubject } from "@/type/enum/subject.enum.js";
 
 export enum TranscriptSubject {
     CONG_NGHE = "Công Nghệ",

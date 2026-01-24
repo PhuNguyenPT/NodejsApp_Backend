@@ -1,7 +1,7 @@
 import { Expose } from "class-transformer";
 import { IsEnum, IsNotEmpty, IsString } from "class-validator";
 
-import { MajorGroup } from "@/type/enum/major.js";
+import { MajorGroup } from "@/type/enum/major.enum.js";
 
 export class MajorGroupDTO {
     /**

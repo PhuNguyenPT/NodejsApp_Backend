@@ -2,17 +2,6 @@ import { Expose, Type } from "class-transformer";
 import { IsArray, IsString, ValidateNested } from "class-validator";
 
 /**
- * HTTP validation error that wraps multiple validation issues.
- */
-export class HTTPValidationError {
-    @Expose()
-    @IsArray()
-    @Type(() => ValidationError)
-    @ValidateNested({ each: true })
-    detail!: ValidationError[];
-}
-
-/**
  * Represents a single validation error from the API.
  */
 export class ValidationError {
@@ -38,4 +27,15 @@ export class ValidationError {
     @Expose()
     @IsString()
     type!: string;
+}
+
+/**
+ * HTTP validation error that wraps multiple validation issues.
+ */
+export class HTTPValidationError {
+    @Expose()
+    @IsArray()
+    @Type(() => ValidationError)
+    @ValidateNested({ each: true })
+    detail!: ValidationError[];
 }

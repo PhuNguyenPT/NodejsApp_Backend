@@ -27,10 +27,10 @@ import { StudentMajorGroupEntity } from "@/entity/uni_guide/student-major-group.
 import { TalentExamEntity } from "@/entity/uni_guide/talent-exam.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { VsatExamEntity } from "@/entity/uni_guide/vsat-exam.entity.js";
-import { MajorGroup } from "@/type/enum/major.js";
-import { SpecialStudentCase } from "@/type/enum/special-student-case.js";
-import { UniType } from "@/type/enum/uni-type.js";
-import { VietnamSouthernProvinces } from "@/type/enum/vietnamese-provinces.js";
+import { MajorGroup } from "@/type/enum/major.enum.js";
+import { SpecialStudentCase } from "@/type/enum/special-student-case.enum.js";
+import { UniType } from "@/type/enum/uni-type.enum.js";
+import { VietnamSouthernProvinces } from "@/type/enum/vietnamese-provinces.enum.js";
 
 @Entity({ name: "students", schema: "uni_guide" })
 @Index("idx_students_user_id", ["userId"])

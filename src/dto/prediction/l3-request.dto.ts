@@ -18,7 +18,7 @@ import { InterCer } from "@/dto/prediction/inter-cer.dto.js";
 import { NangKhieuScore } from "@/dto/prediction/nang-khieu-score.dto.js";
 import { TNTHPTScores } from "@/dto/prediction/tnthpt-scores.dto.js";
 import { TranscriptRecord } from "@/dto/prediction/transcript-record.dto.js";
-import { MajorGroupCodes } from "@/type/enum/major.js";
+import { MajorGroupCodes } from "@/type/enum/major.enum.js";
 
 export class UserInputL3 {
     @Expose()
