@@ -668,50 +668,54 @@ describe("ExamType Enum and Utilities", () => {
         });
 
         it("should include prefix in error messages when provided", () => {
+            let thrownError: unknown;
+
             try {
                 handleExamValidation(ExamType.IELTS, "10.0", "certification");
-                expect.fail("Should have thrown ValidationException");
             } catch (error) {
-                expect(error).toBeInstanceOf(ValidationException);
-                if (error instanceof ValidationException) {
-                    expect(error.validationErrors).toHaveProperty(
-                        "certification.level",
-                    );
-                }
+                thrownError = error as Error;
             }
+
+            expect(thrownError).toBeInstanceOf(ValidationException);
+            expect(
+                (thrownError as ValidationException).validationErrors,
+            ).toHaveProperty("certification.level");
         });
 
         it("should not include prefix when not provided", () => {
+            let thrownError: unknown;
+
             try {
                 handleExamValidation(ExamType.IELTS, "10.0");
-                expect.fail("Should have thrown ValidationException");
             } catch (error) {
-                expect(error).toBeInstanceOf(ValidationException);
-                if (error instanceof ValidationException) {
-                    expect(error.validationErrors).toHaveProperty("level");
-                    expect(error.validationErrors).not.toHaveProperty(
-                        "certification.level",
-                    );
-                }
+                thrownError = error;
             }
+
+            expect(thrownError).toBeInstanceOf(ValidationException);
+            const validationError = thrownError as ValidationException;
+            expect(validationError.validationErrors).toHaveProperty("level");
+            expect(validationError.validationErrors).not.toHaveProperty(
+                "certification.level",
+            );
         });
 
         it("should handle multiple validation errors with prefix", () => {
+            let thrownError: unknown;
+
             try {
                 handleExamValidation(
                     ExamType.IELTS,
                     "invalid",
                     "certifications[0]",
                 );
-                expect.fail("Should have thrown ValidationException");
             } catch (error) {
-                expect(error).toBeInstanceOf(ValidationException);
-                if (error instanceof ValidationException) {
-                    expect(error.validationErrors).toHaveProperty(
-                        "certifications[0].level",
-                    );
-                }
+                thrownError = error;
             }
+
+            expect(thrownError).toBeInstanceOf(ValidationException);
+            expect(
+                (thrownError as ValidationException).validationErrors,
+            ).toHaveProperty("certifications[0].level");
         });
     });
 
@@ -906,16 +910,15 @@ describe("ExamType Enum and Utilities", () => {
 
             allExamTypes.forEach((examType) => {
                 const category = getExamCategory(examType);
+                const expectedCategory = isCCNNType(examType)
+                    ? "CCNN"
+                    : isCCQTType(examType)
+                      ? "CCQT"
+                      : isDGNLType(examType)
+                        ? "ĐGNL"
+                        : undefined;
 
-                if (isCCNNType(examType)) {
-                    expect(category).toBe("CCNN");
-                } else if (isCCQTType(examType)) {
-                    expect(category).toBe("CCQT");
-                } else if (isDGNLType(examType)) {
-                    expect(category).toBe("ĐGNL");
-                } else {
-                    expect(category).toBeUndefined();
-                }
+                expect(category).toBe(expectedCategory);
             });
         });
 
