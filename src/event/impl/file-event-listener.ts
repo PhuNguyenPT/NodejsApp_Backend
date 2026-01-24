@@ -330,7 +330,7 @@ export class FileEventListener implements IFileEventListener {
                             (f) => f.id === ocrResultEntity.fileId,
                         );
 
-                        if (!file || file.studentId !== studentId) {
+                        if (file?.studentId !== studentId) {
                             this.logger.error(
                                 `Data integrity error: File ${ocrResultEntity.fileId} does not belong to student ${studentId}`,
                             );

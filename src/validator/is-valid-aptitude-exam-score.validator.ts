@@ -15,9 +15,7 @@ import { ExamType, validateExamTypeScore } from "@/type/enum/exam-type.js";
  * For VNUHCM, also validates that the sum of component scores equals the total score.
  */
 @ValidatorConstraint({ async: false, name: "isValidAptitudeExamScore" })
-export class IsValidAptitudeExamScoreConstraint
-    implements ValidatorConstraintInterface
-{
+export class IsValidAptitudeExamScoreConstraint implements ValidatorConstraintInterface {
     /**
      * Provides the default error message when validation fails.
      * It extracts the specific error message from `validateExamTypeScore`.

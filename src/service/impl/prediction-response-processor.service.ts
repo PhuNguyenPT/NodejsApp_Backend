@@ -19,9 +19,7 @@ import { Role } from "@/type/enum/user.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 
 @injectable()
-export class PredictionL3ProcessorService
-    implements IPredictionL3ProcessorService
-{
+export class PredictionL3ProcessorService implements IPredictionL3ProcessorService {
     constructor(
         @inject(TYPES.Logger) private readonly logger: Logger,
         @inject(TYPES.DataSource) private readonly dataSource: DataSource,

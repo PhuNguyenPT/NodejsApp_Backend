@@ -1384,7 +1384,7 @@ export class FileController extends Controller {
         fields: Record<string, string | undefined>,
     ): void {
         for (const [fieldName, value] of Object.entries(fields)) {
-            if (value !== undefined && value.trim() === "") {
+            if (value?.trim() === "") {
                 throw new ValidationException({
                     [fieldName]: `${fieldName} cannot be an empty string`,
                 });

@@ -15,9 +15,7 @@ import { ExamType } from "@/type/enum/exam-type.js";
  * and are rejected for other exam types.
  */
 @ValidatorConstraint({ async: false, name: "vnuhcmComponentsNotAllowed" })
-export class VnuhcmComponentsNotAllowedConstraint
-    implements ValidatorConstraintInterface
-{
+export class VnuhcmComponentsNotAllowedConstraint implements ValidatorConstraintInterface {
     defaultMessage(args: ValidationArguments): string {
         const aptitudeExam = args.object as AptitudeExamRequest;
         const { examType, languageScore, mathScore, scienceLogic } =

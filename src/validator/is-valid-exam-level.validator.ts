@@ -12,9 +12,7 @@ import { type Exam, validateExamTypeScore } from "@/type/enum/exam-type.js";
  * is valid for the specified exam type and falls within its expected range.
  */
 @ValidatorConstraint({ async: false, name: "isValidExamLevel" })
-export class IsValidExamLevelConstraint
-    implements ValidatorConstraintInterface
-{
+export class IsValidExamLevelConstraint implements ValidatorConstraintInterface {
     /**
      * Provides the default error message when validation fails.
      * It extracts the specific error message from `validateExamTypeScore`.
