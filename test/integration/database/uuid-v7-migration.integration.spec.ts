@@ -58,8 +58,33 @@ describe("UUID v7 Migration Tests", () => {
         postgresVersion = versionData.version_num;
         hasNativeUuidv7 = postgresVersion >= 180000; // PostgreSQL 18.0.0
 
-        // Ensure pgcrypto extension is available for gen_random_uuid()
-        await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto`);
+        const extensions = (await queryRunner.query(`
+            SELECT extname, extversion 
+            FROM pg_extension 
+            WHERE extname IN ('pgcrypto', 'uuid-ossp')
+            ORDER BY extname
+        `)) as ExtensionResult[];
+
+        const hasPgcrypto = extensions.some(
+            (ext) => ext.extname === "pgcrypto",
+        );
+        const hasPgUuidOssp = extensions.some(
+            (ext) => ext.extname === "uuid-ossp",
+        );
+
+        if (!hasPgcrypto) {
+            // Required for gen_random_uuid() (v4)
+            await queryRunner.query(
+                `CREATE EXTENSION IF NOT EXISTS "pgcrypto"`,
+            );
+        }
+
+        if (!hasPgUuidOssp) {
+            // Required for older uuid-ossp functions
+            await queryRunner.query(
+                `CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`,
+            );
+        }
 
         // If PostgreSQL < 18, verify custom uuidv7() function exists
         if (!hasNativeUuidv7) {
@@ -106,7 +131,11 @@ describe("UUID v7 Migration Tests", () => {
         const hasPgcrypto = extensions.some(
             (ext) => ext.extname === "pgcrypto",
         );
+        const hasPgUuidOssp = extensions.some(
+            (ext) => ext.extname === "uuid-ossp",
+        );
         expect(hasPgcrypto).toBe(true);
+        expect(hasPgUuidOssp).toBe(true);
     });
 
     it("should verify uuidv7() function generates valid UUIDs", async () => {
