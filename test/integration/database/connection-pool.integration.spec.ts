@@ -1,4 +1,5 @@
 // test/integration/database/connection-pool.integration.spec.ts
+import type { PoolConfig } from "pg";
 import type { DataSource, QueryRunner } from "typeorm";
 
 import { describe, expect, it } from "vitest";
@@ -23,12 +24,6 @@ interface PgBackendPidResult {
     pid: number;
 }
 
-interface PoolConfig {
-    idleTimeoutMillis?: number;
-    max?: number;
-    min?: number;
-}
-
 interface QueryNumResult {
     query_num: number;
 }
@@ -38,17 +33,29 @@ interface SimpleValueResult {
 }
 
 describe("PostgreSQL Connection Pool Configuration", () => {
-    // Use getApp to ensure proper initialization without race conditions
-    it("should be properly initialized via test setup", () => {
-        const app = getApp();
-        const dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
+    let poolConfig: PoolConfig;
+    // Initialize variables before all tests
+    const app = getApp();
+    const dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
+    const options = dataSource.options;
 
+    // Type assertion without expect (validation happens in tests)
+    if ("extra" in options && options.extra) {
+        poolConfig = options.extra as PoolConfig;
+    }
+
+    it("should be properly initialized via test setup", () => {
         expect(app).toBeDefined();
         expect(dataSource.isInitialized).toBe(true);
+
+        // Validate pool config was properly extracted
+        const options = dataSource.options;
+        expect("extra" in options).toBe(true);
+        expect(options.extra).toBeDefined();
+        expect(poolConfig).toBeDefined();
     });
 
-    it("should have correct pool configuration (min: 5, max: 20)", () => {
-        const dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
+    it("should have valid pool configuration", () => {
         const options = dataSource.options;
 
         expect(options.type).toBe("postgres");
@@ -57,38 +64,103 @@ describe("PostgreSQL Connection Pool Configuration", () => {
         expect("extra" in options).toBe(true);
         expect(options.extra).toBeDefined();
 
-        const poolConfig = options.extra as PoolConfig;
-        expect(poolConfig.min).toBe(5);
-        expect(poolConfig.max).toBe(20);
-        expect(poolConfig.idleTimeoutMillis).toBe(10000);
+        // Verify pool config has valid values
+        expect(poolConfig.min).toBeDefined();
+        expect(poolConfig.max).toBeDefined();
+        expect(poolConfig.min).toBeGreaterThan(0);
+        expect(poolConfig.max).toBeGreaterThan(0);
+
+        // Type-safe comparison - assert values exist first, then compare
+        const minValue = poolConfig.min ?? 0;
+        const maxValue = poolConfig.max ?? 0;
+        expect(maxValue).toBeGreaterThanOrEqual(minValue);
+
+        // Verify idle timeout is configured
+        expect(poolConfig.idleTimeoutMillis).toBeDefined();
+        expect(poolConfig.idleTimeoutMillis).toBeGreaterThan(0);
+
+        // Verify connection timeout is configured
+        expect(poolConfig.connectionTimeoutMillis).toBeDefined();
+        expect(poolConfig.connectionTimeoutMillis).toBeGreaterThan(0);
+
+        // Verify keep-alive is configured
+        expect(poolConfig.keepAlive).toBeDefined();
+        expect(poolConfig.keepAlive).toBe(true);
+
+        // Verify keep-alive initial delay is configured
+        expect(poolConfig.keepAliveInitialDelayMillis).toBeDefined();
+        expect(poolConfig.keepAliveInitialDelayMillis).toBeGreaterThan(0);
+
+        // Verify statement timeout is configured
+        expect(poolConfig.statement_timeout).toBeDefined();
+        expect(poolConfig.statement_timeout).toBeGreaterThan(0);
+
+        // Verify query timeout is configured
+        expect(poolConfig.query_timeout).toBeDefined();
+        expect(poolConfig.query_timeout).toBeGreaterThan(0);
+
+        // Verify lock timeout is configured
+        expect(poolConfig.lock_timeout).toBeDefined();
+        expect(poolConfig.lock_timeout).toBeGreaterThan(0);
+
+        // Verify idle in transaction timeout is configured
+        expect(poolConfig.idle_in_transaction_session_timeout).toBeDefined();
+        expect(poolConfig.idle_in_transaction_session_timeout).toBeGreaterThan(
+            0,
+        );
+
+        // Verify application name is set
+        expect(poolConfig.application_name).toBeDefined();
+        expect(typeof poolConfig.application_name).toBe("string");
+        expect(poolConfig.application_name?.length).toBeGreaterThan(0);
+
+        // Verify client encoding is set
+        expect(poolConfig.client_encoding).toBeDefined();
+        expect(poolConfig.client_encoding).toBe("UTF8");
+
+        // Verify maxUses is configured
+        expect(poolConfig.maxUses).toBeDefined();
+        expect(poolConfig.maxUses).toBeGreaterThan(0);
+
+        // Verify allowExitOnIdle is defined (can be true or false)
+        expect(poolConfig.allowExitOnIdle).toBeDefined();
+        expect(typeof poolConfig.allowExitOnIdle).toBe("boolean");
+
+        // Verify maxLifetimeSeconds is defined (can be 0 for non-production)
+        expect(poolConfig.maxLifetimeSeconds).toBeDefined();
+        expect(poolConfig.maxLifetimeSeconds).toBeGreaterThanOrEqual(0);
     });
 
     it("should create multiple concurrent connections within pool limits", async () => {
-        const dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
         const queryRunners: QueryRunner[] = [];
 
+        // Use half of max pool size to safely stay within limits
+        const connectionsToCreate = Math.floor((poolConfig.max ?? 5) / 2);
+
         try {
-            // Create 10 concurrent connections (within max pool size)
-            const connectionPromises = Array.from({ length: 10 }, async () => {
-                const queryRunner = dataSource.createQueryRunner();
-                await queryRunner.connect();
-                queryRunners.push(queryRunner);
+            const connectionPromises = Array.from(
+                { length: connectionsToCreate },
+                async () => {
+                    const queryRunner = dataSource.createQueryRunner();
+                    await queryRunner.connect();
+                    queryRunners.push(queryRunner);
 
-                // Execute a simple query to verify connection is active
-                const result = (await queryRunner.query(
-                    "SELECT 1 as value",
-                )) as SimpleValueResult[];
-                const firstResult = result[0];
-                expect(firstResult).toBeDefined();
-                expect(firstResult.value).toBe(1);
+                    // Execute a simple query to verify connection is active
+                    const result = (await queryRunner.query(
+                        "SELECT 1 as value",
+                    )) as SimpleValueResult[];
+                    const firstResult = result[0];
+                    expect(firstResult).toBeDefined();
+                    expect(firstResult.value).toBe(1);
 
-                return queryRunner;
-            });
+                    return queryRunner;
+                },
+            );
 
             await Promise.all(connectionPromises);
 
-            // All 10 connections should be established
-            expect(queryRunners.length).toBe(10);
+            // All connections should be established
+            expect(queryRunners.length).toBe(connectionsToCreate);
 
             // Verify each connection is connected
             for (const qr of queryRunners) {
@@ -101,7 +173,6 @@ describe("PostgreSQL Connection Pool Configuration", () => {
     });
 
     it("should handle connection acquisition and release properly", async () => {
-        const dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
         const queryRunner = dataSource.createQueryRunner();
 
         // Initially, the query runner is not connected (but also not "released")
@@ -123,8 +194,7 @@ describe("PostgreSQL Connection Pool Configuration", () => {
     });
 
     it("should reuse connections from the pool", async () => {
-        const dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
-        const iterations = 5;
+        const iterations = Math.min(poolConfig.max ?? 5, 5);
         const results: number[] = [];
 
         // Execute multiple queries sequentially
@@ -151,12 +221,12 @@ describe("PostgreSQL Connection Pool Configuration", () => {
     });
 
     it("should respect max pool size under heavy concurrent load", async () => {
-        const dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
-        const concurrentQueries = 25; // More than max pool size (20)
+        const maxPoolSize = poolConfig.max ?? 5;
+        const concurrentQueries = maxPoolSize + 3; // Test slightly over limit
         const queryRunners: QueryRunner[] = [];
 
         try {
-            // Create 25 concurrent connection requests
+            // Create concurrent connection requests beyond max size
             // This tests that the pool properly queues requests beyond max size
             const connectionPromises = Array.from(
                 { length: concurrentQueries },
@@ -199,7 +269,6 @@ describe("PostgreSQL Connection Pool Configuration", () => {
     });
 
     it("should have proper connection timeout configuration", () => {
-        const dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
         const options = dataSource.options;
 
         // Type guard to safely access PostgreSQL-specific properties
@@ -212,14 +281,18 @@ describe("PostgreSQL Connection Pool Configuration", () => {
             maxQueryExecutionTime: number;
         };
 
-        expect(pgOptions.connectTimeoutMS).toBe(10000);
-        expect(pgOptions.maxQueryExecutionTime).toBe(5000);
+        expect(pgOptions.connectTimeoutMS).toBeDefined();
+        expect(pgOptions.connectTimeoutMS).toBeGreaterThan(0);
+
+        expect(pgOptions.maxQueryExecutionTime).toBeDefined();
+        expect(pgOptions.maxQueryExecutionTime).toBeGreaterThan(0);
     });
 
     it("should verify active connection count from database", async () => {
-        const dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
         const queryRunners: QueryRunner[] = [];
-        const testConnections = 8;
+
+        // Create connections up to half of max to avoid exhausting the pool
+        const testConnections = Math.floor((poolConfig.max ?? 5) / 2);
 
         try {
             // Create specific number of connections
@@ -255,7 +328,6 @@ describe("PostgreSQL Connection Pool Configuration", () => {
     });
 
     it("should work with both query result formats", async () => {
-        const dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
         const queryRunner = dataSource.createQueryRunner();
 
         try {

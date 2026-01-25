@@ -14,10 +14,10 @@ import { loadEnv } from "vite";
 export default defineConfig({
   plugins: [
     tsconfigPaths({
-      projects: ["./tsconfig.test.json"],
+      projects: ["tsconfig.test.json"],
     }),
   ],
-  setupFiles: ["./test/setup.ts"],
+  setupFiles: ["test/setup.ts"],
   resolve: {
     extensions: [".ts", ".js", ".json"],
   },
@@ -75,7 +75,7 @@ export default defineConfig({
 
     reporters: ["default", "html"],
     outputFile: {
-      html: "./coverage/test-results.html",
+      html: "coverage/test-results.html",
     },
   },
 });
