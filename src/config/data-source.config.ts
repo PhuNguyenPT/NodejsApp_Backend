@@ -1,3 +1,4 @@
+import type { PoolConfig } from "pg";
 import type { LogLevel } from "typeorm";
 import type { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions.js";
 
@@ -39,41 +40,109 @@ import { Transcript1764903586789 } from "@/migration/1764903586789-transcript.js
 import { config } from "@/util/validate-env.js";
 
 /**
- * Determine if we should auto-run migrations on initialization
+ * Production-optimized PostgreSQL connection pool configuration
  *
- * IMPORTANT: In test mode, we NEVER auto-run migrations
- * - Global-setup explicitly calls runMigrations()
- * - Workers just connect without running migrations
+ * Pool sizing strategy:
+ * - Production: max 20, min 5 (handles high concurrency)
+ * - Development: max 10, min 2 (lighter footprint)
+ * - Test: max 5, min 2 (minimal resources)
+ */
+const poolConfig: PoolConfig = {
+    // === Process Management ===
+    // Allow Node.js process to exit when pool is idle
+    // Set to false in production to keep service running
+    allowExitOnIdle: config.NODE_ENV === "test",
+
+    // === Application Identification ===
+    // Shows in pg_stat_activity for easier debugging
+    application_name: `nodejs-app-${config.NODE_ENV}`,
+
+    // === Encoding ===
+    client_encoding: "UTF8",
+
+    // Timeout when acquiring connection from pool
+    // Prevents indefinite waiting when pool is exhausted
+    connectionTimeoutMillis: config.NODE_ENV === "production" ? 5000 : 3000,
+
+    // Idle in transaction timeout (60 seconds)
+    // Closes connections left in transaction state
+    idle_in_transaction_session_timeout: 60000,
+
+    // === Timeout Configuration ===
+    // Idle connection timeout (when to remove idle connections)
+    idleTimeoutMillis: 10000, // 10 seconds
+
+    // === TCP Keep-Alive ===
+    // Enable TCP keep-alive to detect broken connections
+    keepAlive: true,
+
+    // Delay before sending first keep-alive probe (10 seconds)
+    keepAliveInitialDelayMillis: 10000,
+
+    // Lock acquisition timeout (10 seconds)
+    // Prevents deadlocks from holding connections
+    lock_timeout: 10000,
+
+    // === Pool Size Configuration ===
+    // Maximum connections in pool
+    max:
+        config.NODE_ENV === "production"
+            ? 20
+            : config.NODE_ENV === "test"
+              ? 5
+              : 10,
+
+    // Maximum lifetime of a connection (in seconds)
+    // Forces connection refresh to prevent stale connections
+    maxLifetimeSeconds: config.NODE_ENV === "production" ? 1800 : 0, // 30 min in prod
+
+    // === Connection Lifecycle ===
+    // Prevent connection leaks by recycling after N uses
+    // Recommended: 7500 for production
+    maxUses: config.NODE_ENV === "production" ? 7500 : 1000,
+
+    // Minimum connections to maintain
+    min:
+        config.NODE_ENV === "production"
+            ? 5
+            : config.NODE_ENV === "test"
+              ? 2
+              : 2,
+
+    // Query-level timeout (25 seconds)
+    query_timeout: 25000,
+
+    // === Query Timeouts ===
+    // Maximum time for any single statement (30 seconds)
+    // Prevents runaway queries from blocking the pool
+    statement_timeout: 30000,
+};
+
+/**
+ * Determine if we should auto-run migrations on initialization
  */
 const shouldRunMigrations = (): boolean => {
     if (config.NODE_ENV === "test") {
-        // NEVER auto-run in test mode
-        // setup.ts will explicitly call dataSource.runMigrations()
-        return false;
+        return false; // setup.ts handles migrations
     }
-
-    // Production/development - use config setting
     return config.DB_RUN_MIGRATIONS_ON_STARTUP;
 };
 
 /**
- * Get logging configuration based on environment and configuration
+ * Get logging configuration based on environment
  */
 const getLogging = (): boolean | LogLevel[] => {
     if (!config.DB_LOGGING) {
         return false;
     }
 
-    // If custom levels are specified, use them
     if (config.DB_LOGGING_LEVELS) {
         const levels = config.DB_LOGGING_LEVELS.split(",").map(
             (s) => s.trim() as LogLevel,
         );
-
         return levels.length > 0 ? levels : false;
     }
 
-    // Otherwise, auto-detect based on NODE_ENV
     switch (config.NODE_ENV) {
         case "development":
             return [
@@ -85,19 +154,18 @@ const getLogging = (): boolean | LogLevel[] => {
                 "schema",
                 "migration",
             ];
-
         case "production":
             return ["error", "warn"];
-
         case "staging":
             return ["query", "error", "warn", "info"];
-
         default:
             return false;
     }
 };
 
-// Redis configuration for TypeORM cache using ioredis
+/**
+ * Redis configuration for TypeORM query result cache
+ */
 const typeormRedisConfig = {
     db: config.REDIS_DB,
     host: config.REDIS_HOST,
@@ -106,19 +174,24 @@ const typeormRedisConfig = {
     username: config.REDIS_USERNAME,
 } as const;
 
-// PostgreSQL DataSource configuration
+/**
+ * Production-optimized PostgreSQL DataSource configuration
+ */
 const postgresConnectionOptions: PostgresConnectionOptions = {
-    // Query result cache using Redis
+    // === Query Result Cache ===
     cache: {
-        duration: 60 * 60 * 1000, // 1 hour
+        alwaysEnabled: false, // Only cache when explicitly requested
+        duration: 60 * 60 * 1000, // 1 hour default cache duration
+        ignoreErrors: true, // Don't fail queries if cache is down
         options: typeormRedisConfig,
         tableName: "query_result_cache",
         type: "ioredis",
     },
-    // PostgreSQL-specific connection timeout
-    connectTimeoutMS: 10000, // 10 seconds max to establish connection
+    // === Connection Timeout ===
+    // Initial connection timeout (10 seconds)
+    connectTimeoutMS: 10000,
     database: config.POSTGRES_DB,
-    // Entity and migration configuration
+    // === Entities ===
     entities: [
         AcademicPerformanceEntity,
         AdmissionEntity,
@@ -145,17 +218,24 @@ const postgresConnectionOptions: PostgresConnectionOptions = {
         TranscriptSubjectGroupEntity,
         UniL1Entity,
     ],
-    // PostgreSQL connection pool options (pg driver options)
-    extra: {
-        idleTimeoutMillis: 10000, // 10 seconds idle timeout
-        max: 20, // Maximum pool size
-        min: 5, // Minimum pool size
-    },
+    // === Connection Pool ===
+    extra: poolConfig,
     host: config.POSTGRES_HOST,
 
-    // Logging configuration
+    // === Extensions ===
+    // Auto-install required PostgreSQL extensions
+    installExtensions: config.NODE_ENV !== "production",
+
+    // === Logging ===
     logging: getLogging(),
+
+    logNotifications: config.NODE_ENV === "development",
+
+    // === Query Performance ===
+    // Log slow queries (5 seconds threshold)
     maxQueryExecutionTime: 5000,
+
+    // === Migrations ===
     migrations: [
         CreateSchemas1754794900000,
         InitialSchema1754794905473,
@@ -168,19 +248,39 @@ const postgresConnectionOptions: PostgresConnectionOptions = {
         Transcript1764903586789,
     ],
 
-    // Migration settings
     migrationsRun: shouldRunMigrations(),
+
     migrationsTableName: "typeorm_migrations",
+
+    migrationsTransactionMode: "all", // Run all migrations in single transaction
+    // === Integer Handling ===
+    // Parse PostgreSQL bigint (int8) as JavaScript number
+    // WARNING: Only safe for values up to Number.MAX_SAFE_INTEGER (2^53)
+    parseInt8: false, // Keep as string by default for safety
+
     password: config.POSTGRES_PASSWORD,
 
     port: config.POSTGRES_PORT,
+
+    // === Schema ===
+    // Use 'public' schema by default (can be overridden)
+    schema: "public",
+    // === Subscribers ===
     subscribers: [],
-
+    // === Schema Synchronization ===
+    // CRITICAL: Never enable in production!
     synchronize: config.DB_SYNCHRONIZE,
-
+    // === Database Connection ===
     type: "postgres",
 
     username: config.POSTGRES_USER,
+
+    // === Time Handling ===
+    // Parse dates in UTC (recommended for consistency)
+    useUTC: true,
+
+    // === UUID Generation ===
+    uuidExtension: "uuid-ossp",
 };
 
 export const postgresDataSource = new DataSource(postgresConnectionOptions);
