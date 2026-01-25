@@ -852,7 +852,7 @@ describe("UUID v7 Migration Tests", () => {
     });
 
     it("should compare insert performance of UUID v4 (Random) vs UUID v7 (Sequential)", async () => {
-        // 1. Setup temporary tables to isolate the test
+        // Setup temporary tables to isolate the test
         // We use explicit DEFAULTs to force DB-side generation
         await queryRunner.query(`
             CREATE TABLE IF NOT EXISTS temp_perf_v4 (
