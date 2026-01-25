@@ -280,8 +280,7 @@ const postgresConnectionOptions: PostgresConnectionOptions = {
     useUTC: true,
 
     // === UUID Generation ===
-    // Use pgcrypto for better performance (gen_random_uuid)
-    uuidExtension: "pgcrypto",
+    uuidExtension: "uuid-ossp",
 };
 
 export const postgresDataSource = new DataSource(postgresConnectionOptions);
