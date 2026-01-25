@@ -1,3 +1,4 @@
+import type { PoolConfig } from "pg";
 import type { LogLevel } from "typeorm";
 import type { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions.js";
 
@@ -37,6 +38,13 @@ import { TranscriptSubjectGroup1760934064921 } from "@/migration/1760934064921-t
 import { UniItemL1Data1761452875227 } from "@/migration/1761452875227-uni-item-l1-data.js";
 import { Transcript1764903586789 } from "@/migration/1764903586789-transcript.js";
 import { config } from "@/util/validate-env.js";
+
+// Define pool config with proper typing
+const poolConfig: PoolConfig = {
+    idleTimeoutMillis: 10000, // 10 seconds idle timeout
+    max: 20, // Maximum pool size
+    min: 5, // Minimum pool size
+};
 
 /**
  * Determine if we should auto-run migrations on initialization
@@ -146,11 +154,7 @@ const postgresConnectionOptions: PostgresConnectionOptions = {
         UniL1Entity,
     ],
     // PostgreSQL connection pool options (pg driver options)
-    extra: {
-        idleTimeoutMillis: 10000, // 10 seconds idle timeout
-        max: 20, // Maximum pool size
-        min: 5, // Minimum pool size
-    },
+    extra: poolConfig,
     host: config.POSTGRES_HOST,
 
     // Logging configuration
