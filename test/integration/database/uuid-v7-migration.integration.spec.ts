@@ -8,6 +8,10 @@ import { iocContainer } from "@/app/ioc-container.js";
 import { getApp } from "@/test/setup.js";
 import { TYPES } from "@/type/container/types.js";
 
+interface CountResult {
+    count: string;
+}
+
 interface ExtensionResult {
     extname: string;
     extversion: string;
@@ -845,6 +849,93 @@ describe("UUID v7 Migration Tests", () => {
         )) as { valid: boolean }[];
         const validationResultV4 = pgValidationV4[0];
         expect(validationResultV4.valid).toBe(true);
+    });
+
+    it("should compare insert performance of UUID v4 (Random) vs UUID v7 (Sequential)", async () => {
+        // 1. Setup temporary tables to isolate the test
+        // We use explicit DEFAULTs to force DB-side generation
+        await queryRunner.query(`
+            CREATE TABLE IF NOT EXISTS temp_perf_v4 (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                payload TEXT
+            )
+        `);
+
+        await queryRunner.query(`
+            CREATE TABLE IF NOT EXISTS temp_perf_v7 (
+                id UUID PRIMARY KEY DEFAULT uuidv7(),
+                payload TEXT
+            )
+        `);
+
+        try {
+            // Number of records to insert (enough to trigger index page splits)
+            const RECORD_COUNT = 50000;
+
+            // Measure V4 (Random)
+            // We use generate_series to keep the work inside the DB engine
+            const startV4 = performance.now();
+            await queryRunner.query(
+                `
+                INSERT INTO temp_perf_v4 (payload) 
+                SELECT 'performance-test' 
+                FROM generate_series(1, $1)
+            `,
+                [RECORD_COUNT],
+            );
+            const endV4 = performance.now();
+            const timeV4 = endV4 - startV4;
+
+            // Measure V7 (Sequential)
+            const startV7 = performance.now();
+            await queryRunner.query(
+                `
+                INSERT INTO temp_perf_v7 (payload) 
+                SELECT 'performance-test' 
+                FROM generate_series(1, $1)
+            `,
+                [RECORD_COUNT],
+            );
+            const endV7 = performance.now();
+            const timeV7 = endV7 - startV7;
+
+            console.table({
+                "Ops/Sec": {
+                    v4: (RECORD_COUNT / (timeV4 / 1000)).toFixed(0),
+                    v7: (RECORD_COUNT / (timeV7 / 1000)).toFixed(0),
+                },
+                "Time (ms)": { v4: timeV4.toFixed(2), v7: timeV7.toFixed(2) },
+                Winner: timeV7 < timeV4 ? "UUID v7" : "UUID v4", // Likely v7, but don't fail if v4 wins
+            });
+
+            // SANITY ASSERTION (The "Don't be broken" check)
+            // Instead of asserting v7 < v4, assert that v7 is fast *enough*.
+            // e.g., Ensure we can do at least 10,000 writes/sec (arbitrary safe baseline)
+            const v7OpsPerSec = RECORD_COUNT / (timeV7 / 1000);
+            expect(v7OpsPerSec).toBeGreaterThan(10000);
+
+            // Loose Comparison (The "Regression" check)
+            // Fail only if v7 is SIGNIFICANTLY slower (e.g., 2x slower) than v4
+            // This catches major bugs without failing on minor noise.
+            const ratio = timeV7 / timeV4;
+            expect(ratio).toBeLessThan(2.0);
+
+            // Validate Data Integrity
+            const countV4 = (await queryRunner.query(
+                `SELECT COUNT(*) as count FROM temp_perf_v4`,
+            )) as CountResult[];
+
+            const countV7 = (await queryRunner.query(
+                `SELECT COUNT(*) as count FROM temp_perf_v7`,
+            )) as CountResult[];
+
+            expect(parseInt(countV4[0].count, 10)).toBe(RECORD_COUNT);
+            expect(parseInt(countV7[0].count, 10)).toBe(RECORD_COUNT);
+        } finally {
+            // 5. Cleanup
+            await queryRunner.query(`DROP TABLE IF EXISTS temp_perf_v4`);
+            await queryRunner.query(`DROP TABLE IF EXISTS temp_perf_v7`);
+        }
     });
 
     afterAll(async () => {
