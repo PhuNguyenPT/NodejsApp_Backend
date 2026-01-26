@@ -130,7 +130,7 @@ export class TranscriptEventListener implements ITranscriptEventListener {
      * @returns true if valid, false otherwise
      */
     private validateTranscriptCount(
-        transcriptIds: string[],
+        transcriptIds: UUID[],
         studentId: UUID,
         eventType: "created" | "updated",
     ): boolean {

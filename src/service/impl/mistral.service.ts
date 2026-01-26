@@ -128,7 +128,7 @@ export class MistralService implements IMistralService {
      */
     public async extractSubjectScoresBatch(
         student: StudentEntity,
-        fileIds: string[],
+        fileIds: UUID[],
         userId?: UUID,
     ): Promise<BatchScoreExtractionResult> {
         try {

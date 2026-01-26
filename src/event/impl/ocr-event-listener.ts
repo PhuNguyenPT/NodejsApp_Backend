@@ -68,7 +68,7 @@ export class OcrEventListener implements IOcrEventListener {
      * Validate that OCR result IDs count is exactly 3 or 6
      * @returns true if valid, false otherwise
      */
-    private validateOcrCount(ocrResultIds: string[], studentId: UUID): boolean {
+    private validateOcrCount(ocrResultIds: UUID[], studentId: UUID): boolean {
         const count = ocrResultIds.length;
 
         if (!this.ALLOWED_OCR_COUNTS.includes(count)) {
