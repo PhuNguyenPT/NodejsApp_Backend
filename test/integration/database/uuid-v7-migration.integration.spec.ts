@@ -4,6 +4,8 @@ import type { DataSource, QueryRunner } from "typeorm";
 import { validate as uuidValidate, version as uuidVersion } from "uuid";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { iocContainer } from "@/app/ioc-container.js";
 import { getApp } from "@/test/setup.js";
 import { TYPES } from "@/type/container/types.js";
@@ -118,7 +120,7 @@ describe("UUID v7 Migration Tests", () => {
             VALUES 
             ('test-fk-user@example.com', 'test-password', 'user', 'Test FK User')
             RETURNING id
-        `)) as { id: string }[];
+        `)) as { id: UUID }[];
         testUserId = userResult[0].id;
     });
 
@@ -144,7 +146,7 @@ describe("UUID v7 Migration Tests", () => {
 
     it("should verify uuidv7() function generates valid UUIDs", async () => {
         const result = (await queryRunner.query(`SELECT uuidv7() as id`)) as {
-            id: string;
+            id: UUID;
         }[];
 
         const uuidData = result[0];
@@ -189,7 +191,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [testEmail],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             const insertedData = result[0];
 
@@ -218,7 +220,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [testUserId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             studentId = studentResult[0].id;
             expect(uuidValidate(studentId)).toBe(true);
@@ -231,7 +233,7 @@ describe("UUID v7 Migration Tests", () => {
                 VALUES 
                 ('TEST123', 'Khác', 'Other')
                 RETURNING id
-            `)) as { id: string }[];
+            `)) as { id: UUID }[];
 
             majorGroupId = majorGroupResult[0].id;
             expect(uuidValidate(majorGroupId)).toBe(true);
@@ -247,7 +249,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [majorGroupId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(majorResult[0].id)).toBe(true);
             expect(uuidVersion(majorResult[0].id)).toBe(7);
@@ -262,7 +264,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [studentId, majorGroupId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(smgResult[0].id)).toBe(true);
             expect(uuidVersion(smgResult[0].id)).toBe(7);
@@ -277,7 +279,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [studentId, Buffer.from("test")],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(fileResult[0].id)).toBe(true);
             expect(uuidVersion(fileResult[0].id)).toBe(7);
@@ -292,7 +294,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [studentId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(predResult[0].id)).toBe(true);
             expect(uuidVersion(predResult[0].id)).toBe(7);
@@ -304,7 +306,7 @@ describe("UUID v7 Migration Tests", () => {
                 VALUES 
                 ('TEST-ADM-001', 'TEST-UNI')
                 RETURNING id
-            `)) as { id: string }[];
+            `)) as { id: UUID }[];
 
             expect(uuidValidate(admissionResult[0].id)).toBe(true);
             expect(uuidVersion(admissionResult[0].id)).toBe(7);
@@ -319,7 +321,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [studentId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(conductResult[0].id)).toBe(true);
             expect(uuidVersion(conductResult[0].id)).toBe(7);
@@ -334,7 +336,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [studentId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(apResult[0].id)).toBe(true);
             expect(uuidVersion(apResult[0].id)).toBe(7);
@@ -349,7 +351,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [studentId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(aptitudeResult[0].id)).toBe(true);
             expect(uuidVersion(aptitudeResult[0].id)).toBe(7);
@@ -364,7 +366,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [studentId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(certResult[0].id)).toBe(true);
             expect(uuidVersion(certResult[0].id)).toBe(7);
@@ -379,7 +381,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [studentId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(nationalResult[0].id)).toBe(true);
             expect(uuidVersion(nationalResult[0].id)).toBe(7);
@@ -394,7 +396,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [studentId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(talentResult[0].id)).toBe(true);
             expect(uuidVersion(talentResult[0].id)).toBe(7);
@@ -409,7 +411,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [studentId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(vsatResult[0].id)).toBe(true);
             expect(uuidVersion(vsatResult[0].id)).toBe(7);
@@ -424,7 +426,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [studentId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(awardResult[0].id)).toBe(true);
             expect(uuidVersion(awardResult[0].id)).toBe(7);
@@ -439,7 +441,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [studentId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             const transcriptId = transcriptResult[0].id;
             expect(uuidValidate(transcriptId)).toBe(true);
@@ -455,7 +457,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [transcriptId],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(tsResult[0].id)).toBe(true);
             expect(uuidVersion(tsResult[0].id)).toBe(7);
@@ -481,7 +483,7 @@ describe("UUID v7 Migration Tests", () => {
                 VALUES 
                 ('TEST-UNI', 'TEST-MAJOR', 'A00')
                 RETURNING id
-            `)) as { id: string }[];
+            `)) as { id: UUID }[];
 
             expect(uuidValidate(tsgResult[0].id)).toBe(true);
             expect(uuidVersion(tsgResult[0].id)).toBe(7);
@@ -498,7 +500,7 @@ describe("UUID v7 Migration Tests", () => {
                 RETURNING id
             `,
                 [vector65],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(uuidValidate(uniL1Result[0].id)).toBe(true);
             expect(uuidVersion(uniL1Result[0].id)).toBe(7);
@@ -510,7 +512,7 @@ describe("UUID v7 Migration Tests", () => {
                 VALUES 
                 ('TEST-ADM-L2', 'Ho Chi Minh', 'A00', 25.5, true)
                 RETURNING id
-            `)) as { id: string }[];
+            `)) as { id: UUID }[];
 
             expect(uuidValidate(l2Result[0].id)).toBe(true);
             expect(uuidVersion(l2Result[0].id)).toBe(7);
@@ -529,7 +531,7 @@ describe("UUID v7 Migration Tests", () => {
 
     it("should verify UUID v7 contains timestamp component", async () => {
         const result1 = (await queryRunner.query(`SELECT uuidv7() as id`)) as {
-            id: string;
+            id: UUID;
         }[];
         const uuid1Data = result1[0];
         const uuid1 = uuid1Data.id;
@@ -540,7 +542,7 @@ describe("UUID v7 Migration Tests", () => {
         await new Promise((resolve) => setTimeout(resolve, 10));
 
         const result2 = (await queryRunner.query(`SELECT uuidv7() as id`)) as {
-            id: string;
+            id: UUID;
         }[];
         const uuid2Data = result2[0];
         const uuid2 = uuid2Data.id;
@@ -549,7 +551,7 @@ describe("UUID v7 Migration Tests", () => {
         expect(uuidVersion(uuid2)).toBe(7);
         expect(uuid2 > uuid1).toBe(true);
 
-        const extractTimestamp = (uuid: string): bigint => {
+        const extractTimestamp = (uuid: UUID): bigint => {
             const hex = uuid.replace(/-/g, "");
             const timestampHex = hex.substring(0, 12);
             return BigInt(`0x${timestampHex}`);
@@ -564,12 +566,12 @@ describe("UUID v7 Migration Tests", () => {
     it("should compare UUID v4 (gen_random_uuid) vs UUID v7", async () => {
         const v4Result = (await queryRunner.query(
             `SELECT gen_random_uuid() as id`,
-        )) as { id: string }[];
+        )) as { id: UUID }[];
         const v4Data = v4Result[0];
         const uuidV4 = v4Data.id;
 
         const v7Result = (await queryRunner.query(`SELECT uuidv7() as id`)) as {
-            id: string;
+            id: UUID;
         }[];
         const v7Data = v7Result[0];
         const uuidV7 = v7Data.id;
@@ -587,7 +589,7 @@ describe("UUID v7 Migration Tests", () => {
         try {
             const v4Result = (await queryRunner.query(
                 `SELECT gen_random_uuid() as id`,
-            )) as { id: string }[];
+            )) as { id: UUID }[];
             const v4Data = v4Result[0];
             const uuidV4 = v4Data.id;
 
@@ -607,7 +609,7 @@ describe("UUID v7 Migration Tests", () => {
             const result = (await queryRunner.query(
                 `SELECT id FROM "security"."users" WHERE email = $1`,
                 [testEmail],
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             const retrievedData = result[0];
 
@@ -630,7 +632,7 @@ describe("UUID v7 Migration Tests", () => {
             for (let i = 0; i < 3; i++) {
                 const v4Result = (await queryRunner.query(
                     `SELECT gen_random_uuid() as id`,
-                )) as { id: string }[];
+                )) as { id: UUID }[];
                 const v4Data = v4Result[0];
                 const uuidV4 = v4Data.id;
 
@@ -658,7 +660,7 @@ describe("UUID v7 Migration Tests", () => {
                 WHERE email LIKE 'v4-migration-test-%@example.com'
                 ORDER BY email
             `,
-            )) as { id: string }[];
+            )) as { id: UUID }[];
 
             expect(results).toHaveLength(3);
 
@@ -697,7 +699,7 @@ describe("UUID v7 Migration Tests", () => {
                 (email, password, role, name)
                 VALUES ${values}
                 RETURNING id
-            `)) as { id: string }[];
+            `)) as { id: UUID }[];
             const endTime = Date.now();
 
             expect(result).toHaveLength(bulkSize);
@@ -723,7 +725,7 @@ describe("UUID v7 Migration Tests", () => {
     });
 
     it("should verify UUID v7 sortability vs v4 randomness", async () => {
-        const testRecords: { email: string; id: string; type: string }[] = [];
+        const testRecords: { email: string; id: UUID; type: string }[] = [];
 
         try {
             for (let i = 0; i < 3; i++) {
@@ -736,7 +738,7 @@ describe("UUID v7 Migration Tests", () => {
                     RETURNING id, email
                 `,
                     [`v7-sort-test-${String(i)}@example.com`],
-                )) as { email: string; id: string }[];
+                )) as { email: string; id: UUID }[];
 
                 const record = result[0];
 
@@ -751,7 +753,7 @@ describe("UUID v7 Migration Tests", () => {
             for (let i = 0; i < 3; i++) {
                 const v4Result = (await queryRunner.query(
                     `SELECT gen_random_uuid() as id`,
-                )) as { id: string }[];
+                )) as { id: UUID }[];
                 const v4Data = v4Result[0];
                 const uuidV4 = v4Data.id;
 
@@ -817,14 +819,14 @@ describe("UUID v7 Migration Tests", () => {
 
     it("should validate UUID using uuid package and PostgreSQL", async () => {
         const v7Result = (await queryRunner.query(`SELECT uuidv7() as id`)) as {
-            id: string;
+            id: UUID;
         }[];
         const v7Data = v7Result[0];
         const uuidV7 = v7Data.id;
 
         const v4Result = (await queryRunner.query(
             `SELECT gen_random_uuid() as id`,
-        )) as { id: string }[];
+        )) as { id: UUID }[];
         const v4Data = v4Result[0];
         const uuidV4 = v4Data.id;
 

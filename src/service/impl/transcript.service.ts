@@ -100,7 +100,7 @@ export class TranscriptService implements ITranscriptService {
         id: UUID,
         ocrUpdateRequest: OcrUpdateRequest,
         createdBy?: string,
-    ): Promise<{ id: string; subjectScores: SubjectScore[] }> {
+    ): Promise<{ id: UUID; subjectScores: SubjectScore[] }> {
         const transcript: null | TranscriptEntity =
             await this.transcriptRepository.findOne({
                 relations: [
