@@ -1,5 +1,4 @@
 import type { ISubjectScore } from "@/dto/ocr/subject-score.interface.js";
-import type { UUID } from "@/type/common/uuid.type.js";
 
 /**
  * The final, aggregated result containing outcomes for all processed files.
@@ -17,7 +16,7 @@ export interface BatchScoreExtractionResult {
 export interface FileScoreExtractionResult {
     documentAnnotation?: string;
     error?: string;
-    fileId: UUID;
+    fileId: string;
     fileName: string;
     scores: ISubjectScore[];
     success: boolean;
