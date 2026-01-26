@@ -29,7 +29,11 @@ import { SubjectScore } from "@/dto/ocr/subject-score.dto.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
+import {
+    type TsoaUUID,
+    type UUID,
+    UUIDSchema,
+} from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 
@@ -52,7 +56,7 @@ export class OcrController extends Controller {
      * Create a transcript manually for the authenticated user's student profile.
      * This endpoint allows users to input transcript data directly without OCR processing.
      * @summary Create transcript for authenticated user
-     * @param studentId The UUID of the student profile to create a transcript for.
+     * @param {TsoaUUID} studentId The UUID of the student profile to create a transcript for.
      * @param ocrRequest The transcript data including grade, semester, and subject scores.
      * @param authenticatedRequest The authenticated Express request object, containing user details.
      * @returns {OcrResultResponse} The newly created transcript with subject scores.
@@ -66,7 +70,7 @@ export class OcrController extends Controller {
     @Security("bearerAuth", ["profile:update:own"])
     @SuccessResponse(HttpStatus.CREATED, "Transcript successfully created")
     public async createTranscript(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: TsoaUUID,
         @Body() ocrRequest: OcrRequest,
         @Request() authenticatedRequest: Express.AuthenticatedRequest,
     ): Promise<OcrResultResponse> {
@@ -101,7 +105,7 @@ export class OcrController extends Controller {
      * Create a transcript manually for a guest user's student profile.
      * This endpoint allows anonymous users to input transcript data without authentication.
      * @summary Create transcript for guest user
-     * @param studentId The UUID of the guest student profile to create a transcript for.
+     * @param {TsoaUUID} studentId The UUID of the guest student profile to create a transcript for.
      * @param ocrRequest The transcript data including grade, semester, and subject scores.
      * @returns {OcrResultResponse} The newly created transcript with subject scores.
      */
@@ -112,7 +116,7 @@ export class OcrController extends Controller {
     @Response<string>(HttpStatus.NOT_FOUND, "Student profile not found")
     @SuccessResponse(HttpStatus.CREATED, "Transcript successfully created")
     public async createTranscriptGuest(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: TsoaUUID,
         @Body() ocrRequest: OcrRequest,
     ): Promise<OcrResultResponse> {
         const transcript =
@@ -145,7 +149,7 @@ export class OcrController extends Controller {
      * This endpoint processes uploaded transcript images and extracts grade and subject score data.
      * The files must belong to the authenticated user's student profile.
      * @summary Extract scores from transcript images via OCR
-     * @param studentId The UUID of the student profile whose transcript images to process.
+     * @param {TsoaUUID} studentId The UUID of the student profile whose transcript images to process.
      * @param request The authenticated Express request object.
      * @returns {BatchScoreExtractionResult} Batch extraction results containing scores for each processed image.
      */
@@ -161,7 +165,7 @@ export class OcrController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Scores successfully extracted")
     public async extractTranscriptScores(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: TsoaUUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<BatchScoreExtractionResult> {
         this.logger.info(
@@ -185,7 +189,7 @@ export class OcrController extends Controller {
      * Retrieve all extracted transcript scores for an authenticated user's student profile.
      * Returns all previously created or OCR-extracted transcripts with their subject scores.
      * @summary Get all transcripts for authenticated user
-     * @param studentId The UUID of the student profile to retrieve transcripts for.
+     * @param {TsoaUUID} studentId The UUID of the student profile to retrieve transcripts for.
      * @param request The authenticated Express request object.
      * @returns {OcrResultResponse[]} Array of transcript results with subject scores.
      */
@@ -201,7 +205,7 @@ export class OcrController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
     public async getExtractedScores(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: TsoaUUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<OcrResultResponse[]> {
         const user: Express.User = request.user;
@@ -252,7 +256,7 @@ export class OcrController extends Controller {
      * Retrieve all extracted transcript scores for a guest user's student profile.
      * Returns all previously created or OCR-extracted transcripts without authentication.
      * @summary Get all transcripts for guest user
-     * @param studentId The UUID of the guest student profile to retrieve transcripts for.
+     * @param {TsoaUUID} studentId The UUID of the guest student profile to retrieve transcripts for.
      * @returns {OcrResultResponse[]} Array of transcript results with subject scores.
      */
     @Get("guest/{studentId}")
@@ -265,7 +269,7 @@ export class OcrController extends Controller {
     )
     @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
     public async getExtractedScoresGuest(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: TsoaUUID,
     ): Promise<OcrResultResponse[]> {
         this.logger.info("Retrieving OCR result for guest student", {
             studentId,
@@ -310,7 +314,7 @@ export class OcrController extends Controller {
      * Update subject scores for an existing transcript for an authenticated user.
      * This endpoint allows users to correct or modify previously extracted or entered scores.
      * @summary Update transcript scores for authenticated user
-     * @param id The UUID of the transcript to update.
+     * @param {TsoaUUID} id The UUID of the transcript to update.
      * @param ocrUpdateRequest The updated subject scores.
      * @param authenticatedRequest The authenticated Express request object.
      * @returns {OcrResultResponse} The updated transcript with modified subject scores.
@@ -324,7 +328,7 @@ export class OcrController extends Controller {
     @Security("bearerAuth", ["profile:update:own"])
     @SuccessResponse(HttpStatus.OK, "Scores successfully updated")
     public async patchExtractedScores(
-        @Path("id") id: string,
+        @Path("id") id: TsoaUUID,
         @Body() ocrUpdateRequest: OcrUpdateRequest,
         @Request() authenticatedRequest: Express.AuthenticatedRequest,
     ): Promise<OcrResultResponse> {
@@ -355,7 +359,7 @@ export class OcrController extends Controller {
      * Update subject scores for an existing transcript for a guest user.
      * This endpoint allows anonymous users to correct or modify previously extracted or entered scores.
      * @summary Update transcript scores for guest user
-     * @param id The UUID of the transcript to update.
+     * @param {TsoaUUID} id The UUID of the transcript to update.
      * @param ocrUpdateRequest The updated subject scores.
      * @returns {OcrResultResponse} The updated transcript with modified subject scores.
      */
@@ -366,7 +370,7 @@ export class OcrController extends Controller {
     @Response<string>(HttpStatus.NOT_FOUND, "Transcript not found")
     @SuccessResponse(HttpStatus.OK, "Scores successfully updated")
     public async patchExtractedScoresGuest(
-        @Path("id") id: string,
+        @Path("id") id: TsoaUUID,
         @Body() ocrUpdateRequest: OcrUpdateRequest,
     ): Promise<OcrResultResponse> {
         this.logger.info(`Updating OCR result for transcript id ${id}`);
