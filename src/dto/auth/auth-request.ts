@@ -33,7 +33,14 @@ export class LoginRequest {
         },
     )
     password!: string;
+
+    constructor(partial?: Partial<LoginRequest>) {
+        if (partial) {
+            Object.assign(this, partial);
+        }
+    }
 }
+
 /**
  * DTO for user logout request.
  * The refresh token is optional but will be validated if provided.
@@ -46,7 +53,13 @@ export class LogoutRequest {
     @Expose()
     @IsOptional()
     @IsString({ message: "Refresh token must be a string" })
-    refreshToken?: string; // The property should also be optional
+    refreshToken?: string;
+
+    constructor(partial?: Partial<LogoutRequest>) {
+        if (partial) {
+            Object.assign(this, partial);
+        }
+    }
 }
 
 /**
@@ -57,12 +70,17 @@ export class LogoutRequest {
  *   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  * }
  */
-
 export class RefreshTokenRequest {
     @Expose()
     @IsNotEmpty({ message: "Refresh token cannot be empty" })
     @IsString({ message: "Refresh token must be a string" })
     refreshToken!: string;
+
+    constructor(partial?: Partial<RefreshTokenRequest>) {
+        if (partial) {
+            Object.assign(this, partial);
+        }
+    }
 }
 
 /**
@@ -90,4 +108,10 @@ export class RegisterRequest {
         },
     )
     password!: string;
+
+    constructor(partial?: Partial<RegisterRequest>) {
+        if (partial) {
+            Object.assign(this, partial);
+        }
+    }
 }

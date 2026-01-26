@@ -33,53 +33,23 @@ describe("AwardService Integration Tests", () => {
         studentRepository = dataSource.getRepository(StudentEntity);
 
         // Clean up database - preserve system-created awards
-        console.log("🧹 Cleaning up database from previous test runs...");
         awardRepository = dataSource.getRepository(AwardEntity);
-        const result = await awardRepository
+        await awardRepository
             .createQueryBuilder()
             .delete()
             .where("created_by != :systemCreator", { systemCreator: "system" })
             .execute();
-
-        const deleted = result.affected ?? 0;
-        if (deleted > 0) {
-            console.log(
-                `✅ Deleted ${deleted.toString()} leftover test awards`,
-            );
-        }
     });
 
     afterAll(async () => {
-        console.log(
-            `🧹 Cleaning up ${createdAwardIds.length.toString()} test awards...`,
-        );
-
         for (const awardId of createdAwardIds) {
-            try {
-                await awardRepository.delete(awardId);
-                console.log(`✅ Deleted award: ${awardId}`);
-            } catch (error) {
-                console.error(`❌ Failed to delete award ${awardId}:`, error);
-            }
+            await awardRepository.delete(awardId);
         }
-
-        console.log(
-            `🧹 Cleaning up ${createdStudentIds.length.toString()} test students...`,
-        );
 
         // Delete students created in tests
         for (const studentId of createdStudentIds) {
-            try {
-                await studentRepository.delete(studentId);
-                console.log(`✅ Deleted student: ${studentId}`);
-            } catch (error) {
-                console.error(
-                    `❌ Failed to delete student ${studentId}:`,
-                    error,
-                );
-            }
+            await studentRepository.delete(studentId);
         }
-        console.log("✅ Cleanup complete!");
     });
 
     describe("createAwardEntity", () => {
