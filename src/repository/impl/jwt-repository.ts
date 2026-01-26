@@ -315,7 +315,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
         }
     }
 
-    public async invalidateFamily(familyId: string): Promise<void> {
+    public async invalidateFamily(familyId: UUID): Promise<void> {
         try {
             const familyIndexKey = this.getFamilyIndexKey(familyId);
             const tokenIds = await redisClient.sMembers(familyIndexKey);
@@ -422,7 +422,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Helper methods
-    private getFamilyIndexKey(familyId: string): string {
+    private getFamilyIndexKey(familyId: UUID): string {
         return `${this.familyIndexPrefix}${familyId}`;
     }
 
