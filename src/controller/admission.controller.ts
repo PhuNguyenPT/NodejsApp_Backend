@@ -27,6 +27,7 @@ import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import { type IAdmissionService } from "@/service/admission-service.interface.js";
+import { UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -99,7 +100,7 @@ export class AdmissionController extends Controller {
 
         const fields: Record<AdmissionField, (number | string)[]> =
             await this.admissionService.getAllDistinctAdmissionFieldValues(
-                studentId,
+                UUIDSchema.parse(studentId),
                 userId,
             );
         return AdmissionMapper.toAdmissionFieldResponse(fields);
@@ -141,7 +142,7 @@ export class AdmissionController extends Controller {
     ): Promise<AdmissionFieldResponse> {
         const fields: Record<AdmissionField, (number | string)[]> =
             await this.admissionService.getAllDistinctAdmissionFieldValues(
-                studentId,
+                UUIDSchema.parse(studentId),
             );
         return AdmissionMapper.toAdmissionFieldResponse(fields);
     }
@@ -196,7 +197,7 @@ export class AdmissionController extends Controller {
         // Pass the search query directly to the service
         const admissionPage: Page<AdmissionEntity> =
             await this.admissionService.getAdmissionsPageByStudentIdAndUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 pageRequest,
                 { searchQuery, userId },
             );
@@ -251,7 +252,7 @@ export class AdmissionController extends Controller {
         // Pass the search query directly to the service
         const admissionPage: Page<AdmissionEntity> =
             await this.admissionService.getAdmissionsPageByStudentIdAndUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 pageRequest,
                 { searchQuery },
             );

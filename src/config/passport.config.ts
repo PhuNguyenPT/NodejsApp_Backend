@@ -9,6 +9,7 @@ import { Repository } from "typeorm";
 import { Logger } from "winston";
 
 import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 import type { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 
 import {
@@ -330,7 +331,7 @@ export class PassportConfig {
         });
 
         // Deserialize user
-        passport.deserializeUser((id: string, done) => {
+        passport.deserializeUser((id: UUID, done) => {
             void (async () => {
                 try {
                     const user = await this.findUserById(id);
@@ -375,7 +376,7 @@ export class PassportConfig {
         this.isInitialized = true;
     }
 
-    private async findUserById(userId: string): Promise<null | UserEntity> {
+    private async findUserById(userId: UUID): Promise<null | UserEntity> {
         return await this.userRepository.findOne({
             cache: {
                 id: CacheKeys.user(userId),

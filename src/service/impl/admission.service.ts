@@ -5,6 +5,7 @@ import { Brackets, DataSource, IsNull, SelectQueryBuilder } from "typeorm";
 import { Logger } from "winston";
 
 import type { IAdmissionService } from "@/service/admission-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 import type { Page } from "@/type/pagination/page.interface.js";
 import type { Pageable } from "@/type/pagination/pageable.interface.js";
 
@@ -32,7 +33,7 @@ import { config } from "@/util/validate-env.js";
 
 export interface AdmissionQueryOptions {
     searchQuery?: AdmissionSearchQuery;
-    userId?: string;
+    userId?: UUID;
 }
 
 export interface AdmissionSearchOptions {
@@ -73,7 +74,7 @@ export class AdmissionService implements IAdmissionService {
     ) {}
 
     public async getAdmissionsPageByStudentIdAndUserId(
-        studentId: string,
+        studentId: UUID,
         pageable: Pageable,
         options: AdmissionQueryOptions,
     ): Promise<Page<AdmissionEntity>> {
@@ -113,8 +114,8 @@ export class AdmissionService implements IAdmissionService {
     }
 
     public async getAllDistinctAdmissionFieldValues(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<Record<AdmissionField, (number | string)[]>> {
         const cacheKey = CacheKeys.admissionFields(studentId, userId);
 
@@ -357,8 +358,8 @@ export class AdmissionService implements IAdmissionService {
      */
     private async applyUEFScholarshipAdjustments(
         entities: AdmissionEntity[],
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<AdmissionEntity[]> {
         // Quick check: any UEF THPTQG admissions?
         const hasUEFAdmissions = entities.some(
@@ -607,8 +608,8 @@ export class AdmissionService implements IAdmissionService {
     }
 
     private async validateStudentExists(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<void> {
         const studentRepository = this.dataSource.getRepository(StudentEntity);
 

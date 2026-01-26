@@ -1,9 +1,11 @@
 import { z } from "zod";
 
+import { UUIDSchema } from "@/type/common/uuid.type.js";
+
 export const TranscriptUpdatedEventSchema = z.object({
-    studentId: z.string().uuid("Invalid student ID format"),
-    transcriptIds: z.array(z.string().uuid("Invalid transcripts ID format")),
-    userId: z.string().uuid("Invalid user ID format").optional(),
+    studentId: UUIDSchema,
+    transcriptIds: z.array(UUIDSchema),
+    userId: UUIDSchema.optional(),
 });
 
 export type TranscriptUpdatedEvent = z.infer<

@@ -10,6 +10,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { AcademicPerformance } from "@/type/enum/academic-performance.enum.js";
 
@@ -44,7 +46,7 @@ export class AcademicPerformanceEntity {
     grade!: number;
 
     @PrimaryGeneratedColumn("uuid", { name: "id" })
-    id!: string;
+    id!: UUID;
 
     @JoinColumn({ name: "student_id" })
     @ManyToOne("StudentEntity", "academicPerformances", {
@@ -54,7 +56,7 @@ export class AcademicPerformanceEntity {
     student!: Relation<StudentEntity>;
 
     @Column({ name: "student_id", type: "uuid" })
-    studentId!: string;
+    studentId!: UUID;
 
     @UpdateDateColumn({
         insert: false,

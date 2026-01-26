@@ -31,6 +31,7 @@ import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.ent
 import { PredictionResultMapper } from "@/mapper/prediction-result-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
+import { UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 
@@ -94,7 +95,7 @@ export class PredictionController extends Controller {
         const user: Express.User = request.user;
         const predictResults: L1PredictResult[] =
             await this.predictionL1Service.getL1PredictResults(
-                studentId,
+                UUIDSchema.parse(studentId),
                 user.id,
             );
         return predictResults;
@@ -127,7 +128,7 @@ export class PredictionController extends Controller {
         const user: Express.User = request.user;
         const predictResults: L2PredictResult[] =
             await this.predictionL2Service.getL2PredictResults(
-                studentId,
+                UUIDSchema.parse(studentId),
                 user.id,
             );
         return predictResults;
@@ -161,7 +162,7 @@ export class PredictionController extends Controller {
         const user: Express.User = request.user;
         const predictResults: L3PredictResult[] =
             await this.predictionL3Service.getL3PredictResults(
-                studentId,
+                UUIDSchema.parse(studentId),
                 user.id,
             );
         return predictResults;
@@ -272,7 +273,7 @@ export class PredictionController extends Controller {
 
         const predictionResultEntity: PredictionResultEntity =
             await this.predictionResultService.findByStudentIdAndUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 user.id,
             );
 
@@ -300,7 +301,7 @@ export class PredictionController extends Controller {
     ): Promise<PredictionResultResponse> {
         const predictionResultEntity: PredictionResultEntity =
             await this.predictionResultService.findByStudentIdAndUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
             );
 
         return PredictionResultMapper.toResponse(predictionResultEntity);

@@ -12,6 +12,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptSubjectEntity } from "@/entity/uni_guide/transcript-subject.entity.js";
@@ -40,7 +42,7 @@ export class TranscriptEntity {
     grade?: number;
 
     @PrimaryGeneratedColumn("uuid", { name: "id" })
-    id!: string;
+    id!: UUID;
 
     @JoinColumn({ name: "ocr_result_id" })
     @OneToOne("OcrResultEntity", "transcript", {
@@ -50,7 +52,7 @@ export class TranscriptEntity {
     ocrResult?: Relation<OcrResultEntity>;
 
     @Column({ name: "ocr_result_id", nullable: true, type: "uuid" })
-    ocrResultId?: string;
+    ocrResultId?: UUID;
 
     @Column({ name: "semester", nullable: true, type: "integer" })
     semester?: number;
@@ -63,7 +65,7 @@ export class TranscriptEntity {
     student!: Relation<StudentEntity>;
 
     @Column({ name: "student_id", type: "uuid" })
-    studentId!: string;
+    studentId!: UUID;
 
     @OneToMany("TranscriptSubjectEntity", "transcript", {
         cascade: true,

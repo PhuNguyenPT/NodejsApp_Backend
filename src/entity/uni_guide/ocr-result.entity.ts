@@ -15,6 +15,7 @@ import {
 } from "typeorm";
 
 import type { ISubjectScore } from "@/dto/ocr/subject-score.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { SubjectScore } from "@/dto/ocr/subject-score.dto.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
@@ -79,10 +80,10 @@ export class OcrResultEntity {
     file!: Relation<FileEntity>;
 
     @Column({ name: "file_id", type: "uuid" })
-    fileId!: string;
+    fileId!: UUID;
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     @Column({ name: "metadata", nullable: true, type: "jsonb" })
     metadata?: OcrMetadata;
@@ -102,7 +103,7 @@ export class OcrResultEntity {
     student!: Relation<StudentEntity>;
 
     @Column({ name: "student_id", type: "uuid" })
-    studentId!: string;
+    studentId!: UUID;
 
     @OneToOne("TranscriptEntity", "ocrResult", {
         nullable: true,

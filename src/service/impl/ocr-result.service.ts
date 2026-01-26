@@ -8,6 +8,7 @@ import type {
     FileScoreExtractionResult,
 } from "@/dto/ocr/score-extraction-result.js";
 import type { IOcrResultService } from "@/service/ocr-result-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
 import {
@@ -97,7 +98,7 @@ export class OcrResultService implements IOcrResultService {
     }
 
     public async findById(
-        id: string,
+        id: UUID,
         username?: string,
     ): Promise<OcrResultEntity> {
         const ocrResultEntity: null | OcrResultEntity =

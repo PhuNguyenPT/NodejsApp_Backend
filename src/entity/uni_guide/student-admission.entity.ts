@@ -12,6 +12,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
@@ -52,7 +54,7 @@ export class StudentAdmissionEntity {
     createdBy!: string;
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     @JoinColumn({ name: "student_id" })
     @ManyToOne("StudentEntity", "studentAdmissions", {
@@ -62,7 +64,7 @@ export class StudentAdmissionEntity {
     student!: Relation<StudentEntity>;
 
     @Column({ name: "student_id", type: "uuid" })
-    studentId!: string;
+    studentId!: UUID;
 
     @UpdateDateColumn({
         insert: false,

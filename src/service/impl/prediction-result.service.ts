@@ -2,6 +2,7 @@ import { inject, injectable } from "inversify";
 import { Repository } from "typeorm";
 
 import type { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { PredictionResultEntity } from "@/entity/uni_guide/prediction-result.entity.js";
 import { TYPES } from "@/type/container/types.js";
@@ -15,8 +16,8 @@ export class PredictionResultService implements IPredictionResultService {
     ) {}
 
     public async findByStudentIdAndUserId(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<PredictionResultEntity> {
         const predictionResultEntity: null | PredictionResultEntity =
             await this.predictionResultEntityRepository.findOne({

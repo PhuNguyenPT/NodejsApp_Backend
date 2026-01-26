@@ -29,6 +29,7 @@ import { SubjectScore } from "@/dto/ocr/subject-score.dto.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
+import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 
@@ -72,7 +73,7 @@ export class OcrController extends Controller {
         const user = authenticatedRequest.user;
         const transcript =
             await this.transcriptService.saveByStudentIdAndUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 ocrRequest,
                 user.id,
             );
@@ -116,7 +117,7 @@ export class OcrController extends Controller {
     ): Promise<OcrResultResponse> {
         const transcript =
             await this.transcriptService.saveByStudentIdAndUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 ocrRequest,
             );
 
@@ -169,7 +170,7 @@ export class OcrController extends Controller {
 
         const user: Express.User = request.user;
         const result = await this.mistralService.extractSubjectScoresByUserId(
-            studentId,
+            UUIDSchema.parse(studentId),
             user.id,
         );
 
@@ -204,7 +205,7 @@ export class OcrController extends Controller {
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<OcrResultResponse[]> {
         const user: Express.User = request.user;
-        const userId: string = user.id;
+        const userId: UUID = user.id;
 
         this.logger.info("Retrieving OCR results for authorized student", {
             studentId,
@@ -213,7 +214,7 @@ export class OcrController extends Controller {
 
         const transcriptEntities: TranscriptEntity[] =
             await this.transcriptService.findByStudentIdAndUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 userId,
             );
 
@@ -271,7 +272,9 @@ export class OcrController extends Controller {
         });
 
         const transcriptEntities: TranscriptEntity[] =
-            await this.transcriptService.findByStudentIdAndUserId(studentId);
+            await this.transcriptService.findByStudentIdAndUserId(
+                UUIDSchema.parse(studentId),
+            );
 
         const ocrResultResponses: OcrResultResponse[] = transcriptEntities.map(
             (transcriptEntity) => {
@@ -333,7 +336,7 @@ export class OcrController extends Controller {
         );
 
         const result = await this.transcriptService.patchByIdAndCreatedBy(
-            id,
+            UUIDSchema.parse(id),
             ocrUpdateRequest,
             createdBy,
         );
@@ -369,7 +372,7 @@ export class OcrController extends Controller {
         this.logger.info(`Updating OCR result for transcript id ${id}`);
 
         const result = await this.transcriptService.patchByIdAndCreatedBy(
-            id,
+            UUIDSchema.parse(id),
             ocrUpdateRequest,
         );
 

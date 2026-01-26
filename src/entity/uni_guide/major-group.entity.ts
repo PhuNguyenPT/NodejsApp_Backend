@@ -10,6 +10,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { MajorEntity } from "@/entity/uni_guide/major.entity.js";
 import { MajorGroup, type MajorGroupKey } from "@/type/enum/major.enum.js";
 
@@ -44,7 +46,7 @@ export class MajorGroupEntity {
     englishName!: MajorGroupKey; // The English enum key for programmatic access
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     // A MajorGroup has many Majors. This defines the inverse side of the relationship.
     @OneToMany("MajorEntity", "group")

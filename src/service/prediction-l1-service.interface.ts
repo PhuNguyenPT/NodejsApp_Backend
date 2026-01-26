@@ -1,6 +1,7 @@
 import type { UserInputL1 } from "@/dto/prediction/l1-request.dto.js";
 import type { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
 import type { StudentInfoDTO } from "@/dto/student/student.dto.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 export interface IPredictionL1Service {
     combineL1Results(results: L1PredictResult[]): L1PredictResult[];
@@ -12,12 +13,12 @@ export interface IPredictionL1Service {
         studentInfoDTO: StudentInfoDTO,
     ): UserInputL1[];
     getL1PredictResults(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<L1PredictResult[]>;
     getL1PredictResults(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<L1PredictResult[]>;
     predictMajorsL1(userInput: UserInputL1): Promise<L1PredictResult[]>;
     predictMajorsL1Batch(

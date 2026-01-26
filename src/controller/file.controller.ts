@@ -33,6 +33,7 @@ import { FileEntity, FileType } from "@/entity/uni_guide/file.entity.js";
 import { FileMapper } from "@/mapper/file-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
+import { UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 import { Role } from "@/type/enum/user.enum.js";
@@ -73,7 +74,7 @@ export class FileController extends Controller {
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<void> {
         const user: Express.User = request.user;
-        await this.fileService.deleteFile(fileId, user.id);
+        await this.fileService.deleteFile(UUIDSchema.parse(fileId), user.id);
     }
 
     /**
@@ -106,7 +107,7 @@ export class FileController extends Controller {
     ): Promise<void> {
         const user: Express.User = authenticatedRequest.user;
         const file: FileEntity = await this.fileService.getFileById(
-            fileId,
+            UUIDSchema.parse(fileId),
             user.id,
         );
 
@@ -179,7 +180,9 @@ export class FileController extends Controller {
         @Path() fileId: string,
         @Request() request: express.Request,
     ): Promise<void> {
-        const file: FileEntity = await this.fileService.getFileById(fileId);
+        const file: FileEntity = await this.fileService.getFileById(
+            UUIDSchema.parse(fileId),
+        );
 
         // Log buffer info for debugging
         this.logger.info(
@@ -248,7 +251,7 @@ export class FileController extends Controller {
     ): Promise<FileResponse> {
         const user: Express.User = request.user;
         const file: FileEntity = await this.fileService.getFileById(
-            fileId,
+            UUIDSchema.parse(fileId),
             user.id,
         );
         const fileResponse: FileResponse = FileMapper.toFileResponse(file);
@@ -277,7 +280,9 @@ export class FileController extends Controller {
     public async getFileByIdForGuest(
         @Path() fileId: string,
     ): Promise<FileResponse> {
-        const file: FileEntity = await this.fileService.getFileById(fileId);
+        const file: FileEntity = await this.fileService.getFileById(
+            UUIDSchema.parse(fileId),
+        );
         const fileResponse: FileResponse = FileMapper.toFileResponse(file);
         fileResponse.message = "File metadata retrieved successfully";
         return fileResponse;
@@ -308,7 +313,7 @@ export class FileController extends Controller {
         const user: Express.User = request.user;
         const files: FileEntity[] =
             await this.fileService.getFilesMetadataByStudentId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 user.id,
             );
         const fileResponses: FileResponse[] =
@@ -337,7 +342,9 @@ export class FileController extends Controller {
         @Path() studentId: string,
     ): Promise<FileResponse[]> {
         const files: FileEntity[] =
-            await this.fileService.getFilesMetadataByStudentId(studentId);
+            await this.fileService.getFilesMetadataByStudentId(
+                UUIDSchema.parse(studentId),
+            );
         const fileResponses: FileResponse[] =
             FileMapper.toFileResponseList(files);
         const message = "File metadata retrieved successfully";
@@ -375,7 +382,7 @@ export class FileController extends Controller {
     ): Promise<void> {
         const user: Express.User = authenticatedRequest.user;
         const file: FileEntity = await this.fileService.getFileById(
-            fileId,
+            UUIDSchema.parse(fileId),
             user.id,
         );
 
@@ -438,7 +445,9 @@ export class FileController extends Controller {
         @Path() fileId: string,
         @Request() request: express.Request,
     ): Promise<void> {
-        const file: FileEntity = await this.fileService.getFileById(fileId);
+        const file: FileEntity = await this.fileService.getFileById(
+            UUIDSchema.parse(fileId),
+        );
 
         if (!file.isImage()) {
             throw new ValidationException({ fileType: "File is not an image" });
@@ -515,7 +524,7 @@ export class FileController extends Controller {
         }
 
         const file: FileEntity = await this.fileService.updateFile(
-            fileId,
+            UUIDSchema.parse(fileId),
             updateFileDTO,
             user.id,
         );
@@ -617,7 +626,7 @@ export class FileController extends Controller {
             fileType: fileType,
             mimeType: file.mimetype,
             originalFileName: file.originalname,
-            studentId: studentId,
+            studentId: UUIDSchema.parse(studentId),
             tags: tags,
         };
 
@@ -722,7 +731,7 @@ export class FileController extends Controller {
             fileType: fileType,
             mimeType: file.mimetype,
             originalFileName: file.originalname,
-            studentId: studentId,
+            studentId: UUIDSchema.parse(studentId),
             tags: tags,
         };
 
@@ -826,7 +835,7 @@ export class FileController extends Controller {
                 fileType: metadata.fileType,
                 mimeType: file.mimetype,
                 originalFileName: file.originalname,
-                studentId: studentId,
+                studentId: UUIDSchema.parse(studentId),
                 tags: metadata.tags,
                 userId: user.id,
             };
@@ -835,7 +844,7 @@ export class FileController extends Controller {
         // Create all files in a single batch operation
         const fileEntities = await this.fileService.createFiles(
             createFileDTOs,
-            studentId,
+            UUIDSchema.parse(studentId),
             user.id,
         );
 
@@ -933,7 +942,7 @@ export class FileController extends Controller {
                 fileType: metadata.fileType,
                 mimeType: file.mimetype,
                 originalFileName: file.originalname,
-                studentId: studentId,
+                studentId: UUIDSchema.parse(studentId),
                 tags: metadata.tags,
             };
         });
@@ -941,7 +950,7 @@ export class FileController extends Controller {
         // Create all files in a single batch operation
         const fileEntities = await this.fileService.createFiles(
             createFileDTOs,
-            studentId,
+            UUIDSchema.parse(studentId),
         );
 
         // Convert to response format

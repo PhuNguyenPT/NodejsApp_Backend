@@ -27,6 +27,7 @@ import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { StudentMapper } from "@/mapper/student-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
+import { UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -157,7 +158,9 @@ export class StudentController extends Controller {
         @Path("studentId") studentId: string,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentEntityByIdAnUserId(studentId);
+            await this.studentService.getStudentEntityByIdAnUserId(
+                UUIDSchema.parse(studentId),
+            );
         return StudentMapper.toStudentProfileResponse(studentEntity);
     }
 
@@ -185,7 +188,7 @@ export class StudentController extends Controller {
         const user: Express.User = request.user;
         const studentEntity: StudentEntity =
             await this.studentService.getStudentEntityByIdAnUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 user.id,
             );
         return StudentMapper.toStudentProfileResponse(studentEntity);
@@ -213,7 +216,9 @@ export class StudentController extends Controller {
         @Path("studentId") studentId: string,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentWithFiles(studentId);
+            await this.studentService.getStudentWithFiles(
+                UUIDSchema.parse(studentId),
+            );
         return StudentMapper.toStudentProfileWithFilesResponse(studentEntity);
     }
 
@@ -244,7 +249,10 @@ export class StudentController extends Controller {
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentWithFiles(studentId, user.id);
+            await this.studentService.getStudentWithFiles(
+                UUIDSchema.parse(studentId),
+                user.id,
+            );
         return StudentMapper.toStudentProfileWithFilesResponse(studentEntity);
     }
 }

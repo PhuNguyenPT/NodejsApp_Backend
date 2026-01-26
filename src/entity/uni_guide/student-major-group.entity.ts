@@ -13,6 +13,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
@@ -40,7 +42,7 @@ export class StudentMajorGroupEntity {
     createdBy?: string;
 
     @PrimaryGeneratedColumn("uuid", { name: "id" })
-    id!: string;
+    id!: UUID;
 
     @JoinColumn({ name: "major_group_id" })
     @ManyToOne("MajorGroupEntity", "studentMajorGroups", {
@@ -50,7 +52,7 @@ export class StudentMajorGroupEntity {
     majorGroup!: Relation<MajorGroupEntity>;
 
     @Column({ name: "major_group_id", type: "uuid" })
-    majorGroupId!: string;
+    majorGroupId!: UUID;
 
     @JoinColumn({ name: "student_id" })
     @ManyToOne("StudentEntity", "studentMajorGroups", {
@@ -60,7 +62,7 @@ export class StudentMajorGroupEntity {
     student!: Relation<StudentEntity>;
 
     @Column({ name: "student_id", type: "uuid" })
-    studentId!: string;
+    studentId!: UUID;
 
     @UpdateDateColumn({
         insert: false,

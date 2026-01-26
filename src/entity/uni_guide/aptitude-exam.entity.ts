@@ -12,6 +12,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-component.entity.js";
 import { ExamType } from "@/type/enum/exam-type.enum.js";
@@ -40,7 +42,7 @@ export class AptitudeExamEntity {
     examType!: ExamType;
 
     @PrimaryGeneratedColumn("uuid", { name: "id" })
-    id!: string;
+    id!: UUID;
 
     @Column({
         name: "score",
@@ -60,7 +62,7 @@ export class AptitudeExamEntity {
     student!: Relation<StudentEntity>;
 
     @Column({ name: "student_id", type: "uuid" })
-    studentId!: string;
+    studentId!: UUID;
 
     @UpdateDateColumn({
         insert: false,

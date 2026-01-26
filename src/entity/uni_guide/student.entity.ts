@@ -13,6 +13,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { AcademicPerformanceEntity } from "@/entity/uni_guide/academic-performance.entity.js";
 import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
@@ -102,7 +104,7 @@ export class StudentEntity {
     files?: Relation<FileEntity[]>;
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     @Column({ name: "majors", nullable: true, type: "jsonb" })
     majors?: MajorGroup[];
@@ -220,7 +222,7 @@ export class StudentEntity {
     user?: Relation<UserEntity>;
 
     @Column({ name: "user_id", nullable: true, type: "uuid" })
-    userId?: string;
+    userId?: UUID;
 
     @OneToMany("VsatExamEntity", "student", {
         cascade: true,

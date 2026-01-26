@@ -14,6 +14,7 @@ import {
 } from "@/entity/uni_guide/prediction-result.entity.js";
 import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
@@ -32,8 +33,8 @@ export class PredictionL3ProcessorService implements IPredictionL3ProcessorServi
      */
     public async processL3PredictionInTransaction(
         manager: EntityManager,
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<void> {
         const studentEntity = await manager.findOne(StudentEntity, {
             relations: ["predictionResult", "user", "studentAdmissions"],
@@ -99,9 +100,9 @@ export class PredictionL3ProcessorService implements IPredictionL3ProcessorServi
                 }
             }
 
-            const newAdmissionIds = Array.from(l3AdmissionIds).filter(
-                (id) => !existingAdmissionIds.has(id),
-            );
+            const newAdmissionIds = Array.from(l3AdmissionIds)
+                .filter((id) => !existingAdmissionIds.has(id))
+                .map((id) => UUIDSchema.parse(id));
 
             this.logger.info("Admission IDs analysis", {
                 existingCount: existingAdmissionIds.size,

@@ -8,6 +8,7 @@ import { Logger } from "winston";
 
 import type { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
 import type { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
 import {
@@ -314,8 +315,8 @@ export class PredictionL2Service implements IPredictionL2Service {
     }
 
     public async getL2PredictResults(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<L2PredictResult[]> {
         // Data retrieval and validation
         const student = await this.studentRepository.findOne({

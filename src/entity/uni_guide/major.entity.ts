@@ -10,6 +10,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { MajorGroupEntity } from "@/entity/uni_guide/major-group.entity.js";
 
 /**
@@ -43,10 +45,10 @@ export class MajorEntity {
     group!: Relation<MajorGroupEntity>;
 
     @Column({ name: "group_id", nullable: false, type: "uuid" })
-    group_id!: string;
+    group_id!: UUID;
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     @Column({ name: "name", nullable: false, type: "varchar" })
     name!: string; // The Vietnamese name of the major, e.g., "Khoa học giáo dục"

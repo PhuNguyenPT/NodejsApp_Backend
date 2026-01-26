@@ -12,6 +12,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { ExamType } from "@/type/enum/exam-type.enum.js";
 
@@ -60,7 +62,7 @@ export class CertificationEntity {
     examType?: ExamType;
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     @Column({ length: 50, name: "level", nullable: true, type: "varchar" })
     level?: string;
@@ -73,7 +75,7 @@ export class CertificationEntity {
     student!: Relation<StudentEntity>;
 
     @Column({ name: "student_id", type: "uuid" })
-    studentId!: string;
+    studentId!: UUID;
 
     @UpdateDateColumn({
         insert: false,

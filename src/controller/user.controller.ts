@@ -27,6 +27,7 @@ import { UserEntity } from "@/entity/security/user.entity.js";
 import { UserMapper } from "@/mapper/user-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
+import { UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 
@@ -61,7 +62,7 @@ export class UserController extends Controller {
     public async checkUserExists(
         @Path("userId") userId: string,
     ): Promise<{ exists: boolean }> {
-        const exists = await this.userService.exists(userId);
+        const exists = await this.userService.exists(UUIDSchema.parse(userId));
         return { exists };
     }
 
@@ -105,7 +106,7 @@ export class UserController extends Controller {
     @Security("bearerAuth", ["user:delete"])
     @SuccessResponse(HttpStatus.NO_CONTENT, "Successfully deleted user")
     public async deleteUser(@Path("userId") userId: string): Promise<void> {
-        await this.userService.delete(userId);
+        await this.userService.delete(UUIDSchema.parse(userId));
     }
 
     /**
@@ -149,7 +150,7 @@ export class UserController extends Controller {
         @Query() name?: string,
     ): Promise<UserAdmin> {
         const userEntity: UserEntity = await this.userService.getByIdAndName(
-            userId,
+            UUIDSchema.parse(userId),
             name,
         );
         const responseDTO: UserAdmin = UserMapper.toUserAdmin(userEntity);
@@ -175,7 +176,9 @@ export class UserController extends Controller {
     public async getUserById(
         @Path("userId") userId: string,
     ): Promise<UserAdmin> {
-        const userEntity: UserEntity = await this.userService.getById(userId);
+        const userEntity: UserEntity = await this.userService.getById(
+            UUIDSchema.parse(userId),
+        );
         const responseDTO: UserAdmin = UserMapper.toUserAdmin(userEntity);
         return responseDTO;
     }
@@ -208,7 +211,7 @@ export class UserController extends Controller {
     ): Promise<UserAdmin> {
         const user: Express.User = request.user;
         const userEntity = await this.userService.update(
-            userId,
+            UUIDSchema.parse(userId),
             requestBody,
             user,
         );

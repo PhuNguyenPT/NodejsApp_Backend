@@ -1,4 +1,4 @@
-// src/entity/user.ts
+// src/entity/user.entity.ts
 import {
     Column,
     CreateDateColumn,
@@ -10,6 +10,8 @@ import {
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
+
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { Permission, Role } from "@/type/enum/user.enum.js";
@@ -64,7 +66,7 @@ export class UserEntity {
     enabled = true;
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     @Column({ length: 255, name: "name", nullable: true, type: "varchar" })
     name?: string;
