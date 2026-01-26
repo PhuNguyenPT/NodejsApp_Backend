@@ -37,72 +37,39 @@ describe("UserService Integration Tests", () => {
         userService = iocContainer.get<IUserService>(TYPES.IUserService);
 
         // Clean up cache from previous test runs
-        console.log("🧹 Cleaning up cache from previous test runs...");
         const cacheKeys = await redisClient.keys("user:*");
         if (cacheKeys.length > 0) {
             await redisClient.del(cacheKeys);
-            console.log(
-                `✅ Deleted ${cacheKeys.length.toString()} cached entries`,
-            );
         }
 
         // Clean up database - preserve system-created users
-        console.log("🧹 Cleaning up database from previous test runs...");
         const userRepository = dataSource.getRepository(UserEntity);
-        const result = await userRepository
+        await userRepository
             .createQueryBuilder()
             .delete()
             .where("created_by != :systemCreator", { systemCreator: "system" })
             .execute();
-
-        const deleted = result.affected ?? 0;
-        if (deleted > 0) {
-            console.log(`✅ Deleted ${deleted.toString()} leftover test users`);
-        }
     });
 
     afterAll(async () => {
-        console.log(
-            `🧹 Cleaning up ${createdUserIds.length.toString()} test users...`,
-        );
-
         // Delete users created in tests
         for (const userId of createdUserIds) {
-            try {
-                await userService.delete(userId);
-                console.log(`✅ Deleted user: ${userId}`);
-            } catch (error) {
-                console.error(`❌ Failed to delete user ${userId}:`, error);
-            }
+            await userService.delete(userId);
         }
 
         // Final cache cleanup
-        console.log("🧹 Final cache cleanup...");
         const cacheKeys = await redisClient.keys("user:*");
         if (cacheKeys.length > 0) {
             await redisClient.del(cacheKeys);
-            console.log(
-                `✅ Deleted ${cacheKeys.length.toString()} cached entries`,
-            );
         }
 
         // Final database cleanup
-        console.log("🧹 Final database cleanup...");
         const userRepository = dataSource.getRepository(UserEntity);
-        const result = await userRepository
+        await userRepository
             .createQueryBuilder()
             .delete()
             .where("created_by != :systemCreator", { systemCreator: "system" })
             .execute();
-
-        const deleted = result.affected ?? 0;
-        if (deleted > 0) {
-            console.log(
-                `✅ Deleted ${deleted.toString()} remaining test users`,
-            );
-        }
-
-        console.log("✅ Cleanup complete!");
     });
 
     describe("create", () => {
