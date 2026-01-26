@@ -1,3 +1,4 @@
 npm run test:run
+npm run build:clean
 npm run type-check
 npx lint-staged

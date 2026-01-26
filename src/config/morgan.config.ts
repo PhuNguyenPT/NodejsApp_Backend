@@ -4,12 +4,14 @@ import fs from "fs";
 import morgan from "morgan";
 import path from "path";
 import { createStream } from "rotating-file-stream";
+import { v7 } from "uuid";
 
 import { logger } from "@/config/logger.config.js";
+import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { config } from "@/util/validate-env.js";
 
 interface ExtendedRequest extends Request {
-    requestId?: string;
+    requestId?: UUID;
 }
 
 // Custom token to get real client IP from Cloudflare headers
@@ -260,10 +262,7 @@ export const getMorganConfig = (): RequestHandler[] => {
 // Helper function to setup request ID tracking
 export const setupRequestTracking = (): RequestHandler => {
     return (req: ExtendedRequest, res: Response, next) => {
-        // Generate unique request ID
-        const timestamp = Date.now().toString();
-        const randomString = Math.random().toString(36).substring(2, 9);
-        req.requestId = `${timestamp}-${randomString}`;
+        req.requestId = UUIDSchema.parse(v7());
 
         // Add request ID to response headers
         res.setHeader("X-Request-ID", req.requestId);

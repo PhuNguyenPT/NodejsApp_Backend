@@ -9,7 +9,7 @@ import { iocContainer } from "@/app/ioc-container.js";
 import { LoginRequest, RegisterRequest } from "@/dto/auth/auth-request.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { getApp } from "@/test/setup.js";
-import { UUIDSchema } from "@/type/common/uuid.type.js";
+import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { BadCredentialsException } from "@/type/exception/bad-credentials.exception.js";
 import { EntityExistsException } from "@/type/exception/entity-exists.exception.js";
@@ -20,7 +20,7 @@ describe("AuthService Integration Tests", () => {
     let authService: IAuthService;
     let userRepository: Repository<UserEntity>;
     let jwtTokenRepository: IJwtTokenRepository;
-    const createdUserIds: string[] = [];
+    const createdUserIds: UUID[] = [];
     const createdTokens: string[] = [];
     const testEmail = "test@example.com";
     const testPassword = "TestPassword123!";
@@ -77,7 +77,7 @@ describe("AuthService Integration Tests", () => {
             // Act
             const result = await authService.register(registerRequest);
             if (result.user?.id) {
-                createdUserIds.push(result.user.id);
+                createdUserIds.push(UUIDSchema.parse(result.user.id));
             }
             trackTokens(result);
 
@@ -105,7 +105,7 @@ describe("AuthService Integration Tests", () => {
             // First registration
             const firstResult = await authService.register(registerRequest);
             if (firstResult.user?.id) {
-                createdUserIds.push(firstResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(firstResult.user.id));
             }
             trackTokens(firstResult);
 
@@ -135,7 +135,7 @@ describe("AuthService Integration Tests", () => {
             }
 
             const userId = result.user.id;
-            createdUserIds.push(userId);
+            createdUserIds.push(UUIDSchema.parse(userId));
 
             // Retrieve user from database
             const savedUser = await userRepository.findOne({
@@ -157,7 +157,7 @@ describe("AuthService Integration Tests", () => {
             // Act
             const result = await authService.register(registerRequest);
             if (result.user?.id) {
-                createdUserIds.push(result.user.id);
+                createdUserIds.push(UUIDSchema.parse(result.user.id));
             }
             trackTokens(result);
 
@@ -178,7 +178,7 @@ describe("AuthService Integration Tests", () => {
             };
             const registerResult = await authService.register(registerRequest);
             if (registerResult.user?.id) {
-                createdUserIds.push(registerResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(registerResult.user.id));
             }
             trackTokens(registerResult);
 
@@ -208,7 +208,7 @@ describe("AuthService Integration Tests", () => {
             };
             const registerResult = await authService.register(registerRequest);
             if (registerResult.user?.id) {
-                createdUserIds.push(registerResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(registerResult.user.id));
             }
             trackTokens(registerResult);
 
@@ -244,7 +244,7 @@ describe("AuthService Integration Tests", () => {
             };
             const registerResult = await authService.register(registerRequest);
             if (registerResult.user?.id) {
-                createdUserIds.push(registerResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(registerResult.user.id));
             }
             trackTokens(registerResult);
 
@@ -272,7 +272,7 @@ describe("AuthService Integration Tests", () => {
             };
             const loginResult = await authService.register(registerRequest);
             if (loginResult.user?.id) {
-                createdUserIds.push(loginResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(loginResult.user.id));
             }
             trackTokens(loginResult);
 
@@ -306,7 +306,7 @@ describe("AuthService Integration Tests", () => {
             };
             const loginResult = await authService.register(registerRequest);
             if (loginResult.user?.id) {
-                createdUserIds.push(loginResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(loginResult.user.id));
             }
             trackTokens(loginResult);
 
@@ -343,7 +343,7 @@ describe("AuthService Integration Tests", () => {
             };
             const loginResult = await authService.register(registerRequest);
             if (loginResult.user?.id) {
-                createdUserIds.push(loginResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(loginResult.user.id));
             }
             trackTokens(loginResult);
 
@@ -392,7 +392,7 @@ describe("AuthService Integration Tests", () => {
             };
             const loginResult = await authService.register(registerRequest);
             if (loginResult.user?.id) {
-                createdUserIds.push(loginResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(loginResult.user.id));
             }
             trackTokens(loginResult);
 
@@ -426,7 +426,7 @@ describe("AuthService Integration Tests", () => {
             };
             const loginResult = await authService.register(registerRequest);
             if (loginResult.user?.id) {
-                createdUserIds.push(loginResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(loginResult.user.id));
             }
             trackTokens(loginResult);
 
@@ -457,7 +457,7 @@ describe("AuthService Integration Tests", () => {
             };
             const loginResult = await authService.register(registerRequest);
             if (loginResult.user?.id) {
-                createdUserIds.push(loginResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(loginResult.user.id));
             }
             trackTokens(loginResult);
 
@@ -494,7 +494,7 @@ describe("AuthService Integration Tests", () => {
             };
             const registerResult = await authService.register(registerRequest);
             if (registerResult.user?.id) {
-                createdUserIds.push(registerResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(registerResult.user.id));
             }
             trackTokens(registerResult);
             expect(registerResult.success).toBe(true);
@@ -547,7 +547,7 @@ describe("AuthService Integration Tests", () => {
             };
             const initialResult = await authService.register(registerRequest);
             if (initialResult.user?.id) {
-                createdUserIds.push(initialResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(initialResult.user.id));
             }
             trackTokens(initialResult);
 
@@ -590,7 +590,7 @@ describe("AuthService Integration Tests", () => {
             };
             const registerResult = await authService.register(registerRequest);
             if (registerResult.user?.id) {
-                createdUserIds.push(registerResult.user.id);
+                createdUserIds.push(UUIDSchema.parse(registerResult.user.id));
             }
             trackTokens(registerResult);
 

@@ -467,8 +467,8 @@ export class AdmissionService implements IAdmissionService {
     }
 
     private buildBaseStudentAdmissionQuery(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): SelectQueryBuilder<StudentAdmissionEntity> {
         let query = this.dataSource.manager
             .createQueryBuilder(StudentAdmissionEntity, "sa")

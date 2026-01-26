@@ -4,6 +4,7 @@ import { Logger } from "winston";
 
 import type { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
 import type { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import {
     type OcrCreatedEvent,
@@ -67,10 +68,7 @@ export class OcrEventListener implements IOcrEventListener {
      * Validate that OCR result IDs count is exactly 3 or 6
      * @returns true if valid, false otherwise
      */
-    private validateOcrCount(
-        ocrResultIds: string[],
-        studentId: string,
-    ): boolean {
+    private validateOcrCount(ocrResultIds: UUID[], studentId: UUID): boolean {
         const count = ocrResultIds.length;
 
         if (!this.ALLOWED_OCR_COUNTS.includes(count)) {

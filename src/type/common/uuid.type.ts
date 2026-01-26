@@ -9,4 +9,4 @@ export type UUID = NodeUUID & z.BRAND<"UUID">;
 export const UUIDSchema = z
     .string()
     .uuid("Invalid UUID format")
-    .brand<"UUID">() as unknown as z.ZodType<UUID>;
+    .transform((val) => val as UUID);

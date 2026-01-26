@@ -30,7 +30,7 @@ export class OcrResultService implements IOcrResultService {
     ) {}
 
     public async createInitialOcrResults(
-        studentId: string,
+        studentId: UUID,
         createdBy: string,
         files: FileEntity[],
     ): Promise<OcrResultEntity[]> {

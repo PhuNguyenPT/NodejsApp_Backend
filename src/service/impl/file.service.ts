@@ -163,7 +163,7 @@ export class FileService implements IFileService {
         return savedFiles;
     }
 
-    public async deleteFile(fileId: string, userId?: string): Promise<void> {
+    public async deleteFile(fileId: UUID, userId?: UUID): Promise<void> {
         const file = await this.getFileById(fileId, userId);
 
         file.status = FileStatus.DELETED;
@@ -174,10 +174,7 @@ export class FileService implements IFileService {
     /**
      * Gets file by ID and decompresses content if needed
      */
-    public async getFileById(
-        fileId: string,
-        userId?: string,
-    ): Promise<FileEntity> {
+    public async getFileById(fileId: UUID, userId?: UUID): Promise<FileEntity> {
         const query = this.fileRepository
             .createQueryBuilder("files")
             .leftJoinAndSelect("files.student", "student")
@@ -220,8 +217,8 @@ export class FileService implements IFileService {
      * Gets files by student ID and decompresses content if needed
      */
     public async getFilesMetadataByStudentId(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<FileEntity[]> {
         const query = this.fileRepository
             .createQueryBuilder("files")
@@ -250,9 +247,9 @@ export class FileService implements IFileService {
     }
 
     public async updateFile(
-        fileId: string,
+        fileId: UUID,
         updateFileDTO: UpdateFileRequest,
-        userId?: string,
+        userId?: UUID,
     ): Promise<FileEntity> {
         const file = await this.getFileById(fileId, userId);
 

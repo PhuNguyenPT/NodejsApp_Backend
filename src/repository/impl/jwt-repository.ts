@@ -5,6 +5,7 @@ import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-inte
 
 import { redisClient } from "@/config/redis.config.js";
 import { JwtEntity } from "@/entity/security/jwt.entity.js";
+import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 
 @injectable()
@@ -16,7 +17,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
     constructor(@inject(TYPES.Logger) private readonly logger: Logger) {}
     // Blacklist token by ID
-    public async blacklistToken(tokenId: string): Promise<boolean> {
+    public async blacklistToken(tokenId: UUID): Promise<boolean> {
         try {
             const jwtEntity: JwtEntity | null = await this.findById(tokenId);
 
@@ -112,7 +113,9 @@ export class JwtTokenRepository implements IJwtTokenRepository {
 
                     // Check if any tokens in the family are still valid
                     for (const tokenId of tokenIds) {
-                        const jwtEntity = await this.findById(tokenId);
+                        const jwtEntity = await this.findById(
+                            UUIDSchema.parse(tokenId),
+                        );
                         if (jwtEntity) {
                             tokensToCleanup.push(jwtEntity);
                             if (jwtEntity.isValid()) {
@@ -161,7 +164,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Delete token by ID
-    public async deleteById(id: string): Promise<boolean> {
+    public async deleteById(id: UUID): Promise<boolean> {
         try {
             const jwtEntity: JwtEntity | null = await this.findById(id);
 
@@ -250,7 +253,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Find token by ID
-    public async findById(id: string): Promise<JwtEntity | null> {
+    public async findById(id: UUID): Promise<JwtEntity | null> {
         try {
             const key = this.getTokenKey(id);
             const exists = await redisClient.exists(key);
@@ -284,7 +287,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
                 return null;
             }
 
-            return await this.findById(tokenId);
+            return await this.findById(UUIDSchema.parse(tokenId));
         } catch (error) {
             this.logger.error("Error finding JWT token by value:", { error });
             throw new Error("Failed to find JWT token by value");
@@ -312,7 +315,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
         }
     }
 
-    public async invalidateFamily(familyId: string): Promise<void> {
+    public async invalidateFamily(familyId: UUID): Promise<void> {
         try {
             const familyIndexKey = this.getFamilyIndexKey(familyId);
             const tokenIds = await redisClient.sMembers(familyIndexKey);
@@ -324,7 +327,9 @@ export class JwtTokenRepository implements IJwtTokenRepository {
             // Fetch all tokens first, then pipeline the updates
             const jwtEntities: JwtEntity[] = [];
             for (const tokenId of tokenIds) {
-                const jwtEntity = await this.findById(tokenId);
+                const jwtEntity = await this.findById(
+                    UUIDSchema.parse(tokenId),
+                );
                 if (jwtEntity && !jwtEntity.isBlacklisted) {
                     jwtEntity.blacklist();
                     jwtEntity.ttl = this.BLACKLIST_TTL_SECONDS;
@@ -417,7 +422,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
     }
 
     // Helper methods
-    private getFamilyIndexKey(familyId: string): string {
+    private getFamilyIndexKey(familyId: UUID): string {
         return `${this.familyIndexPrefix}${familyId}`;
     }
 
@@ -425,7 +430,7 @@ export class JwtTokenRepository implements IJwtTokenRepository {
         return `${this.tokenIndexPrefix}${token}`;
     }
 
-    private getTokenKey(id: string): string {
+    private getTokenKey(id: UUID): string {
         return `${this.keyPrefix}${id}`;
     }
 }

@@ -3,6 +3,7 @@ import { type DataSource, Repository } from "typeorm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { IAwardService } from "@/service/award-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { iocContainer } from "@/app/ioc-container.js";
 import { AwardRequest } from "@/dto/student/award-request.js";
@@ -22,8 +23,8 @@ describe("AwardService Integration Tests", () => {
     let awardService: IAwardService;
     let awardRepository: Repository<AwardEntity>;
     let studentRepository: Repository<StudentEntity>;
-    const createdStudentIds: string[] = [];
-    const createdAwardIds: string[] = [];
+    const createdStudentIds: UUID[] = [];
+    const createdAwardIds: UUID[] = [];
 
     beforeAll(async () => {
         getApp();
