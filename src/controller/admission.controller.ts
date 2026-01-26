@@ -27,7 +27,7 @@ import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import { type IAdmissionService } from "@/service/admission-service.interface.js";
-import { UUIDSchema } from "@/type/common/uuid.type.js";
+import { type TsoaUUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -64,7 +64,7 @@ export class AdmissionController extends Controller {
      * to populate filter dropdowns or selection lists in the frontend.
      *
      * @summary Get admission field filter options for authenticated user
-     * @param {string} studentId - UUID of the student profile to retrieve filter options for
+     * @param {TsoaUUID} studentId - UUID of the student profile to retrieve filter options for
      * @param {AuthenticatedRequest} request - Express request object containing authenticated user information
      * @returns {Promise<AdmissionFieldResponse>} Object containing arrays of distinct values for each filterable admission field
      *
@@ -92,7 +92,7 @@ export class AdmissionController extends Controller {
         "Successfully retrieve student profile's admissions filter",
     )
     public async getAdmissionFieldsFilter(
-        @Path() studentId: string,
+        @Path() studentId: TsoaUUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<AdmissionFieldResponse> {
         const user: Express.User = request.user;
@@ -112,7 +112,7 @@ export class AdmissionController extends Controller {
      * (profiles where userId is null). Used to populate filter dropdowns for guest users.
      *
      * @summary Get admission field filter options for guest user
-     * @param {string} studentId - UUID of the public student profile to retrieve filter options for
+     * @param {TsoaUUID} studentId - UUID of the public student profile to retrieve filter options for
      * @returns {Promise<AdmissionFieldResponse>} Object containing arrays of distinct values for each filterable admission field
      *
      * @throws {EntityNotFoundException} When the public student profile is not found
@@ -138,7 +138,7 @@ export class AdmissionController extends Controller {
         "Successfully retrieve student profile's admissions filter",
     )
     public async getAdmissionFieldsFilterGuest(
-        @Path() studentId: string,
+        @Path() studentId: TsoaUUID,
     ): Promise<AdmissionFieldResponse> {
         const fields: Record<AdmissionField, (number | string)[]> =
             await this.admissionService.getAllDistinctAdmissionFieldValues(
@@ -152,7 +152,7 @@ export class AdmissionController extends Controller {
      * This endpoint requires authentication and validates that the user has access to the requested student profile.
      *
      * @summary Get student profile's admission(s) for authenticated user
-     * @param {string} studentId - UUID of the student profile to retrieve admissions for
+     * @param {TsoaUUID} studentId - UUID of the student profile to retrieve admissions for
      * @param {AuthenticatedRequest} request - Express request object containing authenticated user information
      * @param {AdmissionSearchQuery} searchQuery - Query parameters for pagination, sorting, and filtering
      * @returns {Promise<Page<AdmissionResponse>>} Paginated list of admission responses
@@ -177,7 +177,7 @@ export class AdmissionController extends Controller {
         "Successfully retrieve student profile's admissions",
     )
     public async getAdmissionResponsePage(
-        @Path() studentId: string,
+        @Path() studentId: TsoaUUID,
         @Request() request: Express.AuthenticatedRequest,
         @Queries() searchQuery: AdmissionSearchQuery,
     ): Promise<PageResponse<AdmissionResponse>> {
@@ -213,7 +213,7 @@ export class AdmissionController extends Controller {
      * (profiles where userId is null).
      *
      * @summary Get student profile's admission(s) for guest user
-     * @param {string} studentId - UUID of the public student profile to retrieve admissions for
+     * @param {TsoaUUID} studentId - UUID of the public student profile to retrieve admissions for
      * @param {AdmissionSearchQuery} searchQuery - Query parameters for pagination, sorting, and filtering
      * @returns {Promise<Page<AdmissionResponse>>} Paginated list of admission responses
      *
@@ -236,7 +236,7 @@ export class AdmissionController extends Controller {
         "Successfully retrieve student profile's admissions",
     )
     public async getAdmissionResponsePageForGuest(
-        @Path() studentId: string,
+        @Path() studentId: TsoaUUID,
         @Queries() searchQuery: AdmissionSearchQuery,
     ): Promise<PageResponse<AdmissionResponse>> {
         // Convert PageableQuery to PageRequest

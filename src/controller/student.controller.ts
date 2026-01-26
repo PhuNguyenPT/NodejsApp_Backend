@@ -27,7 +27,7 @@ import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { StudentMapper } from "@/mapper/student-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { UUIDSchema } from "@/type/common/uuid.type.js";
+import { type TsoaUUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -144,7 +144,7 @@ export class StudentController extends Controller {
      * Retrieve a single student profile by its ID for a guest user.
      * Ensures the profile is not owned by any authenticated user.
      * @summary Get a single guest profile by ID
-     * @param studentId The UUID of the student profile to retrieve.
+     * @param {TsoaUUID} studentId The UUID of the student profile to retrieve.
      * @returns {StudentProfileResponse} The full student profile including awards and certifications.
      * @throws {EntityNotFoundException} If no matching student profile is found.
      */
@@ -155,7 +155,7 @@ export class StudentController extends Controller {
     @Response<string>(HttpStatus.NOT_FOUND, "Not found")
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getStudentGuest(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: TsoaUUID,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
             await this.studentService.getStudentEntityByIdAnUserId(
@@ -168,7 +168,7 @@ export class StudentController extends Controller {
      * Retrieve a single student profile by its ID for an authenticated user.
      * The endpoint verifies that the requested profile belongs to the authenticated user.
      * @summary Get a single profile by ID for current user
-     * @param studentId The UUID of the student profile to retrieve.
+     * @param {TsoaUUID} studentId The UUID of the student profile to retrieve.
      * @param request The authenticated Express request object.
      * @returns {StudentProfileResponse} The full student profile including awards and certifications.
      * @throws {EntityNotFoundException} If no matching student profile is found.
@@ -182,7 +182,7 @@ export class StudentController extends Controller {
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getStudentProfileByUserId(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: TsoaUUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
@@ -199,7 +199,7 @@ export class StudentController extends Controller {
      * Fetches the student profile and only the files with 'active' status.
      * Ensures the profile is not owned by any authenticated user.
      * @summary Get a guest profile with files by ID
-     * @param studentId The UUID of the student profile to retrieve.
+     * @param {TsoaUUID} studentId The UUID of the student profile to retrieve.
      * @returns {StudentProfileResponse} The full student profile including associated active files.
      * @throws {EntityNotFoundException} If no matching student profile is found.
      */
@@ -213,7 +213,7 @@ export class StudentController extends Controller {
         "Successfully retrieve student profile with files",
     )
     public async getStudentProfileGuestWithFiles(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: TsoaUUID,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
             await this.studentService.getStudentWithFiles(
@@ -227,7 +227,7 @@ export class StudentController extends Controller {
      * The endpoint verifies that the requested profile belongs to the authenticated user.
      * Fetches the student profile and only the files with 'active' status.
      * @summary Get a profile with files by ID for current user
-     * @param studentId The UUID of the student profile to retrieve.
+     * @param {TsoaUUID} studentId The UUID of the student profile to retrieve.
      * @param request The authenticated Express request object.
      * @returns {StudentProfileResponse} The full student profile including associated active files.
      * @throws {EntityNotFoundException} If no matching student profile is found or access is denied.
@@ -244,7 +244,7 @@ export class StudentController extends Controller {
         "Successfully retrieve student profile with files",
     )
     public async getStudentProfileWithFiles(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: TsoaUUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;

@@ -27,7 +27,7 @@ import { UserEntity } from "@/entity/security/user.entity.js";
 import { UserMapper } from "@/mapper/user-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
-import { UUIDSchema } from "@/type/common/uuid.type.js";
+import { type TsoaUUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 
@@ -49,7 +49,7 @@ export class UserController extends Controller {
      * Check if a user exists in the system by their ID.
      * This is useful for validation before performing operations that require an existing user.
      * @summary Check user existence
-     * @param userId The UUID of the user to check.
+     * @param {TsoaUUID} userId The UUID of the user to check.
      * @returns {object} Boolean indicating whether the user exists.
      */
     @Get("{userId}/exists")
@@ -60,7 +60,7 @@ export class UserController extends Controller {
     @Security("bearerAuth", ["user:read"])
     @SuccessResponse(HttpStatus.OK, "Successfully checked user existence")
     public async checkUserExists(
-        @Path("userId") userId: string,
+        @Path("userId") userId: TsoaUUID,
     ): Promise<{ exists: boolean }> {
         const exists = await this.userService.exists(UUIDSchema.parse(userId));
         return { exists };
@@ -95,7 +95,7 @@ export class UserController extends Controller {
      * Delete a user from the system permanently.
      * This operation cannot be undone and will also invalidate all cached user data.
      * @summary Delete user
-     * @param userId The UUID of the user to delete.
+     * @param {TsoaUUID} userId The UUID of the user to delete.
      * @throws {EntityNotFoundException} If the user is not found.
      */
     @Delete("{userId}")
@@ -105,7 +105,7 @@ export class UserController extends Controller {
     @Response<string>(HttpStatus.NOT_FOUND, "User not found")
     @Security("bearerAuth", ["user:delete"])
     @SuccessResponse(HttpStatus.NO_CONTENT, "Successfully deleted user")
-    public async deleteUser(@Path("userId") userId: string): Promise<void> {
+    public async deleteUser(@Path("userId") userId: TsoaUUID): Promise<void> {
         await this.userService.delete(UUIDSchema.parse(userId));
     }
 
@@ -132,7 +132,7 @@ export class UserController extends Controller {
      * This endpoint allows querying by both ID and name for more specific searches.
      * Results are cached to improve performance.
      * @summary Get user by ID and optional name
-     * @param userId The UUID of the user to retrieve.
+     * @param {TsoaUUID} userId The UUID of the user to retrieve.
      * @param name Optional name filter to match against the user's name.
      * @returns {UserAdmin} The user matching the provided criteria.
      * @throws {EntityNotFoundException} If no user matches the provided criteria.
@@ -146,7 +146,7 @@ export class UserController extends Controller {
     @Security("bearerAuth", ["user:read"])
     @SuccessResponse(HttpStatus.OK, "Successfully retrieved user")
     public async getUser(
-        @Path("userId") userId: string,
+        @Path("userId") userId: TsoaUUID,
         @Query() name?: string,
     ): Promise<UserAdmin> {
         const userEntity: UserEntity = await this.userService.getByIdAndName(
@@ -161,7 +161,7 @@ export class UserController extends Controller {
      * Retrieve a specific user by their ID.
      * Results are cached to improve performance on repeated queries.
      * @summary Get user by ID
-     * @param userId The UUID of the user to retrieve.
+     * @param {TsoaUUID} userId The UUID of the user to retrieve.
      * @returns {UserAdmin} The user details.
      * @throws {EntityNotFoundException} If the user is not found.
      */
@@ -174,7 +174,7 @@ export class UserController extends Controller {
     @Security("bearerAuth", ["user:read"])
     @SuccessResponse(HttpStatus.OK, "Successfully retrieved user")
     public async getUserById(
-        @Path("userId") userId: string,
+        @Path("userId") userId: TsoaUUID,
     ): Promise<UserAdmin> {
         const userEntity: UserEntity = await this.userService.getById(
             UUIDSchema.parse(userId),
@@ -190,7 +190,7 @@ export class UserController extends Controller {
      * If the role is updated, permissions will be automatically refreshed based on the new role.
      * The user cache will be invalidated after update.
      * @summary Update user
-     * @param userId The UUID of the user to update.
+     * @param {TsoaUUID} userId The UUID of the user to update.
      * @param requestBody Partial user data containing the fields to update.
      * @param request The authenticated request containing the user performing the update.
      * @returns {UserAdmin} The updated user details.
@@ -205,7 +205,7 @@ export class UserController extends Controller {
     @Security("bearerAuth", ["user:update"])
     @SuccessResponse(HttpStatus.OK, "Successfully updated user")
     public async updateUser(
-        @Path("userId") userId: string,
+        @Path("userId") userId: TsoaUUID,
         @Body() requestBody: UpdateUserAdminDTO,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<UserAdmin> {
