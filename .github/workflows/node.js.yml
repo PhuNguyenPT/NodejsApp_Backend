@@ -142,6 +142,6 @@ jobs:
       - name: Build project
         run: npm run build
       - name: Run tests
-        run: npm test
+        run: npm run test:run
       - run: npm run lint
       - run: npm run format:check
