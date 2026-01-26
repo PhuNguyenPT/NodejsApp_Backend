@@ -40,7 +40,7 @@ describe("UUID v7 Migration Tests", () => {
     let queryRunner: QueryRunner;
     let postgresVersion: number;
     let hasNativeUuidv7: boolean;
-    let testUserId: string;
+    let testUserId: UUID;
 
     beforeAll(async () => {
         getApp();
@@ -206,8 +206,8 @@ describe("UUID v7 Migration Tests", () => {
     });
 
     it("should generate valid UUID v7 in uni_guide schema tables", async () => {
-        let studentId: string;
-        let majorGroupId: string;
+        let studentId: UUID;
+        let majorGroupId: UUID;
 
         try {
             // Test students table
@@ -942,18 +942,16 @@ describe("UUID v7 Migration Tests", () => {
 
     afterAll(async () => {
         // Clean up students that reference the test user
-        if (testUserId) {
-            await queryRunner.query(
-                `DELETE FROM "uni_guide"."students" WHERE user_id = $1`,
-                [testUserId],
-            );
+        await queryRunner.query(
+            `DELETE FROM "uni_guide"."students" WHERE user_id = $1`,
+            [testUserId],
+        );
 
-            // Then clean up the test user itself
-            await queryRunner.query(
-                `DELETE FROM "security"."users" WHERE id = $1`,
-                [testUserId],
-            );
-        }
+        // Then clean up the test user itself
+        await queryRunner.query(
+            `DELETE FROM "security"."users" WHERE id = $1`,
+            [testUserId],
+        );
 
         if (!queryRunner.isReleased) {
             await queryRunner.release();

@@ -4,6 +4,7 @@ import { Logger } from "winston";
 
 import type { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
 import type { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import {
     type TranscriptCreatedEvent,
@@ -130,7 +131,7 @@ export class TranscriptEventListener implements ITranscriptEventListener {
      */
     private validateTranscriptCount(
         transcriptIds: string[],
-        studentId: string,
+        studentId: UUID,
         eventType: "created" | "updated",
     ): boolean {
         const count = transcriptIds.length;

@@ -129,7 +129,7 @@ export class MistralService implements IMistralService {
     public async extractSubjectScoresBatch(
         student: StudentEntity,
         fileIds: string[],
-        userId?: string,
+        userId?: UUID,
     ): Promise<BatchScoreExtractionResult> {
         try {
             const filesToProcess = await this.fileRepository
@@ -217,8 +217,8 @@ export class MistralService implements IMistralService {
      * @returns A Promise that resolves to BatchScoreExtractionResult, containing a list of results for each file.
      */
     public async extractSubjectScoresByUserId(
-        studentId: string,
-        userId: string,
+        studentId: UUID,
+        userId: UUID,
     ): Promise<BatchScoreExtractionResult> {
         try {
             const student: null | StudentEntity = await this.studentRepository

@@ -228,7 +228,7 @@ export class UserService implements IUserService {
      * Invalidate all cache entries related to a user
      * @param userId - The user's UUID
      */
-    private async invalidateUserCache(userId: string): Promise<void> {
+    private async invalidateUserCache(userId: UUID): Promise<void> {
         const cacheKey = CacheKeys.user(userId);
         await this.redisClient.del(cacheKey);
 

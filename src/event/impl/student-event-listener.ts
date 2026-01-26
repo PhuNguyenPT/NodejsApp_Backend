@@ -128,8 +128,8 @@ export class StudentEventListener implements IStudentEventListener {
      * Called after linking new admissions to ensure fresh data
      */
     private async invalidateAdmissionCache(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<void> {
         const keysToInvalidate = CacheKeys.allAdmissionFieldsKeys(
             studentId,
