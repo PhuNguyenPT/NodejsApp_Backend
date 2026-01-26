@@ -9,6 +9,7 @@ import { iocContainer } from "@/app/ioc-container.js";
 import { LoginRequest, RegisterRequest } from "@/dto/auth/auth-request.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { getApp } from "@/test/setup.js";
+import { UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { BadCredentialsException } from "@/type/exception/bad-credentials.exception.js";
 import { EntityExistsException } from "@/type/exception/entity-exists.exception.js";
@@ -138,7 +139,7 @@ describe("AuthService Integration Tests", () => {
 
             // Retrieve user from database
             const savedUser = await userRepository.findOne({
-                where: { id: userId },
+                where: { id: UUIDSchema.parse(userId) },
             });
 
             expect(savedUser).toBeDefined();

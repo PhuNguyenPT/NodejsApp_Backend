@@ -21,7 +21,6 @@ import { Logger } from "winston";
 import type { BatchScoreExtractionResult } from "@/dto/ocr/score-extraction-result.js";
 import type { IMistralService } from "@/service/mistral-service.interface.js";
 import type { ITranscriptService } from "@/service/transcript-service.interface.js";
-import type { UUID } from "@/type/common/uuid.type.js";
 
 import { OcrRequest } from "@/dto/ocr/ocr-request.dto.js";
 import { OcrResultResponse } from "@/dto/ocr/ocr-result-response.dto.js";
@@ -30,6 +29,7 @@ import { SubjectScore } from "@/dto/ocr/subject-score.dto.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
+import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 
@@ -66,14 +66,14 @@ export class OcrController extends Controller {
     @Security("bearerAuth", ["profile:update:own"])
     @SuccessResponse(HttpStatus.CREATED, "Transcript successfully created")
     public async createTranscript(
-        @Path("studentId") studentId: UUID,
+        @Path("studentId") studentId: string,
         @Body() ocrRequest: OcrRequest,
         @Request() authenticatedRequest: Express.AuthenticatedRequest,
     ): Promise<OcrResultResponse> {
         const user = authenticatedRequest.user;
         const transcript =
             await this.transcriptService.saveByStudentIdAndUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 ocrRequest,
                 user.id,
             );
@@ -112,12 +112,12 @@ export class OcrController extends Controller {
     @Response<string>(HttpStatus.NOT_FOUND, "Student profile not found")
     @SuccessResponse(HttpStatus.CREATED, "Transcript successfully created")
     public async createTranscriptGuest(
-        @Path("studentId") studentId: UUID,
+        @Path("studentId") studentId: string,
         @Body() ocrRequest: OcrRequest,
     ): Promise<OcrResultResponse> {
         const transcript =
             await this.transcriptService.saveByStudentIdAndUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 ocrRequest,
             );
 
@@ -161,7 +161,7 @@ export class OcrController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Scores successfully extracted")
     public async extractTranscriptScores(
-        @Path("studentId") studentId: UUID,
+        @Path("studentId") studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<BatchScoreExtractionResult> {
         this.logger.info(
@@ -170,7 +170,7 @@ export class OcrController extends Controller {
 
         const user: Express.User = request.user;
         const result = await this.mistralService.extractSubjectScoresByUserId(
-            studentId,
+            UUIDSchema.parse(studentId),
             user.id,
         );
 
@@ -201,7 +201,7 @@ export class OcrController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
     public async getExtractedScores(
-        @Path("studentId") studentId: UUID,
+        @Path("studentId") studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<OcrResultResponse[]> {
         const user: Express.User = request.user;
@@ -214,7 +214,7 @@ export class OcrController extends Controller {
 
         const transcriptEntities: TranscriptEntity[] =
             await this.transcriptService.findByStudentIdAndUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 userId,
             );
 
@@ -265,14 +265,16 @@ export class OcrController extends Controller {
     )
     @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
     public async getExtractedScoresGuest(
-        @Path("studentId") studentId: UUID,
+        @Path("studentId") studentId: string,
     ): Promise<OcrResultResponse[]> {
         this.logger.info("Retrieving OCR result for guest student", {
             studentId,
         });
 
         const transcriptEntities: TranscriptEntity[] =
-            await this.transcriptService.findByStudentIdAndUserId(studentId);
+            await this.transcriptService.findByStudentIdAndUserId(
+                UUIDSchema.parse(studentId),
+            );
 
         const ocrResultResponses: OcrResultResponse[] = transcriptEntities.map(
             (transcriptEntity) => {
@@ -334,7 +336,7 @@ export class OcrController extends Controller {
         );
 
         const result = await this.transcriptService.patchByIdAndCreatedBy(
-            id,
+            UUIDSchema.parse(id),
             ocrUpdateRequest,
             createdBy,
         );
@@ -370,7 +372,7 @@ export class OcrController extends Controller {
         this.logger.info(`Updating OCR result for transcript id ${id}`);
 
         const result = await this.transcriptService.patchByIdAndCreatedBy(
-            id,
+            UUIDSchema.parse(id),
             ocrUpdateRequest,
         );
 

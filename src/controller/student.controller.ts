@@ -18,7 +18,6 @@ import {
 } from "tsoa";
 
 import type { IStudentService } from "@/service/student-service.interface.js";
-import type { UUID } from "@/type/common/uuid.type.js";
 import type { Page } from "@/type/pagination/page.interface.js";
 
 import { StudentProfileResponse } from "@/dto/student/student-profile-response.js";
@@ -28,6 +27,7 @@ import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { StudentMapper } from "@/mapper/student-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
+import { UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -155,10 +155,12 @@ export class StudentController extends Controller {
     @Response<string>(HttpStatus.NOT_FOUND, "Not found")
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getStudentGuest(
-        @Path("studentId") studentId: UUID,
+        @Path("studentId") studentId: string,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentEntityByIdAnUserId(studentId);
+            await this.studentService.getStudentEntityByIdAnUserId(
+                UUIDSchema.parse(studentId),
+            );
         return StudentMapper.toStudentProfileResponse(studentEntity);
     }
 
@@ -180,13 +182,13 @@ export class StudentController extends Controller {
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getStudentProfileByUserId(
-        @Path("studentId") studentId: UUID,
+        @Path("studentId") studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
         const studentEntity: StudentEntity =
             await this.studentService.getStudentEntityByIdAnUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 user.id,
             );
         return StudentMapper.toStudentProfileResponse(studentEntity);
@@ -211,10 +213,12 @@ export class StudentController extends Controller {
         "Successfully retrieve student profile with files",
     )
     public async getStudentProfileGuestWithFiles(
-        @Path("studentId") studentId: UUID,
+        @Path("studentId") studentId: string,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentWithFiles(studentId);
+            await this.studentService.getStudentWithFiles(
+                UUIDSchema.parse(studentId),
+            );
         return StudentMapper.toStudentProfileWithFilesResponse(studentEntity);
     }
 
@@ -240,12 +244,15 @@ export class StudentController extends Controller {
         "Successfully retrieve student profile with files",
     )
     public async getStudentProfileWithFiles(
-        @Path("studentId") studentId: UUID,
+        @Path("studentId") studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentWithFiles(studentId, user.id);
+            await this.studentService.getStudentWithFiles(
+                UUIDSchema.parse(studentId),
+                user.id,
+            );
         return StudentMapper.toStudentProfileWithFilesResponse(studentEntity);
     }
 }

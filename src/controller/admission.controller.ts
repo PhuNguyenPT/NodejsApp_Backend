@@ -14,7 +14,6 @@ import {
     Tags,
 } from "tsoa";
 
-import type { UUID } from "@/type/common/uuid.type.js";
 import type { Page } from "@/type/pagination/page.interface.js";
 
 import { AdmissionFieldResponse } from "@/dto/admission/admission-field-response.js";
@@ -28,6 +27,7 @@ import { AdmissionMapper } from "@/mapper/admission-mapper.js";
 import { validateQuery } from "@/middleware/query-validation.middleware.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import { type IAdmissionService } from "@/service/admission-service.interface.js";
+import { UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -92,7 +92,7 @@ export class AdmissionController extends Controller {
         "Successfully retrieve student profile's admissions filter",
     )
     public async getAdmissionFieldsFilter(
-        @Path() studentId: UUID,
+        @Path() studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<AdmissionFieldResponse> {
         const user: Express.User = request.user;
@@ -100,7 +100,7 @@ export class AdmissionController extends Controller {
 
         const fields: Record<AdmissionField, (number | string)[]> =
             await this.admissionService.getAllDistinctAdmissionFieldValues(
-                studentId,
+                UUIDSchema.parse(studentId),
                 userId,
             );
         return AdmissionMapper.toAdmissionFieldResponse(fields);
@@ -138,11 +138,11 @@ export class AdmissionController extends Controller {
         "Successfully retrieve student profile's admissions filter",
     )
     public async getAdmissionFieldsFilterGuest(
-        @Path() studentId: UUID,
+        @Path() studentId: string,
     ): Promise<AdmissionFieldResponse> {
         const fields: Record<AdmissionField, (number | string)[]> =
             await this.admissionService.getAllDistinctAdmissionFieldValues(
-                studentId,
+                UUIDSchema.parse(studentId),
             );
         return AdmissionMapper.toAdmissionFieldResponse(fields);
     }
@@ -177,7 +177,7 @@ export class AdmissionController extends Controller {
         "Successfully retrieve student profile's admissions",
     )
     public async getAdmissionResponsePage(
-        @Path() studentId: UUID,
+        @Path() studentId: string,
         @Request() request: Express.AuthenticatedRequest,
         @Queries() searchQuery: AdmissionSearchQuery,
     ): Promise<PageResponse<AdmissionResponse>> {
@@ -197,7 +197,7 @@ export class AdmissionController extends Controller {
         // Pass the search query directly to the service
         const admissionPage: Page<AdmissionEntity> =
             await this.admissionService.getAdmissionsPageByStudentIdAndUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 pageRequest,
                 { searchQuery, userId },
             );
@@ -236,7 +236,7 @@ export class AdmissionController extends Controller {
         "Successfully retrieve student profile's admissions",
     )
     public async getAdmissionResponsePageForGuest(
-        @Path() studentId: UUID,
+        @Path() studentId: string,
         @Queries() searchQuery: AdmissionSearchQuery,
     ): Promise<PageResponse<AdmissionResponse>> {
         // Convert PageableQuery to PageRequest
@@ -252,7 +252,7 @@ export class AdmissionController extends Controller {
         // Pass the search query directly to the service
         const admissionPage: Page<AdmissionEntity> =
             await this.admissionService.getAdmissionsPageByStudentIdAndUserId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 pageRequest,
                 { searchQuery },
             );

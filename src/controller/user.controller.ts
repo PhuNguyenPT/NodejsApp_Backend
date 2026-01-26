@@ -19,7 +19,6 @@ import {
 } from "tsoa";
 
 import type { IUserService } from "@/service/user-service.interface.js";
-import type { UUID } from "@/type/common/uuid.type.js";
 
 import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
@@ -28,6 +27,7 @@ import { UserEntity } from "@/entity/security/user.entity.js";
 import { UserMapper } from "@/mapper/user-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
+import { UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 
@@ -60,9 +60,9 @@ export class UserController extends Controller {
     @Security("bearerAuth", ["user:read"])
     @SuccessResponse(HttpStatus.OK, "Successfully checked user existence")
     public async checkUserExists(
-        @Path("userId") userId: UUID,
+        @Path("userId") userId: string,
     ): Promise<{ exists: boolean }> {
-        const exists = await this.userService.exists(userId);
+        const exists = await this.userService.exists(UUIDSchema.parse(userId));
         return { exists };
     }
 
@@ -105,8 +105,8 @@ export class UserController extends Controller {
     @Response<string>(HttpStatus.NOT_FOUND, "User not found")
     @Security("bearerAuth", ["user:delete"])
     @SuccessResponse(HttpStatus.NO_CONTENT, "Successfully deleted user")
-    public async deleteUser(@Path("userId") userId: UUID): Promise<void> {
-        await this.userService.delete(userId);
+    public async deleteUser(@Path("userId") userId: string): Promise<void> {
+        await this.userService.delete(UUIDSchema.parse(userId));
     }
 
     /**
@@ -146,11 +146,11 @@ export class UserController extends Controller {
     @Security("bearerAuth", ["user:read"])
     @SuccessResponse(HttpStatus.OK, "Successfully retrieved user")
     public async getUser(
-        @Path("userId") userId: UUID,
+        @Path("userId") userId: string,
         @Query() name?: string,
     ): Promise<UserAdmin> {
         const userEntity: UserEntity = await this.userService.getByIdAndName(
-            userId,
+            UUIDSchema.parse(userId),
             name,
         );
         const responseDTO: UserAdmin = UserMapper.toUserAdmin(userEntity);
@@ -173,8 +173,12 @@ export class UserController extends Controller {
     @Response<string>(HttpStatus.NOT_FOUND, "User not found")
     @Security("bearerAuth", ["user:read"])
     @SuccessResponse(HttpStatus.OK, "Successfully retrieved user")
-    public async getUserById(@Path("userId") userId: UUID): Promise<UserAdmin> {
-        const userEntity: UserEntity = await this.userService.getById(userId);
+    public async getUserById(
+        @Path("userId") userId: string,
+    ): Promise<UserAdmin> {
+        const userEntity: UserEntity = await this.userService.getById(
+            UUIDSchema.parse(userId),
+        );
         const responseDTO: UserAdmin = UserMapper.toUserAdmin(userEntity);
         return responseDTO;
     }
@@ -201,13 +205,13 @@ export class UserController extends Controller {
     @Security("bearerAuth", ["user:update"])
     @SuccessResponse(HttpStatus.OK, "Successfully updated user")
     public async updateUser(
-        @Path("userId") userId: UUID,
+        @Path("userId") userId: string,
         @Body() requestBody: UpdateUserAdminDTO,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<UserAdmin> {
         const user: Express.User = request.user;
         const userEntity = await this.userService.update(
-            userId,
+            UUIDSchema.parse(userId),
             requestBody,
             user,
         );

@@ -10,7 +10,7 @@ export interface ITranscriptService {
         userId?: UUID,
     ): Promise<TranscriptEntity[]>;
     patchByIdAndCreatedBy(
-        id: string,
+        id: UUID,
         ocrUpdateRequest: OcrUpdateRequest,
         createdBy?: string,
     ): Promise<{ id: string; subjectScores: SubjectScore[] }>;

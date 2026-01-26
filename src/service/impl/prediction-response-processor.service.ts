@@ -4,7 +4,6 @@ import { Logger } from "winston";
 
 import type { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
 import type { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
-import type { UUID } from "@/type/common/uuid.type.js";
 
 import { L3PredictResult } from "@/dto/prediction/l3-predict-result.dto.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
@@ -15,6 +14,7 @@ import {
 } from "@/entity/uni_guide/prediction-result.entity.js";
 import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { Role } from "@/type/enum/user.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
@@ -91,7 +91,7 @@ export class PredictionL3ProcessorService implements IPredictionL3ProcessorServi
                     [],
             );
 
-            const l3AdmissionIds = new Set<UUID>();
+            const l3AdmissionIds = new Set<string>();
             for (const result of l3PredictionResults) {
                 for (const items of Object.values(result.result)) {
                     for (const item of items) {
@@ -100,9 +100,9 @@ export class PredictionL3ProcessorService implements IPredictionL3ProcessorServi
                 }
             }
 
-            const newAdmissionIds = Array.from(l3AdmissionIds).filter(
-                (id) => !existingAdmissionIds.has(id),
-            );
+            const newAdmissionIds = Array.from(l3AdmissionIds)
+                .filter((id) => !existingAdmissionIds.has(id))
+                .map((id) => UUIDSchema.parse(id));
 
             this.logger.info("Admission IDs analysis", {
                 existingCount: existingAdmissionIds.size,

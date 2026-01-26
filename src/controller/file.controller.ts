@@ -24,7 +24,6 @@ import {
 import { Logger } from "winston";
 
 import type { IFileService } from "@/service/file-service.interface.js";
-import type { UUID } from "@/type/common/uuid.type.js";
 
 import { CreateFileDTO } from "@/dto/file/create-file.js";
 import { FilesMetadataSchema } from "@/dto/file/file-metadata.js";
@@ -34,6 +33,7 @@ import { FileEntity, FileType } from "@/entity/uni_guide/file.entity.js";
 import { FileMapper } from "@/mapper/file-mapper.js";
 import { validateUuidParams } from "@/middleware/uuid-validation-middleware.js";
 import validateDTO from "@/middleware/validation-middleware.js";
+import { UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { HttpStatus } from "@/type/enum/http-status.enum.js";
 import { Role } from "@/type/enum/user.enum.js";
@@ -70,11 +70,11 @@ export class FileController extends Controller {
     @Security("bearerAuth", ["file:delete"])
     @SuccessResponse(HttpStatus.NO_CONTENT, "File deleted successfully")
     public async deleteFile(
-        @Path() fileId: UUID,
+        @Path() fileId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<void> {
         const user: Express.User = request.user;
-        await this.fileService.deleteFile(fileId, user.id);
+        await this.fileService.deleteFile(UUIDSchema.parse(fileId), user.id);
     }
 
     /**
@@ -101,13 +101,13 @@ export class FileController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "File downloaded successfully", "file")
     public async downloadFile(
-        @Path() fileId: UUID,
+        @Path() fileId: string,
         @Request() request: express.Request,
         @Request() authenticatedRequest: Express.AuthenticatedRequest,
     ): Promise<void> {
         const user: Express.User = authenticatedRequest.user;
         const file: FileEntity = await this.fileService.getFileById(
-            fileId,
+            UUIDSchema.parse(fileId),
             user.id,
         );
 
@@ -177,10 +177,12 @@ export class FileController extends Controller {
     @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
     @SuccessResponse(HttpStatus.OK, "File downloaded successfully", "file")
     public async downloadFileForGuest(
-        @Path() fileId: UUID,
+        @Path() fileId: string,
         @Request() request: express.Request,
     ): Promise<void> {
-        const file: FileEntity = await this.fileService.getFileById(fileId);
+        const file: FileEntity = await this.fileService.getFileById(
+            UUIDSchema.parse(fileId),
+        );
 
         // Log buffer info for debugging
         this.logger.info(
@@ -244,12 +246,12 @@ export class FileController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "File retrieved successfully")
     public async getFileById(
-        @Path() fileId: UUID,
+        @Path() fileId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<FileResponse> {
         const user: Express.User = request.user;
         const file: FileEntity = await this.fileService.getFileById(
-            fileId,
+            UUIDSchema.parse(fileId),
             user.id,
         );
         const fileResponse: FileResponse = FileMapper.toFileResponse(file);
@@ -276,9 +278,11 @@ export class FileController extends Controller {
     @Response(HttpStatus.UNAUTHORIZED, "Unauthorized")
     @SuccessResponse(HttpStatus.OK, "File retrieved successfully")
     public async getFileByIdForGuest(
-        @Path() fileId: UUID,
+        @Path() fileId: string,
     ): Promise<FileResponse> {
-        const file: FileEntity = await this.fileService.getFileById(fileId);
+        const file: FileEntity = await this.fileService.getFileById(
+            UUIDSchema.parse(fileId),
+        );
         const fileResponse: FileResponse = FileMapper.toFileResponse(file);
         fileResponse.message = "File metadata retrieved successfully";
         return fileResponse;
@@ -303,13 +307,13 @@ export class FileController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Files retrieved successfully")
     public async getFilesByStudentId(
-        @Path() studentId: UUID,
+        @Path() studentId: string,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<FileResponse[]> {
         const user: Express.User = request.user;
         const files: FileEntity[] =
             await this.fileService.getFilesMetadataByStudentId(
-                studentId,
+                UUIDSchema.parse(studentId),
                 user.id,
             );
         const fileResponses: FileResponse[] =
@@ -335,10 +339,12 @@ export class FileController extends Controller {
     @Response(HttpStatus.FORBIDDEN, "Insufficient permissions")
     @SuccessResponse(HttpStatus.OK, "Files retrieved successfully")
     public async getFilesByStudentIdForGuest(
-        @Path() studentId: UUID,
+        @Path() studentId: string,
     ): Promise<FileResponse[]> {
         const files: FileEntity[] =
-            await this.fileService.getFilesMetadataByStudentId(studentId);
+            await this.fileService.getFilesMetadataByStudentId(
+                UUIDSchema.parse(studentId),
+            );
         const fileResponses: FileResponse[] =
             FileMapper.toFileResponseList(files);
         const message = "File metadata retrieved successfully";
@@ -370,13 +376,13 @@ export class FileController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Image preview retrieved successfully")
     public async previewFile(
-        @Path() fileId: UUID,
+        @Path() fileId: string,
         @Request() request: express.Request,
         @Request() authenticatedRequest: Express.AuthenticatedRequest,
     ): Promise<void> {
         const user: Express.User = authenticatedRequest.user;
         const file: FileEntity = await this.fileService.getFileById(
-            fileId,
+            UUIDSchema.parse(fileId),
             user.id,
         );
 
@@ -436,10 +442,12 @@ export class FileController extends Controller {
     @Response(HttpStatus.UNAUTHORIZED, "Unauthorized")
     @SuccessResponse(HttpStatus.OK, "Image preview retrieved successfully")
     public async previewFileForGuest(
-        @Path() fileId: UUID,
+        @Path() fileId: string,
         @Request() request: express.Request,
     ): Promise<void> {
-        const file: FileEntity = await this.fileService.getFileById(fileId);
+        const file: FileEntity = await this.fileService.getFileById(
+            UUIDSchema.parse(fileId),
+        );
 
         if (!file.isImage()) {
             throw new ValidationException({ fileType: "File is not an image" });
@@ -500,7 +508,7 @@ export class FileController extends Controller {
     @SuccessResponse(HttpStatus.OK, "File updated successfully")
     public async updateFile(
         @Request() request: Express.AuthenticatedRequest,
-        @Path() fileId: UUID,
+        @Path() fileId: string,
         @Body() updateFileDTO: UpdateFileRequest,
     ): Promise<FileResponse> {
         const user: Express.User = request.user;
@@ -516,7 +524,7 @@ export class FileController extends Controller {
         }
 
         const file: FileEntity = await this.fileService.updateFile(
-            fileId,
+            UUIDSchema.parse(fileId),
             updateFileDTO,
             user.id,
         );
@@ -565,7 +573,7 @@ export class FileController extends Controller {
     @Security("bearerAuth", ["file:create"])
     @SuccessResponse(HttpStatus.CREATED, "File uploaded successfully")
     public async uploadFile(
-        @Path() studentId: UUID,
+        @Path() studentId: string,
         @Request() request: Express.AuthenticatedRequest,
         @UploadedFile("file") file: Express.Multer.File,
         /**
@@ -618,7 +626,7 @@ export class FileController extends Controller {
             fileType: fileType,
             mimeType: file.mimetype,
             originalFileName: file.originalname,
-            studentId: studentId,
+            studentId: UUIDSchema.parse(studentId),
             tags: tags,
         };
 
@@ -673,7 +681,7 @@ export class FileController extends Controller {
     @Response(HttpStatus.PAYLOAD_TOO_LARGE, "File size exceeds limit")
     @SuccessResponse(HttpStatus.CREATED, "File uploaded successfully")
     public async uploadFileGuest(
-        @Path() studentId: UUID,
+        @Path() studentId: string,
         @UploadedFile("file") file: Express.Multer.File,
         /**
          * File type - must be one of: certificate, document, image, other, portfolio, resume, transcript
@@ -723,7 +731,7 @@ export class FileController extends Controller {
             fileType: fileType,
             mimeType: file.mimetype,
             originalFileName: file.originalname,
-            studentId: studentId,
+            studentId: UUIDSchema.parse(studentId),
             tags: tags,
         };
 
@@ -773,7 +781,7 @@ export class FileController extends Controller {
     @Security("bearerAuth", ["file:create"])
     @SuccessResponse(HttpStatus.CREATED, "File uploaded successfully")
     public async uploadFiles(
-        @Path() studentId: UUID,
+        @Path() studentId: string,
         @Request() request: Express.AuthenticatedRequest,
         @UploadedFiles("files") files: Express.Multer.File[],
         /**
@@ -827,7 +835,7 @@ export class FileController extends Controller {
                 fileType: metadata.fileType,
                 mimeType: file.mimetype,
                 originalFileName: file.originalname,
-                studentId: studentId,
+                studentId: UUIDSchema.parse(studentId),
                 tags: metadata.tags,
                 userId: user.id,
             };
@@ -836,7 +844,7 @@ export class FileController extends Controller {
         // Create all files in a single batch operation
         const fileEntities = await this.fileService.createFiles(
             createFileDTOs,
-            studentId,
+            UUIDSchema.parse(studentId),
             user.id,
         );
 
@@ -883,7 +891,7 @@ export class FileController extends Controller {
     @Response(HttpStatus.PAYLOAD_TOO_LARGE, "File size exceeds limit")
     @SuccessResponse(HttpStatus.CREATED, "File uploaded successfully")
     public async uploadFilesGuest(
-        @Path() studentId: UUID,
+        @Path() studentId: string,
         @UploadedFiles("files") files: Express.Multer.File[],
         /**
          * JSON string containing metadata for each file. Must be an array with same length as files.
@@ -934,7 +942,7 @@ export class FileController extends Controller {
                 fileType: metadata.fileType,
                 mimeType: file.mimetype,
                 originalFileName: file.originalname,
-                studentId: studentId,
+                studentId: UUIDSchema.parse(studentId),
                 tags: metadata.tags,
             };
         });
@@ -942,7 +950,7 @@ export class FileController extends Controller {
         // Create all files in a single batch operation
         const fileEntities = await this.fileService.createFiles(
             createFileDTOs,
-            studentId,
+            UUIDSchema.parse(studentId),
         );
 
         // Convert to response format
