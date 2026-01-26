@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { v7 as uuidv7 } from "uuid";
 
 // src/entity/jwt.token.ts
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/config/jwt.config.js";
@@ -36,11 +36,11 @@ export class JwtEntity {
         this.token = params.token;
         this.ttl = params.ttl ?? JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS;
         this.isBlacklisted = params.isBlacklisted ?? false;
-        this.id = params.id ?? randomUUID();
+        this.id = params.id ?? uuidv7();
         this.createdAt = params.createdAt ?? new Date();
         this.type = params.type ?? TokenType.ACCESS;
         this.updatedAt = params.updatedAt;
-        this.familyId = params.familyId ?? randomUUID();
+        this.familyId = params.familyId ?? uuidv7();
     }
 
     // Create entity from Redis data

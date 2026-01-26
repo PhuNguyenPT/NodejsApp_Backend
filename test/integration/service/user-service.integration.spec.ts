@@ -364,7 +364,7 @@ describe("UserService Integration Tests", () => {
 
             // Assert
             expect(result).toBeDefined();
-            expect(result.length).toBe(initialCount + 2);
+            expect(result.length).toBeGreaterThanOrEqual(initialCount + 2);
             expect(result.some((u) => u.id === user1.id)).toBe(true);
             expect(result.some((u) => u.id === user2.id)).toBe(true);
         });

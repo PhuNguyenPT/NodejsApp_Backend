@@ -1,6 +1,7 @@
 // src/service/jwt.service.ts
 import { inject, injectable } from "inversify";
 import jwt, { type JwtPayload } from "jsonwebtoken";
+import { v7 as uuidv7 } from "uuid";
 import { Logger } from "winston";
 
 import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
@@ -29,7 +30,7 @@ export class JwtService implements IJwtService {
     ) {}
 
     /**
-     * Decode token without verification (existing method - unchanged)
+     * Decode token without verification
      */
     public decodeToken(token: string): CustomJwtPayload | null {
         try {
@@ -60,22 +61,33 @@ export class JwtService implements IJwtService {
         familyId: string,
     ): Promise<string> {
         try {
-            const token = jwt.sign(
-                payload,
-                this.keyStore.getPrivateKey(),
-                signOptions,
-            );
+            const jti = uuidv7();
+
+            const token = jwt.sign(payload, this.keyStore.getPrivateKey(), {
+                ...signOptions,
+                jwtid: jti,
+            });
 
             const ttl = this.extractTtlFromOptions(signOptions.expiresIn);
+
             const jwtEntity = new JwtEntity({
                 familyId,
+                id: jti,
                 token,
                 ttl,
                 type: TokenType.ACCESS,
             });
+
             await this.jwtTokenRepository.save(jwtEntity);
 
-            this.logger.debug(`Access token generated for user: ${payload.id}`);
+            this.logger.debug(
+                `Access token generated for user: ${payload.id}`,
+                {
+                    familyId,
+                    jti,
+                },
+            );
+
             return token;
         } catch (error) {
             this.logger.error("Access token generation failed", {
@@ -94,11 +106,12 @@ export class JwtService implements IJwtService {
         familyId: string,
     ): Promise<string> {
         try {
-            const token = jwt.sign(
-                payload,
-                this.keyStore.getPrivateKey(),
-                refreshSignOptions,
-            );
+            const jti = uuidv7();
+
+            const token = jwt.sign(payload, this.keyStore.getPrivateKey(), {
+                ...refreshSignOptions,
+                jwtid: jti,
+            });
 
             const ttl = this.extractTtlFromOptions(
                 refreshSignOptions.expiresIn,
@@ -106,16 +119,22 @@ export class JwtService implements IJwtService {
 
             const jwtEntity = new JwtEntity({
                 familyId,
+                id: jti,
                 token,
                 ttl,
                 type: TokenType.REFRESH,
             });
+
             await this.jwtTokenRepository.save(jwtEntity);
 
-            // Reduce logging verbosity - only log in debug mode
             this.logger.debug(
                 `Refresh token generated for user: ${payload.id}`,
+                {
+                    familyId,
+                    jti,
+                },
             );
+
             return token;
         } catch (error) {
             this.logger.error("Refresh token generation failed", {
@@ -128,7 +147,7 @@ export class JwtService implements IJwtService {
 
     /**
      * Verify JWT token with Redis validation
-     * This method now checks both JWT validity AND Redis storage/blacklist status
+     * This method checks both JWT validity AND Redis storage/blacklist status
      */
     public async verifyToken(token: string): Promise<CustomJwtPayload> {
         try {
