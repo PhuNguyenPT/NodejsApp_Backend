@@ -7,6 +7,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 @Entity({ name: "uni_l1", schema: "machine_learning" })
 export class UniL1Entity {
     @Column({ name: "admission_code", nullable: true, type: "varchar" })
@@ -21,7 +23,7 @@ export class UniL1Entity {
     createdAt!: Date;
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     @Column({
         length: "65",

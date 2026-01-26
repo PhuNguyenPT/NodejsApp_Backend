@@ -9,6 +9,7 @@ import { Logger } from "winston";
 import type { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
 import type { ISubjectScore } from "@/dto/ocr/subject-score.interface.js";
 import type { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 import type { NationalExamSubject } from "@/type/enum/national-exam-subject.enum.js";
 import type { TalentExamSubject } from "@/type/enum/talent-exam-subject.enum.js";
 
@@ -260,8 +261,8 @@ export class PredictionL3Service implements IPredictionL3Service {
     }
 
     public async getL3PredictResults(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<L3PredictResult[]> {
         // Fetch student without file relations first
         const student = await this.studentRepository.findOne({

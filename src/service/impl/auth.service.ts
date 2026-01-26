@@ -18,6 +18,7 @@ import { AuthResponse } from "@/dto/auth/auth-response.js";
 import { User } from "@/dto/user/user.js";
 import { TokenType } from "@/entity/security/jwt.entity.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
+import { UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { getDefaultPermissionsByRole, Role } from "@/type/enum/user.enum.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
@@ -73,7 +74,7 @@ export class AuthService implements IAuthService {
                 type: TokenType.ACCESS,
             };
 
-            const familyId = randomUUID(); // Create ONE familyId for this session
+            const familyId = UUIDSchema.parse(randomUUID()); // Create ONE familyId for this session
 
             // Pass this familyId when generating tokens
             const accessToken: string =
@@ -433,7 +434,7 @@ export class AuthService implements IAuthService {
                 type: TokenType.ACCESS,
             };
 
-            const familyId = randomUUID();
+            const familyId = UUIDSchema.parse(randomUUID());
             // Generate tokens
             const accessToken = await this.jwtService.generateAccessToken(
                 accessTokenJwtPayload,

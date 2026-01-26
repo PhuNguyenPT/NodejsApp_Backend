@@ -4,6 +4,7 @@ import { Logger } from "winston";
 
 import type { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
 import type { IPredictionL3ProcessorService } from "@/service/prediction-response-processor-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { L3PredictResult } from "@/dto/prediction/l3-predict-result.dto.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
@@ -32,8 +33,8 @@ export class PredictionL3ProcessorService implements IPredictionL3ProcessorServi
      */
     public async processL3PredictionInTransaction(
         manager: EntityManager,
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<void> {
         const studentEntity = await manager.findOne(StudentEntity, {
             relations: ["predictionResult", "user", "studentAdmissions"],
@@ -90,7 +91,7 @@ export class PredictionL3ProcessorService implements IPredictionL3ProcessorServi
                     [],
             );
 
-            const l3AdmissionIds = new Set<string>();
+            const l3AdmissionIds = new Set<UUID>();
             for (const result of l3PredictionResults) {
                 for (const items of Object.values(result.result)) {
                     for (const item of items) {

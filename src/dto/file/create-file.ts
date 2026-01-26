@@ -11,6 +11,8 @@ import {
     Min,
 } from "class-validator";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { FileType } from "@/entity/uni_guide/file.entity.js";
 
 /**
@@ -118,7 +120,7 @@ export class CreateFileDTO {
      * @example "123e4567-e89b-12d3-a456-426614174000"
      */
     @IsUUID(4, { message: "Student ID must be a valid UUID" })
-    studentId!: string;
+    studentId!: UUID;
 
     /**
      * Optional comma-separated tags

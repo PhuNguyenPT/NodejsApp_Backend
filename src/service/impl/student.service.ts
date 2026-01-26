@@ -8,6 +8,7 @@ import type { StudentCreatedEvent } from "@/event/student.event.js";
 import type { ICertificationService } from "@/service/certification-service.interface.js";
 import type { IMajorService } from "@/service/major-service.interface.js";
 import type { IStudentService } from "@/service/student-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 import type { Page } from "@/type/pagination/page.interface.js";
 import type { Pageable } from "@/type/pagination/pageable.interface.js";
 
@@ -80,7 +81,7 @@ export class StudentService implements IStudentService {
      */
     public async createStudentEntity(
         studentRequest: StudentRequest,
-        userId?: string,
+        userId?: UUID,
     ): Promise<StudentEntity> {
         let userEntity: null | UserEntity = null;
 
@@ -107,7 +108,7 @@ export class StudentService implements IStudentService {
      * @returns A promise that resolves to a Page of StudentEntity objects.
      */
     public async getAllStudentEntitiesByUserId(
-        userId: string,
+        userId: UUID,
         pageable: Pageable,
     ): Promise<Page<StudentEntity>> {
         const queryBuilder = this.studentRepository
@@ -147,8 +148,8 @@ export class StudentService implements IStudentService {
      * @throws {EntityNotFoundException} If no matching student profile is found.
      */
     public async getStudentEntityByIdAnUserId(
-        id: string,
-        userId?: string,
+        id: UUID,
+        userId?: UUID,
     ): Promise<StudentEntity> {
         const cacheKey = CacheKeys.studentProfile(id, userId);
 
@@ -197,8 +198,8 @@ export class StudentService implements IStudentService {
      * @throws {EntityNotFoundException} If the student profile is not found or access is denied.
      */
     public async getStudentWithFiles(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<StudentEntity> {
         // 1. Fetch the Student and all its standard relations (using the existing method)
         const student = await this.getStudentEntityByIdAnUserId(
@@ -429,10 +430,7 @@ export class StudentService implements IStudentService {
         return savedStudent;
     }
 
-    private _publishStudentCreatedEvent(
-        studentId: string,
-        userId?: string,
-    ): void {
+    private _publishStudentCreatedEvent(studentId: UUID, userId?: UUID): void {
         const studentCreatedEvent: StudentCreatedEvent = { studentId, userId };
 
         // Fire-and-forget: don't await, let it run in background

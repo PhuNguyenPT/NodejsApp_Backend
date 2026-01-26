@@ -11,6 +11,7 @@ import type {
     SingleFileCreatedEvent,
 } from "@/event/file.event.js";
 import type { IFileService } from "@/service/file-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { CreateFileDTO } from "@/dto/file/create-file.js";
 import { UpdateFileRequest } from "@/dto/file/update-file.js";
@@ -58,7 +59,7 @@ export class FileService implements IFileService {
      */
     public async createFile(
         createFileDTO: CreateFileDTO,
-        userId?: string,
+        userId?: UUID,
     ): Promise<FileEntity> {
         const { content, metadata } =
             await this.compressFileIfBeneficial(createFileDTO);
@@ -100,8 +101,8 @@ export class FileService implements IFileService {
      */
     public async createFiles(
         createFileDTOs: CreateFileDTO[],
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<FileEntity[]> {
         if (createFileDTOs.length === 0) {
             return [];
@@ -280,9 +281,9 @@ export class FileService implements IFileService {
      */
     private async _getAndValidateStudentForUpload(
         transactionalEntityManager: EntityManager,
-        studentId: string,
+        studentId: UUID,
         filesToAdd: number,
-        userId?: string,
+        userId?: UUID,
     ): Promise<void> {
         const student = await transactionalEntityManager.findOne(
             StudentEntity,

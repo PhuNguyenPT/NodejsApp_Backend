@@ -13,6 +13,7 @@ import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
 import { UpdateUserAdminDTO } from "@/dto/user/update-user.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { getApp } from "@/test/setup.js";
+import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import {
     getDefaultPermissionsByRole,
@@ -27,7 +28,7 @@ describe("UserService Integration Tests", () => {
     let dataSource: DataSource;
     let redisClient: RedisClientType;
     let userService: IUserService;
-    const createdUserIds: string[] = [];
+    const createdUserIds: UUID[] = [];
 
     beforeAll(async () => {
         getApp();
@@ -244,7 +245,9 @@ describe("UserService Integration Tests", () => {
 
         it("should throw EntityNotFoundException for non-existent user", async () => {
             // Arrange
-            const nonExistentId = "00000000-0000-0000-0000-000000000000";
+            const nonExistentId = UUIDSchema.parse(
+                "00000000-0000-0000-0000-000000000000",
+            );
 
             // Act & Assert
             await expect(userService.getById(nonExistentId)).rejects.toThrow(
@@ -395,7 +398,9 @@ describe("UserService Integration Tests", () => {
 
         it("should return false for non-existent user", async () => {
             // Arrange
-            const nonExistentId = "00000000-0000-0000-0000-000000000000";
+            const nonExistentId = UUIDSchema.parse(
+                "00000000-0000-0000-0000-000000000000",
+            );
 
             // Act
             const result = await userService.exists(nonExistentId);
@@ -420,7 +425,7 @@ describe("UserService Integration Tests", () => {
 
             const mockUser: Express.User = {
                 email: "admin@example.com",
-                id: v4(),
+                id: UUIDSchema.parse(v4()),
                 permissions: getDefaultPermissionsByRole(Role.ADMIN),
                 role: Role.ADMIN,
             };
@@ -457,7 +462,7 @@ describe("UserService Integration Tests", () => {
 
             const mockUser: Express.User = {
                 email: "admin@example.com",
-                id: v4(),
+                id: UUIDSchema.parse(v4()),
                 permissions: getDefaultPermissionsByRole(Role.ADMIN),
                 role: Role.ADMIN,
             };
@@ -494,7 +499,7 @@ describe("UserService Integration Tests", () => {
 
             const mockUser: Express.User = {
                 email: "admin@example.com",
-                id: v4(),
+                id: UUIDSchema.parse(v4()),
                 permissions: getDefaultPermissionsByRole(Role.ADMIN),
                 role: Role.ADMIN,
             };
@@ -533,7 +538,7 @@ describe("UserService Integration Tests", () => {
 
             const mockUser: Express.User = {
                 email: "admin@example.com",
-                id: v4(),
+                id: UUIDSchema.parse(v4()),
                 permissions: getDefaultPermissionsByRole(Role.ADMIN),
                 role: Role.ADMIN,
             };
@@ -556,10 +561,12 @@ describe("UserService Integration Tests", () => {
 
         it("should throw EntityNotFoundException for non-existent user", async () => {
             // Arrange
-            const nonExistentId = "00000000-0000-0000-0000-000000000000";
+            const nonExistentId = UUIDSchema.parse(
+                "00000000-0000-0000-0000-000000000000",
+            );
             const mockUser: Express.User = {
                 email: "admin@example.com",
-                id: v4(),
+                id: UUIDSchema.parse(v4()),
                 permissions: getDefaultPermissionsByRole(Role.ADMIN),
                 role: Role.ADMIN,
             };
@@ -591,7 +598,7 @@ describe("UserService Integration Tests", () => {
 
             const mockUser: Express.User = {
                 email: "admin@example.com",
-                id: v4(),
+                id: UUIDSchema.parse(v4()),
                 permissions: getDefaultPermissionsByRole(Role.ADMIN),
                 role: Role.ADMIN,
             };
@@ -622,7 +629,7 @@ describe("UserService Integration Tests", () => {
 
             const mockUser: Express.User = {
                 email: "admin@example.com",
-                id: v4(),
+                id: UUIDSchema.parse(v4()),
                 permissions: getDefaultPermissionsByRole(Role.ADMIN),
                 role: Role.ADMIN,
             };
@@ -691,7 +698,9 @@ describe("UserService Integration Tests", () => {
 
         it("should not throw error when deleting non-existent user", async () => {
             // Arrange
-            const nonExistentId = "00000000-0000-0000-0000-000000000000";
+            const nonExistentId = UUIDSchema.parse(
+                "00000000-0000-0000-0000-000000000000",
+            );
 
             // Act & Assert - should not throw
             await expect(
@@ -714,7 +723,7 @@ describe("UserService Integration Tests", () => {
 
             const mockUser: Express.User = {
                 email: "admin@example.com",
-                id: v4(),
+                id: UUIDSchema.parse(v4()),
                 permissions: getDefaultPermissionsByRole(Role.ADMIN),
                 role: Role.ADMIN,
             };
@@ -761,7 +770,7 @@ describe("UserService Integration Tests", () => {
             // Update
             const mockUser: Express.User = {
                 email: "admin@example.com",
-                id: v4(),
+                id: UUIDSchema.parse(v4()),
                 permissions: getDefaultPermissionsByRole(Role.ADMIN),
                 role: Role.ADMIN,
             };
@@ -797,7 +806,7 @@ describe("UserService Integration Tests", () => {
 
             const mockUser: Express.User = {
                 email: "admin@example.com",
-                id: v4(),
+                id: UUIDSchema.parse(v4()),
                 permissions: getDefaultPermissionsByRole(Role.ADMIN),
                 role: Role.ADMIN,
             };
@@ -837,7 +846,7 @@ describe("UserService Integration Tests", () => {
 
                 const mockUser: Express.User = {
                     email: "admin@example.com",
-                    id: v4(),
+                    id: UUIDSchema.parse(v4()),
                     permissions: getDefaultPermissionsByRole(Role.ADMIN),
                     role: Role.ADMIN,
                 };
@@ -861,7 +870,7 @@ describe("UserService Integration Tests", () => {
 
                 const mockUser: Express.User = {
                     email: "admin@example.com",
-                    id: v4(),
+                    id: UUIDSchema.parse(v4()),
                     permissions: getDefaultPermissionsByRole(Role.ADMIN),
                     role: Role.ADMIN,
                 };

@@ -9,6 +9,7 @@ import { Logger } from "winston";
 import type { IStudentEventListener } from "@/event/student-event-listener.interface.js";
 import type { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
 import type { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config.js";
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
@@ -217,10 +218,10 @@ export class StudentEventListener implements IStudentEventListener {
      */
     private async processAdmissionsFromPredictions(
         manager: EntityManager,
-        studentId: string,
+        studentId: UUID,
         l1PredictionResults: L1PredictResult[],
         l2PredictionResults: L2PredictResult[],
-        userId?: string,
+        userId?: UUID,
     ): Promise<void> {
         try {
             const admissionCodeMap = new Map<string, boolean>();
@@ -380,8 +381,8 @@ export class StudentEventListener implements IStudentEventListener {
      */
     private async processStudentPredictionInTransaction(
         manager: EntityManager,
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<void> {
         let userEntity: null | UserEntity = null;
 

@@ -1,6 +1,8 @@
 // src/dto/user/user.ts
 import { Exclude, Expose, Type } from "class-transformer";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { Permission, Role } from "@/type/enum/user.enum.js";
 
 /**
@@ -26,7 +28,7 @@ export class User {
     email!: string;
 
     @Expose()
-    id!: string;
+    id!: UUID;
 
     @Expose()
     name?: string;

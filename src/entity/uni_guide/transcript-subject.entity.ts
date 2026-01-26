@@ -10,6 +10,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { TranscriptSubject } from "@/type/enum/transcript-subject.enum.js";
 
@@ -34,7 +36,7 @@ export class TranscriptSubjectEntity {
     createdBy?: string;
 
     @PrimaryGeneratedColumn("uuid", { name: "id" })
-    id!: string;
+    id!: UUID;
 
     @Column({
         name: "score",

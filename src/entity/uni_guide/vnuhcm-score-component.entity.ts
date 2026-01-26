@@ -11,6 +11,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
 
 @Entity({ name: "vnuhcm_score_components", schema: "uni_guide" })
@@ -44,7 +46,7 @@ export class VnuhcmScoreComponentEntity {
     createdBy?: string;
 
     @PrimaryGeneratedColumn("uuid", { name: "id" })
-    id!: string;
+    id!: UUID;
 
     /**
      * Language score component (0-400)

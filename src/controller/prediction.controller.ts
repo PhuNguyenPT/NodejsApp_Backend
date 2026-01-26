@@ -20,6 +20,7 @@ import type { IPredictionL1Service } from "@/service/prediction-l1-service.inter
 import type { IPredictionL2Service } from "@/service/prediction-l2-service.interface.js";
 import type { IPredictionL3Service } from "@/service/prediction-L3-service.interface.js";
 import type { IPredictionResultService } from "@/service/prediction-result-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
 import { UserInputL2 } from "@/dto/prediction/l2-request.dto.js";
@@ -88,7 +89,7 @@ export class PredictionController extends Controller {
     @Security("bearerAuth", ["api:read"])
     @SuccessResponse(HttpStatus.OK, "Predict result retrieved successfully")
     public async getL1PredictResults(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<L1PredictResult[]> {
         const user: Express.User = request.user;
@@ -121,7 +122,7 @@ export class PredictionController extends Controller {
     @Security("bearerAuth", ["api:read"])
     @SuccessResponse(HttpStatus.OK, "Predict result retrieved successfully")
     public async getL2PredictResults(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<L2PredictResult[]> {
         const user: Express.User = request.user;
@@ -155,7 +156,7 @@ export class PredictionController extends Controller {
     @Security("bearerAuth", ["api:read"])
     @SuccessResponse(HttpStatus.OK, "L3 predict results retrieved successfully")
     public async getL3PredictResults(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<L3PredictResult[]> {
         const user: Express.User = request.user;
@@ -191,7 +192,7 @@ export class PredictionController extends Controller {
     @SuccessResponse(HttpStatus.OK, "Predict result created successfully")
     public async getPredictedMajors(
         @Body() userInput: UserInputL2,
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<L2PredictResult[]> {
         const user: Express.User = request.user;
@@ -231,7 +232,7 @@ export class PredictionController extends Controller {
     @SuccessResponse(HttpStatus.OK, "L3 predict result created successfully")
     public async getPredictedMajorsL3(
         @Body() userInput: UserInputL3,
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<L3PredictResult> {
         const user: Express.User = request.user;
@@ -265,7 +266,7 @@ export class PredictionController extends Controller {
     @Security("bearerAuth", ["api:read"])
     @SuccessResponse(HttpStatus.OK, "Fetching prediction result successfully")
     public async getPredictionResultEntityForAuthenticatedUser(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<PredictionResultResponse> {
         const user: Express.User = request.user;
@@ -296,7 +297,7 @@ export class PredictionController extends Controller {
     @Response<string>(HttpStatus.NOT_FOUND, "Prediction result not found")
     @SuccessResponse(HttpStatus.OK, "Fetching prediction result successfully")
     public async getPredictionResultEntityForGuest(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
     ): Promise<PredictionResultResponse> {
         const predictionResultEntity: PredictionResultEntity =
             await this.predictionResultService.findByStudentIdAndUserId(

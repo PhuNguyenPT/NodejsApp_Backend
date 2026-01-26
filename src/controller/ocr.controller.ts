@@ -21,6 +21,7 @@ import { Logger } from "winston";
 import type { BatchScoreExtractionResult } from "@/dto/ocr/score-extraction-result.js";
 import type { IMistralService } from "@/service/mistral-service.interface.js";
 import type { ITranscriptService } from "@/service/transcript-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { OcrRequest } from "@/dto/ocr/ocr-request.dto.js";
 import { OcrResultResponse } from "@/dto/ocr/ocr-result-response.dto.js";
@@ -65,7 +66,7 @@ export class OcrController extends Controller {
     @Security("bearerAuth", ["profile:update:own"])
     @SuccessResponse(HttpStatus.CREATED, "Transcript successfully created")
     public async createTranscript(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
         @Body() ocrRequest: OcrRequest,
         @Request() authenticatedRequest: Express.AuthenticatedRequest,
     ): Promise<OcrResultResponse> {
@@ -111,7 +112,7 @@ export class OcrController extends Controller {
     @Response<string>(HttpStatus.NOT_FOUND, "Student profile not found")
     @SuccessResponse(HttpStatus.CREATED, "Transcript successfully created")
     public async createTranscriptGuest(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
         @Body() ocrRequest: OcrRequest,
     ): Promise<OcrResultResponse> {
         const transcript =
@@ -160,7 +161,7 @@ export class OcrController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Scores successfully extracted")
     public async extractTranscriptScores(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<BatchScoreExtractionResult> {
         this.logger.info(
@@ -200,11 +201,11 @@ export class OcrController extends Controller {
     @Security("bearerAuth", ["file:read"])
     @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
     public async getExtractedScores(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<OcrResultResponse[]> {
         const user: Express.User = request.user;
-        const userId: string = user.id;
+        const userId: UUID = user.id;
 
         this.logger.info("Retrieving OCR results for authorized student", {
             studentId,
@@ -264,7 +265,7 @@ export class OcrController extends Controller {
     )
     @SuccessResponse(HttpStatus.OK, "Scores successfully retrieved")
     public async getExtractedScoresGuest(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
     ): Promise<OcrResultResponse[]> {
         this.logger.info("Retrieving OCR result for guest student", {
             studentId,

@@ -13,6 +13,7 @@ import type {
     ScoreExtractionResult,
 } from "@/dto/ocr/score-extraction-result.js";
 import type { IMistralService } from "@/service/mistral-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { mistralClient } from "@/config/mistralai.config.js";
 import {
@@ -45,8 +46,8 @@ export class MistralService implements IMistralService {
      * @param userId - Optional user ID for access control (omit for anonymous access)
      */
     public async extractSubjectScores(
-        fileId: string,
-        userId?: string,
+        fileId: UUID,
+        userId?: UUID,
     ): Promise<FileScoreExtractionResult> {
         try {
             const query = this.fileRepository

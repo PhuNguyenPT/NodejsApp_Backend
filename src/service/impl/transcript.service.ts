@@ -6,6 +6,7 @@ import { Logger } from "winston";
 
 import type { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
 import type { ITranscriptService } from "@/service/transcript-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { OcrRequest } from "@/dto/ocr/ocr-request.dto.js";
 import { OcrUpdateRequest } from "@/dto/ocr/ocr-update-request.dto.js";
@@ -40,8 +41,8 @@ export class TranscriptService implements ITranscriptService {
     ) {}
 
     public async findByStudentIdAndUserId(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<TranscriptEntity[]> {
         const student = await this.studentRepository.findOne({
             transaction: true,
@@ -96,7 +97,7 @@ export class TranscriptService implements ITranscriptService {
     }
 
     public async patchByIdAndCreatedBy(
-        id: string,
+        id: UUID,
         ocrUpdateRequest: OcrUpdateRequest,
         createdBy?: string,
     ): Promise<{ id: string; subjectScores: SubjectScore[] }> {
@@ -188,9 +189,9 @@ export class TranscriptService implements ITranscriptService {
     }
 
     public async saveByStudentIdAndUserId(
-        studentId: string,
+        studentId: UUID,
         ocrRequest: OcrRequest,
-        userId?: string,
+        userId?: UUID,
     ): Promise<TranscriptEntity> {
         const student: null | StudentEntity =
             await this.studentRepository.findOne({
@@ -286,7 +287,7 @@ export class TranscriptService implements ITranscriptService {
 
     private _publishTranscriptCreatedEvent(
         student: null | StudentEntity,
-        userId?: string,
+        userId?: UUID,
     ): void {
         if (!student) {
             this.logger.warn(

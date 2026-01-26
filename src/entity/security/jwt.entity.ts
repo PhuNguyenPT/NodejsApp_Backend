@@ -2,6 +2,7 @@ import { v7 as uuidv7 } from "uuid";
 
 // src/entity/jwt.token.ts
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/config/jwt.config.js";
+import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 
 export enum TokenType {
     ACCESS = "access",
@@ -10,8 +11,8 @@ export enum TokenType {
 
 export class JwtEntity {
     public readonly createdAt: Date;
-    public readonly familyId: string;
-    public readonly id: string;
+    public readonly familyId: UUID;
+    public readonly id: UUID;
     public isBlacklisted: boolean;
     public readonly token: string;
     public ttl: number; // Time to live in seconds
@@ -25,8 +26,8 @@ export class JwtEntity {
      */
     constructor(params: {
         createdAt?: Date;
-        familyId?: string;
-        id?: string;
+        familyId?: UUID;
+        id?: UUID;
         isBlacklisted?: boolean;
         token: string;
         ttl?: number;
@@ -36,19 +37,19 @@ export class JwtEntity {
         this.token = params.token;
         this.ttl = params.ttl ?? JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS;
         this.isBlacklisted = params.isBlacklisted ?? false;
-        this.id = params.id ?? uuidv7();
+        this.id = params.id ?? UUIDSchema.parse(uuidv7());
         this.createdAt = params.createdAt ?? new Date();
         this.type = params.type ?? TokenType.ACCESS;
         this.updatedAt = params.updatedAt;
-        this.familyId = params.familyId ?? uuidv7();
+        this.familyId = params.familyId ?? UUIDSchema.parse(uuidv7());
     }
 
     // Create entity from Redis data
     static fromRedisObject(data: Record<string, string>): JwtEntity {
         return new JwtEntity({
             createdAt: new Date(data.createdAt),
-            familyId: data.familyId,
-            id: data.id,
+            familyId: UUIDSchema.parse(data.familyId),
+            id: UUIDSchema.parse(data.id),
             isBlacklisted: data.isBlacklisted === "true",
             token: data.token,
             ttl: parseInt(data.ttl, 10),

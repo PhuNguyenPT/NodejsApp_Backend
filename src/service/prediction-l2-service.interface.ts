@@ -1,6 +1,7 @@
 import type { UserInputL2 } from "@/dto/prediction/l2-request.dto.js";
 import type { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
 import type { StudentInfoDTO } from "@/dto/student/student.dto.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 export interface IPredictionL2Service {
     deduplicateByHighestScore(results: L2PredictResult[]): L2PredictResult[];
@@ -12,8 +13,8 @@ export interface IPredictionL2Service {
         studentInfoDTO: StudentInfoDTO,
     ): UserInputL2[];
     getL2PredictResults(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<L2PredictResult[]>;
     predictMajorsByStudentIdAndUserId(
         userInput: UserInputL2,

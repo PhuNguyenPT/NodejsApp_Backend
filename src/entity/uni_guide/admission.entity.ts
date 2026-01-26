@@ -10,6 +10,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { StudentAdmissionEntity } from "@/entity/uni_guide/student-admission.entity.js";
 
 // Define field categories
@@ -95,7 +97,7 @@ export class AdmissionEntity {
     createdAt!: Date;
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     @Column({ name: "major_code", nullable: true, type: "varchar" })
     majorCode?: string;

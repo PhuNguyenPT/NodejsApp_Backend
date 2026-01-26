@@ -1,9 +1,11 @@
 import { z } from "zod";
 
+import { UUIDSchema } from "@/type/common/uuid.type.js";
+
 const SingleFileCreatedEventSchema = z.object({
-    fileId: z.string().uuid("Invalid file ID format"),
-    studentId: z.string().uuid("Invalid student ID format"),
-    userId: z.string().uuid("Invalid user ID format").optional(),
+    fileId: UUIDSchema,
+    studentId: UUIDSchema,
+    userId: UUIDSchema.optional(),
 });
 
 export type SingleFileCreatedEvent = z.infer<
@@ -11,14 +13,13 @@ export type SingleFileCreatedEvent = z.infer<
 >;
 
 const FilesCreatedEventSchema = z.object({
-    fileIds: z.array(z.string().uuid("Invalid file ID format")),
-    studentId: z.string().uuid("Invalid student ID format"),
-    userId: z.string().uuid("Invalid user ID format").optional(),
+    fileIds: z.array(UUIDSchema),
+    studentId: UUIDSchema,
+    userId: UUIDSchema.optional(),
 });
 
 export type FilesCreatedEvent = z.infer<typeof FilesCreatedEventSchema>;
 
-// Union schema to validate against either event type
 export const OcrEventSchema = z.union([
     SingleFileCreatedEventSchema,
     FilesCreatedEventSchema,

@@ -8,6 +8,7 @@ import { Logger } from "winston";
 
 import type { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
 import type { IPredictionL1Service } from "@/service/prediction-l1-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { DEFAULT_VALIDATOR_OPTIONS } from "@/config/validator.config.js";
 import { HsgSubject } from "@/dto/prediction/hsg-subject.enum.js";
@@ -241,8 +242,8 @@ export class PredictionL1Service implements IPredictionL1Service {
     }
 
     public async getL1PredictResults(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<L1PredictResult[]> {
         const student = await this.studentRepository.findOne({
             relations: ["awards", "studentMajorGroups.majorGroup"],

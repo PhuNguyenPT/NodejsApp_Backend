@@ -6,6 +6,7 @@ import { Repository } from "typeorm";
 import { Logger } from "winston";
 
 import type { IUserService } from "@/service/user-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_MILLISECONDS } from "@/config/jwt.config.js";
 import { CreateUserAdminDTO } from "@/dto/user/create-user.js";
@@ -65,7 +66,7 @@ export class UserService implements IUserService {
         return savedEntity;
     }
 
-    public async delete(id: string): Promise<void> {
+    public async delete(id: UUID): Promise<void> {
         this.logger.info("Deleting user", { userId: id });
 
         await this.userRepository.delete(id);
@@ -76,7 +77,7 @@ export class UserService implements IUserService {
         this.logger.info("User deleted successfully", { userId: id });
     }
 
-    public async exists(id: string): Promise<boolean> {
+    public async exists(id: UUID): Promise<boolean> {
         this.logger.info("Checking if user exists", { userId: id });
 
         const exists: boolean = await this.userRepository.exists({
@@ -101,7 +102,7 @@ export class UserService implements IUserService {
         return userEntities;
     }
 
-    public async getById(id: string): Promise<UserEntity> {
+    public async getById(id: UUID): Promise<UserEntity> {
         this.logger.info("Retrieving user by id", { userId: id });
 
         const userEntity: null | UserEntity = await this.userRepository.findOne(
@@ -125,10 +126,7 @@ export class UserService implements IUserService {
         return userEntity;
     }
 
-    public async getByIdAndName(
-        id: string,
-        name?: string,
-    ): Promise<UserEntity> {
+    public async getByIdAndName(id: UUID, name?: string): Promise<UserEntity> {
         this.logger.info("Retrieving user", { name, userId: id });
 
         const userEntity: null | UserEntity = await this.userRepository.findOne(
@@ -158,7 +156,7 @@ export class UserService implements IUserService {
     }
 
     public async update(
-        id: string,
+        id: UUID,
         updateData: Partial<UpdateUserAdminDTO>,
         user: Express.User,
     ): Promise<UserEntity> {

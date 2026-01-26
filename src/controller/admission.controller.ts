@@ -14,6 +14,7 @@ import {
     Tags,
 } from "tsoa";
 
+import type { UUID } from "@/type/common/uuid.type.js";
 import type { Page } from "@/type/pagination/page.interface.js";
 
 import { AdmissionFieldResponse } from "@/dto/admission/admission-field-response.js";
@@ -91,7 +92,7 @@ export class AdmissionController extends Controller {
         "Successfully retrieve student profile's admissions filter",
     )
     public async getAdmissionFieldsFilter(
-        @Path() studentId: string,
+        @Path() studentId: UUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<AdmissionFieldResponse> {
         const user: Express.User = request.user;
@@ -137,7 +138,7 @@ export class AdmissionController extends Controller {
         "Successfully retrieve student profile's admissions filter",
     )
     public async getAdmissionFieldsFilterGuest(
-        @Path() studentId: string,
+        @Path() studentId: UUID,
     ): Promise<AdmissionFieldResponse> {
         const fields: Record<AdmissionField, (number | string)[]> =
             await this.admissionService.getAllDistinctAdmissionFieldValues(
@@ -176,7 +177,7 @@ export class AdmissionController extends Controller {
         "Successfully retrieve student profile's admissions",
     )
     public async getAdmissionResponsePage(
-        @Path() studentId: string,
+        @Path() studentId: UUID,
         @Request() request: Express.AuthenticatedRequest,
         @Queries() searchQuery: AdmissionSearchQuery,
     ): Promise<PageResponse<AdmissionResponse>> {
@@ -235,7 +236,7 @@ export class AdmissionController extends Controller {
         "Successfully retrieve student profile's admissions",
     )
     public async getAdmissionResponsePageForGuest(
-        @Path() studentId: string,
+        @Path() studentId: UUID,
         @Queries() searchQuery: AdmissionSearchQuery,
     ): Promise<PageResponse<AdmissionResponse>> {
         // Convert PageableQuery to PageRequest

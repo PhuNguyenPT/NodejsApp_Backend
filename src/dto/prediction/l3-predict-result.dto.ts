@@ -8,6 +8,8 @@ import {
     IsString,
 } from "class-validator";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 export class L3PredictionItem {
     @Expose()
     @IsNotEmpty()
@@ -49,7 +51,7 @@ export class L3PredictionItem {
     @IsNotEmpty()
     @IsString()
     @Type(() => String)
-    id!: string;
+    id!: UUID;
 
     @Expose()
     @IsNotEmpty()

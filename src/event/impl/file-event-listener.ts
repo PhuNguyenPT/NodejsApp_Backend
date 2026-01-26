@@ -11,6 +11,7 @@ import type { OcrCreatedEvent } from "@/event/ocr-created.event.js";
 import type { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
 import type { IMistralService } from "@/service/mistral-service.interface.js";
 import type { IOcrResultService } from "@/service/ocr-result-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 
 import { UserEntity } from "@/entity/security/user.entity.js";
 import { FileEntity } from "@/entity/uni_guide/file.entity.js";
@@ -92,8 +93,8 @@ export class FileEventListener implements IFileEventListener {
      * Triggers when we have exactly 3 or 6 completed OCR results
      */
     private async checkAndEmitOcrCreatedEvent(
-        studentId: string,
-        userId?: string,
+        studentId: UUID,
+        userId?: UUID,
     ): Promise<void> {
         try {
             // Get all completed OCR results for this student
@@ -296,7 +297,7 @@ export class FileEventListener implements IFileEventListener {
             }
 
             // 4. Only process files that had OCR results created
-            const fileIdsToProcess: string[] = initialOcrResults.map(
+            const fileIdsToProcess: UUID[] = initialOcrResults.map(
                 (result) => result.fileId,
             );
 

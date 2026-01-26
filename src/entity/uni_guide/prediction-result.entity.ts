@@ -11,6 +11,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { L1PredictResult } from "@/dto/prediction/l1-response.dto.js";
 import { L2PredictResult } from "@/dto/prediction/l2-response.dto.js";
 import { L3PredictResult } from "@/dto/prediction/l3-predict-result.dto.js";
@@ -49,7 +51,7 @@ export class PredictionResultEntity {
     createdBy!: string;
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     @Column({ name: "l1_predict_results", nullable: true, type: "jsonb" })
     l1PredictResults?: L1PredictResult[];
@@ -75,7 +77,7 @@ export class PredictionResultEntity {
     student!: Relation<StudentEntity>;
 
     @Column({ name: "student_id", type: "uuid" })
-    studentId!: string;
+    studentId!: UUID;
 
     @UpdateDateColumn({
         insert: false,

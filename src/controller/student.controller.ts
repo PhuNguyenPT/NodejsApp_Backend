@@ -18,6 +18,7 @@ import {
 } from "tsoa";
 
 import type { IStudentService } from "@/service/student-service.interface.js";
+import type { UUID } from "@/type/common/uuid.type.js";
 import type { Page } from "@/type/pagination/page.interface.js";
 
 import { StudentProfileResponse } from "@/dto/student/student-profile-response.js";
@@ -154,7 +155,7 @@ export class StudentController extends Controller {
     @Response<string>(HttpStatus.NOT_FOUND, "Not found")
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getStudentGuest(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
             await this.studentService.getStudentEntityByIdAnUserId(studentId);
@@ -179,7 +180,7 @@ export class StudentController extends Controller {
     @Security("bearerAuth", ["profile:read:own"])
     @SuccessResponse(HttpStatus.OK, "Successfully retrieve student profiles")
     public async getStudentProfileByUserId(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
@@ -210,7 +211,7 @@ export class StudentController extends Controller {
         "Successfully retrieve student profile with files",
     )
     public async getStudentProfileGuestWithFiles(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
             await this.studentService.getStudentWithFiles(studentId);
@@ -239,7 +240,7 @@ export class StudentController extends Controller {
         "Successfully retrieve student profile with files",
     )
     public async getStudentProfileWithFiles(
-        @Path("studentId") studentId: string,
+        @Path("studentId") studentId: UUID,
         @Request() request: Express.AuthenticatedRequest,
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;

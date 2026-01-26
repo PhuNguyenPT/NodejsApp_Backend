@@ -8,6 +8,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 @Entity({ name: "transcript_subject_group", schema: "machine_learning" })
 @Index("idx_tsg_major_code", ["majorCode"])
 @Index("idx_tsg_uni_code", ["uniCode"])
@@ -24,7 +26,7 @@ export class TranscriptSubjectGroupEntity {
     createdAt!: Date;
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     @Column({ name: "major_code", nullable: true, type: "varchar" })
     majorCode?: null | string;

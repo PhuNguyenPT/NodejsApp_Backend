@@ -13,6 +13,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
@@ -94,7 +96,7 @@ export class FileEntity {
     fileType!: FileType;
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     @Column({ name: "metadata", nullable: true, type: "jsonb" })
     metadata?: Record<string, unknown>;
@@ -129,7 +131,7 @@ export class FileEntity {
     student!: Relation<StudentEntity>;
 
     @Column({ name: "student_id", type: "uuid" })
-    studentId!: string;
+    studentId!: UUID;
 
     @Column({ length: 255, name: "tags", nullable: true, type: "varchar" })
     tags?: string;

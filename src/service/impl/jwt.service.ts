@@ -16,6 +16,7 @@ import {
 } from "@/config/jwt.config.js";
 import { JwtEntity, TokenType } from "@/entity/security/jwt.entity.js";
 import { KeyStore } from "@/type/class/keystore.js";
+import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 
 @injectable()
@@ -58,10 +59,10 @@ export class JwtService implements IJwtService {
      */
     public async generateAccessToken(
         payload: CustomJwtPayload,
-        familyId: string,
+        familyId: UUID,
     ): Promise<string> {
         try {
-            const jti = uuidv7();
+            const jti = UUIDSchema.parse(uuidv7());
 
             const token = jwt.sign(payload, this.keyStore.getPrivateKey(), {
                 ...signOptions,
@@ -103,10 +104,10 @@ export class JwtService implements IJwtService {
      */
     public async generateRefreshToken(
         payload: CustomJwtPayload,
-        familyId: string,
+        familyId: UUID,
     ): Promise<string> {
         try {
-            const jti = uuidv7();
+            const jti = UUIDSchema.parse(uuidv7());
 
             const token = jwt.sign(payload, this.keyStore.getPrivateKey(), {
                 ...refreshSignOptions,

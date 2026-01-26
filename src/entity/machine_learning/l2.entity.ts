@@ -8,6 +8,8 @@ import {
     UpdateDateColumn,
 } from "typeorm";
 
+import type { UUID } from "@/type/common/uuid.type.js";
+
 @Entity({ name: "l2_uni_requirement", schema: "machine_learning" })
 @Index("idx_l2_academic_performance_grade_10", ["academicPerformanceGrade10"])
 @Index("idx_l2_academic_performance_grade_11", ["academicPerformanceGrade11"])
@@ -88,7 +90,7 @@ export class L2Entity {
     createdAt!: Date;
 
     @PrimaryGeneratedColumn("uuid")
-    id!: string;
+    id!: UUID;
 
     @Column({ name: "is_base_row", nullable: true, type: "boolean" })
     isBaseRow?: boolean | null;
