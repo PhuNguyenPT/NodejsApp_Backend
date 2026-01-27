@@ -34,8 +34,8 @@ describe("JwtEntity", () => {
             const token = "test.jwt.token";
             const type = TokenType.REFRESH;
             const ttl = 7200;
-            const createdAt = new Date("2024-01-01T00:00:00Z");
-            const updatedAt = new Date("2024-01-01T01:00:00Z");
+            const createdAt = new Date("2026-01-01T00:00:00Z");
+            const updatedAt = new Date("2026-01-01T01:00:00Z");
             const isBlacklisted = true;
 
             // Act
@@ -162,7 +162,7 @@ describe("JwtEntity", () => {
 
         it("should use provided createdAt instead of extracting from UUID", () => {
             // Arrange
-            const specificDate = new Date("2024-01-01T00:00:00Z");
+            const specificDate = new Date("2026-01-01T00:00:00Z");
 
             // Act
             const entity = new JwtEntity({
@@ -195,7 +195,7 @@ describe("JwtEntity", () => {
 
         it("should handle UUIDs with different timestamps", () => {
             // Arrange
-            const pastDate = new Date("2024-01-01T00:00:00Z");
+            const pastDate = new Date("2026-01-01T00:00:00Z");
             const entity = new JwtEntity({
                 createdAt: pastDate,
                 token: "test.token",
@@ -211,7 +211,7 @@ describe("JwtEntity", () => {
         it("should reconstruct entity from Redis data", () => {
             // Arrange
             const redisData = {
-                createdAt: "2024-01-01T00:00:00.000Z",
+                createdAt: "2026-01-01T00:00:00.000Z",
                 familyId: "01928374-5678-7abc-def0-123456789013",
                 id: "01928374-5678-7abc-def0-123456789012",
                 isBlacklisted: "false",
@@ -237,14 +237,14 @@ describe("JwtEntity", () => {
         it("should handle blacklisted token from Redis", () => {
             // Arrange
             const redisData = {
-                createdAt: "2024-01-01T00:00:00.000Z",
+                createdAt: "2026-01-01T00:00:00.000Z",
                 familyId: "01928374-5678-7abc-def0-123456789013",
                 id: "01928374-5678-7abc-def0-123456789012",
                 isBlacklisted: "true",
                 token: "test.jwt.token",
                 ttl: "60",
                 type: "access",
-                updatedAt: "2024-01-01T01:00:00.000Z",
+                updatedAt: "2026-01-01T01:00:00.000Z",
             };
 
             // Act
@@ -258,7 +258,7 @@ describe("JwtEntity", () => {
         it("should handle REFRESH token type from Redis", () => {
             // Arrange
             const redisData = {
-                createdAt: "2024-01-01T00:00:00.000Z",
+                createdAt: "2026-01-01T00:00:00.000Z",
                 familyId: "01928374-5678-7abc-def0-123456789013",
                 id: "01928374-5678-7abc-def0-123456789012",
                 isBlacklisted: "false",
@@ -277,7 +277,7 @@ describe("JwtEntity", () => {
         it("should default to ACCESS type when type is missing", () => {
             // Arrange
             const redisData = {
-                createdAt: "2024-01-01T00:00:00.000Z",
+                createdAt: "2026-01-01T00:00:00.000Z",
                 familyId: "01928374-5678-7abc-def0-123456789013",
                 id: "01928374-5678-7abc-def0-123456789012",
                 isBlacklisted: "false",
@@ -296,7 +296,7 @@ describe("JwtEntity", () => {
     describe("toRedisObject", () => {
         it("should convert entity to Redis-storable format", () => {
             // Arrange
-            const createdAt = new Date("2024-01-01T00:00:00.000Z");
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
             const entity = new JwtEntity({
                 createdAt,
                 familyId: UUIDSchema.parse(
@@ -326,8 +326,8 @@ describe("JwtEntity", () => {
 
         it("should include updatedAt when present", () => {
             // Arrange
-            const createdAt = new Date("2024-01-01T00:00:00.000Z");
-            const updatedAt = new Date("2024-01-01T01:00:00.000Z");
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const updatedAt = new Date("2026-01-01T01:00:00.000Z");
             const entity = new JwtEntity({
                 createdAt,
                 id: UUIDSchema.parse("01928374-5678-7abc-def0-123456789012"),
