@@ -1,6 +1,7 @@
 import { v7 as uuidv7 } from "uuid";
+import z from "zod";
 
-// src/entity/jwt.token.ts
+// src/entity/jwt.entity.ts
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/config/jwt.config.js";
 import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 
@@ -8,6 +9,26 @@ export enum TokenType {
     ACCESS = "access",
     REFRESH = "refresh",
 }
+
+const TokenTypeSchema = z.nativeEnum(TokenType);
+
+// Schema for Redis data validation
+const RedisJwtSchema = z.object({
+    createdAt: z.string().datetime(),
+    familyId: UUIDSchema,
+    id: UUIDSchema,
+    isBlacklisted: z.enum(["true", "false"]),
+    token: z.string(),
+    ttl: z.coerce
+        .number()
+        .int()
+        .nonnegative()
+        .refine((val) => !isNaN(val), {
+            message: "TTL must be a valid number",
+        }),
+    type: TokenTypeSchema,
+    updatedAt: z.string().datetime().optional(),
+});
 
 export class JwtEntity {
     public readonly createdAt: Date;
@@ -31,30 +52,39 @@ export class JwtEntity {
         isBlacklisted?: boolean;
         token: string;
         ttl?: number;
-        type?: TokenType;
+        type: TokenType;
         updatedAt?: Date;
     }) {
         this.token = params.token;
         this.ttl = params.ttl ?? JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS;
         this.isBlacklisted = params.isBlacklisted ?? false;
-        this.id = params.id ?? UUIDSchema.parse(uuidv7());
-        this.createdAt = params.createdAt ?? new Date();
-        this.type = params.type ?? TokenType.ACCESS;
+
+        const uuid = params.id ?? UUIDSchema.parse(uuidv7());
+        this.id = uuid;
+
+        this.createdAt =
+            params.createdAt ?? this.extractTimestampFromUuidV7(uuid);
+
+        this.type = params.type;
         this.updatedAt = params.updatedAt;
         this.familyId = params.familyId ?? UUIDSchema.parse(uuidv7());
     }
 
     // Create entity from Redis data
     static fromRedisObject(data: Record<string, string>): JwtEntity {
+        const validated = RedisJwtSchema.parse(data);
+
         return new JwtEntity({
-            createdAt: new Date(data.createdAt),
-            familyId: UUIDSchema.parse(data.familyId),
-            id: UUIDSchema.parse(data.id),
-            isBlacklisted: data.isBlacklisted === "true",
-            token: data.token,
-            ttl: parseInt(data.ttl, 10),
-            type: data.type ? (data.type as TokenType) : TokenType.ACCESS,
-            updatedAt: data.updatedAt ? new Date(data.updatedAt) : undefined,
+            createdAt: new Date(validated.createdAt),
+            familyId: validated.familyId,
+            id: validated.id,
+            isBlacklisted: validated.isBlacklisted === "true",
+            token: validated.token,
+            ttl: validated.ttl,
+            type: validated.type,
+            updatedAt: validated.updatedAt
+                ? new Date(validated.updatedAt)
+                : undefined,
         });
     }
 
@@ -64,7 +94,7 @@ export class JwtEntity {
         this.updatedAt = new Date();
     }
 
-    // Get remaining TTL in ms
+    // Get remaining TTL in seconds
     getRemainingTtl(): number {
         if (this.isExpired()) {
             return 0;
@@ -82,7 +112,7 @@ export class JwtEntity {
         const expirationTime = new Date(
             this.createdAt.getTime() + this.ttl * 1000,
         );
-        return now > expirationTime;
+        return now >= expirationTime;
     }
 
     // Check if token is valid (not blacklisted and not expired)
@@ -107,5 +137,25 @@ export class JwtEntity {
         }
 
         return obj;
+    }
+
+    /**
+     * Extract timestamp from UUIDv7
+     * UUIDv7 format: tttttttt-tttt-7xxx-xxxx-xxxxxxxxxxxx
+     * where 't' represents timestamp bits (48 bits total = 12 hex characters)
+     *
+     * The first 48 bits contain a Unix timestamp in milliseconds
+     *
+     * @param uuid - The UUIDv7 string
+     * @returns Date object extracted from the UUID timestamp
+     */
+    private extractTimestampFromUuidV7(uuid: UUID): Date {
+        // Remove hyphens and get first 12 hex characters (48 bits)
+        const hex = uuid.replace(/-/g, "").substring(0, 12);
+
+        // Convert hex to decimal to get milliseconds since Unix epoch
+        const timestamp = parseInt(hex, 16);
+
+        return new Date(timestamp);
     }
 }

@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
-import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { IJwtRepository } from "@/repository/jwt-repository-interface.js";
 
 import { redisClient } from "@/config/redis.config.js";
 import { JwtEntity } from "@/entity/security/jwt.entity.js";
@@ -9,7 +9,7 @@ import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 
 @injectable()
-export class JwtTokenRepository implements IJwtTokenRepository {
+export class JwtRepository implements IJwtRepository {
     private readonly BLACKLIST_TTL_SECONDS = 60; // 1 minute
     private readonly familyIndexPrefix = "family_index:";
     private readonly keyPrefix = "jwt_entity:";
@@ -183,14 +183,10 @@ export class JwtTokenRepository implements IJwtTokenRepository {
             // Also remove from family set
             pipeline.sRem(familyIndexKey, jwtEntity.id);
 
-            const results = await pipeline.exec();
-            const deleted = Array.isArray(results[0]) && results[0][1] === 1;
+            await pipeline.exec();
+            this.logger.debug(`JWT token deleted: ${id}`);
 
-            if (deleted) {
-                this.logger.debug(`JWT token deleted: ${id}`);
-            }
-
-            return deleted;
+            return true;
         } catch (error) {
             this.logger.error(`Error deleting token ${id}:`, { error });
             return false;

@@ -2,7 +2,7 @@
 import { type DataSource, Repository } from "typeorm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { IJwtRepository } from "@/repository/jwt-repository-interface.js";
 import type { IAuthService } from "@/service/auth-service.interface.js";
 
 import { iocContainer } from "@/app/ioc-container.js";
@@ -19,7 +19,7 @@ describe("AuthService Integration Tests", () => {
     let dataSource: DataSource;
     let authService: IAuthService;
     let userRepository: Repository<UserEntity>;
-    let jwtTokenRepository: IJwtTokenRepository;
+    let jwtRepository: IJwtRepository;
     const createdUserIds: UUID[] = [];
     const createdTokens: string[] = [];
     const testEmail = "test@example.com";
@@ -43,9 +43,7 @@ describe("AuthService Integration Tests", () => {
         dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
         authService = iocContainer.get<IAuthService>(TYPES.IAuthService);
         userRepository = dataSource.getRepository(UserEntity);
-        jwtTokenRepository = iocContainer.get<IJwtTokenRepository>(
-            TYPES.IJwtTokenRepository,
-        );
+        jwtRepository = iocContainer.get<IJwtRepository>(TYPES.IJwtRepository);
 
         const testUsers = await userRepository.find({
             where: { email: testEmail },
@@ -58,7 +56,7 @@ describe("AuthService Integration Tests", () => {
 
     afterAll(async () => {
         for (const token of createdTokens) {
-            await jwtTokenRepository.deleteByToken(token);
+            await jwtRepository.deleteByToken(token);
         }
 
         for (const userId of createdUserIds) {

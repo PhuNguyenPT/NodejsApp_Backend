@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 import { Repository } from "typeorm";
 import { Logger } from "winston";
 
-import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { IJwtRepository } from "@/repository/jwt-repository-interface.js";
 import type { IAuthService } from "@/service/auth-service.interface.js";
 import type { IJwtService } from "@/service/jwt-service.interface.js";
 import type { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
@@ -35,8 +35,8 @@ export class AuthService implements IAuthService {
         @inject(TYPES.UserRepository)
         private userRepository: Repository<UserEntity>,
         @inject(TYPES.IJwtService) private readonly jwtService: IJwtService,
-        @inject(TYPES.IJwtTokenRepository)
-        private readonly jwtTokenRepository: IJwtTokenRepository,
+        @inject(TYPES.IJwtRepository)
+        private readonly jwtRepository: IJwtRepository,
         @inject(TYPES.Logger) private readonly logger: Logger,
     ) {}
 
@@ -142,7 +142,7 @@ export class AuthService implements IAuthService {
 
             // 1. Find the access token entity first, as it's the source of truth for the familyId
             const accessJwtEntity =
-                await this.jwtTokenRepository.findByToken(accessToken);
+                await this.jwtRepository.findByToken(accessToken);
 
             if (!accessJwtEntity) {
                 this.logger.warn(
@@ -164,7 +164,7 @@ export class AuthService implements IAuthService {
             // 3. Process the refresh token ONLY if it was provided
             if (refreshToken) {
                 const refreshJwtEntity =
-                    await this.jwtTokenRepository.findByToken(refreshToken);
+                    await this.jwtRepository.findByToken(refreshToken);
 
                 if (!refreshJwtEntity) {
                     this.logger.warn(
@@ -208,7 +208,7 @@ export class AuthService implements IAuthService {
 
             // 4. Blacklist all validated tokens in parallel
             const blacklistPromises = tokensToBlacklist.map((token) =>
-                this.jwtTokenRepository.blacklistTokenByValue(token),
+                this.jwtRepository.blacklistTokenByValue(token),
             );
 
             const results = await Promise.allSettled(blacklistPromises);
@@ -254,7 +254,7 @@ export class AuthService implements IAuthService {
 
             // 1. Get token entity to check for reuse and get its familyId
             const oldRefreshJwtEntity =
-                await this.jwtTokenRepository.findByToken(refreshToken);
+                await this.jwtRepository.findByToken(refreshToken);
 
             // 2. CRITICAL: Check for token reuse (stolen token detection)
             if (!oldRefreshJwtEntity) {
@@ -284,7 +284,7 @@ export class AuthService implements IAuthService {
                 this.logger.warn(
                     `Refresh token reuse/misuse detected. Invalidating family: ${oldRefreshJwtEntity.familyId}`,
                 );
-                await this.jwtTokenRepository.invalidateFamily(
+                await this.jwtRepository.invalidateFamily(
                     oldRefreshJwtEntity.familyId,
                 );
                 throw new JwtException("Invalid or reused refresh token");
@@ -303,7 +303,7 @@ export class AuthService implements IAuthService {
                             : String(verifyError),
                     familyId: oldRefreshJwtEntity.familyId,
                 });
-                await this.jwtTokenRepository.invalidateFamily(
+                await this.jwtRepository.invalidateFamily(
                     oldRefreshJwtEntity.familyId,
                 );
                 throw verifyError;
@@ -320,7 +320,7 @@ export class AuthService implements IAuthService {
                     userId: payload.id,
                 });
                 // Invalidate family since user no longer exists
-                await this.jwtTokenRepository.invalidateFamily(
+                await this.jwtRepository.invalidateFamily(
                     oldRefreshJwtEntity.familyId,
                 );
                 throw new AuthenticationException("User not found");
@@ -334,14 +334,14 @@ export class AuthService implements IAuthService {
                     userId: payload.id,
                 });
                 // Invalidate family since account is inactive
-                await this.jwtTokenRepository.invalidateFamily(
+                await this.jwtRepository.invalidateFamily(
                     oldRefreshJwtEntity.familyId,
                 );
                 throw new AccessDeniedException("Account is no longer active");
             }
 
             // 5. Blacklist the old refresh token immediately to prevent reuse
-            await this.jwtTokenRepository.blacklistTokenByValue(refreshToken);
+            await this.jwtRepository.blacklistTokenByValue(refreshToken);
 
             // 6. Generate NEW tokens using the same familyId
             const familyId = oldRefreshJwtEntity.familyId;

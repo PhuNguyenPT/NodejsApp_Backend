@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { Logger } from "winston";
 
-import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { IJwtRepository } from "@/repository/jwt-repository-interface.js";
 
 import { TYPES } from "@/type/container/types.js";
 
@@ -10,8 +10,8 @@ export class TokenCleanupJob {
     private isCleanupRunning = false;
 
     constructor(
-        @inject(TYPES.IJwtTokenRepository)
-        private jwtTokenRepository: IJwtTokenRepository,
+        @inject(TYPES.IJwtRepository)
+        private jwtRepository: IJwtRepository,
         @inject(TYPES.Logger)
         private logger: Logger,
         private cleanupTimeout: NodeJS.Timeout | null = null,
@@ -28,7 +28,7 @@ export class TokenCleanupJob {
         this.isCleanupRunning = true;
 
         try {
-            await this.jwtTokenRepository.cleanup();
+            await this.jwtRepository.cleanup();
         } catch (error) {
             this.logger.error("Token cleanup job failed:", { error });
         } finally {

@@ -8,7 +8,7 @@ import { Strategy as JwtStrategy } from "passport-jwt";
 import { Repository } from "typeorm";
 import { Logger } from "winston";
 
-import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { IJwtRepository } from "@/repository/jwt-repository-interface.js";
 import type { UUID } from "@/type/common/uuid.type.js";
 import type { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 
@@ -29,8 +29,8 @@ export class PassportConfig {
     constructor(
         @inject(TYPES.UserRepository)
         private userRepository: Repository<UserEntity>,
-        @inject(TYPES.IJwtTokenRepository)
-        private readonly jwtTokenRepository: IJwtTokenRepository,
+        @inject(TYPES.IJwtRepository)
+        private readonly jwtRepository: IJwtRepository,
         @inject(TYPES.Logger)
         private logger: Logger,
     ) {}
@@ -85,7 +85,7 @@ export class PassportConfig {
                             try {
                                 // 1. FIRST: Check if token is blacklisted (logout/revoked tokens)
                                 const isBlacklisted =
-                                    await this.jwtTokenRepository.isTokenBlacklisted(
+                                    await this.jwtRepository.isTokenBlacklisted(
                                         rawToken,
                                     );
                                 if (isBlacklisted) {
@@ -107,7 +107,7 @@ export class PassportConfig {
 
                                 // 2. Check if token exists in Redis storage
                                 const tokenInfo =
-                                    await this.jwtTokenRepository.findByToken(
+                                    await this.jwtRepository.findByToken(
                                         rawToken,
                                     );
 
@@ -139,7 +139,7 @@ export class PassportConfig {
                                     );
 
                                     // Auto-cleanup expired token
-                                    await this.jwtTokenRepository.blacklistTokenByValue(
+                                    await this.jwtRepository.blacklistTokenByValue(
                                         rawToken,
                                     );
 
