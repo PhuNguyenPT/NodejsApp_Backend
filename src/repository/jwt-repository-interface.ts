@@ -2,7 +2,7 @@
 import type { JwtEntity } from "@/entity/security/jwt.entity.js";
 import type { UUID } from "@/type/common/uuid.type.js";
 
-export interface IJwtTokenRepository {
+export interface IJwtRepository {
     blacklistToken(tokenId: UUID): Promise<boolean>;
     blacklistTokenByValue(token: string): Promise<boolean>;
     cleanup(): Promise<void>;

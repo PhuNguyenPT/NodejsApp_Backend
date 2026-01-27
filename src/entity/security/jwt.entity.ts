@@ -1,6 +1,6 @@
 import { v7 as uuidv7 } from "uuid";
 
-// src/entity/jwt.token.ts
+// src/entity/jwt.entity.ts
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/config/jwt.config.js";
 import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 
@@ -31,15 +31,20 @@ export class JwtEntity {
         isBlacklisted?: boolean;
         token: string;
         ttl?: number;
-        type?: TokenType;
+        type: TokenType;
         updatedAt?: Date;
     }) {
         this.token = params.token;
         this.ttl = params.ttl ?? JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS;
         this.isBlacklisted = params.isBlacklisted ?? false;
-        this.id = params.id ?? UUIDSchema.parse(uuidv7());
-        this.createdAt = params.createdAt ?? new Date();
-        this.type = params.type ?? TokenType.ACCESS;
+
+        const uuid = params.id ?? UUIDSchema.parse(uuidv7());
+        this.id = uuid;
+
+        this.createdAt =
+            params.createdAt ?? this.extractTimestampFromUuidV7(uuid);
+
+        this.type = params.type;
         this.updatedAt = params.updatedAt;
         this.familyId = params.familyId ?? UUIDSchema.parse(uuidv7());
     }
@@ -64,7 +69,7 @@ export class JwtEntity {
         this.updatedAt = new Date();
     }
 
-    // Get remaining TTL in ms
+    // Get remaining TTL in seconds
     getRemainingTtl(): number {
         if (this.isExpired()) {
             return 0;
@@ -82,7 +87,7 @@ export class JwtEntity {
         const expirationTime = new Date(
             this.createdAt.getTime() + this.ttl * 1000,
         );
-        return now > expirationTime;
+        return now >= expirationTime;
     }
 
     // Check if token is valid (not blacklisted and not expired)
@@ -107,5 +112,25 @@ export class JwtEntity {
         }
 
         return obj;
+    }
+
+    /**
+     * Extract timestamp from UUIDv7
+     * UUIDv7 format: tttttttt-tttt-7xxx-xxxx-xxxxxxxxxxxx
+     * where 't' represents timestamp bits (48 bits total = 12 hex characters)
+     *
+     * The first 48 bits contain a Unix timestamp in milliseconds
+     *
+     * @param uuid - The UUIDv7 string
+     * @returns Date object extracted from the UUID timestamp
+     */
+    private extractTimestampFromUuidV7(uuid: UUID): Date {
+        // Remove hyphens and get first 12 hex characters (48 bits)
+        const hex = uuid.replace(/-/g, "").substring(0, 12);
+
+        // Convert hex to decimal to get milliseconds since Unix epoch
+        const timestamp = parseInt(hex, 16);
+
+        return new Date(timestamp);
     }
 }

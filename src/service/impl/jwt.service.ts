@@ -4,7 +4,7 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 import { v7 as uuidv7 } from "uuid";
 import { Logger } from "winston";
 
-import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { IJwtRepository } from "@/repository/jwt-repository-interface.js";
 import type { IJwtService } from "@/service/jwt-service.interface.js";
 import type { CustomJwtPayload } from "@/type/interface/jwt.interface.js";
 
@@ -26,8 +26,8 @@ export class JwtService implements IJwtService {
         private readonly keyStore: KeyStore,
         @inject(TYPES.Logger)
         private readonly logger: Logger,
-        @inject(TYPES.IJwtTokenRepository)
-        private readonly jwtTokenRepository: IJwtTokenRepository,
+        @inject(TYPES.IJwtRepository)
+        private readonly jwtRepository: IJwtRepository,
     ) {}
 
     /**
@@ -79,7 +79,7 @@ export class JwtService implements IJwtService {
                 type: TokenType.ACCESS,
             });
 
-            await this.jwtTokenRepository.save(jwtEntity);
+            await this.jwtRepository.save(jwtEntity);
 
             this.logger.debug(
                 `Access token generated for user: ${payload.id}`,
@@ -126,7 +126,7 @@ export class JwtService implements IJwtService {
                 type: TokenType.REFRESH,
             });
 
-            await this.jwtTokenRepository.save(jwtEntity);
+            await this.jwtRepository.save(jwtEntity);
 
             this.logger.debug(
                 `Refresh token generated for user: ${payload.id}`,
@@ -153,7 +153,7 @@ export class JwtService implements IJwtService {
     public async verifyToken(token: string): Promise<CustomJwtPayload> {
         try {
             // Check if token exists and is valid in Redis
-            const jwtEntity = await this.jwtTokenRepository.findByToken(token);
+            const jwtEntity = await this.jwtRepository.findByToken(token);
 
             if (!jwtEntity?.isValid()) {
                 this.logger.warn(
@@ -184,7 +184,7 @@ export class JwtService implements IJwtService {
             return decoded;
         } catch (error) {
             if (error instanceof jwt.TokenExpiredError) {
-                await this.jwtTokenRepository.blacklistTokenByValue(token);
+                await this.jwtRepository.blacklistTokenByValue(token);
                 throw new Error("Token has expired");
             } else if (error instanceof jwt.JsonWebTokenError) {
                 throw new Error("Invalid token");

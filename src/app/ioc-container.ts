@@ -13,7 +13,7 @@ import type { IFileEventListener } from "@/event/file-event-listener.interface.j
 import type { IOcrEventListener } from "@/event/ocr-event-listener.interface.js";
 import type { IStudentEventListener } from "@/event/student-event-listener.interface.js";
 import type { ITranscriptEventListener } from "@/event/transcript-event-listener.interface.js";
-import type { IJwtTokenRepository } from "@/repository/jwt-token-repository-interface.js";
+import type { IJwtRepository } from "@/repository/jwt-repository-interface.js";
 import type { IAdmissionService } from "@/service/admission-service.interface.js";
 import type { IAuthService } from "@/service/auth-service.interface.js";
 import type { IAwardService } from "@/service/award-service.interface.js";
@@ -85,7 +85,7 @@ import { LifecycleManager } from "@/manager/lifecycle.manager.js";
 import { MiddlewareManager } from "@/manager/middleware.manager.js";
 import { RouteManager } from "@/manager/route.manager.js";
 import { ServerManager } from "@/manager/server.manager.js";
-import { JwtTokenRepository } from "@/repository/impl/jwt-repository.js";
+import { JwtRepository } from "@/repository/impl/jwt-repository.js";
 import { AdmissionService } from "@/service/impl/admission.service.js";
 import { AuthService } from "@/service/impl/auth.service.js";
 import { AwardService } from "@/service/impl/award.service.js";
@@ -209,8 +209,8 @@ if (!global.__IOC_INITIALIZED__) {
 
     // --- Repository Bindings ---
     iocContainer
-        .bind<IJwtTokenRepository>(TYPES.IJwtTokenRepository)
-        .to(JwtTokenRepository)
+        .bind<IJwtRepository>(TYPES.IJwtRepository)
+        .to(JwtRepository)
         .inSingletonScope();
     iocContainer
         .bind<Repository<UserEntity>>(TYPES.UserRepository)
