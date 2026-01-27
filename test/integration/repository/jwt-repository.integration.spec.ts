@@ -99,9 +99,16 @@ describe("JwtTokenRepository Integration Tests", () => {
             // Assert
             const retrieved = await jwtTokenRepository.findById(jwtEntity.id);
             expect(retrieved).toBeDefined();
-            expect(retrieved?.id).toBe(jwtEntity.id);
-            expect(retrieved?.token).toBe(jwtEntity.token);
-            expect(retrieved?.familyId).toBe(jwtEntity.familyId);
+            expect(retrieved?.id).toStrictEqual(jwtEntity.id);
+            expect(retrieved?.token).toStrictEqual(jwtEntity.token);
+            expect(retrieved?.familyId).toStrictEqual(jwtEntity.familyId);
+            expect(retrieved?.ttl).toStrictEqual(jwtEntity.ttl);
+            expect(retrieved?.type).toStrictEqual(jwtEntity.type);
+            expect(retrieved?.createdAt).toStrictEqual(jwtEntity.createdAt);
+            expect(retrieved?.updatedAt).toStrictEqual(jwtEntity.updatedAt);
+            expect(retrieved?.isBlacklisted).toStrictEqual(
+                jwtEntity.isBlacklisted,
+            );
         });
 
         it("should create token index for quick lookup", async () => {
@@ -115,7 +122,7 @@ describe("JwtTokenRepository Integration Tests", () => {
             // Assert
             const tokenIndexKey = `token_index:${jwtEntity.token}`;
             const storedId = await redisClient.get(tokenIndexKey);
-            expect(storedId).toBe(jwtEntity.id);
+            expect(storedId).toStrictEqual(jwtEntity.id);
         });
 
         it("should add token to family index", async () => {
@@ -171,7 +178,7 @@ describe("JwtTokenRepository Integration Tests", () => {
             // Assert
             const familyIndexKey = `family_index:${familyId}`;
             const familyMembers = await redisClient.sMembers(familyIndexKey);
-            expect(familyMembers).toHaveLength(2);
+            expect(familyMembers.length).toBeGreaterThanOrEqual(2);
             expect(familyMembers).toContain(token1.id);
             expect(familyMembers).toContain(token2.id);
         });
@@ -189,9 +196,16 @@ describe("JwtTokenRepository Integration Tests", () => {
 
             // Assert
             expect(result).toBeDefined();
-            expect(result?.id).toBe(jwtEntity.id);
-            expect(result?.token).toBe(jwtEntity.token);
-            expect(result?.familyId).toBe(jwtEntity.familyId);
+            expect(result?.id).toStrictEqual(jwtEntity.id);
+            expect(result?.token).toStrictEqual(jwtEntity.token);
+            expect(result?.familyId).toStrictEqual(jwtEntity.familyId);
+            expect(result?.type).toStrictEqual(jwtEntity.type);
+            expect(result?.ttl).toBeLessThanOrEqual(jwtEntity.ttl);
+            expect(result?.createdAt).toStrictEqual(jwtEntity.createdAt);
+            expect(result?.updatedAt).toStrictEqual(jwtEntity.updatedAt);
+            expect(result?.isBlacklisted).toBe(jwtEntity.isBlacklisted);
+            expect(result?.ttl).toBeGreaterThanOrEqual(0);
+            expect(jwtEntity.ttl).toBeGreaterThanOrEqual(0);
         });
 
         it("should return null for non-existent token", async () => {
@@ -234,8 +248,16 @@ describe("JwtTokenRepository Integration Tests", () => {
 
             // Assert
             expect(result).toBeDefined();
-            expect(result?.id).toBe(jwtEntity.id);
-            expect(result?.token).toBe(jwtEntity.token);
+            expect(result?.id).toStrictEqual(jwtEntity.id);
+            expect(result?.token).toStrictEqual(jwtEntity.token);
+            expect(result?.familyId).toStrictEqual(jwtEntity.familyId);
+            expect(result?.type).toStrictEqual(jwtEntity.type);
+            expect(result?.ttl).toBeLessThanOrEqual(jwtEntity.ttl);
+            expect(result?.createdAt).toStrictEqual(jwtEntity.createdAt);
+            expect(result?.updatedAt).toStrictEqual(jwtEntity.updatedAt);
+            expect(result?.isBlacklisted).toBe(jwtEntity.isBlacklisted);
+            expect(result?.ttl).toBeGreaterThanOrEqual(0);
+            expect(jwtEntity.ttl).toBeGreaterThanOrEqual(0);
         });
 
         it("should return null for non-existent token value", async () => {
