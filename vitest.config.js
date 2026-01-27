@@ -50,12 +50,10 @@ export default defineConfig({
       exclude: [
         "node_modules/**",
         "dist/**",
-        "**/*.config.{js,ts}",
         "**/*.d.ts",
         "**/generated/**",
         "**/*.{spec,test}.ts",
         "src/migration/**",
-        "src/type/**",
       ],
       include: ["src/**/*.ts"],
       thresholds: {
