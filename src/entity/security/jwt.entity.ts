@@ -1,4 +1,5 @@
 import { v7 as uuidv7 } from "uuid";
+import z from "zod";
 
 // src/entity/jwt.entity.ts
 import { JWT_ACCESS_TOKEN_EXPIRATION_IN_SECONDS } from "@/config/jwt.config.js";
@@ -8,6 +9,26 @@ export enum TokenType {
     ACCESS = "access",
     REFRESH = "refresh",
 }
+
+const TokenTypeSchema = z.nativeEnum(TokenType);
+
+// Schema for Redis data validation
+const RedisJwtSchema = z.object({
+    createdAt: z.string().datetime(),
+    familyId: UUIDSchema,
+    id: UUIDSchema,
+    isBlacklisted: z.enum(["true", "false"]),
+    token: z.string(),
+    ttl: z.coerce
+        .number()
+        .int()
+        .nonnegative()
+        .refine((val) => !isNaN(val), {
+            message: "TTL must be a valid number",
+        }),
+    type: TokenTypeSchema,
+    updatedAt: z.string().datetime().optional(),
+});
 
 export class JwtEntity {
     public readonly createdAt: Date;
@@ -51,15 +72,19 @@ export class JwtEntity {
 
     // Create entity from Redis data
     static fromRedisObject(data: Record<string, string>): JwtEntity {
+        const validated = RedisJwtSchema.parse(data);
+
         return new JwtEntity({
-            createdAt: new Date(data.createdAt),
-            familyId: UUIDSchema.parse(data.familyId),
-            id: UUIDSchema.parse(data.id),
-            isBlacklisted: data.isBlacklisted === "true",
-            token: data.token,
-            ttl: parseInt(data.ttl, 10),
-            type: data.type ? (data.type as TokenType) : TokenType.ACCESS,
-            updatedAt: data.updatedAt ? new Date(data.updatedAt) : undefined,
+            createdAt: new Date(validated.createdAt),
+            familyId: validated.familyId,
+            id: validated.id,
+            isBlacklisted: validated.isBlacklisted === "true",
+            token: validated.token,
+            ttl: validated.ttl,
+            type: validated.type,
+            updatedAt: validated.updatedAt
+                ? new Date(validated.updatedAt)
+                : undefined,
         });
     }
 

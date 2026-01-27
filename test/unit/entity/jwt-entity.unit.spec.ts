@@ -1,5 +1,7 @@
-// test/unit/entity/jwt.entity.spec.ts
+// test/unit/entity/jwt-entity.unit.spec.ts
+import { v7 } from "uuid";
 import { describe, expect, it } from "vitest";
+import { ZodError } from "zod";
 
 import { JwtEntity, TokenType } from "@/entity/security/jwt.entity.js";
 import { UUIDSchema } from "@/type/common/uuid.type.js";
@@ -27,15 +29,15 @@ describe("JwtEntity", () => {
 
         it("should create entity with all optional fields provided", () => {
             // Arrange
-            const id = UUIDSchema.parse("01928374-5678-7abc-def0-123456789012");
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const updatedAt = new Date("2026-01-01T01:00:00.000Z");
+            const id = UUIDSchema.parse(v7({ msecs: createdAt.getTime() }));
             const familyId = UUIDSchema.parse(
-                "01928374-5678-7abc-def0-123456789013",
+                v7({ msecs: createdAt.getTime() }),
             );
             const token = "test.jwt.token";
             const type = TokenType.REFRESH;
             const ttl = 7200;
-            const createdAt = new Date("2026-01-01T00:00:00Z");
-            const updatedAt = new Date("2026-01-01T01:00:00Z");
             const isBlacklisted = true;
 
             // Act
@@ -94,8 +96,9 @@ describe("JwtEntity", () => {
 
         it("should use the same family ID when provided", () => {
             // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
             const familyId = UUIDSchema.parse(
-                "01928374-5678-7abc-def0-123456789013",
+                v7({ msecs: createdAt.getTime() }),
             );
 
             // Act
@@ -116,7 +119,7 @@ describe("JwtEntity", () => {
             expect(entity1.familyId).toBe(entity2.familyId);
         });
 
-        it("should create ACCESS token type by default when using default TTL", () => {
+        it("should create ACCESS token type when using default TTL", () => {
             // Arrange & Act
             const entity = new JwtEntity({
                 token: "test.token",
@@ -127,7 +130,7 @@ describe("JwtEntity", () => {
             expect(entity.type).toBe(TokenType.ACCESS);
         });
 
-        it("should create REFRESH token type when specified", () => {
+        it("should create REFRESH token type when using default TTL", () => {
             // Arrange & Act
             const entity = new JwtEntity({
                 token: "test.token",
@@ -147,7 +150,6 @@ describe("JwtEntity", () => {
                 token: "test.token",
                 type: TokenType.ACCESS,
             });
-
             const afterCreation = Date.now();
 
             // Assert
@@ -190,7 +192,9 @@ describe("JwtEntity", () => {
             const currentTime = Date.now();
 
             // Assert - Should be very close to current time (within 1 second)
-            expect(Math.abs(extractedTime - currentTime)).toBeLessThan(1000);
+            expect(Math.abs(extractedTime - currentTime)).toBeLessThanOrEqual(
+                1000,
+            );
         });
 
         it("should handle UUIDs with different timestamps", () => {
@@ -210,10 +214,14 @@ describe("JwtEntity", () => {
     describe("fromRedisObject", () => {
         it("should reconstruct entity from Redis data", () => {
             // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
             const redisData = {
-                createdAt: "2026-01-01T00:00:00.000Z",
-                familyId: "01928374-5678-7abc-def0-123456789013",
-                id: "01928374-5678-7abc-def0-123456789012",
+                createdAt: createdAt.toISOString(),
+                familyId,
+                id,
                 isBlacklisted: "false",
                 token: "test.jwt.token",
                 ttl: "3600",
@@ -236,15 +244,20 @@ describe("JwtEntity", () => {
 
         it("should handle blacklisted token from Redis", () => {
             // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const updatedAt = new Date("2026-01-01T01:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
             const redisData = {
-                createdAt: "2026-01-01T00:00:00.000Z",
-                familyId: "01928374-5678-7abc-def0-123456789013",
-                id: "01928374-5678-7abc-def0-123456789012",
+                createdAt: createdAt.toISOString(),
+                familyId,
+                id,
                 isBlacklisted: "true",
                 token: "test.jwt.token",
                 ttl: "60",
                 type: "access",
-                updatedAt: "2026-01-01T01:00:00.000Z",
+                updatedAt: updatedAt.toISOString(),
             };
 
             // Act
@@ -257,10 +270,14 @@ describe("JwtEntity", () => {
 
         it("should handle REFRESH token type from Redis", () => {
             // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
             const redisData = {
-                createdAt: "2026-01-01T00:00:00.000Z",
-                familyId: "01928374-5678-7abc-def0-123456789013",
-                id: "01928374-5678-7abc-def0-123456789012",
+                createdAt: createdAt.toISOString(),
+                familyId,
+                id,
                 isBlacklisted: "false",
                 token: "test.jwt.token",
                 ttl: "7200",
@@ -274,15 +291,20 @@ describe("JwtEntity", () => {
             expect(entity.type).toBe(TokenType.REFRESH);
         });
 
-        it("should default to ACCESS type when type is missing", () => {
+        it("should handle ACCESS token type from Redis", () => {
             // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
             const redisData = {
-                createdAt: "2026-01-01T00:00:00.000Z",
-                familyId: "01928374-5678-7abc-def0-123456789013",
-                id: "01928374-5678-7abc-def0-123456789012",
+                createdAt: createdAt.toISOString(),
+                familyId,
+                id,
                 isBlacklisted: "false",
                 token: "test.jwt.token",
                 ttl: "3600",
+                type: "access",
             };
 
             // Act
@@ -291,18 +313,382 @@ describe("JwtEntity", () => {
             // Assert
             expect(entity.type).toBe(TokenType.ACCESS);
         });
+
+        it("should throw error for invalid token type", () => {
+            // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
+            const redisData = {
+                createdAt: createdAt.toISOString(),
+                familyId,
+                id,
+                isBlacklisted: "false",
+                token: "test.jwt.token",
+                ttl: "3600",
+                type: "invalid_type",
+            };
+
+            // Act & Assert
+            expect(() => JwtEntity.fromRedisObject(redisData)).toThrow();
+        });
+
+        it("should throw ZodError with proper message for invalid token type", () => {
+            // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
+            const redisData = {
+                createdAt: createdAt.toISOString(),
+                familyId,
+                id,
+                isBlacklisted: "false",
+                token: "test.jwt.token",
+                ttl: "3600",
+                type: "invalid_type",
+            };
+
+            // Act
+            let thrownError: unknown;
+            try {
+                JwtEntity.fromRedisObject(redisData);
+            } catch (error) {
+                thrownError = error;
+            }
+
+            // Assert
+            expect(thrownError).toBeInstanceOf(ZodError);
+            const zodError = thrownError as ZodError;
+            expect(zodError.issues).toBeDefined();
+            expect(zodError.issues[0].path).toContain("type");
+        });
+
+        it("should throw error for invalid UUID format", () => {
+            // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+
+            const redisData = {
+                createdAt: createdAt.toISOString(),
+                familyId: "invalid-uuid",
+                id: "invalid-uuid",
+                isBlacklisted: "false",
+                token: "test.jwt.token",
+                ttl: "3600",
+                type: "access",
+            };
+
+            // Act & Assert
+            expect(() => JwtEntity.fromRedisObject(redisData)).toThrow();
+        });
+
+        it("should throw ZodError with proper message for invalid UUID", () => {
+            // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+
+            const redisData = {
+                createdAt: createdAt.toISOString(),
+                familyId: "invalid-uuid",
+                id: "invalid-uuid",
+                isBlacklisted: "false",
+                token: "test.jwt.token",
+                ttl: "3600",
+                type: "access",
+            };
+
+            // Act
+            let thrownError: unknown;
+            try {
+                JwtEntity.fromRedisObject(redisData);
+            } catch (error) {
+                thrownError = error;
+            }
+
+            // Assert
+            expect(thrownError).toBeInstanceOf(ZodError);
+            const zodError = thrownError as ZodError;
+            expect(zodError.issues).toBeDefined();
+            expect(zodError.issues.length).toBeGreaterThan(0);
+            // Should have errors for both id and familyId
+            const paths = zodError.issues.map((issue) => issue.path[0]);
+            expect(paths).toContain("id");
+            expect(paths).toContain("familyId");
+        });
+
+        it("should throw error for invalid isBlacklisted value", () => {
+            // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
+            const redisData = {
+                createdAt: createdAt.toISOString(),
+                familyId,
+                id,
+                isBlacklisted: "maybe", // Invalid value
+                token: "test.jwt.token",
+                ttl: "3600",
+                type: "access",
+            };
+
+            // Act & Assert
+            expect(() => JwtEntity.fromRedisObject(redisData)).toThrow();
+        });
+
+        it("should throw ZodError with proper message for invalid isBlacklisted", () => {
+            // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
+            const redisData = {
+                createdAt: createdAt.toISOString(),
+                familyId,
+                id,
+                isBlacklisted: "maybe", // Invalid value
+                token: "test.jwt.token",
+                ttl: "3600",
+                type: "access",
+            };
+
+            // Act
+            let thrownError: unknown;
+            try {
+                JwtEntity.fromRedisObject(redisData);
+            } catch (error) {
+                thrownError = error;
+            }
+
+            // Assert
+            expect(thrownError).toBeInstanceOf(ZodError);
+            const zodError = thrownError as ZodError;
+            expect(zodError.issues).toBeDefined();
+            expect(zodError.issues[0].path).toContain("isBlacklisted");
+        });
+
+        it("should throw error for missing required fields", () => {
+            // Arrange
+            const redisData = {
+                token: "test.jwt.token",
+                type: "access",
+                // Missing: id, familyId, createdAt, ttl, isBlacklisted
+            };
+
+            // Act & Assert
+            expect(() => JwtEntity.fromRedisObject(redisData)).toThrow();
+        });
+
+        it("should throw ZodError with proper message for missing fields", () => {
+            // Arrange
+            const redisData = {
+                token: "test.jwt.token",
+                type: "access",
+                // Missing: id, familyId, createdAt, ttl, isBlacklisted
+            };
+
+            // Act
+            let thrownError: unknown;
+            try {
+                JwtEntity.fromRedisObject(redisData);
+            } catch (error) {
+                thrownError = error;
+            }
+
+            // Assert
+            expect(thrownError).toBeInstanceOf(ZodError);
+            const zodError = thrownError as ZodError;
+            expect(zodError.issues).toBeDefined();
+            // Should have multiple errors for missing fields
+            expect(zodError.issues.length).toBeGreaterThan(0);
+            const paths = zodError.issues.map((issue) => issue.path[0]);
+            expect(paths).toContain("id");
+            expect(paths).toContain("familyId");
+            expect(paths).toContain("createdAt");
+            expect(paths).toContain("ttl");
+            expect(paths).toContain("isBlacklisted");
+        });
+
+        it("should throw error for invalid createdAt format", () => {
+            // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
+            const redisData = {
+                createdAt: "not-a-valid-date",
+                familyId,
+                id,
+                isBlacklisted: "false",
+                token: "test.jwt.token",
+                ttl: "3600",
+                type: "access",
+            };
+
+            // Act & Assert
+            expect(() => JwtEntity.fromRedisObject(redisData)).toThrow();
+        });
+
+        it("should throw ZodError with proper message for invalid createdAt", () => {
+            // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
+            const redisData = {
+                createdAt: "not-a-valid-date",
+                familyId,
+                id,
+                isBlacklisted: "false",
+                token: "test.jwt.token",
+                ttl: "3600",
+                type: "access",
+            };
+
+            // Act
+            let thrownError: unknown;
+            try {
+                JwtEntity.fromRedisObject(redisData);
+            } catch (error) {
+                thrownError = error;
+            }
+
+            // Assert
+            expect(thrownError).toBeInstanceOf(ZodError);
+            const zodError = thrownError as ZodError;
+            expect(zodError.issues).toBeDefined();
+            expect(zodError.issues[0].path).toContain("createdAt");
+        });
+
+        it("should throw error for invalid ttl format", () => {
+            // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
+            const redisData = {
+                createdAt: createdAt.toISOString(),
+                familyId,
+                id,
+                isBlacklisted: "false",
+                token: "test.jwt.token",
+                ttl: "not-a-number",
+                type: "access",
+            };
+
+            // Act & Assert
+            expect(() => JwtEntity.fromRedisObject(redisData)).toThrow();
+        });
+
+        it("should throw ZodError with proper message for invalid ttl", () => {
+            // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
+            const redisData = {
+                createdAt: createdAt.toISOString(),
+                familyId,
+                id,
+                isBlacklisted: "false",
+                token: "test.jwt.token",
+                ttl: "not-a-number",
+                type: "access",
+            };
+
+            // Act
+            let thrownError: unknown;
+            try {
+                JwtEntity.fromRedisObject(redisData);
+            } catch (error) {
+                thrownError = error;
+            }
+
+            // Assert
+            expect(thrownError).toBeInstanceOf(ZodError);
+            const zodError = thrownError as ZodError;
+            expect(zodError.issues).toBeDefined();
+            expect(zodError.issues[0].path).toContain("ttl");
+            // Check if message mentions it must be a valid number
+            expect(zodError.issues[0].message).toBeDefined();
+        });
+
+        it("should throw error for negative ttl", () => {
+            // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
+            const redisData = {
+                createdAt: createdAt.toISOString(),
+                familyId,
+                id,
+                isBlacklisted: "false",
+                token: "test.jwt.token",
+                ttl: "-100",
+                type: "access",
+            };
+
+            // Act
+            let thrownError: unknown;
+            try {
+                JwtEntity.fromRedisObject(redisData);
+            } catch (error) {
+                thrownError = error;
+            }
+
+            // Assert
+            expect(thrownError).toBeInstanceOf(ZodError);
+            const zodError = thrownError as ZodError;
+            expect(zodError.issues).toBeDefined();
+            expect(zodError.issues[0].path).toContain("ttl");
+        });
+
+        it("should throw error for decimal ttl", () => {
+            // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = v7({ msecs: createdAt.getTime() });
+            const familyId = v7({ msecs: createdAt.getTime() });
+
+            const redisData = {
+                createdAt: createdAt.toISOString(),
+                familyId,
+                id,
+                isBlacklisted: "false",
+                token: "test.jwt.token",
+                ttl: "3600.5",
+                type: "access",
+            };
+
+            // Act
+            let thrownError: unknown;
+            try {
+                JwtEntity.fromRedisObject(redisData);
+            } catch (error) {
+                thrownError = error;
+            }
+
+            // Assert
+            expect(thrownError).toBeInstanceOf(ZodError);
+            const zodError = thrownError as ZodError;
+            expect(zodError.issues).toBeDefined();
+            expect(zodError.issues[0].path).toContain("ttl");
+        });
     });
 
     describe("toRedisObject", () => {
         it("should convert entity to Redis-storable format", () => {
             // Arrange
             const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const id = UUIDSchema.parse(v7({ msecs: createdAt.getTime() }));
+            const familyId = UUIDSchema.parse(
+                v7({ msecs: createdAt.getTime() }),
+            );
+
             const entity = new JwtEntity({
                 createdAt,
-                familyId: UUIDSchema.parse(
-                    "01928374-5678-7abc-def0-123456789013",
-                ),
-                id: UUIDSchema.parse("01928374-5678-7abc-def0-123456789012"),
+                familyId,
+                id,
                 isBlacklisted: false,
                 token: "test.jwt.token",
                 ttl: 3600,
@@ -313,10 +699,10 @@ describe("JwtEntity", () => {
             const redisObject = entity.toRedisObject();
 
             // Assert
-            expect(redisObject).toEqual({
+            expect(redisObject).toStrictEqual({
                 createdAt: createdAt.toISOString(),
-                familyId: "01928374-5678-7abc-def0-123456789013",
-                id: "01928374-5678-7abc-def0-123456789012",
+                familyId: familyId,
+                id: id,
                 isBlacklisted: "false",
                 token: "test.jwt.token",
                 ttl: "3600",
@@ -328,9 +714,11 @@ describe("JwtEntity", () => {
             // Arrange
             const createdAt = new Date("2026-01-01T00:00:00.000Z");
             const updatedAt = new Date("2026-01-01T01:00:00.000Z");
+            const id = UUIDSchema.parse(v7({ msecs: createdAt.getTime() }));
+
             const entity = new JwtEntity({
                 createdAt,
-                id: UUIDSchema.parse("01928374-5678-7abc-def0-123456789012"),
+                id,
                 isBlacklisted: true,
                 token: "test.jwt.token",
                 ttl: 60,
@@ -359,6 +747,20 @@ describe("JwtEntity", () => {
             // Assert
             expect(redisObject.type).toBe("refresh");
         });
+
+        it("should handle ACCESS token type", () => {
+            // Arrange
+            const entity = new JwtEntity({
+                token: "test.jwt.token",
+                type: TokenType.ACCESS,
+            });
+
+            // Act
+            const redisObject = entity.toRedisObject();
+
+            // Assert
+            expect(redisObject.type).toBe("access");
+        });
     });
 
     describe("blacklist", () => {
@@ -384,12 +786,10 @@ describe("JwtEntity", () => {
                 type: TokenType.ACCESS,
             });
             expect(entity.updatedAt).toBeUndefined();
-
             const beforeBlacklist = Date.now();
 
             // Act
             entity.blacklist();
-
             const afterBlacklist = Date.now();
 
             // Assert
@@ -458,8 +858,7 @@ describe("JwtEntity", () => {
             });
 
             // Act & Assert
-            // Due to timing, this might be true or false, so we just check it doesn't throw
-            expect(typeof entity.isExpired()).toBe("boolean");
+            expect(entity.isExpired()).toBe(true);
         });
 
         it("should return true for token with zero TTL", () => {
@@ -618,10 +1017,13 @@ describe("JwtEntity", () => {
     describe("Round-trip serialization", () => {
         it("should maintain data integrity through save and load cycle", () => {
             // Arrange
+            const createdAt = new Date("2026-01-01T00:00:00.000Z");
+            const familyId = UUIDSchema.parse(
+                v7({ msecs: createdAt.getTime() }),
+            );
+
             const original = new JwtEntity({
-                familyId: UUIDSchema.parse(
-                    "01928374-5678-7abc-def0-123456789013",
-                ),
+                familyId,
                 token: "test.jwt.token",
                 ttl: 3600,
                 type: TokenType.REFRESH,
