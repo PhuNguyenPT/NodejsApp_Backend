@@ -1,6 +1,6 @@
+// test/integration/service/student-service.integration.spec.ts
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
-// test/integration/service/student-service.integration.spec.ts
 import { type DataSource, Repository } from "typeorm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
