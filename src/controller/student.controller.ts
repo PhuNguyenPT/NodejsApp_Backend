@@ -59,11 +59,11 @@ export class StudentController extends Controller {
     @Produces("application/json")
     @Response<string>(HttpStatus.UNPROCESSABLE_ENTITY, "Validation error")
     @SuccessResponse(HttpStatus.CREATED, "Successfully create student")
-    public async createStudentProfile(
+    public async createProfile(
         @Body() studentRequest: StudentRequest,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
-            await this.studentService.createStudentEntity(studentRequest);
+            await this.studentService.create(studentRequest);
         return StudentMapper.toStudentProfileResponse(studentEntity);
     }
 
@@ -86,16 +86,15 @@ export class StudentController extends Controller {
     @Response<string>(HttpStatus.NOT_FOUND, "User not found")
     @Security("bearerAuth", ["profile:create:own"])
     @SuccessResponse(HttpStatus.CREATED, "Successfully create student profile")
-    public async createStudentProfileForUser(
+    public async createProfileForUser(
         @Request() request: Express.AuthenticatedRequest,
         @Body() studentRequest: StudentRequest,
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
-        const studentEntity: StudentEntity =
-            await this.studentService.createStudentEntity(
-                studentRequest,
-                user.id,
-            );
+        const studentEntity: StudentEntity = await this.studentService.create(
+            studentRequest,
+            user.id,
+        );
         const studentProfileResponse: StudentProfileResponse =
             StudentMapper.toStudentProfileResponse(studentEntity);
         return studentProfileResponse;
@@ -131,10 +130,7 @@ export class StudentController extends Controller {
 
         const user: Express.User = request.user;
         const studentEntities: Page<StudentEntity> =
-            await this.studentService.getAllStudentEntitiesByUserId(
-                user.id,
-                pageRequest,
-            );
+            await this.studentService.getAllByUserId(user.id, pageRequest);
         const studentResponsePage: PageResponse<StudentResponse> =
             StudentMapper.toStudentResponsePage(studentEntities);
         return studentResponsePage;
@@ -158,7 +154,7 @@ export class StudentController extends Controller {
         @Path("studentId") studentId: TsoaUUID,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentEntityByIdAnUserId(
+            await this.studentService.getByIdAndUserId(
                 UUIDSchema.parse(studentId),
             );
         return StudentMapper.toStudentProfileResponse(studentEntity);
@@ -187,7 +183,7 @@ export class StudentController extends Controller {
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentEntityByIdAnUserId(
+            await this.studentService.getByIdAndUserId(
                 UUIDSchema.parse(studentId),
                 user.id,
             );
@@ -216,9 +212,7 @@ export class StudentController extends Controller {
         @Path("studentId") studentId: TsoaUUID,
     ): Promise<StudentProfileResponse> {
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentWithFiles(
-                UUIDSchema.parse(studentId),
-            );
+            await this.studentService.getWithFiles(UUIDSchema.parse(studentId));
         return StudentMapper.toStudentProfileWithFilesResponse(studentEntity);
     }
 
@@ -249,7 +243,7 @@ export class StudentController extends Controller {
     ): Promise<StudentProfileResponse> {
         const user: Express.User = request.user;
         const studentEntity: StudentEntity =
-            await this.studentService.getStudentWithFiles(
+            await this.studentService.getWithFiles(
                 UUIDSchema.parse(studentId),
                 user.id,
             );

@@ -79,7 +79,7 @@ export class StudentService implements IStudentService {
      * @throws {ValidationException} If the min budget is greater than the max budget.
      * @throws {EntityNotFoundException} If userId is provided but the user is not found.
      */
-    public async createStudentEntity(
+    public async create(
         studentRequest: StudentRequest,
         userId?: UUID,
     ): Promise<StudentEntity> {
@@ -107,7 +107,7 @@ export class StudentService implements IStudentService {
      * @param pageable - Pagination and sorting options.
      * @returns A promise that resolves to a Page of StudentEntity objects.
      */
-    public async getAllStudentEntitiesByUserId(
+    public async getAllByUserId(
         userId: UUID,
         pageable: Pageable,
     ): Promise<Page<StudentEntity>> {
@@ -147,7 +147,7 @@ export class StudentService implements IStudentService {
      * @returns A promise that resolves to the found StudentEntity.
      * @throws {EntityNotFoundException} If no matching student profile is found.
      */
-    public async getStudentEntityByIdAnUserId(
+    public async getByIdAndUserId(
         id: UUID,
         userId?: UUID,
     ): Promise<StudentEntity> {
@@ -197,15 +197,12 @@ export class StudentService implements IStudentService {
      * @returns A promise that resolves to the StudentEntity with its files.
      * @throws {EntityNotFoundException} If the student profile is not found or access is denied.
      */
-    public async getStudentWithFiles(
+    public async getWithFiles(
         studentId: UUID,
         userId?: UUID,
     ): Promise<StudentEntity> {
         // 1. Fetch the Student and all its standard relations (using the existing method)
-        const student = await this.getStudentEntityByIdAnUserId(
-            studentId,
-            userId,
-        );
+        const student = await this.getByIdAndUserId(studentId, userId);
 
         // 2. Fetch ONLY the active files using find
         const activeFilesMetadata = await this.fileRepository.find({

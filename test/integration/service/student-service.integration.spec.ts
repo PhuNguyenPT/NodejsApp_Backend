@@ -79,7 +79,7 @@ describe("StudentService Integration Tests", () => {
         }
     });
 
-    describe("createStudentEntity", () => {
+    describe("create", () => {
         it("should create a basic student profile for authenticated user", async () => {
             // Arrange
             const studentRequest: StudentRequest = plainToInstance(
@@ -121,7 +121,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -177,8 +177,7 @@ describe("StudentService Integration Tests", () => {
             );
 
             // Act
-            const student =
-                await studentService.createStudentEntity(studentRequest);
+            const student = await studentService.create(studentRequest);
             createdStudentIds.push(student.id);
 
             // Assert
@@ -230,7 +229,7 @@ describe("StudentService Integration Tests", () => {
 
             // Act & Assert
             await expect(
-                studentService.createStudentEntity(studentRequest, testUser.id),
+                studentService.create(studentRequest, testUser.id),
             ).rejects.toThrow(ValidationException);
         });
 
@@ -277,10 +276,7 @@ describe("StudentService Integration Tests", () => {
 
             // Act & Assert
             await expect(
-                studentService.createStudentEntity(
-                    studentRequest,
-                    nonExistentUserId,
-                ),
+                studentService.create(studentRequest, nonExistentUserId),
             ).rejects.toThrow(EntityNotFoundException);
         });
 
@@ -325,7 +321,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -393,7 +389,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -437,6 +433,18 @@ describe("StudentService Integration Tests", () => {
                             level: Rank.FIRST,
                             name: NationalExcellentExamType.NATIONAL,
                         },
+                        {
+                            category:
+                                NationalExcellentStudentExamSubject.PHYSICS,
+                            level: Rank.SECOND,
+                            name: NationalExcellentExamType.NATIONAL,
+                        },
+                        {
+                            category:
+                                NationalExcellentStudentExamSubject.CHEMISTRY,
+                            level: Rank.THIRD,
+                            name: NationalExcellentExamType.NATIONAL,
+                        },
                     ],
                     certifications: [],
                     conducts: [
@@ -461,7 +469,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -469,11 +477,37 @@ describe("StudentService Integration Tests", () => {
 
             // Assert
             expect(student.awards).toBeDefined();
-            expect(student.awards).toHaveLength(1);
-            student.awards?.forEach((award) => {
-                expect(award.name).toBe(NationalExcellentExamType.NATIONAL);
-                expect(award.createdBy).toBe(testUser.email);
-            });
+            expect(student.awards).toHaveLength(3);
+            const mathAward = student.awards?.find(
+                (a) =>
+                    a.category ===
+                    NationalExcellentStudentExamSubject.MATHEMATICS,
+            );
+            expect(mathAward).toBeDefined();
+            expect(mathAward?.level).toBe(Rank.FIRST);
+            expect(mathAward?.name).toBe(NationalExcellentExamType.NATIONAL);
+            expect(mathAward?.createdBy).toBe(testUser.email);
+
+            const physicsAward = student.awards?.find(
+                (a) =>
+                    a.category === NationalExcellentStudentExamSubject.PHYSICS,
+            );
+            expect(physicsAward).toBeDefined();
+            expect(physicsAward?.level).toBe(Rank.SECOND);
+            expect(physicsAward?.name).toBe(NationalExcellentExamType.NATIONAL);
+            expect(physicsAward?.createdBy).toBe(testUser.email);
+
+            const chemistryAward = student.awards?.find(
+                (a) =>
+                    a.category ===
+                    NationalExcellentStudentExamSubject.CHEMISTRY,
+            );
+            expect(chemistryAward).toBeDefined();
+            expect(chemistryAward?.level).toBe(Rank.THIRD);
+            expect(chemistryAward?.name).toBe(
+                NationalExcellentExamType.NATIONAL,
+            );
+            expect(chemistryAward?.createdBy).toBe(testUser.email);
         });
 
         it("should create student with conducts", async () => {
@@ -517,7 +551,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -574,7 +608,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -633,7 +667,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -693,7 +727,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -766,7 +800,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -914,7 +948,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 comprehensiveRequest,
                 testUser.id,
             );
@@ -1124,10 +1158,10 @@ describe("StudentService Integration Tests", () => {
         });
     });
 
-    describe("getAllStudentEntitiesByUserId", () => {
+    describe("getAllByUserId", () => {
         it("should retrieve all student profiles for a user with pagination", async () => {
             // Arrange - Create multiple students
-            const student1 = await studentService.createStudentEntity(
+            const student1 = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -1169,7 +1203,7 @@ describe("StudentService Integration Tests", () => {
 
             createdStudentIds.push(student1.id);
 
-            const student2 = await studentService.createStudentEntity(
+            const student2 = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -1215,7 +1249,7 @@ describe("StudentService Integration Tests", () => {
             const pageable = PageRequest.of(0, 10);
 
             // Act
-            const page = await studentService.getAllStudentEntitiesByUserId(
+            const page = await studentService.getAllByUserId(
                 testUser.id,
                 pageable,
             );
@@ -1231,7 +1265,7 @@ describe("StudentService Integration Tests", () => {
             const pageable = PageRequest.of(0, 10);
 
             // Act
-            const page = await studentService.getAllStudentEntitiesByUserId(
+            const page = await studentService.getAllByUserId(
                 testUser.id,
                 pageable,
             );
@@ -1250,7 +1284,7 @@ describe("StudentService Integration Tests", () => {
             const pageable = PageRequest.of(0, 10, sort);
 
             // Act
-            const page = await studentService.getAllStudentEntitiesByUserId(
+            const page = await studentService.getAllByUserId(
                 testUser.id,
                 pageable,
             );
@@ -1273,7 +1307,7 @@ describe("StudentService Integration Tests", () => {
             const pageable = PageRequest.of(0, pageSize);
 
             // Act
-            const page = await studentService.getAllStudentEntitiesByUserId(
+            const page = await studentService.getAllByUserId(
                 testUser.id,
                 pageable,
             );
@@ -1286,10 +1320,10 @@ describe("StudentService Integration Tests", () => {
         });
     });
 
-    describe("getStudentEntityByIdAnUserId", () => {
+    describe("getByIdAndUserId", () => {
         it("should retrieve a student profile by id for authenticated user", async () => {
             // Arrange
-            const created = await studentService.createStudentEntity(
+            const created = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -1332,7 +1366,7 @@ describe("StudentService Integration Tests", () => {
             createdStudentIds.push(created.id);
 
             // Act
-            const retrieved = await studentService.getStudentEntityByIdAnUserId(
+            const retrieved = await studentService.getByIdAndUserId(
                 created.id,
                 testUser.id,
             );
@@ -1344,7 +1378,7 @@ describe("StudentService Integration Tests", () => {
 
         it("should retrieve anonymous student profile", async () => {
             // Arrange
-            const created = await studentService.createStudentEntity({
+            const created = await studentService.create({
                 academicPerformances: [
                     {
                         academicPerformance: AcademicPerformance.GOOD,
@@ -1384,9 +1418,7 @@ describe("StudentService Integration Tests", () => {
             createdStudentIds.push(created.id);
 
             // Act
-            const retrieved = await studentService.getStudentEntityByIdAnUserId(
-                created.id,
-            );
+            const retrieved = await studentService.getByIdAndUserId(created.id);
 
             // Assert
             expect(retrieved).toBeDefined();
@@ -1402,10 +1434,7 @@ describe("StudentService Integration Tests", () => {
 
             // Act & Assert
             await expect(
-                studentService.getStudentEntityByIdAnUserId(
-                    nonExistentId,
-                    testUser.id,
-                ),
+                studentService.getByIdAndUserId(nonExistentId, testUser.id),
             ).rejects.toThrow(EntityNotFoundException);
         });
 
@@ -1419,7 +1448,7 @@ describe("StudentService Integration Tests", () => {
             await userRepository.save(otherUser);
             createdUserIds.push(otherUser.id);
 
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -1463,16 +1492,13 @@ describe("StudentService Integration Tests", () => {
 
             // Act & Assert
             await expect(
-                studentService.getStudentEntityByIdAnUserId(
-                    student.id,
-                    testUser.id,
-                ),
+                studentService.getByIdAndUserId(student.id, testUser.id),
             ).rejects.toThrow(EntityNotFoundException);
         });
 
         it("should load all relations when retrieving student", async () => {
             // Arrange
-            const created = await studentService.createStudentEntity(
+            const created = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -1530,7 +1556,7 @@ describe("StudentService Integration Tests", () => {
             createdStudentIds.push(created.id);
 
             // Act
-            const retrieved = await studentService.getStudentEntityByIdAnUserId(
+            const retrieved = await studentService.getByIdAndUserId(
                 created.id,
                 testUser.id,
             );
@@ -1549,10 +1575,10 @@ describe("StudentService Integration Tests", () => {
         });
     });
 
-    describe("getStudentWithFiles", () => {
+    describe("getWithFiles", () => {
         it("should retrieve student with active files only", async () => {
             // Arrange
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -1620,7 +1646,7 @@ describe("StudentService Integration Tests", () => {
             await fileRepository.save(deletedFile);
 
             // Act
-            const retrieved = await studentService.getStudentWithFiles(
+            const retrieved = await studentService.getWithFiles(
                 student.id,
                 testUser.id,
             );
@@ -1636,7 +1662,7 @@ describe("StudentService Integration Tests", () => {
 
         it("should retrieve anonymous student with files", async () => {
             // Arrange
-            const student = await studentService.createStudentEntity({
+            const student = await studentService.create({
                 academicPerformances: [
                     {
                         academicPerformance: AcademicPerformance.GOOD,
@@ -1688,9 +1714,7 @@ describe("StudentService Integration Tests", () => {
             await fileRepository.save(file);
 
             // Act
-            const retrieved = await studentService.getStudentWithFiles(
-                student.id,
-            );
+            const retrieved = await studentService.getWithFiles(student.id);
 
             // Assert
             expect(retrieved.files).toBeDefined();
@@ -1699,7 +1723,7 @@ describe("StudentService Integration Tests", () => {
 
         it("should return empty files array when no active files exist", async () => {
             // Arrange
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -1742,7 +1766,7 @@ describe("StudentService Integration Tests", () => {
             createdStudentIds.push(student.id);
 
             // Act
-            const retrieved = await studentService.getStudentWithFiles(
+            const retrieved = await studentService.getWithFiles(
                 student.id,
                 testUser.id,
             );
@@ -1756,7 +1780,7 @@ describe("StudentService Integration Tests", () => {
     describe("Complex Scenarios", () => {
         it("should handle complete student lifecycle: create -> retrieve -> get with files", async () => {
             // Step 1: Create
-            const created = await studentService.createStudentEntity(
+            const created = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -1800,7 +1824,7 @@ describe("StudentService Integration Tests", () => {
             expect(created.id).toBeDefined();
 
             // Step 2: Retrieve
-            const retrieved = await studentService.getStudentEntityByIdAnUserId(
+            const retrieved = await studentService.getByIdAndUserId(
                 created.id,
                 testUser.id,
             );
@@ -1819,7 +1843,7 @@ describe("StudentService Integration Tests", () => {
             });
             await fileRepository.save(file);
 
-            const withFiles = await studentService.getStudentWithFiles(
+            const withFiles = await studentService.getWithFiles(
                 created.id,
                 testUser.id,
             );
@@ -1828,7 +1852,7 @@ describe("StudentService Integration Tests", () => {
 
         it("should maintain data integrity across multiple operations", async () => {
             // Create student with comprehensive data
-            const student1 = await studentService.createStudentEntity(
+            const student1 = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -1886,7 +1910,7 @@ describe("StudentService Integration Tests", () => {
             createdStudentIds.push(student1.id);
 
             // Create another student
-            const student2 = await studentService.createStudentEntity(
+            const student2 = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -1929,16 +1953,14 @@ describe("StudentService Integration Tests", () => {
             createdStudentIds.push(student2.id);
 
             // Verify both students exist independently
-            const retrieved1 =
-                await studentService.getStudentEntityByIdAnUserId(
-                    student1.id,
-                    testUser.id,
-                );
-            const retrieved2 =
-                await studentService.getStudentEntityByIdAnUserId(
-                    student2.id,
-                    testUser.id,
-                );
+            const retrieved1 = await studentService.getByIdAndUserId(
+                student1.id,
+                testUser.id,
+            );
+            const retrieved2 = await studentService.getByIdAndUserId(
+                student2.id,
+                testUser.id,
+            );
 
             expect(retrieved1.id).not.toBe(retrieved2.id);
             expect(retrieved1.academicPerformances).toHaveLength(3);
@@ -1956,7 +1978,7 @@ describe("StudentService Integration Tests", () => {
             createdUserIds.push(user2.id);
 
             // Create students for each user
-            const user1Student = await studentService.createStudentEntity(
+            const user1Student = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -1998,7 +2020,7 @@ describe("StudentService Integration Tests", () => {
             );
             createdStudentIds.push(user1Student.id);
 
-            const user2Student = await studentService.createStudentEntity(
+            const user2Student = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -2041,16 +2063,14 @@ describe("StudentService Integration Tests", () => {
             createdStudentIds.push(user2Student.id);
 
             // Verify each user can only access their own students
-            const user1Page =
-                await studentService.getAllStudentEntitiesByUserId(
-                    testUser.id,
-                    PageRequest.of(0, 100),
-                );
-            const user2Page =
-                await studentService.getAllStudentEntitiesByUserId(
-                    user2.id,
-                    PageRequest.of(0, 100),
-                );
+            const user1Page = await studentService.getAllByUserId(
+                testUser.id,
+                PageRequest.of(0, 100),
+            );
+            const user2Page = await studentService.getAllByUserId(
+                user2.id,
+                PageRequest.of(0, 100),
+            );
             const user1StudentIds = user1Page.content.map(
                 (s: StudentEntity) => s.id,
             );
