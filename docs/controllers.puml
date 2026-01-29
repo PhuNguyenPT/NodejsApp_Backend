@@ -1545,10 +1545,10 @@ class StudentRequest {
     +vsatExams?: VsatExam[] | undefined
 }
 interface IStudentService {
-    +createStudentEntity(studentRequest: StudentRequest, userId?: string | undefined): Promise<StudentEntity>
-    +getAllStudentEntitiesByUserId(userId: string, pageable: Pageable): Promise<Page<StudentEntity>>
-    +getStudentEntityByIdAnUserId(id: string, userId?: string | undefined): Promise<StudentEntity>
-    +getStudentWithFiles(studentId: string, userId?: string | undefined): Promise<StudentEntity>
+    +create(studentRequest: StudentRequest, userId?: string | undefined): Promise<StudentEntity>
+    +getAllByUserId(userId: string, pageable: Pageable): Promise<Page<StudentEntity>>
+    +getByIdAndUserId(id: string, userId?: string | undefined): Promise<StudentEntity>
+    +getWithFiles(studentId: string, userId?: string | undefined): Promise<StudentEntity>
 }
 class AcademicPerformanceResponse {
     +academicPerformance: AcademicPerformance
@@ -1605,8 +1605,8 @@ class StudentResponse {
 }
 class StudentController extends Controller {
     -studentService: IStudentService
-    +createStudentProfile(studentRequest: StudentRequest): Promise<StudentProfileResponse>
-    +createStudentProfileForUser(request: AuthenticatedRequest, studentRequest: StudentRequest): Promise<StudentProfileResponse>
+    +createProfile(studentRequest: StudentRequest): Promise<StudentProfileResponse>
+    +createProfileForUser(request: AuthenticatedRequest, studentRequest: StudentRequest): Promise<StudentProfileResponse>
     +getAllStudentProfilesByUserId(request: AuthenticatedRequest, pageableQuery: PageableQuery): Promise<PageResponse<StudentResponse>>
     +getStudentGuest(studentId: string): Promise<StudentProfileResponse>
     +getStudentProfileByUserId(studentId: string, request: AuthenticatedRequest): Promise<StudentProfileResponse>

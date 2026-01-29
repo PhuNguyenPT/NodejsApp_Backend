@@ -1,6 +1,6 @@
 // test/integration/service/user-service.integration.spec.ts
 import type { RedisClientType } from "redis";
-import type { DataSource } from "typeorm";
+import type { DataSource, Repository } from "typeorm";
 
 import bcrypt from "bcrypt";
 import { v4 } from "uuid";
@@ -28,49 +28,31 @@ describe("UserService Integration Tests", () => {
     let dataSource: DataSource;
     let redisClient: RedisClientType;
     let userService: IUserService;
+    let userRepository: Repository<UserEntity>;
     const createdUserIds: UUID[] = [];
 
-    beforeAll(async () => {
+    beforeAll(() => {
         getApp();
 
         dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
         redisClient = iocContainer.get<RedisClientType>(TYPES.RedisPublisher);
         userService = iocContainer.get<IUserService>(TYPES.IUserService);
-
-        // Clean up cache from previous test runs
-        const cacheKeys = await redisClient.keys("user:*");
-        if (cacheKeys.length > 0) {
-            await redisClient.del(cacheKeys);
-        }
-
-        // Clean up database - preserve system-created users
-        const userRepository = dataSource.getRepository(UserEntity);
-        await userRepository
-            .createQueryBuilder()
-            .delete()
-            .where("created_by != :systemCreator", { systemCreator: "system" })
-            .execute();
+        userRepository = dataSource.getRepository(UserEntity);
     });
 
     afterAll(async () => {
         // Delete users created in tests
         for (const userId of createdUserIds) {
-            await userService.delete(userId);
+            await userRepository.delete(userId);
         }
 
         // Final cache cleanup
-        const cacheKeys = await redisClient.keys("user:*");
-        if (cacheKeys.length > 0) {
-            await redisClient.del(cacheKeys);
+        const userKeys: string[] = createdUserIds.map((userId) =>
+            CacheKeys.user(userId),
+        );
+        if (userKeys.length > 0) {
+            await redisClient.del(userKeys);
         }
-
-        // Final database cleanup
-        const userRepository = dataSource.getRepository(UserEntity);
-        await userRepository
-            .createQueryBuilder()
-            .delete()
-            .where("created_by != :systemCreator", { systemCreator: "system" })
-            .execute();
     });
 
     describe("create", () => {
@@ -661,6 +643,7 @@ describe("UserService Integration Tests", () => {
                 role: Role.USER,
             };
             const created = await userService.create(createDto);
+            createdUserIds.push(created.id);
 
             // Act
             await userService.delete(created.id);
@@ -681,6 +664,7 @@ describe("UserService Integration Tests", () => {
                 role: Role.USER,
             };
             const created = await userService.create(createDto);
+            createdUserIds.push(created.id);
 
             // Populate cache
             await userService.getById(created.id);

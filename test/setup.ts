@@ -1,6 +1,8 @@
 // test/setup.ts
 import "reflect-metadata";
 
+import type { Container } from "inversify";
+
 import type AbstractApp from "@/app/app.abstract.js";
 
 import { iocContainer } from "@/app/ioc-container.js";
@@ -166,4 +168,11 @@ export const getApp = (): AbstractApp => {
         throw new Error("App not initialized. Check test setup logs.");
     }
     return globalThis.__TEST_APP__;
+};
+
+export const getContainer = (): Container => {
+    if (!globalThis.__IOC_CONTAINER__) {
+        throw new Error("Container not initialized. Check test setup logs.");
+    }
+    return globalThis.__IOC_CONTAINER__;
 };

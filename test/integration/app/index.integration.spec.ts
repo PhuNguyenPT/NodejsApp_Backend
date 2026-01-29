@@ -3,11 +3,13 @@ import "reflect-metadata";
 
 import type { JsonObject } from "swagger-ui-express";
 
+import { Container } from "inversify";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type AbstractApp from "@/app/app.abstract.js";
 
 import { logger } from "@/config/logger.config.js";
+import { getApp, getContainer } from "@/test/setup.js";
 import { TYPES } from "@/type/container/types.js";
 import { createSafeConfig } from "@/util/validate-env.js";
 
@@ -29,13 +31,11 @@ describe("Application Bootstrap Integration", () => {
     let app: AbstractApp;
     let serverUrl: string;
     let baseUrl: string;
+    let iocContainer: Container;
 
-    beforeAll(async () => {
-        // Import and get the real container
-        const { iocContainer } = await import("@/app/ioc-container.js");
-
-        // Get the app instance (already initialized in test/setup.ts)
-        app = iocContainer.get<AbstractApp>(TYPES.App);
+    beforeAll(() => {
+        app = getApp();
+        iocContainer = getContainer();
 
         // Start the server
         app.listen();
@@ -53,8 +53,7 @@ describe("Application Bootstrap Integration", () => {
     });
 
     describe("Bootstrap Process", () => {
-        it("should have container initialized", async () => {
-            const { iocContainer } = await import("@/app/ioc-container.js");
+        it("should have container initialized", () => {
             expect(iocContainer).toBeDefined();
         });
 
@@ -83,9 +82,7 @@ describe("Application Bootstrap Integration", () => {
     });
 
     describe("Container Configuration", () => {
-        it("should have all required bindings in the container", async () => {
-            const { iocContainer } = await import("@/app/ioc-container.js");
-
+        it("should have all required bindings in the container", () => {
             // Test that key services can be resolved
             expect(() => iocContainer.get(TYPES.App)).not.toThrow();
             expect(() => iocContainer.get(TYPES.Config)).not.toThrow();
@@ -95,9 +92,7 @@ describe("Application Bootstrap Integration", () => {
             expect(() => iocContainer.get(TYPES.RedisSubscriber)).not.toThrow();
         });
 
-        it("should resolve managers from container", async () => {
-            const { iocContainer } = await import("@/app/ioc-container.js");
-
+        it("should resolve managers from container", () => {
             expect(() => iocContainer.get(TYPES.DatabaseManager)).not.toThrow();
             expect(() => iocContainer.get(TYPES.ServerManager)).not.toThrow();
             expect(() =>
@@ -109,9 +104,7 @@ describe("Application Bootstrap Integration", () => {
             ).not.toThrow();
         });
 
-        it("should maintain singleton scope for app", async () => {
-            const { iocContainer } = await import("@/app/ioc-container.js");
-
+        it("should maintain singleton scope for app", () => {
             const app1 = iocContainer.get<AbstractApp>(TYPES.App);
             const app2 = iocContainer.get<AbstractApp>(TYPES.App);
 

@@ -1,3 +1,5 @@
+import type { RedisClientType } from "redis";
+
 // test/integration/service/student-service.integration.spec.ts
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
@@ -33,6 +35,7 @@ import { EntityNotFoundException } from "@/type/exception/entity-not-found.excep
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { PageRequest } from "@/type/pagination/page-request.js";
 import { Order, Sort } from "@/type/pagination/sort.js";
+import { CacheKeys } from "@/util/cache-key.js";
 
 describe("StudentService Integration Tests", () => {
     let dataSource: DataSource;
@@ -40,6 +43,7 @@ describe("StudentService Integration Tests", () => {
     let studentRepository: Repository<StudentEntity>;
     let userRepository: Repository<UserEntity>;
     let fileRepository: Repository<FileEntity>;
+    let redisClient: RedisClientType;
 
     const createdStudentIds: UUID[] = [];
     const createdUserIds: UUID[] = [];
@@ -53,6 +57,7 @@ describe("StudentService Integration Tests", () => {
         studentService = iocContainer.get<IStudentService>(
             TYPES.IStudentService,
         );
+        redisClient = iocContainer.get<RedisClientType>(TYPES.RedisPublisher);
         studentRepository = dataSource.getRepository(StudentEntity);
         userRepository = dataSource.getRepository(UserEntity);
         fileRepository = dataSource.getRepository(FileEntity);
@@ -73,13 +78,27 @@ describe("StudentService Integration Tests", () => {
             await studentRepository.delete(studentId);
         }
 
-        // Clean up users
+        // Clean up users and their caches
         for (const userId of createdUserIds) {
             await userRepository.delete(userId);
+            await redisClient.del(CacheKeys.user(userId));
+        }
+
+        const allStudentIds = [
+            ...createdStudentIds,
+            "00000000-0000-0000-0000-000000000000",
+        ];
+
+        for (const studentId of allStudentIds) {
+            const pattern = `student_profile:${studentId}:*`;
+            const keys = await redisClient.keys(pattern);
+            if (keys.length > 0) {
+                await redisClient.del(keys);
+            }
         }
     });
 
-    describe("createStudentEntity", () => {
+    describe("create", () => {
         it("should create a basic student profile for authenticated user", async () => {
             // Arrange
             const studentRequest: StudentRequest = plainToInstance(
@@ -105,8 +124,8 @@ describe("StudentService Integration Tests", () => {
                         { conduct: Conduct.GOOD, grade: 12 },
                     ],
                     majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
+                    maxBudget: 50000000,
+                    minBudget: 10000000,
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 8.0 },
                         { name: VietnameseSubject.NGU_VAN, score: 7.0 },
@@ -121,7 +140,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -130,8 +149,8 @@ describe("StudentService Integration Tests", () => {
             // Assert
             expect(student).toBeDefined();
             expect(student.id).toBeDefined();
-            expect(student.minBudget).toBe(1000000);
-            expect(student.maxBudget).toBe(5000000);
+            expect(student.minBudget).toBe(10000000);
+            expect(student.maxBudget).toBe(50000000);
             expect(student.createdBy).toBe(testUser.email);
             expect(student.user?.id).toBe(testUser.id);
             expect(student.province).toBe(VietnamSouthernProvinces.HO_CHI_MINH);
@@ -163,8 +182,8 @@ describe("StudentService Integration Tests", () => {
                         { conduct: Conduct.GOOD, grade: 12 },
                     ],
                     majors: [MajorGroup.BUSINESS_AND_MANAGEMENT],
-                    maxBudget: 8000000,
-                    minBudget: 2000000,
+                    maxBudget: 80000000,
+                    minBudget: 20000000,
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 8.0 },
                         { name: VietnameseSubject.NGU_VAN, score: 7.0 },
@@ -177,8 +196,7 @@ describe("StudentService Integration Tests", () => {
             );
 
             // Act
-            const student =
-                await studentService.createStudentEntity(studentRequest);
+            const student = await studentService.create(studentRequest);
             createdStudentIds.push(student.id);
 
             // Assert
@@ -213,8 +231,8 @@ describe("StudentService Integration Tests", () => {
                         { conduct: Conduct.GOOD, grade: 12 },
                     ],
                     majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 10000000,
+                    maxBudget: 50000000,
+                    minBudget: 100000000,
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 8.0 },
                         { name: VietnameseSubject.NGU_VAN, score: 7.0 },
@@ -230,7 +248,7 @@ describe("StudentService Integration Tests", () => {
 
             // Act & Assert
             await expect(
-                studentService.createStudentEntity(studentRequest, testUser.id),
+                studentService.create(studentRequest, testUser.id),
             ).rejects.toThrow(ValidationException);
         });
 
@@ -259,8 +277,8 @@ describe("StudentService Integration Tests", () => {
                         { conduct: Conduct.GOOD, grade: 12 },
                     ],
                     majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
+                    maxBudget: 50000000,
+                    minBudget: 10000000,
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 8.0 },
                         { name: VietnameseSubject.NGU_VAN, score: 7.0 },
@@ -277,10 +295,7 @@ describe("StudentService Integration Tests", () => {
 
             // Act & Assert
             await expect(
-                studentService.createStudentEntity(
-                    studentRequest,
-                    nonExistentUserId,
-                ),
+                studentService.create(studentRequest, nonExistentUserId),
             ).rejects.toThrow(EntityNotFoundException);
         });
 
@@ -309,8 +324,8 @@ describe("StudentService Integration Tests", () => {
                         { conduct: Conduct.GOOD, grade: 12 },
                     ],
                     majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
+                    maxBudget: 50000000,
+                    minBudget: 10000000,
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 8.0 },
                         { name: VietnameseSubject.NGU_VAN, score: 7.0 },
@@ -325,7 +340,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -377,8 +392,8 @@ describe("StudentService Integration Tests", () => {
                         { conduct: Conduct.GOOD, grade: 12 },
                     ],
                     majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
+                    maxBudget: 50000000,
+                    minBudget: 10000000,
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 8.0 },
                         { name: VietnameseSubject.NGU_VAN, score: 7.0 },
@@ -393,7 +408,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -437,6 +452,18 @@ describe("StudentService Integration Tests", () => {
                             level: Rank.FIRST,
                             name: NationalExcellentExamType.NATIONAL,
                         },
+                        {
+                            category:
+                                NationalExcellentStudentExamSubject.PHYSICS,
+                            level: Rank.SECOND,
+                            name: NationalExcellentExamType.NATIONAL,
+                        },
+                        {
+                            category:
+                                NationalExcellentStudentExamSubject.CHEMISTRY,
+                            level: Rank.THIRD,
+                            name: NationalExcellentExamType.NATIONAL,
+                        },
                     ],
                     certifications: [],
                     conducts: [
@@ -445,8 +472,8 @@ describe("StudentService Integration Tests", () => {
                         { conduct: Conduct.GOOD, grade: 12 },
                     ],
                     majors: [MajorGroup.MATHEMATICS_AND_STATISTICS],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
+                    maxBudget: 50000000,
+                    minBudget: 10000000,
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 8.0 },
                         { name: VietnameseSubject.NGU_VAN, score: 7.0 },
@@ -461,7 +488,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -469,11 +496,37 @@ describe("StudentService Integration Tests", () => {
 
             // Assert
             expect(student.awards).toBeDefined();
-            expect(student.awards).toHaveLength(1);
-            student.awards?.forEach((award) => {
-                expect(award.name).toBe(NationalExcellentExamType.NATIONAL);
-                expect(award.createdBy).toBe(testUser.email);
-            });
+            expect(student.awards).toHaveLength(3);
+            const mathAward = student.awards?.find(
+                (a) =>
+                    a.category ===
+                    NationalExcellentStudentExamSubject.MATHEMATICS,
+            );
+            expect(mathAward).toBeDefined();
+            expect(mathAward?.level).toBe(Rank.FIRST);
+            expect(mathAward?.name).toBe(NationalExcellentExamType.NATIONAL);
+            expect(mathAward?.createdBy).toBe(testUser.email);
+
+            const physicsAward = student.awards?.find(
+                (a) =>
+                    a.category === NationalExcellentStudentExamSubject.PHYSICS,
+            );
+            expect(physicsAward).toBeDefined();
+            expect(physicsAward?.level).toBe(Rank.SECOND);
+            expect(physicsAward?.name).toBe(NationalExcellentExamType.NATIONAL);
+            expect(physicsAward?.createdBy).toBe(testUser.email);
+
+            const chemistryAward = student.awards?.find(
+                (a) =>
+                    a.category ===
+                    NationalExcellentStudentExamSubject.CHEMISTRY,
+            );
+            expect(chemistryAward).toBeDefined();
+            expect(chemistryAward?.level).toBe(Rank.THIRD);
+            expect(chemistryAward?.name).toBe(
+                NationalExcellentExamType.NATIONAL,
+            );
+            expect(chemistryAward?.createdBy).toBe(testUser.email);
         });
 
         it("should create student with conducts", async () => {
@@ -501,8 +554,8 @@ describe("StudentService Integration Tests", () => {
                         { conduct: Conduct.GOOD, grade: 12 },
                     ],
                     majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
+                    maxBudget: 50000000,
+                    minBudget: 10000000,
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 8.0 },
                         { name: VietnameseSubject.NGU_VAN, score: 7.0 },
@@ -517,7 +570,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -558,8 +611,8 @@ describe("StudentService Integration Tests", () => {
                         { conduct: Conduct.GOOD, grade: 12 },
                     ],
                     majors: [MajorGroup.MATHEMATICS_AND_STATISTICS],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
+                    maxBudget: 50000000,
+                    minBudget: 10000000,
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 9.5 },
                         { name: VietnameseSubject.NGU_VAN, score: 8.0 },
@@ -574,7 +627,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -614,8 +667,8 @@ describe("StudentService Integration Tests", () => {
                         { conduct: Conduct.GOOD, grade: 12 },
                     ],
                     majors: [MajorGroup.ARTS],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
+                    maxBudget: 50000000,
+                    minBudget: 10000000,
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 8.0 },
                         { name: VietnameseSubject.NGU_VAN, score: 7.0 },
@@ -633,7 +686,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -672,8 +725,8 @@ describe("StudentService Integration Tests", () => {
                         { conduct: Conduct.GOOD, grade: 12 },
                     ],
                     majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
+                    maxBudget: 50000000,
+                    minBudget: 10000000,
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 8.0 },
                         { name: VietnameseSubject.NGU_VAN, score: 7.0 },
@@ -693,7 +746,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -702,6 +755,34 @@ describe("StudentService Integration Tests", () => {
             // Assert
             expect(student.vsatExams).toBeDefined();
             expect(student.vsatExams).toHaveLength(3);
+
+            // Verify individual VSAT exam items
+            const vsatToan = student.vsatExams?.find(
+                (e) => e.name === VietnameseSubject.TOAN,
+            );
+            expect(vsatToan).toBeDefined();
+            expect(vsatToan?.score).toBe(120);
+            expect(vsatToan?.createdBy).toBe(testUser.email);
+
+            const vsatNguVan = student.vsatExams?.find(
+                (e) => e.name === VietnameseSubject.NGU_VAN,
+            );
+            expect(vsatNguVan).toBeDefined();
+            expect(vsatNguVan?.score).toBe(130);
+            expect(vsatNguVan?.createdBy).toBe(testUser.email);
+
+            const vsatTiengAnh = student.vsatExams?.find(
+                (e) => e.name === VietnameseSubject.TIENG_ANH,
+            );
+            expect(vsatTiengAnh).toBeDefined();
+            expect(vsatTiengAnh?.score).toBe(125);
+            expect(vsatTiengAnh?.createdBy).toBe(testUser.email);
+
+            // Verify all VSAT exams have createdBy set
+            student.vsatExams?.forEach((vsatExam) => {
+                expect(vsatExam.createdBy).toBe(testUser.email);
+                expect(vsatExam.score).toBeGreaterThan(0);
+            });
         });
 
         it("should create comprehensive student with all relations", async () => {
@@ -750,8 +831,8 @@ describe("StudentService Integration Tests", () => {
                         MajorGroup.ENGINEERING,
                         MajorGroup.NATURAL_SCIENCES,
                     ],
-                    maxBudget: 10000000,
-                    minBudget: 3000000,
+                    maxBudget: 100000000,
+                    minBudget: 30000000,
                     nationalExams: [
                         { name: VietnameseSubject.VAT_LY, score: 9.0 },
                         { name: VietnameseSubject.TOAN, score: 9.5 },
@@ -766,7 +847,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 studentRequest,
                 testUser.id,
             );
@@ -790,18 +871,17 @@ describe("StudentService Integration Tests", () => {
                         {
                             academicPerformance: AcademicPerformance.GOOD,
                             grade: 10,
-                        }, // "Tốt"
+                        },
                         {
                             academicPerformance:
                                 AcademicPerformance.SATISFACTORY,
                             grade: 11,
-                        }, // "Khá"
+                        },
                         {
                             academicPerformance: AcademicPerformance.PASSED,
                             grade: 12,
-                        }, // "Đạt"
+                        },
                     ],
-
                     // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                     aptitudeExams: [
                         {
@@ -816,29 +896,27 @@ describe("StudentService Integration Tests", () => {
                             score: 95,
                         },
                     ],
-
                     // Optional: Awards (multiple awards with different categories and levels)
                     awards: [
                         {
                             category:
-                                NationalExcellentStudentExamSubject.MATHEMATICS, // "Toán"
+                                NationalExcellentStudentExamSubject.MATHEMATICS,
                             level: Rank.FIRST,
                             name: NationalExcellentExamType.NATIONAL,
                         },
                         {
                             category:
-                                NationalExcellentStudentExamSubject.PHYSICS, // VietnameseSubject.VAT_LY
+                                NationalExcellentStudentExamSubject.PHYSICS,
                             level: Rank.SECOND,
                             name: NationalExcellentExamType.NATIONAL,
                         },
                         {
                             category:
-                                NationalExcellentStudentExamSubject.ENGLISH, // VietnameseSubject.TIENG_ANH
+                                NationalExcellentStudentExamSubject.ENGLISH,
                             level: Rank.THIRD,
                             name: NationalExcellentExamType.NATIONAL,
                         },
                     ],
-
                     // Optional: Certifications (language and other certifications)
                     certifications: [
                         {
@@ -854,25 +932,21 @@ describe("StudentService Integration Tests", () => {
                             level: "1450",
                         },
                     ],
-
                     // Required: Conducts (3 items with different values for each grade)
                     conducts: [
-                        { conduct: Conduct.GOOD, grade: 10 }, // "Tốt"
-                        { conduct: Conduct.SATISFACTORY, grade: 11 }, // "Khá"
-                        { conduct: Conduct.PASSED, grade: 12 }, // "Đạt"
+                        { conduct: Conduct.GOOD, grade: 10 },
+                        { conduct: Conduct.SATISFACTORY, grade: 11 },
+                        { conduct: Conduct.PASSED, grade: 12 },
                     ],
-
                     // Required: Majors (multiple major groups, 1-3 items)
                     majors: [
                         MajorGroup.ENGINEERING,
                         MajorGroup.NATURAL_SCIENCES,
                         MajorGroup.MATHEMATICS_AND_STATISTICS,
                     ],
-
                     // Required: Budget (with maxBudget > minBudget)
-                    maxBudget: 15000000,
-                    minBudget: 5000000,
-
+                    maxBudget: 150000000,
+                    minBudget: 50000000,
                     // Required: National Exams (exactly 4 subjects with varied scores)
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 9.5 },
@@ -880,26 +954,21 @@ describe("StudentService Integration Tests", () => {
                         { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
                         { name: VietnameseSubject.VAT_LY, score: 8.75 },
                     ],
-
                     // Required: Province
                     province: VietnamSouthernProvinces.HO_CHI_MINH,
-
                     // Optional: Special Student Cases (multiple cases)
                     specialStudentCases: [
-                        SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY, // "Dân tộc thiểu số rất ít người (Mông, La Ha,...)"
-                        SpecialStudentCase.ETHNIC_MINORITY_STUDENT, // "Học sinh thuộc huyện nghèo, vùng đặc biệt khó khăn"
+                        SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                        SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
                     ],
-
                     // Optional: Talent Exams (multiple talent subjects)
                     talentExams: [
-                        { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 }, // "Vẽ Mỹ thuật"
-                        { name: VietnameseSubject.HAT, score: 8.5 }, // "Hát"
-                        { name: VietnameseSubject.DOC_DIEN_CAM, score: 8.75 }, // "Đọc diễn cảm"
+                        { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                        { name: VietnameseSubject.HAT, score: 8.5 },
+                        { name: VietnameseSubject.DOC_DIEN_CAM, score: 8.75 },
                     ],
-
                     // Required: University Type
                     uniType: UniType.PUBLIC,
-
                     // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
                     vsatExams: [
                         { name: VietnameseSubject.TOAN, score: 140 },
@@ -914,7 +983,7 @@ describe("StudentService Integration Tests", () => {
             expect(validationErrors).toHaveLength(0);
 
             // Act
-            const student = await studentService.createStudentEntity(
+            const student = await studentService.create(
                 comprehensiveRequest,
                 testUser.id,
             );
@@ -1032,8 +1101,8 @@ describe("StudentService Integration Tests", () => {
             // 7. Budget
             expect(student.minBudget).toBeDefined();
             expect(student.maxBudget).toBeDefined();
-            expect(student.minBudget).toBe(5000000);
-            expect(student.maxBudget).toBe(15000000);
+            expect(student.minBudget).toBe(50000000);
+            expect(student.maxBudget).toBe(150000000);
 
             const minBudget = student.minBudget ?? 0;
             const maxBudget = student.maxBudget ?? 0;
@@ -1124,124 +1193,559 @@ describe("StudentService Integration Tests", () => {
         });
     });
 
-    describe("getAllStudentEntitiesByUserId", () => {
-        it("should retrieve all student profiles for a user with pagination", async () => {
-            // Arrange - Create multiple students
-            const student1 = await studentService.createStudentEntity(
-                {
-                    academicPerformances: [
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 10,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 11,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 12,
-                        },
-                    ],
-                    aptitudeExams: [],
-                    awards: [],
-                    certifications: [],
-                    conducts: [
-                        { conduct: Conduct.GOOD, grade: 10 },
-                        { conduct: Conduct.GOOD, grade: 11 },
-                        { conduct: Conduct.GOOD, grade: 12 },
-                    ],
-                    majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
-                    nationalExams: [
-                        { name: VietnameseSubject.TOAN, score: 8.0 },
-                        { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                        { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                        { name: VietnameseSubject.VAT_LY, score: 7.5 },
-                    ],
-                    province: VietnamSouthernProvinces.HO_CHI_MINH,
-                    talentExams: [],
-                    uniType: UniType.PUBLIC,
-                },
-                testUser.id,
-            );
+    describe("getAllByUserId", () => {
+        describe("getAllByUserId", () => {
+            it("should retrieve all student profiles for a user with pagination", async () => {
+                // Arrange
+                const request1: StudentRequest = plainToInstance(
+                    StudentRequest,
+                    {
+                        // Required: Academic Performances (3 items with different values for each grade)
+                        academicPerformances: [
+                            {
+                                academicPerformance: AcademicPerformance.GOOD,
+                                grade: 10,
+                            },
+                            {
+                                academicPerformance:
+                                    AcademicPerformance.SATISFACTORY,
+                                grade: 11,
+                            },
+                            {
+                                academicPerformance: AcademicPerformance.PASSED,
+                                grade: 12,
+                            },
+                        ],
+                        // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                        aptitudeExams: [
+                            {
+                                examType: ExamType.VNUHCM,
+                                languageScore: 350,
+                                mathScore: 200,
+                                scienceLogic: 150,
+                                score: 700,
+                            },
+                            {
+                                examType: ExamType.HSA,
+                                score: 95,
+                            },
+                        ],
+                        // Optional: Awards (multiple awards with different categories and levels)
+                        awards: [
+                            {
+                                category:
+                                    NationalExcellentStudentExamSubject.MATHEMATICS,
+                                level: Rank.FIRST,
+                                name: NationalExcellentExamType.NATIONAL,
+                            },
+                            {
+                                category:
+                                    NationalExcellentStudentExamSubject.PHYSICS,
+                                level: Rank.SECOND,
+                                name: NationalExcellentExamType.NATIONAL,
+                            },
+                            {
+                                category:
+                                    NationalExcellentStudentExamSubject.ENGLISH,
+                                level: Rank.THIRD,
+                                name: NationalExcellentExamType.NATIONAL,
+                            },
+                        ],
+                        // Optional: Certifications (language and other certifications)
+                        certifications: [
+                            {
+                                examType: ExamType.IELTS,
+                                level: "7.5",
+                            },
+                            {
+                                examType: ExamType.TOEFL_iBT,
+                                level: "105",
+                            },
+                            {
+                                examType: ExamType.SAT,
+                                level: "1450",
+                            },
+                        ],
+                        // Required: Conducts (3 items with different values for each grade)
+                        conducts: [
+                            { conduct: Conduct.GOOD, grade: 10 },
+                            { conduct: Conduct.SATISFACTORY, grade: 11 },
+                            { conduct: Conduct.PASSED, grade: 12 },
+                        ],
+                        // Required: Majors (multiple major groups, 1-3 items)
+                        majors: [
+                            MajorGroup.ENGINEERING,
+                            MajorGroup.NATURAL_SCIENCES,
+                            MajorGroup.MATHEMATICS_AND_STATISTICS,
+                        ],
+                        // Required: Budget (with maxBudget > minBudget)
+                        maxBudget: 150000000,
+                        minBudget: 50000000,
+                        // Required: National Exams (exactly 4 subjects with varied scores)
+                        nationalExams: [
+                            { name: VietnameseSubject.TOAN, score: 9.5 },
+                            { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                            { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                            { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                        ],
+                        // Required: Province
+                        province: VietnamSouthernProvinces.HO_CHI_MINH,
+                        // Optional: Special Student Cases (multiple cases)
+                        specialStudentCases: [
+                            SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                            SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                        ],
+                        // Optional: Talent Exams (multiple talent subjects)
+                        talentExams: [
+                            { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                            { name: VietnameseSubject.HAT, score: 8.5 },
+                            {
+                                name: VietnameseSubject.DOC_DIEN_CAM,
+                                score: 8.75,
+                            },
+                        ],
+                        // Required: University Type
+                        uniType: UniType.PUBLIC,
+                        // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                        vsatExams: [
+                            { name: VietnameseSubject.TOAN, score: 140 },
+                            { name: VietnameseSubject.NGU_VAN, score: 135 },
+                            { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                            { name: VietnameseSubject.VAT_LY, score: 130 },
+                            { name: VietnameseSubject.HOA_HOC, score: 138 },
+                        ],
+                    },
+                );
+                const validationErrors1 = await validate(request1);
+                expect(validationErrors1).toHaveLength(0);
 
-            createdStudentIds.push(student1.id);
+                const student1 = await studentService.create(
+                    request1,
+                    testUser.id,
+                );
+                createdStudentIds.push(student1.id);
 
-            const student2 = await studentService.createStudentEntity(
-                {
-                    academicPerformances: [
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 10,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 11,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 12,
-                        },
-                    ],
-                    aptitudeExams: [],
-                    awards: [],
-                    certifications: [],
-                    conducts: [
-                        { conduct: Conduct.GOOD, grade: 10 },
-                        { conduct: Conduct.GOOD, grade: 11 },
-                        { conduct: Conduct.GOOD, grade: 12 },
-                    ],
-                    majors: [MajorGroup.BUSINESS_AND_MANAGEMENT],
-                    maxBudget: 6000000,
-                    minBudget: 2000000,
-                    nationalExams: [
-                        { name: VietnameseSubject.TOAN, score: 8.0 },
-                        { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                        { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                        { name: VietnameseSubject.LICH_SU, score: 7.5 },
-                    ],
-                    province: VietnamSouthernProvinces.HO_CHI_MINH,
-                    talentExams: [],
-                    uniType: UniType.PUBLIC,
-                    vsatExams: [],
-                },
-                testUser.id,
-            );
+                const request2: StudentRequest = plainToInstance(
+                    StudentRequest,
+                    {
+                        // Required: Academic Performances (3 items with different values for each grade)
+                        academicPerformances: [
+                            {
+                                academicPerformance: AcademicPerformance.GOOD,
+                                grade: 10,
+                            },
+                            {
+                                academicPerformance:
+                                    AcademicPerformance.SATISFACTORY,
+                                grade: 11,
+                            },
+                            {
+                                academicPerformance: AcademicPerformance.PASSED,
+                                grade: 12,
+                            },
+                        ],
+                        // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                        aptitudeExams: [
+                            {
+                                examType: ExamType.VNUHCM,
+                                languageScore: 350,
+                                mathScore: 200,
+                                scienceLogic: 150,
+                                score: 700,
+                            },
+                            {
+                                examType: ExamType.HSA,
+                                score: 95,
+                            },
+                        ],
+                        // Optional: Awards (multiple awards with different categories and levels)
+                        awards: [
+                            {
+                                category:
+                                    NationalExcellentStudentExamSubject.MATHEMATICS,
+                                level: Rank.FIRST,
+                                name: NationalExcellentExamType.NATIONAL,
+                            },
+                            {
+                                category:
+                                    NationalExcellentStudentExamSubject.PHYSICS,
+                                level: Rank.SECOND,
+                                name: NationalExcellentExamType.NATIONAL,
+                            },
+                            {
+                                category:
+                                    NationalExcellentStudentExamSubject.ENGLISH,
+                                level: Rank.THIRD,
+                                name: NationalExcellentExamType.NATIONAL,
+                            },
+                        ],
+                        // Optional: Certifications (language and other certifications)
+                        certifications: [
+                            {
+                                examType: ExamType.IELTS,
+                                level: "7.5",
+                            },
+                            {
+                                examType: ExamType.TOEFL_iBT,
+                                level: "105",
+                            },
+                            {
+                                examType: ExamType.SAT,
+                                level: "1450",
+                            },
+                        ],
+                        // Required: Conducts (3 items with different values for each grade)
+                        conducts: [
+                            { conduct: Conduct.GOOD, grade: 10 },
+                            { conduct: Conduct.SATISFACTORY, grade: 11 },
+                            { conduct: Conduct.PASSED, grade: 12 },
+                        ],
+                        // Required: Majors (multiple major groups, 1-3 items)
+                        majors: [
+                            MajorGroup.ENGINEERING,
+                            MajorGroup.NATURAL_SCIENCES,
+                            MajorGroup.MATHEMATICS_AND_STATISTICS,
+                        ],
+                        // Required: Budget (with maxBudget > minBudget)
+                        maxBudget: 150000000,
+                        minBudget: 50000000,
+                        // Required: National Exams (exactly 4 subjects with varied scores)
+                        nationalExams: [
+                            { name: VietnameseSubject.TOAN, score: 9.5 },
+                            { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                            { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                            { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                        ],
+                        // Required: Province
+                        province: VietnamSouthernProvinces.HO_CHI_MINH,
+                        // Optional: Special Student Cases (multiple cases)
+                        specialStudentCases: [
+                            SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                            SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                        ],
+                        // Optional: Talent Exams (multiple talent subjects)
+                        talentExams: [
+                            { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                            { name: VietnameseSubject.HAT, score: 8.5 },
+                            {
+                                name: VietnameseSubject.DOC_DIEN_CAM,
+                                score: 8.75,
+                            },
+                        ],
+                        // Required: University Type
+                        uniType: UniType.PUBLIC,
+                        // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                        vsatExams: [
+                            { name: VietnameseSubject.TOAN, score: 140 },
+                            { name: VietnameseSubject.NGU_VAN, score: 135 },
+                            { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                            { name: VietnameseSubject.VAT_LY, score: 130 },
+                            { name: VietnameseSubject.HOA_HOC, score: 138 },
+                        ],
+                    },
+                );
+                const validationErrors2 = await validate(request2);
+                expect(validationErrors2).toHaveLength(0);
 
-            createdStudentIds.push(student2.id);
+                const student2 = await studentService.create(
+                    request2,
+                    testUser.id,
+                );
+                createdStudentIds.push(student2.id);
 
-            const pageable = PageRequest.of(0, 10);
+                const pageable = PageRequest.of(0, 10);
 
-            // Act
-            const page = await studentService.getAllStudentEntitiesByUserId(
-                testUser.id,
-                pageable,
-            );
+                // Act
+                const page = await studentService.getAllByUserId(
+                    testUser.id,
+                    pageable,
+                );
 
-            // Assert
-            expect(page).toBeDefined();
-            expect(page.content.length).toBeGreaterThanOrEqual(2);
-            expect(page.totalElements).toBeGreaterThanOrEqual(2);
-        });
+                // Assert
+                expect(page).toBeDefined();
+                expect(page.content).toContainEqual(
+                    expect.objectContaining({ id: student1.id }),
+                );
+                expect(page.content).toContainEqual(
+                    expect.objectContaining({ id: student2.id }),
+                );
+                expect(page.totalElements).toBeGreaterThanOrEqual(2);
+            });
 
-        it("should sort students by createdAt DESC by default", async () => {
-            // Arrange
-            const pageable = PageRequest.of(0, 10);
+            it("should sort students by createdAt DESC by default", async () => {
+                // Arrange - Create students with controlled timing\
+                const request1: StudentRequest = plainToInstance(
+                    StudentRequest,
+                    {
+                        // Required: Academic Performances (3 items with different values for each grade)
+                        academicPerformances: [
+                            {
+                                academicPerformance: AcademicPerformance.GOOD,
+                                grade: 10,
+                            },
+                            {
+                                academicPerformance:
+                                    AcademicPerformance.SATISFACTORY,
+                                grade: 11,
+                            },
+                            {
+                                academicPerformance: AcademicPerformance.PASSED,
+                                grade: 12,
+                            },
+                        ],
+                        // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                        aptitudeExams: [
+                            {
+                                examType: ExamType.VNUHCM,
+                                languageScore: 350,
+                                mathScore: 200,
+                                scienceLogic: 150,
+                                score: 700,
+                            },
+                            {
+                                examType: ExamType.HSA,
+                                score: 95,
+                            },
+                        ],
+                        // Optional: Awards (multiple awards with different categories and levels)
+                        awards: [
+                            {
+                                category:
+                                    NationalExcellentStudentExamSubject.MATHEMATICS,
+                                level: Rank.FIRST,
+                                name: NationalExcellentExamType.NATIONAL,
+                            },
+                            {
+                                category:
+                                    NationalExcellentStudentExamSubject.PHYSICS,
+                                level: Rank.SECOND,
+                                name: NationalExcellentExamType.NATIONAL,
+                            },
+                            {
+                                category:
+                                    NationalExcellentStudentExamSubject.ENGLISH,
+                                level: Rank.THIRD,
+                                name: NationalExcellentExamType.NATIONAL,
+                            },
+                        ],
+                        // Optional: Certifications (language and other certifications)
+                        certifications: [
+                            {
+                                examType: ExamType.IELTS,
+                                level: "7.5",
+                            },
+                            {
+                                examType: ExamType.TOEFL_iBT,
+                                level: "105",
+                            },
+                            {
+                                examType: ExamType.SAT,
+                                level: "1450",
+                            },
+                        ],
+                        // Required: Conducts (3 items with different values for each grade)
+                        conducts: [
+                            { conduct: Conduct.GOOD, grade: 10 },
+                            { conduct: Conduct.SATISFACTORY, grade: 11 },
+                            { conduct: Conduct.PASSED, grade: 12 },
+                        ],
+                        // Required: Majors (multiple major groups, 1-3 items)
+                        majors: [
+                            MajorGroup.ENGINEERING,
+                            MajorGroup.NATURAL_SCIENCES,
+                            MajorGroup.MATHEMATICS_AND_STATISTICS,
+                        ],
+                        // Required: Budget (with maxBudget > minBudget)
+                        maxBudget: 150000000,
+                        minBudget: 50000000,
+                        // Required: National Exams (exactly 4 subjects with varied scores)
+                        nationalExams: [
+                            { name: VietnameseSubject.TOAN, score: 9.5 },
+                            { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                            { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                            { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                        ],
+                        // Required: Province
+                        province: VietnamSouthernProvinces.HO_CHI_MINH,
+                        // Optional: Special Student Cases (multiple cases)
+                        specialStudentCases: [
+                            SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                            SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                        ],
+                        // Optional: Talent Exams (multiple talent subjects)
+                        talentExams: [
+                            { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                            { name: VietnameseSubject.HAT, score: 8.5 },
+                            {
+                                name: VietnameseSubject.DOC_DIEN_CAM,
+                                score: 8.75,
+                            },
+                        ],
+                        // Required: University Type
+                        uniType: UniType.PUBLIC,
+                        // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                        vsatExams: [
+                            { name: VietnameseSubject.TOAN, score: 140 },
+                            { name: VietnameseSubject.NGU_VAN, score: 135 },
+                            { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                            { name: VietnameseSubject.VAT_LY, score: 130 },
+                            { name: VietnameseSubject.HOA_HOC, score: 138 },
+                        ],
+                    },
+                );
+                const validationErrors1 = await validate(request1);
+                expect(validationErrors1).toHaveLength(0);
 
-            // Act
-            const page = await studentService.getAllStudentEntitiesByUserId(
-                testUser.id,
-                pageable,
-            );
+                const student1 = await studentService.create(
+                    request1,
+                    testUser.id,
+                );
+                createdStudentIds.push(student1.id);
 
-            const content = page.content;
-            expect(content.length).toBeGreaterThanOrEqual(2);
+                await new Promise((resolve) => setTimeout(resolve, 10));
+                const request2: StudentRequest = plainToInstance(
+                    StudentRequest,
+                    {
+                        // Required: Academic Performances (3 items with different values for each grade)
+                        academicPerformances: [
+                            {
+                                academicPerformance: AcademicPerformance.GOOD,
+                                grade: 10,
+                            },
+                            {
+                                academicPerformance:
+                                    AcademicPerformance.SATISFACTORY,
+                                grade: 11,
+                            },
+                            {
+                                academicPerformance: AcademicPerformance.PASSED,
+                                grade: 12,
+                            },
+                        ],
+                        // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                        aptitudeExams: [
+                            {
+                                examType: ExamType.VNUHCM,
+                                languageScore: 350,
+                                mathScore: 200,
+                                scienceLogic: 150,
+                                score: 700,
+                            },
+                            {
+                                examType: ExamType.HSA,
+                                score: 95,
+                            },
+                        ],
+                        // Optional: Awards (multiple awards with different categories and levels)
+                        awards: [
+                            {
+                                category:
+                                    NationalExcellentStudentExamSubject.MATHEMATICS,
+                                level: Rank.FIRST,
+                                name: NationalExcellentExamType.NATIONAL,
+                            },
+                            {
+                                category:
+                                    NationalExcellentStudentExamSubject.PHYSICS,
+                                level: Rank.SECOND,
+                                name: NationalExcellentExamType.NATIONAL,
+                            },
+                            {
+                                category:
+                                    NationalExcellentStudentExamSubject.ENGLISH,
+                                level: Rank.THIRD,
+                                name: NationalExcellentExamType.NATIONAL,
+                            },
+                        ],
+                        // Optional: Certifications (language and other certifications)
+                        certifications: [
+                            {
+                                examType: ExamType.IELTS,
+                                level: "7.5",
+                            },
+                            {
+                                examType: ExamType.TOEFL_iBT,
+                                level: "105",
+                            },
+                            {
+                                examType: ExamType.SAT,
+                                level: "1450",
+                            },
+                        ],
+                        // Required: Conducts (3 items with different values for each grade)
+                        conducts: [
+                            { conduct: Conduct.GOOD, grade: 10 },
+                            { conduct: Conduct.SATISFACTORY, grade: 11 },
+                            { conduct: Conduct.PASSED, grade: 12 },
+                        ],
+                        // Required: Majors (multiple major groups, 1-3 items)
+                        majors: [
+                            MajorGroup.ENGINEERING,
+                            MajorGroup.NATURAL_SCIENCES,
+                            MajorGroup.MATHEMATICS_AND_STATISTICS,
+                        ],
+                        // Required: Budget (with maxBudget > minBudget)
+                        maxBudget: 150000000,
+                        minBudget: 50000000,
+                        // Required: National Exams (exactly 4 subjects with varied scores)
+                        nationalExams: [
+                            { name: VietnameseSubject.TOAN, score: 9.5 },
+                            { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                            { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                            { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                        ],
+                        // Required: Province
+                        province: VietnamSouthernProvinces.HO_CHI_MINH,
+                        // Optional: Special Student Cases (multiple cases)
+                        specialStudentCases: [
+                            SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                            SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                        ],
+                        // Optional: Talent Exams (multiple talent subjects)
+                        talentExams: [
+                            { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                            { name: VietnameseSubject.HAT, score: 8.5 },
+                            {
+                                name: VietnameseSubject.DOC_DIEN_CAM,
+                                score: 8.75,
+                            },
+                        ],
+                        // Required: University Type
+                        uniType: UniType.PUBLIC,
+                        // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                        vsatExams: [
+                            { name: VietnameseSubject.TOAN, score: 140 },
+                            { name: VietnameseSubject.NGU_VAN, score: 135 },
+                            { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                            { name: VietnameseSubject.VAT_LY, score: 130 },
+                            { name: VietnameseSubject.HOA_HOC, score: 138 },
+                        ],
+                    },
+                );
+                const validationErrors2 = await validate(request2);
+                expect(validationErrors2).toHaveLength(0);
+                const student2 = await studentService.create(
+                    request2,
+                    testUser.id,
+                );
+                createdStudentIds.push(student2.id);
 
-            expect(content[0].createdAt.getTime()).toBeGreaterThanOrEqual(
-                content[1].createdAt.getTime(),
-            );
+                // Act
+                const page = await studentService.getAllByUserId(
+                    testUser.id,
+                    PageRequest.of(0, 10),
+                );
+
+                // Assert
+                const student2Index = page.content.findIndex(
+                    (s) => s.id === student2.id,
+                );
+                const student1Index = page.content.findIndex(
+                    (s) => s.id === student1.id,
+                );
+
+                expect(student2Index).toBeLessThan(student1Index); // Newer first
+            });
         });
 
         it("should apply custom sorting", async () => {
@@ -1250,7 +1754,7 @@ describe("StudentService Integration Tests", () => {
             const pageable = PageRequest.of(0, 10, sort);
 
             // Act
-            const page = await studentService.getAllStudentEntitiesByUserId(
+            const page = await studentService.getAllByUserId(
                 testUser.id,
                 pageable,
             );
@@ -1273,7 +1777,7 @@ describe("StudentService Integration Tests", () => {
             const pageable = PageRequest.of(0, pageSize);
 
             // Act
-            const page = await studentService.getAllStudentEntitiesByUserId(
+            const page = await studentService.getAllByUserId(
                 testUser.id,
                 pageable,
             );
@@ -1286,53 +1790,129 @@ describe("StudentService Integration Tests", () => {
         });
     });
 
-    describe("getStudentEntityByIdAnUserId", () => {
+    describe("getByIdAndUserId", () => {
         it("should retrieve a student profile by id for authenticated user", async () => {
             // Arrange
-            const created = await studentService.createStudentEntity(
-                {
-                    academicPerformances: [
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 10,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 11,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 12,
-                        },
-                    ],
-                    aptitudeExams: [],
-                    awards: [],
-                    certifications: [],
-                    conducts: [
-                        { conduct: Conduct.GOOD, grade: 10 },
-                        { conduct: Conduct.GOOD, grade: 11 },
-                        { conduct: Conduct.GOOD, grade: 12 },
-                    ],
-                    majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
-                    nationalExams: [
-                        { name: VietnameseSubject.TOAN, score: 8.0 },
-                        { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                        { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                        { name: VietnameseSubject.VAT_LY, score: 7.5 },
-                    ],
-                    province: VietnamSouthernProvinces.HO_CHI_MINH,
-                    talentExams: [],
-                    uniType: UniType.PUBLIC,
-                    vsatExams: [],
-                },
-                testUser.id,
-            );
+            const request: StudentRequest = plainToInstance(StudentRequest, {
+                // Required: Academic Performances (3 items with different values for each grade)
+                academicPerformances: [
+                    {
+                        academicPerformance: AcademicPerformance.GOOD,
+                        grade: 10,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.SATISFACTORY,
+                        grade: 11,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.PASSED,
+                        grade: 12,
+                    },
+                ],
+                // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                aptitudeExams: [
+                    {
+                        examType: ExamType.VNUHCM,
+                        languageScore: 350,
+                        mathScore: 200,
+                        scienceLogic: 150,
+                        score: 700,
+                    },
+                    {
+                        examType: ExamType.HSA,
+                        score: 95,
+                    },
+                ],
+                // Optional: Awards (multiple awards with different categories and levels)
+                awards: [
+                    {
+                        category:
+                            NationalExcellentStudentExamSubject.MATHEMATICS,
+                        level: Rank.FIRST,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.PHYSICS,
+                        level: Rank.SECOND,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.ENGLISH,
+                        level: Rank.THIRD,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                ],
+                // Optional: Certifications (language and other certifications)
+                certifications: [
+                    {
+                        examType: ExamType.IELTS,
+                        level: "7.5",
+                    },
+                    {
+                        examType: ExamType.TOEFL_iBT,
+                        level: "105",
+                    },
+                    {
+                        examType: ExamType.SAT,
+                        level: "1450",
+                    },
+                ],
+                // Required: Conducts (3 items with different values for each grade)
+                conducts: [
+                    { conduct: Conduct.GOOD, grade: 10 },
+                    { conduct: Conduct.SATISFACTORY, grade: 11 },
+                    { conduct: Conduct.PASSED, grade: 12 },
+                ],
+                // Required: Majors (multiple major groups, 1-3 items)
+                majors: [
+                    MajorGroup.ENGINEERING,
+                    MajorGroup.NATURAL_SCIENCES,
+                    MajorGroup.MATHEMATICS_AND_STATISTICS,
+                ],
+                // Required: Budget (with maxBudget > minBudget)
+                maxBudget: 150000000,
+                minBudget: 50000000,
+                // Required: National Exams (exactly 4 subjects with varied scores)
+                nationalExams: [
+                    { name: VietnameseSubject.TOAN, score: 9.5 },
+                    { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                    { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                ],
+                // Required: Province
+                province: VietnamSouthernProvinces.HO_CHI_MINH,
+                // Optional: Special Student Cases (multiple cases)
+                specialStudentCases: [
+                    SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                    SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                ],
+                // Optional: Talent Exams (multiple talent subjects)
+                talentExams: [
+                    { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                    { name: VietnameseSubject.HAT, score: 8.5 },
+                    {
+                        name: VietnameseSubject.DOC_DIEN_CAM,
+                        score: 8.75,
+                    },
+                ],
+                // Required: University Type
+                uniType: UniType.PUBLIC,
+                // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                vsatExams: [
+                    { name: VietnameseSubject.TOAN, score: 140 },
+                    { name: VietnameseSubject.NGU_VAN, score: 135 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                    { name: VietnameseSubject.VAT_LY, score: 130 },
+                    { name: VietnameseSubject.HOA_HOC, score: 138 },
+                ],
+            });
+            const validationErrors = await validate(request);
+            expect(validationErrors).toHaveLength(0);
+            const created = await studentService.create(request, testUser.id);
             createdStudentIds.push(created.id);
 
             // Act
-            const retrieved = await studentService.getStudentEntityByIdAnUserId(
+            const retrieved = await studentService.getByIdAndUserId(
                 created.id,
                 testUser.id,
             );
@@ -1344,49 +1924,126 @@ describe("StudentService Integration Tests", () => {
 
         it("should retrieve anonymous student profile", async () => {
             // Arrange
-            const created = await studentService.createStudentEntity({
+            const request: StudentRequest = plainToInstance(StudentRequest, {
+                // Required: Academic Performances (3 items with different values for each grade)
                 academicPerformances: [
                     {
                         academicPerformance: AcademicPerformance.GOOD,
                         grade: 10,
                     },
                     {
-                        academicPerformance: AcademicPerformance.GOOD,
+                        academicPerformance: AcademicPerformance.SATISFACTORY,
                         grade: 11,
                     },
                     {
-                        academicPerformance: AcademicPerformance.GOOD,
+                        academicPerformance: AcademicPerformance.PASSED,
                         grade: 12,
                     },
                 ],
-                aptitudeExams: [],
-                awards: [],
-                certifications: [],
+                // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                aptitudeExams: [
+                    {
+                        examType: ExamType.VNUHCM,
+                        languageScore: 350,
+                        mathScore: 200,
+                        scienceLogic: 150,
+                        score: 700,
+                    },
+                    {
+                        examType: ExamType.HSA,
+                        score: 95,
+                    },
+                ],
+                // Optional: Awards (multiple awards with different categories and levels)
+                awards: [
+                    {
+                        category:
+                            NationalExcellentStudentExamSubject.MATHEMATICS,
+                        level: Rank.FIRST,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.PHYSICS,
+                        level: Rank.SECOND,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.ENGLISH,
+                        level: Rank.THIRD,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                ],
+                // Optional: Certifications (language and other certifications)
+                certifications: [
+                    {
+                        examType: ExamType.IELTS,
+                        level: "7.5",
+                    },
+                    {
+                        examType: ExamType.TOEFL_iBT,
+                        level: "105",
+                    },
+                    {
+                        examType: ExamType.SAT,
+                        level: "1450",
+                    },
+                ],
+                // Required: Conducts (3 items with different values for each grade)
                 conducts: [
                     { conduct: Conduct.GOOD, grade: 10 },
-                    { conduct: Conduct.GOOD, grade: 11 },
-                    { conduct: Conduct.GOOD, grade: 12 },
+                    { conduct: Conduct.SATISFACTORY, grade: 11 },
+                    { conduct: Conduct.PASSED, grade: 12 },
                 ],
-                majors: [MajorGroup.ENGINEERING],
-                maxBudget: 5000000,
-                minBudget: 1000000,
+                // Required: Majors (multiple major groups, 1-3 items)
+                majors: [
+                    MajorGroup.ENGINEERING,
+                    MajorGroup.NATURAL_SCIENCES,
+                    MajorGroup.MATHEMATICS_AND_STATISTICS,
+                ],
+                // Required: Budget (with maxBudget > minBudget)
+                maxBudget: 150000000,
+                minBudget: 50000000,
+                // Required: National Exams (exactly 4 subjects with varied scores)
                 nationalExams: [
-                    { name: VietnameseSubject.TOAN, score: 8.0 },
-                    { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                    { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                    { name: VietnameseSubject.VAT_LY, score: 7.5 },
+                    { name: VietnameseSubject.TOAN, score: 9.5 },
+                    { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                    { name: VietnameseSubject.VAT_LY, score: 8.75 },
                 ],
+                // Required: Province
                 province: VietnamSouthernProvinces.HO_CHI_MINH,
-                talentExams: [],
+                // Optional: Special Student Cases (multiple cases)
+                specialStudentCases: [
+                    SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                    SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                ],
+                // Optional: Talent Exams (multiple talent subjects)
+                talentExams: [
+                    { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                    { name: VietnameseSubject.HAT, score: 8.5 },
+                    {
+                        name: VietnameseSubject.DOC_DIEN_CAM,
+                        score: 8.75,
+                    },
+                ],
+                // Required: University Type
                 uniType: UniType.PUBLIC,
-                vsatExams: [],
+                // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                vsatExams: [
+                    { name: VietnameseSubject.TOAN, score: 140 },
+                    { name: VietnameseSubject.NGU_VAN, score: 135 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                    { name: VietnameseSubject.VAT_LY, score: 130 },
+                    { name: VietnameseSubject.HOA_HOC, score: 138 },
+                ],
             });
+            const validationErrors = await validate(request);
+            expect(validationErrors).toHaveLength(0);
+            const created = await studentService.create(request);
             createdStudentIds.push(created.id);
 
             // Act
-            const retrieved = await studentService.getStudentEntityByIdAnUserId(
-                created.id,
-            );
+            const retrieved = await studentService.getByIdAndUserId(created.id);
 
             // Assert
             expect(retrieved).toBeDefined();
@@ -1402,10 +2059,7 @@ describe("StudentService Integration Tests", () => {
 
             // Act & Assert
             await expect(
-                studentService.getStudentEntityByIdAnUserId(
-                    nonExistentId,
-                    testUser.id,
-                ),
+                studentService.getByIdAndUserId(nonExistentId, testUser.id),
             ).rejects.toThrow(EntityNotFoundException);
         });
 
@@ -1419,118 +2073,254 @@ describe("StudentService Integration Tests", () => {
             await userRepository.save(otherUser);
             createdUserIds.push(otherUser.id);
 
-            const student = await studentService.createStudentEntity(
-                {
-                    academicPerformances: [
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 10,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 11,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 12,
-                        },
-                    ],
-                    aptitudeExams: [],
-                    awards: [],
-                    certifications: [],
-                    conducts: [
-                        { conduct: Conduct.GOOD, grade: 10 },
-                        { conduct: Conduct.GOOD, grade: 11 },
-                        { conduct: Conduct.GOOD, grade: 12 },
-                    ],
-                    majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
-                    nationalExams: [
-                        { name: VietnameseSubject.TOAN, score: 8.0 },
-                        { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                        { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                        { name: VietnameseSubject.VAT_LY, score: 7.5 },
-                    ],
-                    province: VietnamSouthernProvinces.HO_CHI_MINH,
-                    talentExams: [],
-                    uniType: UniType.PUBLIC,
-                    vsatExams: [],
-                },
-                otherUser.id,
-            );
+            const request: StudentRequest = plainToInstance(StudentRequest, {
+                // Required: Academic Performances (3 items with different values for each grade)
+                academicPerformances: [
+                    {
+                        academicPerformance: AcademicPerformance.GOOD,
+                        grade: 10,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.SATISFACTORY,
+                        grade: 11,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.PASSED,
+                        grade: 12,
+                    },
+                ],
+                // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                aptitudeExams: [
+                    {
+                        examType: ExamType.VNUHCM,
+                        languageScore: 350,
+                        mathScore: 200,
+                        scienceLogic: 150,
+                        score: 700,
+                    },
+                    {
+                        examType: ExamType.HSA,
+                        score: 95,
+                    },
+                ],
+                // Optional: Awards (multiple awards with different categories and levels)
+                awards: [
+                    {
+                        category:
+                            NationalExcellentStudentExamSubject.MATHEMATICS,
+                        level: Rank.FIRST,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.PHYSICS,
+                        level: Rank.SECOND,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.ENGLISH,
+                        level: Rank.THIRD,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                ],
+                // Optional: Certifications (language and other certifications)
+                certifications: [
+                    {
+                        examType: ExamType.IELTS,
+                        level: "7.5",
+                    },
+                    {
+                        examType: ExamType.TOEFL_iBT,
+                        level: "105",
+                    },
+                    {
+                        examType: ExamType.SAT,
+                        level: "1450",
+                    },
+                ],
+                // Required: Conducts (3 items with different values for each grade)
+                conducts: [
+                    { conduct: Conduct.GOOD, grade: 10 },
+                    { conduct: Conduct.SATISFACTORY, grade: 11 },
+                    { conduct: Conduct.PASSED, grade: 12 },
+                ],
+                // Required: Majors (multiple major groups, 1-3 items)
+                majors: [
+                    MajorGroup.ENGINEERING,
+                    MajorGroup.NATURAL_SCIENCES,
+                    MajorGroup.MATHEMATICS_AND_STATISTICS,
+                ],
+                // Required: Budget (with maxBudget > minBudget)
+                maxBudget: 150000000,
+                minBudget: 50000000,
+                // Required: National Exams (exactly 4 subjects with varied scores)
+                nationalExams: [
+                    { name: VietnameseSubject.TOAN, score: 9.5 },
+                    { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                    { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                ],
+                // Required: Province
+                province: VietnamSouthernProvinces.HO_CHI_MINH,
+                // Optional: Special Student Cases (multiple cases)
+                specialStudentCases: [
+                    SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                    SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                ],
+                // Optional: Talent Exams (multiple talent subjects)
+                talentExams: [
+                    { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                    { name: VietnameseSubject.HAT, score: 8.5 },
+                    {
+                        name: VietnameseSubject.DOC_DIEN_CAM,
+                        score: 8.75,
+                    },
+                ],
+                // Required: University Type
+                uniType: UniType.PUBLIC,
+                // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                vsatExams: [
+                    { name: VietnameseSubject.TOAN, score: 140 },
+                    { name: VietnameseSubject.NGU_VAN, score: 135 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                    { name: VietnameseSubject.VAT_LY, score: 130 },
+                    { name: VietnameseSubject.HOA_HOC, score: 138 },
+                ],
+            });
+            const validationErrors = await validate(request);
+            expect(validationErrors).toHaveLength(0);
+
+            const student = await studentService.create(request, otherUser.id);
             createdStudentIds.push(student.id);
 
             // Act & Assert
             await expect(
-                studentService.getStudentEntityByIdAnUserId(
-                    student.id,
-                    testUser.id,
-                ),
+                studentService.getByIdAndUserId(student.id, testUser.id),
             ).rejects.toThrow(EntityNotFoundException);
         });
 
         it("should load all relations when retrieving student", async () => {
             // Arrange
-            const created = await studentService.createStudentEntity(
-                {
-                    academicPerformances: [
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 10,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 11,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 12,
-                        },
-                    ],
-                    aptitudeExams: [
-                        {
-                            examType: ExamType.VNUHCM,
-                            languageScore: 9.0,
-                            mathScore: 9.0,
-                            scienceLogic: 9.0,
-                            score: 27.0,
-                        },
-                    ],
-                    awards: [
-                        {
-                            category:
-                                NationalExcellentStudentExamSubject.ENGLISH,
-                            level: Rank.SECOND,
-                            name: NationalExcellentExamType.NATIONAL,
-                        },
-                    ],
-                    certifications: [],
-                    conducts: [
-                        { conduct: Conduct.GOOD, grade: 10 },
-                        { conduct: Conduct.GOOD, grade: 11 },
-                        { conduct: Conduct.GOOD, grade: 12 },
-                    ],
-                    majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
-                    nationalExams: [
-                        { name: VietnameseSubject.TOAN, score: 8.0 },
-                        { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                        { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                        { name: VietnameseSubject.VAT_LY, score: 7.5 },
-                    ],
-                    province: VietnamSouthernProvinces.HO_CHI_MINH,
-                    talentExams: [],
-                    uniType: UniType.PUBLIC,
-                    vsatExams: [],
-                },
-                testUser.id,
-            );
+            const request: StudentRequest = plainToInstance(StudentRequest, {
+                // Required: Academic Performances (3 items with different values for each grade)
+                academicPerformances: [
+                    {
+                        academicPerformance: AcademicPerformance.GOOD,
+                        grade: 10,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.SATISFACTORY,
+                        grade: 11,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.PASSED,
+                        grade: 12,
+                    },
+                ],
+                // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                aptitudeExams: [
+                    {
+                        examType: ExamType.VNUHCM,
+                        languageScore: 350,
+                        mathScore: 200,
+                        scienceLogic: 150,
+                        score: 700,
+                    },
+                    {
+                        examType: ExamType.HSA,
+                        score: 95,
+                    },
+                ],
+                // Optional: Awards (multiple awards with different categories and levels)
+                awards: [
+                    {
+                        category:
+                            NationalExcellentStudentExamSubject.MATHEMATICS,
+                        level: Rank.FIRST,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.PHYSICS,
+                        level: Rank.SECOND,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.ENGLISH,
+                        level: Rank.THIRD,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                ],
+                // Optional: Certifications (language and other certifications)
+                certifications: [
+                    {
+                        examType: ExamType.IELTS,
+                        level: "7.5",
+                    },
+                    {
+                        examType: ExamType.TOEFL_iBT,
+                        level: "105",
+                    },
+                    {
+                        examType: ExamType.SAT,
+                        level: "1450",
+                    },
+                ],
+                // Required: Conducts (3 items with different values for each grade)
+                conducts: [
+                    { conduct: Conduct.GOOD, grade: 10 },
+                    { conduct: Conduct.SATISFACTORY, grade: 11 },
+                    { conduct: Conduct.PASSED, grade: 12 },
+                ],
+                // Required: Majors (multiple major groups, 1-3 items)
+                majors: [
+                    MajorGroup.ENGINEERING,
+                    MajorGroup.NATURAL_SCIENCES,
+                    MajorGroup.MATHEMATICS_AND_STATISTICS,
+                ],
+                // Required: Budget (with maxBudget > minBudget)
+                maxBudget: 150000000,
+                minBudget: 50000000,
+                // Required: National Exams (exactly 4 subjects with varied scores)
+                nationalExams: [
+                    { name: VietnameseSubject.TOAN, score: 9.5 },
+                    { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                    { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                ],
+                // Required: Province
+                province: VietnamSouthernProvinces.HO_CHI_MINH,
+                // Optional: Special Student Cases (multiple cases)
+                specialStudentCases: [
+                    SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                    SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                ],
+                // Optional: Talent Exams (multiple talent subjects)
+                talentExams: [
+                    { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                    { name: VietnameseSubject.HAT, score: 8.5 },
+                    {
+                        name: VietnameseSubject.DOC_DIEN_CAM,
+                        score: 8.75,
+                    },
+                ],
+                // Required: University Type
+                uniType: UniType.PUBLIC,
+                // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                vsatExams: [
+                    { name: VietnameseSubject.TOAN, score: 140 },
+                    { name: VietnameseSubject.NGU_VAN, score: 135 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                    { name: VietnameseSubject.VAT_LY, score: 130 },
+                    { name: VietnameseSubject.HOA_HOC, score: 138 },
+                ],
+            });
+            const validationErrors = await validate(request);
+            expect(validationErrors).toHaveLength(0);
+
+            const created = await studentService.create(request, testUser.id);
             createdStudentIds.push(created.id);
 
             // Act
-            const retrieved = await studentService.getStudentEntityByIdAnUserId(
+            const retrieved = await studentService.getByIdAndUserId(
                 created.id,
                 testUser.id,
             );
@@ -1539,9 +2329,9 @@ describe("StudentService Integration Tests", () => {
             expect(retrieved.academicPerformances).toBeDefined();
             expect(retrieved.academicPerformances).toHaveLength(3);
             expect(retrieved.aptitudeExams).toBeDefined();
-            expect(retrieved.aptitudeExams).toHaveLength(1);
+            expect(retrieved.aptitudeExams).toHaveLength(2);
             expect(retrieved.awards).toBeDefined();
-            expect(retrieved.awards).toHaveLength(1);
+            expect(retrieved.awards).toHaveLength(3);
             expect(retrieved.conducts).toBeDefined();
             expect(retrieved.conducts).toHaveLength(3);
             expect(retrieved.nationalExams).toBeDefined();
@@ -1549,49 +2339,126 @@ describe("StudentService Integration Tests", () => {
         });
     });
 
-    describe("getStudentWithFiles", () => {
+    describe("getWithFiles", () => {
         it("should retrieve student with active files only", async () => {
             // Arrange
-            const student = await studentService.createStudentEntity(
-                {
-                    academicPerformances: [
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 10,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 11,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 12,
-                        },
-                    ],
-                    aptitudeExams: [],
-                    awards: [],
-                    certifications: [],
-                    conducts: [
-                        { conduct: Conduct.GOOD, grade: 10 },
-                        { conduct: Conduct.GOOD, grade: 11 },
-                        { conduct: Conduct.GOOD, grade: 12 },
-                    ],
-                    majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
-                    nationalExams: [
-                        { name: VietnameseSubject.TOAN, score: 8.0 },
-                        { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                        { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                        { name: VietnameseSubject.VAT_LY, score: 7.5 },
-                    ],
-                    province: VietnamSouthernProvinces.HO_CHI_MINH,
-                    talentExams: [],
-                    uniType: UniType.PUBLIC,
-                    vsatExams: [],
-                },
-                testUser.id,
-            );
+            const request: StudentRequest = plainToInstance(StudentRequest, {
+                // Required: Academic Performances (3 items with different values for each grade)
+                academicPerformances: [
+                    {
+                        academicPerformance: AcademicPerformance.GOOD,
+                        grade: 10,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.SATISFACTORY,
+                        grade: 11,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.PASSED,
+                        grade: 12,
+                    },
+                ],
+                // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                aptitudeExams: [
+                    {
+                        examType: ExamType.VNUHCM,
+                        languageScore: 350,
+                        mathScore: 200,
+                        scienceLogic: 150,
+                        score: 700,
+                    },
+                    {
+                        examType: ExamType.HSA,
+                        score: 95,
+                    },
+                ],
+                // Optional: Awards (multiple awards with different categories and levels)
+                awards: [
+                    {
+                        category:
+                            NationalExcellentStudentExamSubject.MATHEMATICS,
+                        level: Rank.FIRST,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.PHYSICS,
+                        level: Rank.SECOND,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.ENGLISH,
+                        level: Rank.THIRD,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                ],
+                // Optional: Certifications (language and other certifications)
+                certifications: [
+                    {
+                        examType: ExamType.IELTS,
+                        level: "7.5",
+                    },
+                    {
+                        examType: ExamType.TOEFL_iBT,
+                        level: "105",
+                    },
+                    {
+                        examType: ExamType.SAT,
+                        level: "1450",
+                    },
+                ],
+                // Required: Conducts (3 items with different values for each grade)
+                conducts: [
+                    { conduct: Conduct.GOOD, grade: 10 },
+                    { conduct: Conduct.SATISFACTORY, grade: 11 },
+                    { conduct: Conduct.PASSED, grade: 12 },
+                ],
+                // Required: Majors (multiple major groups, 1-3 items)
+                majors: [
+                    MajorGroup.ENGINEERING,
+                    MajorGroup.NATURAL_SCIENCES,
+                    MajorGroup.MATHEMATICS_AND_STATISTICS,
+                ],
+                // Required: Budget (with maxBudget > minBudget)
+                maxBudget: 150000000,
+                minBudget: 50000000,
+                // Required: National Exams (exactly 4 subjects with varied scores)
+                nationalExams: [
+                    { name: VietnameseSubject.TOAN, score: 9.5 },
+                    { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                    { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                ],
+                // Required: Province
+                province: VietnamSouthernProvinces.HO_CHI_MINH,
+                // Optional: Special Student Cases (multiple cases)
+                specialStudentCases: [
+                    SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                    SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                ],
+                // Optional: Talent Exams (multiple talent subjects)
+                talentExams: [
+                    { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                    { name: VietnameseSubject.HAT, score: 8.5 },
+                    {
+                        name: VietnameseSubject.DOC_DIEN_CAM,
+                        score: 8.75,
+                    },
+                ],
+                // Required: University Type
+                uniType: UniType.PUBLIC,
+                // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                vsatExams: [
+                    { name: VietnameseSubject.TOAN, score: 140 },
+                    { name: VietnameseSubject.NGU_VAN, score: 135 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                    { name: VietnameseSubject.VAT_LY, score: 130 },
+                    { name: VietnameseSubject.HOA_HOC, score: 138 },
+                ],
+            });
+            const validationErrors = await validate(request);
+            expect(validationErrors).toHaveLength(0);
+
+            const student = await studentService.create(request, testUser.id);
             createdStudentIds.push(student.id);
 
             // Create files
@@ -1620,7 +2487,7 @@ describe("StudentService Integration Tests", () => {
             await fileRepository.save(deletedFile);
 
             // Act
-            const retrieved = await studentService.getStudentWithFiles(
+            const retrieved = await studentService.getWithFiles(
                 student.id,
                 testUser.id,
             );
@@ -1636,43 +2503,123 @@ describe("StudentService Integration Tests", () => {
 
         it("should retrieve anonymous student with files", async () => {
             // Arrange
-            const student = await studentService.createStudentEntity({
+            const request: StudentRequest = plainToInstance(StudentRequest, {
+                // Required: Academic Performances (3 items with different values for each grade)
                 academicPerformances: [
                     {
                         academicPerformance: AcademicPerformance.GOOD,
                         grade: 10,
                     },
                     {
-                        academicPerformance: AcademicPerformance.GOOD,
+                        academicPerformance: AcademicPerformance.SATISFACTORY,
                         grade: 11,
                     },
                     {
-                        academicPerformance: AcademicPerformance.GOOD,
+                        academicPerformance: AcademicPerformance.PASSED,
                         grade: 12,
                     },
                 ],
-                aptitudeExams: [],
-                awards: [],
-                certifications: [],
+                // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                aptitudeExams: [
+                    {
+                        examType: ExamType.VNUHCM,
+                        languageScore: 350,
+                        mathScore: 200,
+                        scienceLogic: 150,
+                        score: 700,
+                    },
+                    {
+                        examType: ExamType.HSA,
+                        score: 95,
+                    },
+                ],
+                // Optional: Awards (multiple awards with different categories and levels)
+                awards: [
+                    {
+                        category:
+                            NationalExcellentStudentExamSubject.MATHEMATICS,
+                        level: Rank.FIRST,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.PHYSICS,
+                        level: Rank.SECOND,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.ENGLISH,
+                        level: Rank.THIRD,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                ],
+                // Optional: Certifications (language and other certifications)
+                certifications: [
+                    {
+                        examType: ExamType.IELTS,
+                        level: "7.5",
+                    },
+                    {
+                        examType: ExamType.TOEFL_iBT,
+                        level: "105",
+                    },
+                    {
+                        examType: ExamType.SAT,
+                        level: "1450",
+                    },
+                ],
+                // Required: Conducts (3 items with different values for each grade)
                 conducts: [
                     { conduct: Conduct.GOOD, grade: 10 },
-                    { conduct: Conduct.GOOD, grade: 11 },
-                    { conduct: Conduct.GOOD, grade: 12 },
+                    { conduct: Conduct.SATISFACTORY, grade: 11 },
+                    { conduct: Conduct.PASSED, grade: 12 },
                 ],
-                majors: [MajorGroup.ENGINEERING],
-                maxBudget: 5000000,
-                minBudget: 1000000,
+                // Required: Majors (multiple major groups, 1-3 items)
+                majors: [
+                    MajorGroup.ENGINEERING,
+                    MajorGroup.NATURAL_SCIENCES,
+                    MajorGroup.MATHEMATICS_AND_STATISTICS,
+                ],
+                // Required: Budget (with maxBudget > minBudget)
+                maxBudget: 150000000,
+                minBudget: 50000000,
+                // Required: National Exams (exactly 4 subjects with varied scores)
                 nationalExams: [
-                    { name: VietnameseSubject.TOAN, score: 8.0 },
-                    { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                    { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                    { name: VietnameseSubject.VAT_LY, score: 7.5 },
+                    { name: VietnameseSubject.TOAN, score: 9.5 },
+                    { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                    { name: VietnameseSubject.VAT_LY, score: 8.75 },
                 ],
+                // Required: Province
                 province: VietnamSouthernProvinces.HO_CHI_MINH,
-                talentExams: [],
+                // Optional: Special Student Cases (multiple cases)
+                specialStudentCases: [
+                    SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                    SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                ],
+                // Optional: Talent Exams (multiple talent subjects)
+                talentExams: [
+                    { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                    { name: VietnameseSubject.HAT, score: 8.5 },
+                    {
+                        name: VietnameseSubject.DOC_DIEN_CAM,
+                        score: 8.75,
+                    },
+                ],
+                // Required: University Type
                 uniType: UniType.PUBLIC,
-                vsatExams: [],
+                // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                vsatExams: [
+                    { name: VietnameseSubject.TOAN, score: 140 },
+                    { name: VietnameseSubject.NGU_VAN, score: 135 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                    { name: VietnameseSubject.VAT_LY, score: 130 },
+                    { name: VietnameseSubject.HOA_HOC, score: 138 },
+                ],
             });
+            const validationErrors = await validate(request);
+            expect(validationErrors).toHaveLength(0);
+
+            const student = await studentService.create(request);
             createdStudentIds.push(student.id);
 
             const file = fileRepository.create({
@@ -1688,61 +2635,140 @@ describe("StudentService Integration Tests", () => {
             await fileRepository.save(file);
 
             // Act
-            const retrieved = await studentService.getStudentWithFiles(
-                student.id,
-            );
+            const retrieved = await studentService.getWithFiles(student.id);
 
             // Assert
             expect(retrieved.files).toBeDefined();
             expect(retrieved.files).toHaveLength(1);
+            expect(retrieved.files?.[0].fileName).toBe("anonymous-file.pdf");
+            expect(retrieved.files?.[0].status).toBe(FileStatus.ACTIVE);
+            expect(Number(retrieved.files?.[0].fileSize)).toBe(1024);
+            expect(retrieved.createdBy).toBe(Role.ANONYMOUS);
         });
 
         it("should return empty files array when no active files exist", async () => {
             // Arrange
-            const student = await studentService.createStudentEntity(
-                {
-                    academicPerformances: [
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 10,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 11,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 12,
-                        },
-                    ],
-                    aptitudeExams: [],
-                    awards: [],
-                    certifications: [],
-                    conducts: [
-                        { conduct: Conduct.GOOD, grade: 10 },
-                        { conduct: Conduct.GOOD, grade: 11 },
-                        { conduct: Conduct.GOOD, grade: 12 },
-                    ],
-                    majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
-                    nationalExams: [
-                        { name: VietnameseSubject.TOAN, score: 8.0 },
-                        { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                        { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                        { name: VietnameseSubject.VAT_LY, score: 7.5 },
-                    ],
-                    province: VietnamSouthernProvinces.HO_CHI_MINH,
-                    talentExams: [],
-                    uniType: UniType.PUBLIC,
-                    vsatExams: [],
-                },
-                testUser.id,
-            );
+            const request: StudentRequest = plainToInstance(StudentRequest, {
+                // Required: Academic Performances (3 items with different values for each grade)
+                academicPerformances: [
+                    {
+                        academicPerformance: AcademicPerformance.GOOD,
+                        grade: 10,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.SATISFACTORY,
+                        grade: 11,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.PASSED,
+                        grade: 12,
+                    },
+                ],
+                // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                aptitudeExams: [
+                    {
+                        examType: ExamType.VNUHCM,
+                        languageScore: 350,
+                        mathScore: 200,
+                        scienceLogic: 150,
+                        score: 700,
+                    },
+                    {
+                        examType: ExamType.HSA,
+                        score: 95,
+                    },
+                ],
+                // Optional: Awards (multiple awards with different categories and levels)
+                awards: [
+                    {
+                        category:
+                            NationalExcellentStudentExamSubject.MATHEMATICS,
+                        level: Rank.FIRST,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.PHYSICS,
+                        level: Rank.SECOND,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.ENGLISH,
+                        level: Rank.THIRD,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                ],
+                // Optional: Certifications (language and other certifications)
+                certifications: [
+                    {
+                        examType: ExamType.IELTS,
+                        level: "7.5",
+                    },
+                    {
+                        examType: ExamType.TOEFL_iBT,
+                        level: "105",
+                    },
+                    {
+                        examType: ExamType.SAT,
+                        level: "1450",
+                    },
+                ],
+                // Required: Conducts (3 items with different values for each grade)
+                conducts: [
+                    { conduct: Conduct.GOOD, grade: 10 },
+                    { conduct: Conduct.SATISFACTORY, grade: 11 },
+                    { conduct: Conduct.PASSED, grade: 12 },
+                ],
+                // Required: Majors (multiple major groups, 1-3 items)
+                majors: [
+                    MajorGroup.ENGINEERING,
+                    MajorGroup.NATURAL_SCIENCES,
+                    MajorGroup.MATHEMATICS_AND_STATISTICS,
+                ],
+                // Required: Budget (with maxBudget > minBudget)
+                maxBudget: 150000000,
+                minBudget: 50000000,
+                // Required: National Exams (exactly 4 subjects with varied scores)
+                nationalExams: [
+                    { name: VietnameseSubject.TOAN, score: 9.5 },
+                    { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                    { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                ],
+                // Required: Province
+                province: VietnamSouthernProvinces.HO_CHI_MINH,
+                // Optional: Special Student Cases (multiple cases)
+                specialStudentCases: [
+                    SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                    SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                ],
+                // Optional: Talent Exams (multiple talent subjects)
+                talentExams: [
+                    { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                    { name: VietnameseSubject.HAT, score: 8.5 },
+                    {
+                        name: VietnameseSubject.DOC_DIEN_CAM,
+                        score: 8.75,
+                    },
+                ],
+                // Required: University Type
+                uniType: UniType.PUBLIC,
+                // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                vsatExams: [
+                    { name: VietnameseSubject.TOAN, score: 140 },
+                    { name: VietnameseSubject.NGU_VAN, score: 135 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                    { name: VietnameseSubject.VAT_LY, score: 130 },
+                    { name: VietnameseSubject.HOA_HOC, score: 138 },
+                ],
+            });
+            const validationErrors = await validate(request);
+            expect(validationErrors).toHaveLength(0);
+
+            const student = await studentService.create(request, testUser.id);
             createdStudentIds.push(student.id);
 
             // Act
-            const retrieved = await studentService.getStudentWithFiles(
+            const retrieved = await studentService.getWithFiles(
                 student.id,
                 testUser.id,
             );
@@ -1756,51 +2782,128 @@ describe("StudentService Integration Tests", () => {
     describe("Complex Scenarios", () => {
         it("should handle complete student lifecycle: create -> retrieve -> get with files", async () => {
             // Step 1: Create
-            const created = await studentService.createStudentEntity(
-                {
-                    academicPerformances: [
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 10,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 11,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 12,
-                        },
-                    ],
-                    aptitudeExams: [],
-                    awards: [],
-                    certifications: [],
-                    conducts: [
-                        { conduct: Conduct.GOOD, grade: 10 },
-                        { conduct: Conduct.GOOD, grade: 11 },
-                        { conduct: Conduct.GOOD, grade: 12 },
-                    ],
-                    majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 8000000,
-                    minBudget: 3000000,
-                    nationalExams: [
-                        { name: VietnameseSubject.TOAN, score: 8.0 },
-                        { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                        { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                        { name: VietnameseSubject.VAT_LY, score: 7.5 },
-                    ],
-                    province: VietnamSouthernProvinces.HO_CHI_MINH,
-                    talentExams: [],
-                    uniType: UniType.PUBLIC,
-                    vsatExams: [],
-                },
-                testUser.id,
-            );
+            const request: StudentRequest = plainToInstance(StudentRequest, {
+                // Required: Academic Performances (3 items with different values for each grade)
+                academicPerformances: [
+                    {
+                        academicPerformance: AcademicPerformance.GOOD,
+                        grade: 10,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.SATISFACTORY,
+                        grade: 11,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.PASSED,
+                        grade: 12,
+                    },
+                ],
+                // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                aptitudeExams: [
+                    {
+                        examType: ExamType.VNUHCM,
+                        languageScore: 350,
+                        mathScore: 200,
+                        scienceLogic: 150,
+                        score: 700,
+                    },
+                    {
+                        examType: ExamType.HSA,
+                        score: 95,
+                    },
+                ],
+                // Optional: Awards (multiple awards with different categories and levels)
+                awards: [
+                    {
+                        category:
+                            NationalExcellentStudentExamSubject.MATHEMATICS,
+                        level: Rank.FIRST,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.PHYSICS,
+                        level: Rank.SECOND,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.ENGLISH,
+                        level: Rank.THIRD,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                ],
+                // Optional: Certifications (language and other certifications)
+                certifications: [
+                    {
+                        examType: ExamType.IELTS,
+                        level: "7.5",
+                    },
+                    {
+                        examType: ExamType.TOEFL_iBT,
+                        level: "105",
+                    },
+                    {
+                        examType: ExamType.SAT,
+                        level: "1450",
+                    },
+                ],
+                // Required: Conducts (3 items with different values for each grade)
+                conducts: [
+                    { conduct: Conduct.GOOD, grade: 10 },
+                    { conduct: Conduct.SATISFACTORY, grade: 11 },
+                    { conduct: Conduct.PASSED, grade: 12 },
+                ],
+                // Required: Majors (multiple major groups, 1-3 items)
+                majors: [
+                    MajorGroup.ENGINEERING,
+                    MajorGroup.NATURAL_SCIENCES,
+                    MajorGroup.MATHEMATICS_AND_STATISTICS,
+                ],
+                // Required: Budget (with maxBudget > minBudget)
+                maxBudget: 150000000,
+                minBudget: 50000000,
+                // Required: National Exams (exactly 4 subjects with varied scores)
+                nationalExams: [
+                    { name: VietnameseSubject.TOAN, score: 9.5 },
+                    { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                    { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                ],
+                // Required: Province
+                province: VietnamSouthernProvinces.HO_CHI_MINH,
+                // Optional: Special Student Cases (multiple cases)
+                specialStudentCases: [
+                    SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                    SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                ],
+                // Optional: Talent Exams (multiple talent subjects)
+                talentExams: [
+                    { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                    { name: VietnameseSubject.HAT, score: 8.5 },
+                    {
+                        name: VietnameseSubject.DOC_DIEN_CAM,
+                        score: 8.75,
+                    },
+                ],
+                // Required: University Type
+                uniType: UniType.PUBLIC,
+                // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                vsatExams: [
+                    { name: VietnameseSubject.TOAN, score: 140 },
+                    { name: VietnameseSubject.NGU_VAN, score: 135 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                    { name: VietnameseSubject.VAT_LY, score: 130 },
+                    { name: VietnameseSubject.HOA_HOC, score: 138 },
+                ],
+            });
+            const validationErrors = await validate(request);
+            expect(validationErrors).toHaveLength(0);
+
+            const created = await studentService.create(request, testUser.id);
             createdStudentIds.push(created.id);
             expect(created.id).toBeDefined();
 
             // Step 2: Retrieve
-            const retrieved = await studentService.getStudentEntityByIdAnUserId(
+            const retrieved = await studentService.getByIdAndUserId(
                 created.id,
                 testUser.id,
             );
@@ -1819,7 +2922,7 @@ describe("StudentService Integration Tests", () => {
             });
             await fileRepository.save(file);
 
-            const withFiles = await studentService.getStudentWithFiles(
+            const withFiles = await studentService.getWithFiles(
                 created.id,
                 testUser.id,
             );
@@ -1828,117 +2931,254 @@ describe("StudentService Integration Tests", () => {
 
         it("should maintain data integrity across multiple operations", async () => {
             // Create student with comprehensive data
-            const student1 = await studentService.createStudentEntity(
-                {
-                    academicPerformances: [
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 10,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 11,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 12,
-                        },
-                    ],
-                    aptitudeExams: [
-                        {
-                            examType: ExamType.VNUHCM,
-                            languageScore: 9.0,
-                            mathScore: 9.0,
-                            scienceLogic: 9.0,
-                            score: 27.0,
-                        },
-                    ],
-                    awards: [
-                        {
-                            category:
-                                NationalExcellentStudentExamSubject.PHYSICS,
-                            level: Rank.THIRD,
-                            name: NationalExcellentExamType.NATIONAL,
-                        },
-                    ],
-                    certifications: [],
-                    conducts: [
-                        { conduct: Conduct.GOOD, grade: 10 },
-                        { conduct: Conduct.GOOD, grade: 11 },
-                        { conduct: Conduct.GOOD, grade: 12 },
-                    ],
-                    majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
-                    nationalExams: [
-                        { name: VietnameseSubject.TOAN, score: 8.0 },
-                        { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                        { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                        { name: VietnameseSubject.VAT_LY, score: 7.5 },
-                    ],
-                    province: VietnamSouthernProvinces.HO_CHI_MINH,
-                    talentExams: [],
-                    uniType: UniType.PUBLIC,
-                    vsatExams: [],
-                },
-                testUser.id,
-            );
+            const request1: StudentRequest = plainToInstance(StudentRequest, {
+                // Required: Academic Performances (3 items with different values for each grade)
+                academicPerformances: [
+                    {
+                        academicPerformance: AcademicPerformance.GOOD,
+                        grade: 10,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.SATISFACTORY,
+                        grade: 11,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.PASSED,
+                        grade: 12,
+                    },
+                ],
+                // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                aptitudeExams: [
+                    {
+                        examType: ExamType.VNUHCM,
+                        languageScore: 350,
+                        mathScore: 200,
+                        scienceLogic: 150,
+                        score: 700,
+                    },
+                    {
+                        examType: ExamType.HSA,
+                        score: 95,
+                    },
+                ],
+                // Optional: Awards (multiple awards with different categories and levels)
+                awards: [
+                    {
+                        category:
+                            NationalExcellentStudentExamSubject.MATHEMATICS,
+                        level: Rank.FIRST,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.PHYSICS,
+                        level: Rank.SECOND,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.ENGLISH,
+                        level: Rank.THIRD,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                ],
+                // Optional: Certifications (language and other certifications)
+                certifications: [
+                    {
+                        examType: ExamType.IELTS,
+                        level: "7.5",
+                    },
+                    {
+                        examType: ExamType.TOEFL_iBT,
+                        level: "105",
+                    },
+                    {
+                        examType: ExamType.SAT,
+                        level: "1450",
+                    },
+                ],
+                // Required: Conducts (3 items with different values for each grade)
+                conducts: [
+                    { conduct: Conduct.GOOD, grade: 10 },
+                    { conduct: Conduct.SATISFACTORY, grade: 11 },
+                    { conduct: Conduct.PASSED, grade: 12 },
+                ],
+                // Required: Majors (multiple major groups, 1-3 items)
+                majors: [
+                    MajorGroup.ENGINEERING,
+                    MajorGroup.NATURAL_SCIENCES,
+                    MajorGroup.MATHEMATICS_AND_STATISTICS,
+                ],
+                // Required: Budget (with maxBudget > minBudget)
+                maxBudget: 150000000,
+                minBudget: 50000000,
+                // Required: National Exams (exactly 4 subjects with varied scores)
+                nationalExams: [
+                    { name: VietnameseSubject.TOAN, score: 9.5 },
+                    { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                    { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                ],
+                // Required: Province
+                province: VietnamSouthernProvinces.HO_CHI_MINH,
+                // Optional: Special Student Cases (multiple cases)
+                specialStudentCases: [
+                    SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                    SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                ],
+                // Optional: Talent Exams (multiple talent subjects)
+                talentExams: [
+                    { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                    { name: VietnameseSubject.HAT, score: 8.5 },
+                    {
+                        name: VietnameseSubject.DOC_DIEN_CAM,
+                        score: 8.75,
+                    },
+                ],
+                // Required: University Type
+                uniType: UniType.PUBLIC,
+                // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                vsatExams: [
+                    { name: VietnameseSubject.TOAN, score: 140 },
+                    { name: VietnameseSubject.NGU_VAN, score: 135 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                    { name: VietnameseSubject.VAT_LY, score: 130 },
+                    { name: VietnameseSubject.HOA_HOC, score: 138 },
+                ],
+            });
+            const validationErrors1 = await validate(request1);
+            expect(validationErrors1).toHaveLength(0);
+
+            const student1 = await studentService.create(request1, testUser.id);
             createdStudentIds.push(student1.id);
 
             // Create another student
-            const student2 = await studentService.createStudentEntity(
-                {
-                    academicPerformances: [
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 10,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 11,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 12,
-                        },
-                    ],
-                    aptitudeExams: [],
-                    awards: [],
-                    certifications: [],
-                    conducts: [
-                        { conduct: Conduct.GOOD, grade: 10 },
-                        { conduct: Conduct.GOOD, grade: 11 },
-                        { conduct: Conduct.GOOD, grade: 12 },
-                    ],
-                    majors: [MajorGroup.BUSINESS_AND_MANAGEMENT],
-                    maxBudget: 6000000,
-                    minBudget: 2000000,
-                    nationalExams: [
-                        { name: VietnameseSubject.TOAN, score: 8.0 },
-                        { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                        { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                        { name: VietnameseSubject.LICH_SU, score: 7.5 },
-                    ],
-                    province: VietnamSouthernProvinces.HO_CHI_MINH,
-                    talentExams: [],
-                    uniType: UniType.PUBLIC,
-                    vsatExams: [],
-                },
-                testUser.id,
-            );
+            const request2: StudentRequest = plainToInstance(StudentRequest, {
+                // Required: Academic Performances (3 items with different values for each grade)
+                academicPerformances: [
+                    {
+                        academicPerformance: AcademicPerformance.GOOD,
+                        grade: 10,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.SATISFACTORY,
+                        grade: 11,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.PASSED,
+                        grade: 12,
+                    },
+                ],
+                // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                aptitudeExams: [
+                    {
+                        examType: ExamType.VNUHCM,
+                        languageScore: 350,
+                        mathScore: 200,
+                        scienceLogic: 150,
+                        score: 700,
+                    },
+                    {
+                        examType: ExamType.HSA,
+                        score: 95,
+                    },
+                ],
+                // Optional: Awards (multiple awards with different categories and levels)
+                awards: [
+                    {
+                        category:
+                            NationalExcellentStudentExamSubject.MATHEMATICS,
+                        level: Rank.FIRST,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.PHYSICS,
+                        level: Rank.SECOND,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.ENGLISH,
+                        level: Rank.THIRD,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                ],
+                // Optional: Certifications (language and other certifications)
+                certifications: [
+                    {
+                        examType: ExamType.IELTS,
+                        level: "7.5",
+                    },
+                    {
+                        examType: ExamType.TOEFL_iBT,
+                        level: "105",
+                    },
+                    {
+                        examType: ExamType.SAT,
+                        level: "1450",
+                    },
+                ],
+                // Required: Conducts (3 items with different values for each grade)
+                conducts: [
+                    { conduct: Conduct.GOOD, grade: 10 },
+                    { conduct: Conduct.SATISFACTORY, grade: 11 },
+                    { conduct: Conduct.PASSED, grade: 12 },
+                ],
+                // Required: Majors (multiple major groups, 1-3 items)
+                majors: [
+                    MajorGroup.ENGINEERING,
+                    MajorGroup.NATURAL_SCIENCES,
+                    MajorGroup.MATHEMATICS_AND_STATISTICS,
+                ],
+                // Required: Budget (with maxBudget > minBudget)
+                maxBudget: 150000000,
+                minBudget: 50000000,
+                // Required: National Exams (exactly 4 subjects with varied scores)
+                nationalExams: [
+                    { name: VietnameseSubject.TOAN, score: 9.5 },
+                    { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                    { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                ],
+                // Required: Province
+                province: VietnamSouthernProvinces.HO_CHI_MINH,
+                // Optional: Special Student Cases (multiple cases)
+                specialStudentCases: [
+                    SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                    SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                ],
+                // Optional: Talent Exams (multiple talent subjects)
+                talentExams: [
+                    { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                    { name: VietnameseSubject.HAT, score: 8.5 },
+                    {
+                        name: VietnameseSubject.DOC_DIEN_CAM,
+                        score: 8.75,
+                    },
+                ],
+                // Required: University Type
+                uniType: UniType.PUBLIC,
+                // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                vsatExams: [
+                    { name: VietnameseSubject.TOAN, score: 140 },
+                    { name: VietnameseSubject.NGU_VAN, score: 135 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                    { name: VietnameseSubject.VAT_LY, score: 130 },
+                    { name: VietnameseSubject.HOA_HOC, score: 138 },
+                ],
+            });
+            const validationErrors2 = await validate(request2);
+            expect(validationErrors2).toHaveLength(0);
+
+            const student2 = await studentService.create(request2, testUser.id);
             createdStudentIds.push(student2.id);
 
             // Verify both students exist independently
-            const retrieved1 =
-                await studentService.getStudentEntityByIdAnUserId(
-                    student1.id,
-                    testUser.id,
-                );
-            const retrieved2 =
-                await studentService.getStudentEntityByIdAnUserId(
-                    student2.id,
-                    testUser.id,
-                );
+            const retrieved1 = await studentService.getByIdAndUserId(
+                student1.id,
+                testUser.id,
+            );
+            const retrieved2 = await studentService.getByIdAndUserId(
+                student2.id,
+                testUser.id,
+            );
 
             expect(retrieved1.id).not.toBe(retrieved2.id);
             expect(retrieved1.academicPerformances).toHaveLength(3);
@@ -1954,51 +3194,130 @@ describe("StudentService Integration Tests", () => {
             });
             await userRepository.save(user2);
             createdUserIds.push(user2.id);
+            const request: StudentRequest = plainToInstance(StudentRequest, {
+                // Required: Academic Performances (3 items with different values for each grade)
+                academicPerformances: [
+                    {
+                        academicPerformance: AcademicPerformance.GOOD,
+                        grade: 10,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.SATISFACTORY,
+                        grade: 11,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.PASSED,
+                        grade: 12,
+                    },
+                ],
+                // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
+                aptitudeExams: [
+                    {
+                        examType: ExamType.VNUHCM,
+                        languageScore: 350,
+                        mathScore: 200,
+                        scienceLogic: 150,
+                        score: 700,
+                    },
+                    {
+                        examType: ExamType.HSA,
+                        score: 95,
+                    },
+                ],
+                // Optional: Awards (multiple awards with different categories and levels)
+                awards: [
+                    {
+                        category:
+                            NationalExcellentStudentExamSubject.MATHEMATICS,
+                        level: Rank.FIRST,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.PHYSICS,
+                        level: Rank.SECOND,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                    {
+                        category: NationalExcellentStudentExamSubject.ENGLISH,
+                        level: Rank.THIRD,
+                        name: NationalExcellentExamType.NATIONAL,
+                    },
+                ],
+                // Optional: Certifications (language and other certifications)
+                certifications: [
+                    {
+                        examType: ExamType.IELTS,
+                        level: "7.5",
+                    },
+                    {
+                        examType: ExamType.TOEFL_iBT,
+                        level: "105",
+                    },
+                    {
+                        examType: ExamType.SAT,
+                        level: "1450",
+                    },
+                ],
+                // Required: Conducts (3 items with different values for each grade)
+                conducts: [
+                    { conduct: Conduct.GOOD, grade: 10 },
+                    { conduct: Conduct.SATISFACTORY, grade: 11 },
+                    { conduct: Conduct.PASSED, grade: 12 },
+                ],
+                // Required: Majors (multiple major groups, 1-3 items)
+                majors: [
+                    MajorGroup.ENGINEERING,
+                    MajorGroup.NATURAL_SCIENCES,
+                    MajorGroup.MATHEMATICS_AND_STATISTICS,
+                ],
+                // Required: Budget (with maxBudget > minBudget)
+                maxBudget: 150000000,
+                minBudget: 50000000,
+                // Required: National Exams (exactly 4 subjects with varied scores)
+                nationalExams: [
+                    { name: VietnameseSubject.TOAN, score: 9.5 },
+                    { name: VietnameseSubject.NGU_VAN, score: 8.5 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 9.0 },
+                    { name: VietnameseSubject.VAT_LY, score: 8.75 },
+                ],
+                // Required: Province
+                province: VietnamSouthernProvinces.HO_CHI_MINH,
+                // Optional: Special Student Cases (multiple cases)
+                specialStudentCases: [
+                    SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY,
+                    SpecialStudentCase.ETHNIC_MINORITY_STUDENT,
+                ],
+                // Optional: Talent Exams (multiple talent subjects)
+                talentExams: [
+                    { name: VietnameseSubject.VE_MY_THUAT, score: 9.0 },
+                    { name: VietnameseSubject.HAT, score: 8.5 },
+                    {
+                        name: VietnameseSubject.DOC_DIEN_CAM,
+                        score: 8.75,
+                    },
+                ],
+                // Required: University Type
+                uniType: UniType.PUBLIC,
+                // Optional: VSAT Exams (minimum 3, maximum 8 - using valid VSAT subjects)
+                vsatExams: [
+                    { name: VietnameseSubject.TOAN, score: 140 },
+                    { name: VietnameseSubject.NGU_VAN, score: 135 },
+                    { name: VietnameseSubject.TIENG_ANH, score: 145 },
+                    { name: VietnameseSubject.VAT_LY, score: 130 },
+                    { name: VietnameseSubject.HOA_HOC, score: 138 },
+                ],
+            });
+            const validationErrors = await validate(request);
+            expect(validationErrors).toHaveLength(0);
 
             // Create students for each user
-            const user1Student = await studentService.createStudentEntity(
-                {
-                    academicPerformances: [
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 10,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 11,
-                        },
-                        {
-                            academicPerformance: AcademicPerformance.GOOD,
-                            grade: 12,
-                        },
-                    ],
-                    aptitudeExams: [],
-                    awards: [],
-                    certifications: [],
-                    conducts: [
-                        { conduct: Conduct.GOOD, grade: 10 },
-                        { conduct: Conduct.GOOD, grade: 11 },
-                        { conduct: Conduct.GOOD, grade: 12 },
-                    ],
-                    majors: [MajorGroup.ENGINEERING],
-                    maxBudget: 5000000,
-                    minBudget: 1000000,
-                    nationalExams: [
-                        { name: VietnameseSubject.TOAN, score: 8.0 },
-                        { name: VietnameseSubject.NGU_VAN, score: 7.0 },
-                        { name: VietnameseSubject.TIENG_ANH, score: 8.5 },
-                        { name: VietnameseSubject.VAT_LY, score: 7.5 },
-                    ],
-                    province: VietnamSouthernProvinces.HO_CHI_MINH,
-                    talentExams: [],
-                    uniType: UniType.PUBLIC,
-                    vsatExams: [],
-                },
+            const user1Student = await studentService.create(
+                request,
                 testUser.id,
             );
             createdStudentIds.push(user1Student.id);
 
-            const user2Student = await studentService.createStudentEntity(
+            const user2Student = await studentService.create(
                 {
                     academicPerformances: [
                         {
@@ -2023,8 +3342,8 @@ describe("StudentService Integration Tests", () => {
                         { conduct: Conduct.GOOD, grade: 12 },
                     ],
                     majors: [MajorGroup.BUSINESS_AND_MANAGEMENT],
-                    maxBudget: 6000000,
-                    minBudget: 2000000,
+                    maxBudget: 60000000,
+                    minBudget: 20000000,
                     nationalExams: [
                         { name: VietnameseSubject.TOAN, score: 8.0 },
                         { name: VietnameseSubject.NGU_VAN, score: 7.0 },
@@ -2041,16 +3360,14 @@ describe("StudentService Integration Tests", () => {
             createdStudentIds.push(user2Student.id);
 
             // Verify each user can only access their own students
-            const user1Page =
-                await studentService.getAllStudentEntitiesByUserId(
-                    testUser.id,
-                    PageRequest.of(0, 100),
-                );
-            const user2Page =
-                await studentService.getAllStudentEntitiesByUserId(
-                    user2.id,
-                    PageRequest.of(0, 100),
-                );
+            const user1Page = await studentService.getAllByUserId(
+                testUser.id,
+                PageRequest.of(0, 100),
+            );
+            const user2Page = await studentService.getAllByUserId(
+                user2.id,
+                PageRequest.of(0, 100),
+            );
             const user1StudentIds = user1Page.content.map(
                 (s: StudentEntity) => s.id,
             );
