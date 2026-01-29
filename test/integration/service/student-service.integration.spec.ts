@@ -736,6 +736,34 @@ describe("StudentService Integration Tests", () => {
             // Assert
             expect(student.vsatExams).toBeDefined();
             expect(student.vsatExams).toHaveLength(3);
+
+            // Verify individual VSAT exam items
+            const vsatToan = student.vsatExams?.find(
+                (e) => e.name === VietnameseSubject.TOAN,
+            );
+            expect(vsatToan).toBeDefined();
+            expect(vsatToan?.score).toBe(120);
+            expect(vsatToan?.createdBy).toBe(testUser.email);
+
+            const vsatNguVan = student.vsatExams?.find(
+                (e) => e.name === VietnameseSubject.NGU_VAN,
+            );
+            expect(vsatNguVan).toBeDefined();
+            expect(vsatNguVan?.score).toBe(130);
+            expect(vsatNguVan?.createdBy).toBe(testUser.email);
+
+            const vsatTiengAnh = student.vsatExams?.find(
+                (e) => e.name === VietnameseSubject.TIENG_ANH,
+            );
+            expect(vsatTiengAnh).toBeDefined();
+            expect(vsatTiengAnh?.score).toBe(125);
+            expect(vsatTiengAnh?.createdBy).toBe(testUser.email);
+
+            // Verify all VSAT exams have createdBy set
+            student.vsatExams?.forEach((vsatExam) => {
+                expect(vsatExam.createdBy).toBe(testUser.email);
+                expect(vsatExam.score).toBeGreaterThan(0);
+            });
         });
 
         it("should create comprehensive student with all relations", async () => {
