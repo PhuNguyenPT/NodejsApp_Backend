@@ -17,27 +17,25 @@ export default defineConfig({
       projects: ["tsconfig.test.json"],
     }),
   ],
-  setupFiles: ["test/setup.ts"],
   resolve: {
     extensions: [".ts", ".js", ".json"],
   },
-
   test: {
+    setupFiles: ["test/setup.ts"],
     globals: true,
     environment: "node",
     env: loadEnv("test", process.cwd(), ""),
-
     pool: "forks",
     poolOptions: {
       forks: {
         singleFork: false,
-        maxForks: 4,
+        maxForks: 6,
         minForks: 1,
         isolate: true,
       },
       threads: {
         singleThread: false,
-        maxThreads: 4,
+        maxThreads: 6,
         minThreads: 1,
         isolate: true,
       },
@@ -57,10 +55,10 @@ export default defineConfig({
       ],
       include: ["src/**/*.ts"],
       thresholds: {
-        lines: 30,
-        functions: 30,
-        branches: 50,
-        statements: 30,
+        lines: 50,
+        functions: 50,
+        branches: 75,
+        statements: 50,
       },
       all: true,
     },
