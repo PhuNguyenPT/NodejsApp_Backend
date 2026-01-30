@@ -722,7 +722,7 @@ describe("ExamType Enum and Utilities", () => {
     describe("Edge Cases and Error Handling", () => {
         it("should handle empty string scores", () => {
             const errors = validateExamTypeScore(ExamType.IELTS, "");
-            expect(errors.level).toContain("must be a valid number");
+            expect(errors.level).toContain("Level is required.");
         });
 
         it("should handle whitespace-only scores", () => {

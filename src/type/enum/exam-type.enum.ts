@@ -106,9 +106,14 @@ export function isDGNLType(examType: ExamType): examType is DGNLType {
  */
 export function validateExamTypeScore(
     examType: ExamType,
-    level: string,
+    level: null | string | undefined,
 ): Record<string, string | undefined> {
     const errors: Record<string, string | undefined> = {};
+
+    if (!level) {
+        errors.level = "Level is required.";
+        return errors;
+    }
     const trimmedLevel = level.trim();
 
     const setErrorMessage = (message: string) => {
