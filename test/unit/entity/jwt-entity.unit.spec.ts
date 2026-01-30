@@ -987,7 +987,7 @@ describe("JwtEntity", () => {
 
             // Act
             const remaining1 = entity.getRemainingTtl();
-            await new Promise((resolve) => setTimeout(resolve, 100)); // Wait 100ms
+            await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1000ms
             const remaining2 = entity.getRemainingTtl();
 
             // Assert
