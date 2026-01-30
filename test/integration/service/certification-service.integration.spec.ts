@@ -1,3 +1,5 @@
+import { plainToInstance } from "class-transformer";
+import { validate } from "class-validator";
 // test/integration/service/certification-service.integration.spec.ts
 import { beforeAll, describe, expect, it } from "vitest";
 
@@ -1727,6 +1729,508 @@ describe("CertificationService Integration Tests", () => {
             const results =
                 certificationService.createCertificationEntities(allExamTypes);
             expect(results).toHaveLength(16);
+        });
+    });
+
+    describe("DTO Validation with class-validator", () => {
+        describe("Valid Certifications", () => {
+            it("should validate IELTS certification DTO successfully", async () => {
+                // Arrange
+                const plainObject = {
+                    examType: ExamType.IELTS,
+                    level: "7.5",
+                };
+
+                // Act
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                // Assert
+                expect(errors).toHaveLength(0);
+                expect(dto.examType).toBe(ExamType.IELTS);
+                expect(dto.level).toBe("7.5");
+            });
+
+            it("should validate TOEIC certification DTO successfully", async () => {
+                const plainObject = {
+                    examType: ExamType.TOEIC,
+                    level: "850",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors).toHaveLength(0);
+            });
+
+            it("should validate JLPT certification DTO successfully", async () => {
+                const plainObject = {
+                    examType: ExamType.JLPT,
+                    level: "N2",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors).toHaveLength(0);
+            });
+
+            it("should validate A-Level certification DTO successfully", async () => {
+                const plainObject = {
+                    examType: ExamType.A_Level,
+                    level: "A*",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors).toHaveLength(0);
+            });
+
+            it("should validate all CCNN exam types", async () => {
+                const ccnnExams = [
+                    { examType: ExamType.IELTS, level: "7.0" },
+                    { examType: ExamType.JLPT, level: "N1" },
+                    { examType: ExamType.TOEFL_CBT, level: "200" },
+                    { examType: ExamType.TOEFL_iBT, level: "95" },
+                    { examType: ExamType.TOEFL_Paper, level: "550" },
+                    { examType: ExamType.TOEIC, level: "850" },
+                ];
+
+                for (const plainObject of ccnnExams) {
+                    const dto = plainToInstance(
+                        CertificationRequest,
+                        plainObject,
+                    );
+                    const errors = await validate(dto);
+                    expect(errors).toHaveLength(0);
+                }
+            });
+
+            it("should validate all CCQT exam types", async () => {
+                const ccqtExams = [
+                    { examType: ExamType.A_Level, level: "A*" },
+                    { examType: ExamType.ACT, level: "30" },
+                    { examType: ExamType.Duolingo_English_Test, level: "120" },
+                    { examType: ExamType.IB, level: "38" },
+                    { examType: ExamType.OSSD, level: "85" },
+                    { examType: ExamType.PTE_Academic, level: "70" },
+                    { examType: ExamType.SAT, level: "1400" },
+                ];
+
+                for (const plainObject of ccqtExams) {
+                    const dto = plainToInstance(
+                        CertificationRequest,
+                        plainObject,
+                    );
+                    const errors = await validate(dto);
+                    expect(errors).toHaveLength(0);
+                }
+            });
+
+            it("should validate all DGNL exam types", async () => {
+                const dgnlExams = [
+                    { examType: ExamType.HSA, level: "120" },
+                    { examType: ExamType.TSA, level: "80" },
+                    { examType: ExamType.VNUHCM, level: "1000" },
+                ];
+
+                for (const plainObject of dgnlExams) {
+                    const dto = plainToInstance(
+                        CertificationRequest,
+                        plainObject,
+                    );
+                    const errors = await validate(dto);
+                    expect(errors.length).toBeGreaterThan(0);
+                }
+            });
+        });
+
+        describe("Invalid Certifications - DTO Validation", () => {
+            it("should fail validation for missing examType", async () => {
+                const plainObject = {
+                    level: "7.5",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+                expect(errors[0].property).toBe("examType");
+            });
+
+            it("should fail validation for missing level", async () => {
+                const plainObject = {
+                    examType: ExamType.IELTS,
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+                expect(errors[0].property).toBe("level");
+            });
+
+            it("should fail validation for empty level string", async () => {
+                const plainObject = {
+                    examType: ExamType.IELTS,
+                    level: "",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+            });
+
+            it("should fail validation for level exceeding max length", async () => {
+                const plainObject = {
+                    examType: ExamType.IELTS,
+                    level: "a".repeat(51), // exceeds 50 char limit
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+            });
+
+            it("should fail validation for invalid IELTS score (out of range)", async () => {
+                const plainObject = {
+                    examType: ExamType.IELTS,
+                    level: "10.0",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+            });
+
+            it("should fail validation for invalid IELTS increment", async () => {
+                const plainObject = {
+                    examType: ExamType.IELTS,
+                    level: "7.3",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+            });
+
+            it("should fail validation for invalid TOEIC score (not multiple of 5)", async () => {
+                const plainObject = {
+                    examType: ExamType.TOEIC,
+                    level: "853",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+            });
+
+            it("should fail validation for invalid JLPT level", async () => {
+                const plainObject = {
+                    examType: ExamType.JLPT,
+                    level: "N6",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+            });
+
+            it("should fail validation for invalid A-Level grade", async () => {
+                const plainObject = {
+                    examType: ExamType.A_Level,
+                    level: "Z",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+            });
+
+            it("should fail validation for negative TOEIC score", async () => {
+                const plainObject = {
+                    examType: ExamType.TOEIC,
+                    level: "-100",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+            });
+
+            it("should fail validation for TOEFL iBT decimal score", async () => {
+                const plainObject = {
+                    examType: ExamType.TOEFL_iBT,
+                    level: "95.5",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+            });
+
+            it("should fail validation for SAT score not multiple of 10", async () => {
+                const plainObject = {
+                    examType: ExamType.SAT,
+                    level: "1405",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+            });
+
+            it("should fail validation for ACT decimal score", async () => {
+                const plainObject = {
+                    examType: ExamType.ACT,
+                    level: "25.5",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+            });
+
+            it("should fail validation for Duolingo not multiple of 5", async () => {
+                const plainObject = {
+                    examType: ExamType.Duolingo_English_Test,
+                    level: "123",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors.length).toBeGreaterThan(0);
+            });
+        });
+
+        describe("Integration - DTO Validation with Service", () => {
+            it("should successfully create entity after DTO validation", async () => {
+                // Arrange
+                const plainObject = {
+                    examType: ExamType.IELTS,
+                    level: "7.5",
+                };
+
+                // Act - Validate DTO
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                // Assert - No validation errors
+                expect(errors).toHaveLength(0);
+
+                // Act - Create entity via service
+                const entity =
+                    certificationService.createCertificationEntity(dto);
+
+                // Assert - Entity created successfully
+                expect(entity).toBeDefined();
+                expect(entity.examType).toBe(ExamType.IELTS);
+                expect(entity.level).toBe("7.5");
+                expect(entity.cefr).toBe(CEFR.C1);
+            });
+
+            it("should validate and create multiple entities", async () => {
+                // Arrange
+                const plainObjects = [
+                    { examType: ExamType.IELTS, level: "7.5" },
+                    { examType: ExamType.TOEIC, level: "850" },
+                    { examType: ExamType.JLPT, level: "N2" },
+                ];
+
+                // Act - Validate all DTOs
+                const dtos = plainObjects.map((obj) =>
+                    plainToInstance(CertificationRequest, obj),
+                );
+
+                const validationResults = await Promise.all(
+                    dtos.map((dto) => validate(dto)),
+                );
+
+                // Assert - All DTOs are valid
+                validationResults.forEach((errors) => {
+                    expect(errors).toHaveLength(0);
+                });
+
+                // Act - Create entities
+                const entities =
+                    certificationService.createCertificationEntities(dtos);
+
+                // Assert - All entities created
+                expect(entities).toHaveLength(3);
+                expect(entities[0].cefr).toBe(CEFR.C1);
+                expect(entities[1].cefr).toBe(CEFR.B2);
+                expect(entities[2].cefr).toBeUndefined();
+            });
+
+            it("should fail DTO validation before reaching service for invalid data", async () => {
+                // Arrange - Invalid IELTS score
+                const plainObject = {
+                    examType: ExamType.IELTS,
+                    level: "10.0",
+                };
+
+                // Act - Validate DTO
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                // Assert - Validation should fail
+                expect(errors.length).toBeGreaterThan(0);
+            });
+
+            it("should pass validation for boundary valid scores", async () => {
+                const validCases = [
+                    { examType: ExamType.IELTS, level: "1.0" },
+                    { examType: ExamType.IELTS, level: "9.0" },
+                    { examType: ExamType.TOEIC, level: "60" },
+                    { examType: ExamType.TOEIC, level: "990" },
+                ];
+
+                for (const { examType, level } of validCases) {
+                    const dto = plainToInstance(CertificationRequest, {
+                        examType,
+                        level,
+                    });
+
+                    const errors = await validate(dto);
+                    expect(errors).toHaveLength(0);
+
+                    const entity =
+                        certificationService.createCertificationEntity(dto);
+                    expect(entity).toBeDefined();
+                }
+            });
+
+            it("should fail validation for boundary invalid scores", async () => {
+                const invalidCases = [
+                    { examType: ExamType.IELTS, level: "0.5" },
+                    { examType: ExamType.IELTS, level: "9.5" },
+                    { examType: ExamType.TOEIC, level: "55" },
+                    { examType: ExamType.TOEIC, level: "995" },
+                ];
+
+                for (const { examType, level } of invalidCases) {
+                    const dto = plainToInstance(CertificationRequest, {
+                        examType,
+                        level,
+                    });
+
+                    const errors = await validate(dto);
+                    expect(errors.length).toBeGreaterThan(0);
+                }
+            });
+
+            it("should pass validation for valid certification exam types (CCNN + CCQT)", async () => {
+                const validCertificationTypes = [
+                    // CCNN types (6)
+                    { examType: ExamType.IELTS, level: "7.0" },
+                    { examType: ExamType.JLPT, level: "N2" },
+                    { examType: ExamType.TOEFL_CBT, level: "200" },
+                    { examType: ExamType.TOEFL_iBT, level: "95" },
+                    { examType: ExamType.TOEFL_Paper, level: "550" },
+                    { examType: ExamType.TOEIC, level: "850" },
+                    // CCQT types (7)
+                    { examType: ExamType.SAT, level: "1400" },
+                    { examType: ExamType.ACT, level: "30" },
+                    { examType: ExamType.IB, level: "38" },
+                    { examType: ExamType.A_Level, level: "A*" },
+                    { examType: ExamType.Duolingo_English_Test, level: "120" },
+                    { examType: ExamType.OSSD, level: "85" },
+                    { examType: ExamType.PTE_Academic, level: "70" },
+                ];
+
+                for (const { examType, level } of validCertificationTypes) {
+                    const dto = plainToInstance(CertificationRequest, {
+                        examType,
+                        level,
+                    });
+                    const errors = await validate(dto);
+
+                    expect(errors).toHaveLength(0);
+
+                    const entity =
+                        certificationService.createCertificationEntity(dto);
+                    expect(entity).toBeDefined();
+                    expect(entity.examType).toBe(examType);
+                    expect(entity.level).toBe(level);
+                }
+            });
+
+            it("should fail validation for invalid certification exam types (DGNL)", async () => {
+                const invalidCertificationTypes = [
+                    // DGNL types (3) - not allowed for certifications
+                    { examType: ExamType.HSA, level: "120" },
+                    { examType: ExamType.TSA, level: "80" },
+                    { examType: ExamType.VNUHCM, level: "1000" },
+                ];
+
+                for (const { examType, level } of invalidCertificationTypes) {
+                    const dto = plainToInstance(CertificationRequest, {
+                        examType,
+                        level,
+                    });
+                    const errors = await validate(dto);
+
+                    expect(errors.length).toBeGreaterThan(0);
+
+                    const examTypeError = errors.find(
+                        (e) => e.property === "examType",
+                    );
+                    expect(examTypeError).toBeDefined();
+                }
+            });
+
+            it("should handle whitespace in level after DTO validation", async () => {
+                const plainObject = {
+                    examType: ExamType.IELTS,
+                    level: " 7.5 ",
+                };
+
+                const dto = plainToInstance(CertificationRequest, plainObject);
+                const errors = await validate(dto);
+
+                expect(errors).toHaveLength(0);
+
+                const entity =
+                    certificationService.createCertificationEntity(dto);
+                expect(entity.cefr).toBe(CEFR.C1);
+            });
+
+            it("should validate large batch with plainToInstance", async () => {
+                const largeBatch = Array.from({ length: 100 }, (_, i) => ({
+                    examType: i % 2 === 0 ? ExamType.IELTS : ExamType.TOEIC,
+                    level: i % 2 === 0 ? "7.0" : "850",
+                }));
+
+                for (const plainObject of largeBatch) {
+                    const dto = plainToInstance(
+                        CertificationRequest,
+                        plainObject,
+                    );
+                    const errors = await validate(dto);
+                    expect(errors).toHaveLength(0);
+                }
+
+                const dtos = largeBatch.map((obj) =>
+                    plainToInstance(CertificationRequest, obj),
+                );
+                const entities =
+                    certificationService.createCertificationEntities(dtos);
+
+                expect(entities).toHaveLength(100);
+            });
         });
     });
 });
