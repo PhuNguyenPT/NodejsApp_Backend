@@ -101,6 +101,15 @@ export function isDGNLType(examType: ExamType): examType is DGNLType {
     return (DGNLTypes as readonly ExamType[]).includes(examType);
 }
 
+export function isExam(obj: unknown): obj is Exam {
+    return (
+        typeof obj === "object" &&
+        obj !== null &&
+        "examType" in obj &&
+        "level" in obj
+    );
+}
+
 /**
  * Validates an exam's score/level based on its type and provides specific error messages.
  */

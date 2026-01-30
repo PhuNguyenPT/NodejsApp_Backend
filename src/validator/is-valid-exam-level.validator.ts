@@ -4,10 +4,7 @@ import {
     type ValidatorConstraintInterface,
 } from "class-validator";
 
-import {
-    type Exam,
-    validateExamTypeScore,
-} from "@/type/enum/exam-type.enum.js";
+import { isExam, validateExamTypeScore } from "@/type/enum/exam-type.enum.js";
 
 /**
  * Custom validator constraint for Exam level.
@@ -23,13 +20,16 @@ export class IsValidExamLevelConstraint implements ValidatorConstraintInterface 
      * @returns The error message string.
      */
     defaultMessage(args: ValidationArguments): string {
-        const aptitudeExamRequest = args.object as Exam;
-        const examType = aptitudeExamRequest.examType;
-        const level = aptitudeExamRequest.level;
+        const obj = args.object;
 
-        const errors = validateExamTypeScore(examType, level);
+        if (!isExam(obj)) {
+            return "Invalid exam data structure.";
+        }
 
-        return errors.level ?? `The provided score for ${examType} is invalid.`;
+        const errors = validateExamTypeScore(obj.examType, obj.level);
+        return (
+            errors.level ?? `The provided score for ${obj.examType} is invalid.`
+        );
     }
 
     /**
@@ -39,11 +39,13 @@ export class IsValidExamLevelConstraint implements ValidatorConstraintInterface 
      * @returns True if the level is valid, false otherwise.
      */
     validate(level: string, args: ValidationArguments): boolean {
-        const aptitudeExamRequest = args.object as Exam;
-        const examType = aptitudeExamRequest.examType;
+        const obj = args.object;
 
-        const errors = validateExamTypeScore(examType, level);
+        if (!isExam(obj)) {
+            return false;
+        }
 
+        const errors = validateExamTypeScore(obj.examType, level);
         return Object.keys(errors).length === 0 || errors.level === undefined;
     }
 }
