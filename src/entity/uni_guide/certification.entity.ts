@@ -15,7 +15,11 @@ import {
 import type { UUID } from "@/type/common/uuid.type.js";
 
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
-import { ExamType } from "@/type/enum/exam-type.enum.js";
+import {
+    type CCNNType,
+    type CCQTType,
+    CertificationExamTypeEnum,
+} from "@/type/enum/exam-type.enum.js";
 
 export enum CEFR {
     A1 = "A1",
@@ -58,8 +62,13 @@ export class CertificationEntity {
     })
     createdBy?: string;
 
-    @Column({ enum: ExamType, name: "exam_type", nullable: true, type: "enum" })
-    examType?: ExamType;
+    @Column({
+        enum: CertificationExamTypeEnum,
+        name: "exam_type",
+        nullable: true,
+        type: "enum",
+    })
+    examType?: CCNNType | CCQTType;
 
     @PrimaryGeneratedColumn("uuid")
     id!: UUID;

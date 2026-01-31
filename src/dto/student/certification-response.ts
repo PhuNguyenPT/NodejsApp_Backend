@@ -1,8 +1,9 @@
 import { Expose } from "class-transformer";
 import { IsNotEmpty, IsOptional } from "class-validator";
 
+import type { CCNNType, CCQTType } from "@/type/enum/exam-type.enum.js";
+
 import { CEFR } from "@/entity/uni_guide/certification.entity.js";
-import { ExamType } from "@/type/enum/exam-type.enum.js";
 
 /**
  * Data Transfer Object for Certification response information
@@ -22,7 +23,7 @@ export class CertificationResponse {
      * @example "IELTS"
      */
     @Expose()
-    examType!: ExamType;
+    examType!: CCNNType | CCQTType;
 
     @Expose()
     @IsNotEmpty()

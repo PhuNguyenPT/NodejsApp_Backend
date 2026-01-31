@@ -16,7 +16,7 @@ import type { UUID } from "@/type/common/uuid.type.js";
 
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-component.entity.js";
-import { ExamType } from "@/type/enum/exam-type.enum.js";
+import { DGNLType } from "@/type/enum/exam-type.enum.js";
 
 @Entity({ name: "aptitude_exams", schema: "uni_guide" })
 export class AptitudeExamEntity {
@@ -38,8 +38,8 @@ export class AptitudeExamEntity {
     })
     createdBy?: string;
 
-    @Column({ enum: ExamType, name: "exam_type", type: "enum" })
-    examType!: ExamType;
+    @Column({ enum: DGNLType, name: "exam_type", type: "enum" })
+    examType!: DGNLType;
 
     @PrimaryGeneratedColumn("uuid", { name: "id" })
     id!: UUID;

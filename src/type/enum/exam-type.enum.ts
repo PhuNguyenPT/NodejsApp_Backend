@@ -1,54 +1,41 @@
 import { ValidationException } from "../exception/validation.exception.js";
 
-// Single unified enum for all exam types
-export enum ExamType {
-    A_Level = "Alevel",
-    ACT = "ACT",
-    Duolingo_English_Test = "DoulingoEnglishTest",
-    HSA = "HSA",
-    IB = "IB",
+// Separate enums for each category
+export enum CCNNType {
     IELTS = "IELTS",
     JLPT = "JLPT",
-    OSSD = "OSSD",
-    PTE_Academic = "PTEAcademic",
-    SAT = "SAT",
     TOEFL_CBT = "TOEFL CBT",
     TOEFL_iBT = "TOEFL iBT",
     TOEFL_Paper = "TOEFL Paper",
     TOEIC = "TOEIC",
+}
+
+export enum CCQTType {
+    A_Level = "Alevel",
+    ACT = "ACT",
+    Duolingo_English_Test = "DoulingoEnglishTest",
+    IB = "IB",
+    OSSD = "OSSD",
+    PTE_Academic = "PTEAcademic",
+    SAT = "SAT",
+}
+
+export enum DGNLType {
+    HSA = "HSA",
     TSA = "TSA",
     VNUHCM = "VNUHCM",
 }
 
-// Helper constants for categorization
-export const CCNNTypes = [
-    ExamType.IELTS,
-    ExamType.JLPT,
-    ExamType.TOEFL_CBT,
-    ExamType.TOEFL_iBT,
-    ExamType.TOEFL_Paper,
-    ExamType.TOEIC,
-] as const satisfies readonly ExamType[];
+// Combined type for all exam types
+export type ExamType = CCNNType | CCQTType | DGNLType;
 
-export const CCQTTypes = [
-    ExamType.A_Level,
-    ExamType.ACT,
-    ExamType.Duolingo_English_Test,
-    ExamType.IB,
-    ExamType.OSSD,
-    ExamType.PTE_Academic,
-    ExamType.SAT,
-] as const satisfies readonly ExamType[];
+// For @IsEnum decorator - only CCNN and CCQT types for certifications
+export const CertificationExamTypeEnum = {
+    ...CCNNType,
+    ...CCQTType,
+} as const;
 
-export const DGNLTypes = [
-    ExamType.HSA,
-    ExamType.TSA,
-    ExamType.VNUHCM,
-] as const satisfies readonly ExamType[];
-
-export type CCNNType = (typeof CCNNTypes)[number];
-export type CCQTType = (typeof CCQTTypes)[number];
-export type DGNLType = (typeof DGNLTypes)[number];
+export type CertificationType = CCNNType | CCQTType;
 
 export interface Exam {
     examType: ExamType;
@@ -56,7 +43,7 @@ export interface Exam {
 }
 
 export function getExamCategory(
-    examType: ExamType,
+    examType: unknown,
 ): "CCNN" | "CCQT" | "ĐGNL" | undefined {
     if (isCCNNType(examType)) return "CCNN";
     if (isCCQTType(examType)) return "CCQT";
@@ -89,16 +76,16 @@ export function handleExamValidation(
 }
 
 // Type guards for categorization
-export function isCCNNType(examType: ExamType): examType is CCNNType {
-    return (CCNNTypes as readonly ExamType[]).includes(examType);
+export function isCCNNType(examType: unknown): examType is CCNNType {
+    return Object.values(CCNNType).includes(examType as CCNNType);
 }
 
-export function isCCQTType(examType: ExamType): examType is CCQTType {
-    return (CCQTTypes as readonly ExamType[]).includes(examType);
+export function isCCQTType(examType: unknown): examType is CCQTType {
+    return Object.values(CCQTType).includes(examType as CCQTType);
 }
 
-export function isDGNLType(examType: ExamType): examType is DGNLType {
-    return (DGNLTypes as readonly ExamType[]).includes(examType);
+export function isDGNLType(examType: unknown): examType is DGNLType {
+    return Object.values(DGNLType).includes(examType as DGNLType);
 }
 
 export function isExam(obj: unknown): obj is Exam {
@@ -114,7 +101,7 @@ export function isExam(obj: unknown): obj is Exam {
  * Validates an exam's score/level based on its type and provides specific error messages.
  */
 export function validateExamTypeScore(
-    examType: ExamType,
+    examType: CCNNType | CCQTType | DGNLType,
     level: null | string | undefined,
 ): Record<string, string | undefined> {
     const errors: Record<string, string | undefined> = {};
@@ -129,7 +116,7 @@ export function validateExamTypeScore(
         errors.level = message;
     };
 
-    if (examType === ExamType.A_Level) {
+    if (examType === CCQTType.A_Level) {
         const validGrades = ["A", "A*", "B", "C", "D", "E", "F", "N", "O", "U"];
         if (!validGrades.includes(trimmedLevel)) {
             setErrorMessage(`Level must be one of: ${validGrades.join(", ")}.`);
@@ -138,7 +125,7 @@ export function validateExamTypeScore(
     }
 
     // Handle JLPT separately
-    if (examType === ExamType.JLPT) {
+    if (examType === CCNNType.JLPT) {
         const validJLPTGrades = ["N1", "N2", "N3", "N4", "N5"];
         if (!validJLPTGrades.includes(trimmedLevel)) {
             setErrorMessage(
@@ -175,7 +162,7 @@ function validateCCNNNumericScore(
     setErrorMessage: (message: string) => void,
 ): void {
     switch (examType) {
-        case ExamType.IELTS:
+        case CCNNType.IELTS:
             if (parsedLevel < 1 || parsedLevel > 9)
                 setErrorMessage("Score must be between 1 and 9.");
             else if ((parsedLevel * 2) % 1 !== 0)
@@ -183,31 +170,30 @@ function validateCCNNNumericScore(
                     "Score must be in 0.5 increments (e.g., 6.5, 7.0, 7.5).",
                 );
             break;
-        case ExamType.TOEFL_CBT:
+        case CCNNType.TOEFL_CBT:
             if (parsedLevel < 33 || parsedLevel > 300)
                 setErrorMessage("Score must be between 33 and 300.");
             else if (parsedLevel % 1 !== 0)
                 setErrorMessage("Score must be a whole number.");
             break;
-        case ExamType.TOEFL_iBT:
+        case CCNNType.TOEFL_iBT:
             if (parsedLevel < 0 || parsedLevel > 120)
                 setErrorMessage("Score must be between 0 and 120.");
             else if (parsedLevel % 1 !== 0)
                 setErrorMessage("Score must be a whole number.");
             break;
-        case ExamType.TOEFL_Paper:
+        case CCNNType.TOEFL_Paper:
             if (parsedLevel < 310 || parsedLevel > 677)
                 setErrorMessage("Score must be between 310 and 677.");
             else if (parsedLevel % 1 !== 0)
                 setErrorMessage("Score must be a whole number.");
             break;
-        case ExamType.TOEIC:
+        case CCNNType.TOEIC:
             if (parsedLevel < 60 || parsedLevel > 990)
                 setErrorMessage("Score must be between 60 and 990.");
             else if (parsedLevel % 5 !== 0)
                 setErrorMessage("Score must be a multiple of 5.");
             break;
-        // JLPT is handled as a string score, so it's not in this numeric switch
     }
 }
 
@@ -220,43 +206,42 @@ function validateCCQTNumericScore(
     setErrorMessage: (message: string) => void,
 ): void {
     switch (examType) {
-        case ExamType.ACT:
+        case CCQTType.ACT:
             if (parsedLevel < 1 || parsedLevel > 36)
                 setErrorMessage("Score must be between 1 and 36.");
             else if (parsedLevel % 1 !== 0)
                 setErrorMessage("Score must be a whole number.");
             break;
-        case ExamType.Duolingo_English_Test:
+        case CCQTType.Duolingo_English_Test:
             if (parsedLevel < 10 || parsedLevel > 160)
                 setErrorMessage("Score must be between 10 and 160.");
             else if (parsedLevel % 5 !== 0)
                 setErrorMessage("Score must be a multiple of 5.");
             break;
-        case ExamType.IB:
+        case CCQTType.IB:
             if (parsedLevel < 0 || parsedLevel > 45)
                 setErrorMessage("Score must be between 0 and 45.");
             else if (parsedLevel % 1 !== 0)
                 setErrorMessage("Score must be a whole number.");
             break;
-        case ExamType.OSSD:
+        case CCQTType.OSSD:
             if (parsedLevel < 0 || parsedLevel > 100)
                 setErrorMessage("Score must be between 0 and 100.");
             else if (parsedLevel % 1 !== 0)
                 setErrorMessage("Score must be a whole number.");
             break;
-        case ExamType.PTE_Academic:
+        case CCQTType.PTE_Academic:
             if (parsedLevel < 10 || parsedLevel > 90)
                 setErrorMessage("Score must be between 10 and 90.");
             else if (parsedLevel % 1 !== 0)
                 setErrorMessage("Score must be a whole number.");
             break;
-        case ExamType.SAT:
+        case CCQTType.SAT:
             if (parsedLevel < 400 || parsedLevel > 1600)
                 setErrorMessage("Score must be between 400 and 1600.");
             else if (parsedLevel % 10 !== 0)
                 setErrorMessage("Score must be a multiple of 10.");
             break;
-        // A_Level is handled as a string score, so it's not in this numeric switch
     }
 }
 
@@ -269,19 +254,19 @@ function validateDGNLNumericScore(
     setErrorMessage: (message: string) => void,
 ): void {
     switch (examType) {
-        case ExamType.HSA:
+        case DGNLType.HSA:
             if (parsedLevel < 0 || parsedLevel > 150)
                 setErrorMessage("Score must be between 0 and 150.");
             else if (parsedLevel % 1 !== 0)
                 setErrorMessage("Score must be a whole number.");
             break;
-        case ExamType.TSA:
+        case DGNLType.TSA:
             if (parsedLevel < 0 || parsedLevel > 100)
                 setErrorMessage("Score must be between 0 and 100.");
             else if (parsedLevel % 1 !== 0)
                 setErrorMessage("Score must be a whole number.");
             break;
-        case ExamType.VNUHCM:
+        case DGNLType.VNUHCM:
             if (parsedLevel < 0 || parsedLevel > 1200)
                 setErrorMessage("Score must be between 0 and 1200.");
             else if (parsedLevel % 1 !== 0)

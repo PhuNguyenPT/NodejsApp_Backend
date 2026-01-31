@@ -1,5 +1,6 @@
 import { Expose, Type } from "class-transformer";
 import {
+    IsEnum,
     IsNotEmpty,
     Validate,
     ValidateIf,
@@ -7,9 +8,8 @@ import {
 } from "class-validator";
 
 import { VnuhcmComponentDTO } from "@/dto/student/vnuhcm-component.dto.js";
-import { ExamType } from "@/type/enum/exam-type.enum.js";
+import { DGNLType } from "@/type/enum/exam-type.enum.js";
 import { IsValidAptitudeExamScoreConstraint } from "@/validator/is-valid-aptitude-exam-score.validator.js";
-import { IsValidDGNLExamTypeConstraint } from "@/validator/is-valid-exam-type.validator.js";
 import { ValidateVnuhcmComponents } from "@/validator/vnuhcm-components-not-allowed.validator.js";
 
 /**
@@ -26,10 +26,10 @@ export class AptitudeExamDTO {
      * @example "VNUHCM"
      */
     @Expose()
+    @IsEnum(DGNLType)
     @IsNotEmpty({ message: "Exam type is required" })
-    @Validate(IsValidDGNLExamTypeConstraint)
     @ValidateVnuhcmComponents()
-    examType!: ExamType;
+    examType!: DGNLType;
 
     /**
      * Numeric score for the aptitude test
@@ -41,7 +41,7 @@ export class AptitudeExamDTO {
     score!: number;
     @Expose({ name: "vnuhcmScoreComponents" }) // Use 'name' to match the Entity's relation
     @Type(() => VnuhcmComponentDTO)
-    @ValidateIf((o: AptitudeExamDTO) => o.examType === ExamType.VNUHCM)
+    @ValidateIf((o: AptitudeExamDTO) => o.examType === DGNLType.VNUHCM)
     @ValidateNested()
     vnuhcmComponents?: VnuhcmComponentDTO;
 }

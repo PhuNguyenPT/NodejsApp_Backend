@@ -8,7 +8,7 @@ import {
 } from "class-validator";
 
 import { AptitudeExamRequest } from "@/dto/student/aptitude-exam-request.js";
-import { ExamType } from "@/type/enum/exam-type.enum.js";
+import { DGNLType } from "@/type/enum/exam-type.enum.js";
 
 /**
  * Custom validator to ensure VNUHCM component scores are only provided for VNUHCM exams
@@ -40,7 +40,7 @@ export class VnuhcmComponentsNotAllowedConstraint implements ValidatorConstraint
             aptitudeExam;
 
         // If examType is VNUHCM, component scores are allowed (handled by other validators)
-        if (examType === ExamType.VNUHCM) {
+        if (examType === DGNLType.VNUHCM) {
             return true;
         }
 

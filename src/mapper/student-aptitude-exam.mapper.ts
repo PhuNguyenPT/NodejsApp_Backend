@@ -2,7 +2,7 @@ import { plainToInstance } from "class-transformer";
 
 import { AptitudeExamResponse } from "@/dto/student/aptitude-exam-response.js";
 import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
-import { ExamType } from "@/type/enum/exam-type.enum.js";
+import { DGNLType } from "@/type/enum/exam-type.enum.js";
 
 export const StudentAptitudeExamMapper = {
     /**
@@ -18,7 +18,7 @@ export const StudentAptitudeExamMapper = {
 
         // If it's a VNUHCM exam and has component scores, include them
         if (
-            entity.examType === ExamType.VNUHCM &&
+            entity.examType === DGNLType.VNUHCM &&
             entity.vnuhcmScoreComponents
         ) {
             response.languageScore = entity.vnuhcmScoreComponents.languageScore;
