@@ -18,7 +18,7 @@ import { type UUID, UUIDSchema } from "@/type/common/uuid.type.js";
 import { TYPES } from "@/type/container/types.js";
 import { AcademicPerformance } from "@/type/enum/academic-performance.enum.js";
 import { Conduct } from "@/type/enum/conduct.enum.js";
-import { ExamType } from "@/type/enum/exam-type.enum.js";
+import { CCNNType, CCQTType, DGNLType } from "@/type/enum/exam-type.enum.js";
 import { MajorGroup } from "@/type/enum/major.enum.js";
 import { NationalExamSubjects } from "@/type/enum/national-exam-subject.enum.js";
 import {
@@ -379,7 +379,7 @@ describe("StudentService Integration Tests", () => {
                     ],
                     aptitudeExams: [
                         {
-                            examType: ExamType.VNUHCM,
+                            examType: DGNLType.VNUHCM,
                             languageScore: 350,
                             mathScore: 200,
                             scienceLogic: 150,
@@ -806,7 +806,7 @@ describe("StudentService Integration Tests", () => {
                     ],
                     aptitudeExams: [
                         {
-                            examType: ExamType.VNUHCM,
+                            examType: DGNLType.VNUHCM,
                             languageScore: 350,
                             mathScore: 200,
                             scienceLogic: 150,
@@ -885,14 +885,14 @@ describe("StudentService Integration Tests", () => {
                     // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                     aptitudeExams: [
                         {
-                            examType: ExamType.VNUHCM,
+                            examType: DGNLType.VNUHCM,
                             languageScore: 350,
                             mathScore: 200,
                             scienceLogic: 150,
                             score: 700,
                         },
                         {
-                            examType: ExamType.HSA,
+                            examType: DGNLType.HSA,
                             score: 95,
                         },
                     ],
@@ -920,15 +920,15 @@ describe("StudentService Integration Tests", () => {
                     // Optional: Certifications (language and other certifications)
                     certifications: [
                         {
-                            examType: ExamType.IELTS,
+                            examType: CCNNType.IELTS,
                             level: "7.5",
                         },
                         {
-                            examType: ExamType.TOEFL_iBT,
+                            examType: CCNNType.TOEFL_iBT,
                             level: "105",
                         },
                         {
-                            examType: ExamType.SAT,
+                            examType: CCQTType.SAT,
                             level: "1450",
                         },
                     ],
@@ -1015,7 +1015,7 @@ describe("StudentService Integration Tests", () => {
             expect(student.aptitudeExams).toHaveLength(2);
             // VNUHCM exam with components
             const vnuhcmExam = student.aptitudeExams?.find(
-                (e) => e.examType === ExamType.VNUHCM,
+                (e) => e.examType === DGNLType.VNUHCM,
             );
             expect(vnuhcmExam).toBeDefined();
             expect(vnuhcmExam?.score).toBe(700);
@@ -1025,7 +1025,7 @@ describe("StudentService Integration Tests", () => {
             expect(vnuhcmExam?.vnuhcmScoreComponents?.scienceLogic).toBe(150);
             // HSA exam
             const hsaExam = student.aptitudeExams?.find(
-                (e) => e.examType === ExamType.HSA,
+                (e) => e.examType === DGNLType.HSA,
             );
             expect(hsaExam).toBeDefined();
             expect(hsaExam?.score).toBe(95);
@@ -1061,17 +1061,17 @@ describe("StudentService Integration Tests", () => {
             expect(student.certifications).toBeDefined();
             expect(student.certifications).toHaveLength(3);
             const ielts = student.certifications?.find(
-                (c) => c.examType === ExamType.IELTS,
+                (c) => c.examType === CCNNType.IELTS,
             );
             expect(ielts).toBeDefined();
             expect(ielts?.level).toBe("7.5");
             const toefl = student.certifications?.find(
-                (c) => c.examType === ExamType.TOEFL_iBT,
+                (c) => c.examType === CCNNType.TOEFL_iBT,
             );
             expect(toefl).toBeDefined();
             expect(toefl?.level).toBe("105");
             const sat = student.certifications?.find(
-                (c) => c.examType === ExamType.SAT,
+                (c) => c.examType === CCQTType.SAT,
             );
             expect(sat).toBeDefined();
             expect(sat?.level).toBe("1450");
@@ -1219,14 +1219,14 @@ describe("StudentService Integration Tests", () => {
                         // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                         aptitudeExams: [
                             {
-                                examType: ExamType.VNUHCM,
+                                examType: DGNLType.VNUHCM,
                                 languageScore: 350,
                                 mathScore: 200,
                                 scienceLogic: 150,
                                 score: 700,
                             },
                             {
-                                examType: ExamType.HSA,
+                                examType: DGNLType.HSA,
                                 score: 95,
                             },
                         ],
@@ -1254,15 +1254,15 @@ describe("StudentService Integration Tests", () => {
                         // Optional: Certifications (language and other certifications)
                         certifications: [
                             {
-                                examType: ExamType.IELTS,
+                                examType: CCNNType.IELTS,
                                 level: "7.5",
                             },
                             {
-                                examType: ExamType.TOEFL_iBT,
+                                examType: CCNNType.TOEFL_iBT,
                                 level: "105",
                             },
                             {
-                                examType: ExamType.SAT,
+                                examType: CCQTType.SAT,
                                 level: "1450",
                             },
                         ],
@@ -1347,14 +1347,14 @@ describe("StudentService Integration Tests", () => {
                         // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                         aptitudeExams: [
                             {
-                                examType: ExamType.VNUHCM,
+                                examType: DGNLType.VNUHCM,
                                 languageScore: 350,
                                 mathScore: 200,
                                 scienceLogic: 150,
                                 score: 700,
                             },
                             {
-                                examType: ExamType.HSA,
+                                examType: DGNLType.HSA,
                                 score: 95,
                             },
                         ],
@@ -1382,15 +1382,15 @@ describe("StudentService Integration Tests", () => {
                         // Optional: Certifications (language and other certifications)
                         certifications: [
                             {
-                                examType: ExamType.IELTS,
+                                examType: CCNNType.IELTS,
                                 level: "7.5",
                             },
                             {
-                                examType: ExamType.TOEFL_iBT,
+                                examType: CCNNType.TOEFL_iBT,
                                 level: "105",
                             },
                             {
-                                examType: ExamType.SAT,
+                                examType: CCQTType.SAT,
                                 level: "1450",
                             },
                         ],
@@ -1496,14 +1496,14 @@ describe("StudentService Integration Tests", () => {
                         // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                         aptitudeExams: [
                             {
-                                examType: ExamType.VNUHCM,
+                                examType: DGNLType.VNUHCM,
                                 languageScore: 350,
                                 mathScore: 200,
                                 scienceLogic: 150,
                                 score: 700,
                             },
                             {
-                                examType: ExamType.HSA,
+                                examType: DGNLType.HSA,
                                 score: 95,
                             },
                         ],
@@ -1531,15 +1531,15 @@ describe("StudentService Integration Tests", () => {
                         // Optional: Certifications (language and other certifications)
                         certifications: [
                             {
-                                examType: ExamType.IELTS,
+                                examType: CCNNType.IELTS,
                                 level: "7.5",
                             },
                             {
-                                examType: ExamType.TOEFL_iBT,
+                                examType: CCNNType.TOEFL_iBT,
                                 level: "105",
                             },
                             {
-                                examType: ExamType.SAT,
+                                examType: CCQTType.SAT,
                                 level: "1450",
                             },
                         ],
@@ -1625,14 +1625,14 @@ describe("StudentService Integration Tests", () => {
                         // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                         aptitudeExams: [
                             {
-                                examType: ExamType.VNUHCM,
+                                examType: DGNLType.VNUHCM,
                                 languageScore: 350,
                                 mathScore: 200,
                                 scienceLogic: 150,
                                 score: 700,
                             },
                             {
-                                examType: ExamType.HSA,
+                                examType: DGNLType.HSA,
                                 score: 95,
                             },
                         ],
@@ -1660,15 +1660,15 @@ describe("StudentService Integration Tests", () => {
                         // Optional: Certifications (language and other certifications)
                         certifications: [
                             {
-                                examType: ExamType.IELTS,
+                                examType: CCNNType.IELTS,
                                 level: "7.5",
                             },
                             {
-                                examType: ExamType.TOEFL_iBT,
+                                examType: CCNNType.TOEFL_iBT,
                                 level: "105",
                             },
                             {
-                                examType: ExamType.SAT,
+                                examType: CCQTType.SAT,
                                 level: "1450",
                             },
                         ],
@@ -1812,14 +1812,14 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                 aptitudeExams: [
                     {
-                        examType: ExamType.VNUHCM,
+                        examType: DGNLType.VNUHCM,
                         languageScore: 350,
                         mathScore: 200,
                         scienceLogic: 150,
                         score: 700,
                     },
                     {
-                        examType: ExamType.HSA,
+                        examType: DGNLType.HSA,
                         score: 95,
                     },
                 ],
@@ -1845,15 +1845,15 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Certifications (language and other certifications)
                 certifications: [
                     {
-                        examType: ExamType.IELTS,
+                        examType: CCNNType.IELTS,
                         level: "7.5",
                     },
                     {
-                        examType: ExamType.TOEFL_iBT,
+                        examType: CCNNType.TOEFL_iBT,
                         level: "105",
                     },
                     {
-                        examType: ExamType.SAT,
+                        examType: CCQTType.SAT,
                         level: "1450",
                     },
                 ],
@@ -1943,14 +1943,14 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                 aptitudeExams: [
                     {
-                        examType: ExamType.VNUHCM,
+                        examType: DGNLType.VNUHCM,
                         languageScore: 350,
                         mathScore: 200,
                         scienceLogic: 150,
                         score: 700,
                     },
                     {
-                        examType: ExamType.HSA,
+                        examType: DGNLType.HSA,
                         score: 95,
                     },
                 ],
@@ -1976,15 +1976,15 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Certifications (language and other certifications)
                 certifications: [
                     {
-                        examType: ExamType.IELTS,
+                        examType: CCNNType.IELTS,
                         level: "7.5",
                     },
                     {
-                        examType: ExamType.TOEFL_iBT,
+                        examType: CCNNType.TOEFL_iBT,
                         level: "105",
                     },
                     {
-                        examType: ExamType.SAT,
+                        examType: CCQTType.SAT,
                         level: "1450",
                     },
                 ],
@@ -2092,14 +2092,14 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                 aptitudeExams: [
                     {
-                        examType: ExamType.VNUHCM,
+                        examType: DGNLType.VNUHCM,
                         languageScore: 350,
                         mathScore: 200,
                         scienceLogic: 150,
                         score: 700,
                     },
                     {
-                        examType: ExamType.HSA,
+                        examType: DGNLType.HSA,
                         score: 95,
                     },
                 ],
@@ -2125,15 +2125,15 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Certifications (language and other certifications)
                 certifications: [
                     {
-                        examType: ExamType.IELTS,
+                        examType: CCNNType.IELTS,
                         level: "7.5",
                     },
                     {
-                        examType: ExamType.TOEFL_iBT,
+                        examType: CCNNType.TOEFL_iBT,
                         level: "105",
                     },
                     {
-                        examType: ExamType.SAT,
+                        examType: CCQTType.SAT,
                         level: "1450",
                     },
                 ],
@@ -2219,14 +2219,14 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                 aptitudeExams: [
                     {
-                        examType: ExamType.VNUHCM,
+                        examType: DGNLType.VNUHCM,
                         languageScore: 350,
                         mathScore: 200,
                         scienceLogic: 150,
                         score: 700,
                     },
                     {
-                        examType: ExamType.HSA,
+                        examType: DGNLType.HSA,
                         score: 95,
                     },
                 ],
@@ -2252,15 +2252,15 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Certifications (language and other certifications)
                 certifications: [
                     {
-                        examType: ExamType.IELTS,
+                        examType: CCNNType.IELTS,
                         level: "7.5",
                     },
                     {
-                        examType: ExamType.TOEFL_iBT,
+                        examType: CCNNType.TOEFL_iBT,
                         level: "105",
                     },
                     {
-                        examType: ExamType.SAT,
+                        examType: CCQTType.SAT,
                         level: "1450",
                     },
                 ],
@@ -2361,14 +2361,14 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                 aptitudeExams: [
                     {
-                        examType: ExamType.VNUHCM,
+                        examType: DGNLType.VNUHCM,
                         languageScore: 350,
                         mathScore: 200,
                         scienceLogic: 150,
                         score: 700,
                     },
                     {
-                        examType: ExamType.HSA,
+                        examType: DGNLType.HSA,
                         score: 95,
                     },
                 ],
@@ -2394,15 +2394,15 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Certifications (language and other certifications)
                 certifications: [
                     {
-                        examType: ExamType.IELTS,
+                        examType: CCNNType.IELTS,
                         level: "7.5",
                     },
                     {
-                        examType: ExamType.TOEFL_iBT,
+                        examType: CCNNType.TOEFL_iBT,
                         level: "105",
                     },
                     {
-                        examType: ExamType.SAT,
+                        examType: CCQTType.SAT,
                         level: "1450",
                     },
                 ],
@@ -2522,14 +2522,14 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                 aptitudeExams: [
                     {
-                        examType: ExamType.VNUHCM,
+                        examType: DGNLType.VNUHCM,
                         languageScore: 350,
                         mathScore: 200,
                         scienceLogic: 150,
                         score: 700,
                     },
                     {
-                        examType: ExamType.HSA,
+                        examType: DGNLType.HSA,
                         score: 95,
                     },
                 ],
@@ -2555,15 +2555,15 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Certifications (language and other certifications)
                 certifications: [
                     {
-                        examType: ExamType.IELTS,
+                        examType: CCNNType.IELTS,
                         level: "7.5",
                     },
                     {
-                        examType: ExamType.TOEFL_iBT,
+                        examType: CCNNType.TOEFL_iBT,
                         level: "105",
                     },
                     {
-                        examType: ExamType.SAT,
+                        examType: CCQTType.SAT,
                         level: "1450",
                     },
                 ],
@@ -2667,14 +2667,14 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                 aptitudeExams: [
                     {
-                        examType: ExamType.VNUHCM,
+                        examType: DGNLType.VNUHCM,
                         languageScore: 350,
                         mathScore: 200,
                         scienceLogic: 150,
                         score: 700,
                     },
                     {
-                        examType: ExamType.HSA,
+                        examType: DGNLType.HSA,
                         score: 95,
                     },
                 ],
@@ -2700,15 +2700,15 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Certifications (language and other certifications)
                 certifications: [
                     {
-                        examType: ExamType.IELTS,
+                        examType: CCNNType.IELTS,
                         level: "7.5",
                     },
                     {
-                        examType: ExamType.TOEFL_iBT,
+                        examType: CCNNType.TOEFL_iBT,
                         level: "105",
                     },
                     {
-                        examType: ExamType.SAT,
+                        examType: CCQTType.SAT,
                         level: "1450",
                     },
                 ],
@@ -2801,14 +2801,14 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                 aptitudeExams: [
                     {
-                        examType: ExamType.VNUHCM,
+                        examType: DGNLType.VNUHCM,
                         languageScore: 350,
                         mathScore: 200,
                         scienceLogic: 150,
                         score: 700,
                     },
                     {
-                        examType: ExamType.HSA,
+                        examType: DGNLType.HSA,
                         score: 95,
                     },
                 ],
@@ -2834,15 +2834,15 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Certifications (language and other certifications)
                 certifications: [
                     {
-                        examType: ExamType.IELTS,
+                        examType: CCNNType.IELTS,
                         level: "7.5",
                     },
                     {
-                        examType: ExamType.TOEFL_iBT,
+                        examType: CCNNType.TOEFL_iBT,
                         level: "105",
                     },
                     {
-                        examType: ExamType.SAT,
+                        examType: CCQTType.SAT,
                         level: "1450",
                     },
                 ],
@@ -2950,14 +2950,14 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                 aptitudeExams: [
                     {
-                        examType: ExamType.VNUHCM,
+                        examType: DGNLType.VNUHCM,
                         languageScore: 350,
                         mathScore: 200,
                         scienceLogic: 150,
                         score: 700,
                     },
                     {
-                        examType: ExamType.HSA,
+                        examType: DGNLType.HSA,
                         score: 95,
                     },
                 ],
@@ -2983,15 +2983,15 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Certifications (language and other certifications)
                 certifications: [
                     {
-                        examType: ExamType.IELTS,
+                        examType: CCNNType.IELTS,
                         level: "7.5",
                     },
                     {
-                        examType: ExamType.TOEFL_iBT,
+                        examType: CCNNType.TOEFL_iBT,
                         level: "105",
                     },
                     {
-                        examType: ExamType.SAT,
+                        examType: CCQTType.SAT,
                         level: "1450",
                     },
                 ],
@@ -3070,14 +3070,14 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                 aptitudeExams: [
                     {
-                        examType: ExamType.VNUHCM,
+                        examType: DGNLType.VNUHCM,
                         languageScore: 350,
                         mathScore: 200,
                         scienceLogic: 150,
                         score: 700,
                     },
                     {
-                        examType: ExamType.HSA,
+                        examType: DGNLType.HSA,
                         score: 95,
                     },
                 ],
@@ -3103,15 +3103,15 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Certifications (language and other certifications)
                 certifications: [
                     {
-                        examType: ExamType.IELTS,
+                        examType: CCNNType.IELTS,
                         level: "7.5",
                     },
                     {
-                        examType: ExamType.TOEFL_iBT,
+                        examType: CCNNType.TOEFL_iBT,
                         level: "105",
                     },
                     {
-                        examType: ExamType.SAT,
+                        examType: CCQTType.SAT,
                         level: "1450",
                     },
                 ],
@@ -3213,14 +3213,14 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Aptitude Exams (multiple exam types including VNUHCM with components)
                 aptitudeExams: [
                     {
-                        examType: ExamType.VNUHCM,
+                        examType: DGNLType.VNUHCM,
                         languageScore: 350,
                         mathScore: 200,
                         scienceLogic: 150,
                         score: 700,
                     },
                     {
-                        examType: ExamType.HSA,
+                        examType: DGNLType.HSA,
                         score: 95,
                     },
                 ],
@@ -3246,15 +3246,15 @@ describe("StudentService Integration Tests", () => {
                 // Optional: Certifications (language and other certifications)
                 certifications: [
                     {
-                        examType: ExamType.IELTS,
+                        examType: CCNNType.IELTS,
                         level: "7.5",
                     },
                     {
-                        examType: ExamType.TOEFL_iBT,
+                        examType: CCNNType.TOEFL_iBT,
                         level: "105",
                     },
                     {
-                        examType: ExamType.SAT,
+                        examType: CCQTType.SAT,
                         level: "1450",
                     },
                 ],

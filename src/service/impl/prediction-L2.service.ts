@@ -27,7 +27,7 @@ import {
     getRankByAcademicPerformance,
 } from "@/type/enum/academic-performance.enum.js";
 import { Conduct, getRankByConduct } from "@/type/enum/conduct.enum.js";
-import { ExamType } from "@/type/enum/exam-type.enum.js";
+import { CCNNType } from "@/type/enum/exam-type.enum.js";
 import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
@@ -246,7 +246,7 @@ export class PredictionL2Service implements IPredictionL2Service {
         const certificationMap = new Map<string, CertificationDTO[]>();
 
         ccnnCertifications.forEach((cert) => {
-            if (cert.examType === ExamType.JLPT && cert.level) {
+            if (cert.examType === CCNNType.JLPT && cert.level) {
                 // Group JLPT certifications
                 if (!certificationMap.has("JLPT")) {
                     certificationMap.set("JLPT", []);

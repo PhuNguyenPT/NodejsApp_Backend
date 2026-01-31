@@ -5,7 +5,7 @@ import type { VsatExamSubject } from "@/type/enum/vsat-exam-subject.enum.js";
 import { HTTPValidationError } from "@/dto/prediction/validation-error.dto.js";
 import { AptitudeExamDTO } from "@/dto/student/aptitude-exam-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student.dto.js";
-import { ExamType } from "@/type/enum/exam-type.enum.js";
+import { CCQTType, isCCQTType } from "@/type/enum/exam-type.enum.js";
 import {
     getAllPossibleSubjectGroups,
     getGroupSubjects,
@@ -68,6 +68,9 @@ export class PredictionUtil {
                 studentInfoDTO.getCertificationsByExamType("CCQT");
 
             return ccqtCerts.reduce<ExamScenario[]>((acc, cert) => {
+                if (!isCCQTType(cert.examType)) {
+                    return acc;
+                }
                 const score = this.getAndValidateScoreByCCQT(
                     cert.examType,
                     cert.level,
@@ -294,39 +297,39 @@ export class PredictionUtil {
     }
 
     private getAndValidateScoreByCCQT(
-        type: ExamType,
+        type: CCQTType,
         validateScore: string,
     ): number | undefined {
         const parsedScore = parseInt(validateScore);
 
-        if (isNaN(parsedScore) && type !== ExamType.A_Level) return undefined;
+        if (isNaN(parsedScore) && type !== CCQTType.A_Level) return undefined;
 
         switch (type) {
-            case ExamType.A_Level:
+            case CCQTType.A_Level:
                 return this.getAndValidateScoreByCCQT_Type_A_Level(
                     validateScore,
                 );
-            case ExamType.ACT:
+            case CCQTType.ACT:
                 return 1 <= parsedScore && parsedScore <= 36
                     ? parsedScore
                     : undefined;
-            case ExamType.Duolingo_English_Test: // THIS IS THE FIX
+            case CCQTType.Duolingo_English_Test: // THIS IS THE FIX
                 return 10 <= parsedScore && parsedScore <= 160
                     ? parsedScore
                     : undefined;
-            case ExamType.IB:
+            case CCQTType.IB:
                 return 0 <= parsedScore && parsedScore <= 45
                     ? parsedScore
                     : undefined;
-            case ExamType.OSSD:
+            case CCQTType.OSSD:
                 return 0 <= parsedScore && parsedScore <= 100
                     ? parsedScore
                     : undefined;
-            case ExamType.PTE_Academic: // THIS IS THE FIX
+            case CCQTType.PTE_Academic: // THIS IS THE FIX
                 return 10 <= parsedScore && parsedScore <= 90
                     ? parsedScore
                     : undefined;
-            case ExamType.SAT:
+            case CCQTType.SAT:
                 return 400 <= parsedScore && parsedScore <= 1600
                     ? parsedScore
                     : undefined;

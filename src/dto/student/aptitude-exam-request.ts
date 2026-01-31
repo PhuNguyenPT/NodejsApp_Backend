@@ -1,5 +1,6 @@
 import { Expose } from "class-transformer";
 import {
+    IsEnum,
     IsInt,
     IsNotEmpty,
     Max,
@@ -8,9 +9,8 @@ import {
     ValidateIf,
 } from "class-validator";
 
-import { ExamType } from "@/type/enum/exam-type.enum.js";
+import { DGNLType } from "@/type/enum/exam-type.enum.js";
 import { IsValidAptitudeExamScoreConstraint } from "@/validator/is-valid-aptitude-exam-score.validator.js";
-import { IsValidDGNLExamTypeConstraint } from "@/validator/is-valid-exam-type.validator.js";
 import { ValidateVnuhcmComponents } from "@/validator/vnuhcm-components-not-allowed.validator.js";
 
 /**
@@ -30,10 +30,10 @@ export class AptitudeExamRequest {
      * @example "VNUHCM"
      */
     @Expose()
+    @IsEnum(DGNLType)
     @IsNotEmpty({ message: "Exam type is required" })
-    @Validate(IsValidDGNLExamTypeConstraint)
     @ValidateVnuhcmComponents()
-    examType!: ExamType;
+    examType!: DGNLType;
 
     /**
      * Language score component for VNUHCM exam
@@ -46,7 +46,7 @@ export class AptitudeExamRequest {
     @IsNotEmpty({ message: "Language score is required for VNUHCM" })
     @Max(400, { message: "Language score must not exceed 400" })
     @Min(0, { message: "Language score must be at least 0" })
-    @ValidateIf((o: AptitudeExamRequest) => o.examType === ExamType.VNUHCM)
+    @ValidateIf((o: AptitudeExamRequest) => o.examType === DGNLType.VNUHCM)
     languageScore?: number;
 
     /**
@@ -60,7 +60,7 @@ export class AptitudeExamRequest {
     @IsNotEmpty({ message: "Math score is required for VNUHCM" })
     @Max(300, { message: "Math score must not exceed 300" })
     @Min(0, { message: "Math score must be at least 0" })
-    @ValidateIf((o: AptitudeExamRequest) => o.examType === ExamType.VNUHCM)
+    @ValidateIf((o: AptitudeExamRequest) => o.examType === DGNLType.VNUHCM)
     mathScore?: number;
 
     /**
@@ -74,7 +74,7 @@ export class AptitudeExamRequest {
     @IsNotEmpty({ message: "Science & Logic score is required for VNUHCM" })
     @Max(500, { message: "Science & Logic score must not exceed 500" })
     @Min(0, { message: "Science & Logic score must be at least 0" })
-    @ValidateIf((o: AptitudeExamRequest) => o.examType === ExamType.VNUHCM)
+    @ValidateIf((o: AptitudeExamRequest) => o.examType === DGNLType.VNUHCM)
     scienceLogic?: number;
 
     /**

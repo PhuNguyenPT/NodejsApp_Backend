@@ -6,7 +6,7 @@ import {
 } from "class-validator";
 
 import { AptitudeExamRequest } from "@/dto/student/aptitude-exam-request.js";
-import { ExamType, validateExamTypeScore } from "@/type/enum/exam-type.enum.js";
+import { DGNLType, validateExamTypeScore } from "@/type/enum/exam-type.enum.js";
 
 /**
  * Custom validator constraint for Aptitude Test scores.
@@ -27,7 +27,7 @@ export class IsValidAptitudeExamScoreConstraint implements ValidatorConstraintIn
         const examType = aptitudeExam.examType;
         const score = String(aptitudeExam.score);
 
-        if (examType === ExamType.VNUHCM) {
+        if (examType === DGNLType.VNUHCM) {
             const { languageScore, mathScore, scienceLogic } = aptitudeExam;
 
             if (
@@ -67,7 +67,7 @@ export class IsValidAptitudeExamScoreConstraint implements ValidatorConstraintIn
             return false;
         }
 
-        if (examType === ExamType.VNUHCM) {
+        if (examType === DGNLType.VNUHCM) {
             const { languageScore, mathScore, scienceLogic } = aptitudeExam;
 
             if (

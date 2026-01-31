@@ -1,16 +1,19 @@
 import { Expose } from "class-transformer";
 import {
+    IsEnum,
     IsNotEmpty,
     IsOptional,
     IsString,
     MaxLength,
     MinLength,
-    Validate,
 } from "class-validator";
 
 import { CEFR } from "@/entity/uni_guide/certification.entity.js";
-import { ExamType } from "@/type/enum/exam-type.enum.js";
-import { IsValidCertificationExamTypeConstraint } from "@/validator/is-valid-exam-type.validator.js";
+import {
+    type CCNNType,
+    type CCQTType,
+    CertificationExamTypeEnum,
+} from "@/type/enum/exam-type.enum.js";
 
 /**
  * Data Transfer Object for Certification information
@@ -30,9 +33,9 @@ export class CertificationDTO {
      * @example "IELTS"
      */
     @Expose()
+    @IsEnum(CertificationExamTypeEnum)
     @IsNotEmpty({ message: "Exam type is required" })
-    @Validate(IsValidCertificationExamTypeConstraint)
-    examType!: ExamType;
+    examType!: CCNNType | CCQTType;
 
     @Expose()
     @IsNotEmpty({ message: "Level is required" })

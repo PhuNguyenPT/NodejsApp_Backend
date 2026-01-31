@@ -37,11 +37,7 @@ import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { TYPES } from "@/type/container/types.js";
-import {
-    type CCQTType,
-    ExamType,
-    isCCQTType,
-} from "@/type/enum/exam-type.enum.js";
+import { CCQTType, DGNLType, isCCQTType } from "@/type/enum/exam-type.enum.js";
 import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.enum.js";
 import { NationalExcellentStudentExamSubject } from "@/type/enum/national-excellent-exam.enum.js";
 import { Rank } from "@/type/enum/rank.enum.js";
@@ -1708,19 +1704,19 @@ export class PredictionL3Service implements IPredictionL3Service {
 
     private mapCCQTTypeToInterCerEnum(examType: CCQTType): InterCerEnum {
         switch (examType) {
-            case ExamType.A_Level:
+            case CCQTType.A_Level:
                 return InterCerEnum.A_LEVEL;
-            case ExamType.ACT:
+            case CCQTType.ACT:
                 return InterCerEnum.ACT;
-            case ExamType.Duolingo_English_Test:
+            case CCQTType.Duolingo_English_Test:
                 return InterCerEnum.DOULINGO_ENGLISH_TEST;
-            case ExamType.IB:
+            case CCQTType.IB:
                 return InterCerEnum.IB;
-            case ExamType.OSSD:
+            case CCQTType.OSSD:
                 return InterCerEnum.OSSD;
-            case ExamType.PTE_Academic:
+            case CCQTType.PTE_Academic:
                 return InterCerEnum.PTE_ACADEMIC;
-            case ExamType.SAT:
+            case CCQTType.SAT:
                 return InterCerEnum.SAT;
             default: {
                 const _exhaustiveCheck: never = examType;
@@ -1740,7 +1736,7 @@ export class PredictionL3Service implements IPredictionL3Service {
         aptitudeExam: AptitudeExamDTO,
     ): DGNL | undefined {
         if (
-            aptitudeExam.examType !== ExamType.VNUHCM ||
+            aptitudeExam.examType !== DGNLType.VNUHCM ||
             !aptitudeExam.vnuhcmComponents
         ) {
             return undefined;

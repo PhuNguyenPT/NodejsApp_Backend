@@ -26,7 +26,7 @@ import { TalentExamEntity } from "@/entity/uni_guide/talent-exam.entity.js";
 import { VnuhcmScoreComponentEntity } from "@/entity/uni_guide/vnuhcm-score-component.entity.js";
 import { VsatExamEntity } from "@/entity/uni_guide/vsat-exam.entity.js";
 import { TYPES } from "@/type/container/types.js";
-import { ExamType } from "@/type/enum/exam-type.enum.js";
+import { DGNLType } from "@/type/enum/exam-type.enum.js";
 import { Role } from "@/type/enum/user.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -279,7 +279,7 @@ export class StudentService implements IStudentService {
                     }
 
                     if (
-                        aptitudeExamRequest.examType === ExamType.VNUHCM &&
+                        aptitudeExamRequest.examType === DGNLType.VNUHCM &&
                         aptitudeExamRequest.languageScore &&
                         aptitudeExamRequest.mathScore &&
                         aptitudeExamRequest.scienceLogic &&

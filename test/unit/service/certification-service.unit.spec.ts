@@ -10,7 +10,7 @@ import {
     CertificationEntity,
 } from "@/entity/uni_guide/certification.entity.js";
 import { CertificationService } from "@/service/impl/certification.service.js";
-import { ExamType } from "@/type/enum/exam-type.enum.js";
+import { CCNNType, CCQTType } from "@/type/enum/exam-type.enum.js";
 import { Role } from "@/type/enum/user.enum.js";
 
 describe("CertificationService Business Logic Tests", () => {
@@ -35,13 +35,13 @@ describe("CertificationService Business Logic Tests", () => {
         it("should create a certification entity with required fields", () => {
             // Arrange & Act
             const certification = new CertificationEntity({
-                examType: ExamType.IELTS,
+                examType: CCNNType.IELTS,
                 level: "7.5",
                 studentId: "test-student-id",
             });
 
             // Assert
-            expect(certification.examType).toBe(ExamType.IELTS);
+            expect(certification.examType).toBe(CCNNType.IELTS);
             expect(certification.level).toBe("7.5");
             expect(certification.studentId).toBe("test-student-id");
         });
@@ -50,7 +50,7 @@ describe("CertificationService Business Logic Tests", () => {
             // Arrange & Act
             const certification = new CertificationEntity({
                 createdBy: Role.ADMIN,
-                examType: ExamType.TOEFL_iBT,
+                examType: CCNNType.TOEFL_iBT,
                 level: "100",
                 studentId: "test-student-id",
             });
@@ -63,14 +63,14 @@ describe("CertificationService Business Logic Tests", () => {
             // Arrange & Act
             const certification = new CertificationEntity({
                 cefr: CEFR.C1,
-                examType: ExamType.IELTS,
+                examType: CCNNType.IELTS,
                 level: "7.5",
                 studentId: "student-123",
             });
 
             // Assert
             expect(certification.cefr).toBe(CEFR.C1);
-            expect(certification.examType).toBe(ExamType.IELTS);
+            expect(certification.examType).toBe(CCNNType.IELTS);
             expect(certification.level).toBe("7.5");
         });
 
@@ -79,7 +79,7 @@ describe("CertificationService Business Logic Tests", () => {
             const certification = new CertificationEntity({
                 cefr: CEFR.B2,
                 createdBy: Role.USER,
-                examType: ExamType.TOEIC,
+                examType: CCNNType.TOEIC,
                 level: "850",
                 studentId: "student-456",
                 updatedBy: Role.MODERATOR,
@@ -87,7 +87,7 @@ describe("CertificationService Business Logic Tests", () => {
 
             // Assert
             expect(certification.cefr).toBe(CEFR.B2);
-            expect(certification.examType).toBe(ExamType.TOEIC);
+            expect(certification.examType).toBe(CCNNType.TOEIC);
             expect(certification.level).toBe("850");
             expect(certification.studentId).toBe("student-456");
             expect(certification.createdBy).toBe(Role.USER);
@@ -99,7 +99,7 @@ describe("CertificationService Business Logic Tests", () => {
         it("should create a certification entity from certification request", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.IELTS,
+                examType: CCNNType.IELTS,
                 level: "7.5",
             };
 
@@ -119,7 +119,7 @@ describe("CertificationService Business Logic Tests", () => {
             // Assert
             expect(createSpy).toHaveBeenCalledWith(certificationRequest);
             expect(createSpy).toHaveBeenCalledTimes(1);
-            expect(result.examType).toBe(ExamType.IELTS);
+            expect(result.examType).toBe(CCNNType.IELTS);
             expect(result.level).toBe("7.5");
             expect(result.createdBy).toBe(Role.ANONYMOUS);
         });
@@ -127,7 +127,7 @@ describe("CertificationService Business Logic Tests", () => {
         it("should set createdBy to ANONYMOUS when not provided", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.TOEFL_iBT,
+                examType: CCNNType.TOEFL_iBT,
                 level: "95",
             };
 
@@ -150,7 +150,7 @@ describe("CertificationService Business Logic Tests", () => {
         it("should preserve createdBy if already set", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.TOEIC,
+                examType: CCNNType.TOEIC,
                 level: "900",
             };
 
@@ -174,7 +174,7 @@ describe("CertificationService Business Logic Tests", () => {
         it("should automatically set CEFR level for CCNN exams", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.IELTS,
+                examType: CCNNType.IELTS,
                 level: "7.5",
             };
 
@@ -197,7 +197,7 @@ describe("CertificationService Business Logic Tests", () => {
         it("should not set CEFR level for non-CCNN exams", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.SAT,
+                examType: CCQTType.SAT,
                 level: "1400",
             };
 
@@ -223,15 +223,15 @@ describe("CertificationService Business Logic Tests", () => {
             // Arrange
             const certificationRequests: CertificationRequest[] = [
                 {
-                    examType: ExamType.IELTS,
+                    examType: CCNNType.IELTS,
                     level: "7.5",
                 },
                 {
-                    examType: ExamType.TOEFL_iBT,
+                    examType: CCNNType.TOEFL_iBT,
                     level: "100",
                 },
                 {
-                    examType: ExamType.TOEIC,
+                    examType: CCNNType.TOEIC,
                     level: "850",
                 },
             ];
@@ -257,9 +257,9 @@ describe("CertificationService Business Logic Tests", () => {
             // Assert
             expect(createSpy).toHaveBeenCalledTimes(3);
             expect(result).toHaveLength(3);
-            expect(result[0].examType).toBe(ExamType.IELTS);
-            expect(result[1].examType).toBe(ExamType.TOEFL_iBT);
-            expect(result[2].examType).toBe(ExamType.TOEIC);
+            expect(result[0].examType).toBe(CCNNType.IELTS);
+            expect(result[1].examType).toBe(CCNNType.TOEFL_iBT);
+            expect(result[2].examType).toBe(CCNNType.TOEIC);
             expect(result[0].level).toBe("7.5");
             expect(result[1].level).toBe("100");
             expect(result[2].level).toBe("850");
@@ -284,7 +284,7 @@ describe("CertificationService Business Logic Tests", () => {
             // Arrange
             const certificationRequests: CertificationRequest[] = [
                 {
-                    examType: ExamType.IELTS,
+                    examType: CCNNType.IELTS,
                     level: "8.0",
                 },
             ];
@@ -304,7 +304,7 @@ describe("CertificationService Business Logic Tests", () => {
             // Assert
             expect(createSpy).toHaveBeenCalledTimes(1);
             expect(result).toHaveLength(1);
-            expect(result[0].examType).toBe(ExamType.IELTS);
+            expect(result[0].examType).toBe(CCNNType.IELTS);
             expect(result[0].level).toBe("8.0");
         });
 
@@ -312,11 +312,11 @@ describe("CertificationService Business Logic Tests", () => {
             // Arrange
             const certificationRequests: CertificationRequest[] = [
                 {
-                    examType: ExamType.IELTS,
+                    examType: CCNNType.IELTS,
                     level: "7.0",
                 },
                 {
-                    examType: ExamType.TOEFL_iBT,
+                    examType: CCNNType.TOEFL_iBT,
                     level: "90",
                 },
             ];
@@ -348,7 +348,7 @@ describe("CertificationService Business Logic Tests", () => {
             const largeCertArray: CertificationRequest[] = Array.from(
                 { length: 50 },
                 (_, i) => ({
-                    examType: i % 2 === 0 ? ExamType.IELTS : ExamType.TOEFL_iBT,
+                    examType: i % 2 === 0 ? CCNNType.IELTS : CCNNType.TOEFL_iBT,
                     level: i % 2 === 0 ? "7.5" : "100",
                 }),
             );
@@ -374,8 +374,8 @@ describe("CertificationService Business Logic Tests", () => {
             // Assert
             expect(result).toHaveLength(50);
             expect(createSpy).toHaveBeenCalledTimes(50);
-            expect(result[0].examType).toBe(ExamType.IELTS);
-            expect(result[49].examType).toBe(ExamType.TOEFL_iBT);
+            expect(result[0].examType).toBe(CCNNType.IELTS);
+            expect(result[49].examType).toBe(CCNNType.TOEFL_iBT);
         });
     });
 
@@ -383,61 +383,61 @@ describe("CertificationService Business Logic Tests", () => {
         describe("IELTS CEFR Mapping", () => {
             it("should map IELTS scores to A1 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "1.0"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "1.0"),
                 ).toBe(CEFR.A1);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "3.0"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "3.0"),
                 ).toBe(CEFR.A1);
             });
 
             it("should map IELTS scores to A2 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "3.5"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "3.5"),
                 ).toBe(CEFR.A2);
             });
 
             it("should map IELTS scores to B1 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "4.0"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "4.0"),
                 ).toBe(CEFR.B1);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "5.0"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "5.0"),
                 ).toBe(CEFR.B1);
             });
 
             it("should map IELTS scores to B2 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "5.5"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "5.5"),
                 ).toBe(CEFR.B2);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "6.5"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "6.5"),
                 ).toBe(CEFR.B2);
             });
 
             it("should map IELTS scores to C1 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "7.0"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "7.0"),
                 ).toBe(CEFR.C1);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "8.0"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "8.0"),
                 ).toBe(CEFR.C1);
             });
 
             it("should map IELTS scores to C2 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "8.5"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "8.5"),
                 ).toBe(CEFR.C2);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "9.0"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "9.0"),
                 ).toBe(CEFR.C2);
             });
 
             it("should return undefined for out-of-range IELTS scores", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "0.5"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "0.5"),
                 ).toBeUndefined();
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "9.5"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "9.5"),
                 ).toBeUndefined();
             });
         });
@@ -445,47 +445,47 @@ describe("CertificationService Business Logic Tests", () => {
         describe("TOEFL iBT CEFR Mapping", () => {
             it("should map TOEFL iBT scores to A1 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEFL_iBT, "0"),
+                    certificationService.getCEFRLevel(CCNNType.TOEFL_iBT, "0"),
                 ).toBe(CEFR.A1);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEFL_iBT, "6"),
+                    certificationService.getCEFRLevel(CCNNType.TOEFL_iBT, "6"),
                 ).toBe(CEFR.A1);
             });
 
             it("should map TOEFL iBT scores to A2 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEFL_iBT, "7"),
+                    certificationService.getCEFRLevel(CCNNType.TOEFL_iBT, "7"),
                 ).toBe(CEFR.A2);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEFL_iBT, "13"),
+                    certificationService.getCEFRLevel(CCNNType.TOEFL_iBT, "13"),
                 ).toBe(CEFR.A2);
             });
 
             it("should map TOEFL iBT scores to B1 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEFL_iBT, "14"),
+                    certificationService.getCEFRLevel(CCNNType.TOEFL_iBT, "14"),
                 ).toBe(CEFR.B1);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEFL_iBT, "49"),
+                    certificationService.getCEFRLevel(CCNNType.TOEFL_iBT, "49"),
                 ).toBe(CEFR.B1);
             });
 
             it("should map TOEFL iBT scores to B2 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEFL_iBT, "50"),
+                    certificationService.getCEFRLevel(CCNNType.TOEFL_iBT, "50"),
                 ).toBe(CEFR.B2);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEFL_iBT, "89"),
+                    certificationService.getCEFRLevel(CCNNType.TOEFL_iBT, "89"),
                 ).toBe(CEFR.B2);
             });
 
             it("should map TOEFL iBT scores to C1 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEFL_iBT, "90"),
+                    certificationService.getCEFRLevel(CCNNType.TOEFL_iBT, "90"),
                 ).toBe(CEFR.C1);
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_iBT,
+                        CCNNType.TOEFL_iBT,
                         "113",
                     ),
                 ).toBe(CEFR.C1);
@@ -494,13 +494,13 @@ describe("CertificationService Business Logic Tests", () => {
             it("should map TOEFL iBT scores to C2 level", () => {
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_iBT,
+                        CCNNType.TOEFL_iBT,
                         "114",
                     ),
                 ).toBe(CEFR.C2);
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_iBT,
+                        CCNNType.TOEFL_iBT,
                         "120",
                     ),
                 ).toBe(CEFR.C2);
@@ -510,55 +510,55 @@ describe("CertificationService Business Logic Tests", () => {
         describe("TOEIC CEFR Mapping", () => {
             it("should map TOEIC scores to A1 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "60"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "60"),
                 ).toBe(CEFR.A1);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "220"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "220"),
                 ).toBe(CEFR.A1);
             });
 
             it("should map TOEIC scores to A2 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "225"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "225"),
                 ).toBe(CEFR.A2);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "545"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "545"),
                 ).toBe(CEFR.A2);
             });
 
             it("should map TOEIC scores to B1 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "550"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "550"),
                 ).toBe(CEFR.B1);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "780"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "780"),
                 ).toBe(CEFR.B1);
             });
 
             it("should map TOEIC scores to B2 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "785"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "785"),
                 ).toBe(CEFR.B2);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "940"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "940"),
                 ).toBe(CEFR.B2);
             });
 
             it("should map TOEIC scores to C1 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "945"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "945"),
                 ).toBe(CEFR.C1);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "980"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "980"),
                 ).toBe(CEFR.C1);
             });
 
             it("should map TOEIC scores to C2 level", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "985"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "985"),
                 ).toBe(CEFR.C2);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "990"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "990"),
                 ).toBe(CEFR.C2);
             });
         });
@@ -566,32 +566,32 @@ describe("CertificationService Business Logic Tests", () => {
         describe("TOEFL CBT CEFR Mapping", () => {
             it("should map TOEFL CBT scores correctly", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEFL_CBT, "50"),
+                    certificationService.getCEFRLevel(CCNNType.TOEFL_CBT, "50"),
                 ).toBe(CEFR.A1);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEFL_CBT, "80"),
+                    certificationService.getCEFRLevel(CCNNType.TOEFL_CBT, "80"),
                 ).toBe(CEFR.A2);
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_CBT,
+                        CCNNType.TOEFL_CBT,
                         "120",
                     ),
                 ).toBe(CEFR.B1);
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_CBT,
+                        CCNNType.TOEFL_CBT,
                         "180",
                     ),
                 ).toBe(CEFR.B2);
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_CBT,
+                        CCNNType.TOEFL_CBT,
                         "230",
                     ),
                 ).toBe(CEFR.C1);
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_CBT,
+                        CCNNType.TOEFL_CBT,
                         "270",
                     ),
                 ).toBe(CEFR.C2);
@@ -602,37 +602,37 @@ describe("CertificationService Business Logic Tests", () => {
             it("should map TOEFL Paper scores correctly", () => {
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_Paper,
+                        CCNNType.TOEFL_Paper,
                         "320",
                     ),
                 ).toBe(CEFR.A1);
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_Paper,
+                        CCNNType.TOEFL_Paper,
                         "380",
                     ),
                 ).toBe(CEFR.A2);
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_Paper,
+                        CCNNType.TOEFL_Paper,
                         "450",
                     ),
                 ).toBe(CEFR.B1);
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_Paper,
+                        CCNNType.TOEFL_Paper,
                         "490",
                     ),
                 ).toBe(CEFR.B2);
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_Paper,
+                        CCNNType.TOEFL_Paper,
                         "530",
                     ),
                 ).toBe(CEFR.C1);
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_Paper,
+                        CCNNType.TOEFL_Paper,
                         "600",
                     ),
                 ).toBe(CEFR.C2);
@@ -642,25 +642,25 @@ describe("CertificationService Business Logic Tests", () => {
         describe("Non-CCNN Exams", () => {
             it("should return undefined for JLPT", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.JLPT, "N1"),
+                    certificationService.getCEFRLevel(CCNNType.JLPT, "N1"),
                 ).toBeUndefined();
             });
 
             it("should return undefined for SAT", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.SAT, "1400"),
+                    certificationService.getCEFRLevel(CCQTType.SAT, "1400"),
                 ).toBeUndefined();
             });
 
             it("should return undefined for ACT", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.ACT, "30"),
+                    certificationService.getCEFRLevel(CCQTType.ACT, "30"),
                 ).toBeUndefined();
             });
 
             it("should return undefined for IB", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IB, "38"),
+                    certificationService.getCEFRLevel(CCQTType.IB, "38"),
                 ).toBeUndefined();
             });
         });
@@ -669,7 +669,7 @@ describe("CertificationService Business Logic Tests", () => {
             it("should handle invalid numeric strings", () => {
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.IELTS,
+                        CCNNType.IELTS,
                         "invalid",
                     ),
                 ).toBeUndefined();
@@ -677,35 +677,35 @@ describe("CertificationService Business Logic Tests", () => {
 
             it("should handle boundary values correctly", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "1.0"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "1.0"),
                 ).toBe(CEFR.A1);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "9.0"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "9.0"),
                 ).toBe(CEFR.C2);
             });
 
             it("should return undefined for IELTS scores not in 0.5 increments", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "7.3"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "7.3"),
                 ).toBeUndefined();
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "6.7"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "6.7"),
                 ).toBeUndefined();
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, "8.25"),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, "8.25"),
                 ).toBeUndefined();
             });
 
             it("should return undefined for TOEFL iBT decimal scores", () => {
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_iBT,
+                        CCNNType.TOEFL_iBT,
                         "95.5",
                     ),
                 ).toBeUndefined();
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_iBT,
+                        CCNNType.TOEFL_iBT,
                         "100.3",
                     ),
                 ).toBeUndefined();
@@ -714,13 +714,13 @@ describe("CertificationService Business Logic Tests", () => {
             it("should return undefined for TOEFL CBT decimal scores", () => {
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_CBT,
+                        CCNNType.TOEFL_CBT,
                         "200.5",
                     ),
                 ).toBeUndefined();
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_CBT,
+                        CCNNType.TOEFL_CBT,
                         "150.7",
                     ),
                 ).toBeUndefined();
@@ -729,13 +729,13 @@ describe("CertificationService Business Logic Tests", () => {
             it("should return undefined for TOEFL Paper decimal scores", () => {
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_Paper,
+                        CCNNType.TOEFL_Paper,
                         "550.5",
                     ),
                 ).toBeUndefined();
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_Paper,
+                        CCNNType.TOEFL_Paper,
                         "600.3",
                     ),
                 ).toBeUndefined();
@@ -743,25 +743,25 @@ describe("CertificationService Business Logic Tests", () => {
 
             it("should return undefined for TOEIC scores not in multiples of 5", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "851"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "851"),
                 ).toBeUndefined();
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "903"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "903"),
                 ).toBeUndefined();
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "787"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "787"),
                 ).toBeUndefined();
             });
 
             it("should accept valid TOEIC scores in multiples of 5", () => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "850"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "850"),
                 ).toBe(CEFR.B2);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "900"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "900"),
                 ).toBe(CEFR.B2);
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, "785"),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, "785"),
                 ).toBe(CEFR.B2);
             });
         });
@@ -769,13 +769,16 @@ describe("CertificationService Business Logic Tests", () => {
 
     describe("Exam Type Coverage", () => {
         it("should handle all CCNN exam types", () => {
-            const ccnnExams = [
-                { examType: ExamType.IELTS, level: "7.0" },
-                { examType: ExamType.JLPT, level: "N1" },
-                { examType: ExamType.TOEFL_CBT, level: "200" },
-                { examType: ExamType.TOEFL_iBT, level: "100" },
-                { examType: ExamType.TOEFL_Paper, level: "550" },
-                { examType: ExamType.TOEIC, level: "850" },
+            const ccnnExams: {
+                examType: CCNNType | CCQTType;
+                level: string;
+            }[] = [
+                { examType: CCNNType.IELTS, level: "7.0" },
+                { examType: CCNNType.JLPT, level: "N1" },
+                { examType: CCNNType.TOEFL_CBT, level: "200" },
+                { examType: CCNNType.TOEFL_iBT, level: "100" },
+                { examType: CCNNType.TOEFL_Paper, level: "550" },
+                { examType: CCNNType.TOEIC, level: "850" },
             ];
 
             ccnnExams.forEach(({ examType, level }) => {
@@ -800,45 +803,20 @@ describe("CertificationService Business Logic Tests", () => {
         });
 
         it("should handle all CCQT exam types", () => {
-            const ccqtExams = [
-                { examType: ExamType.A_Level, level: "A*" },
-                { examType: ExamType.ACT, level: "32" },
-                { examType: ExamType.Duolingo_English_Test, level: "120" },
-                { examType: ExamType.IB, level: "40" },
-                { examType: ExamType.OSSD, level: "85" },
-                { examType: ExamType.PTE_Academic, level: "70" },
-                { examType: ExamType.SAT, level: "1500" },
+            const ccqtExams: {
+                examType: CCNNType | CCQTType;
+                level: string;
+            }[] = [
+                { examType: CCQTType.A_Level, level: "A*" },
+                { examType: CCQTType.ACT, level: "32" },
+                { examType: CCQTType.Duolingo_English_Test, level: "120" },
+                { examType: CCQTType.IB, level: "40" },
+                { examType: CCQTType.OSSD, level: "85" },
+                { examType: CCQTType.PTE_Academic, level: "70" },
+                { examType: CCQTType.SAT, level: "1500" },
             ];
 
             ccqtExams.forEach(({ examType, level }) => {
-                const certificationRequest: CertificationRequest = {
-                    examType,
-                    level,
-                };
-
-                const mockEntity = new CertificationEntity();
-                mockEntity.examType = examType;
-                mockEntity.level = level;
-                mockEntity.createdBy = Role.ANONYMOUS;
-
-                createSpy.mockReturnValue(mockEntity);
-
-                const result =
-                    certificationService.createCertificationEntity(
-                        certificationRequest,
-                    );
-                expect(result.examType).toBe(examType);
-            });
-        });
-
-        it("should handle all DGNL exam types", () => {
-            const dgnlExams = [
-                { examType: ExamType.HSA, level: "120" },
-                { examType: ExamType.TSA, level: "85" },
-                { examType: ExamType.VNUHCM, level: "1000" },
-            ];
-
-            dgnlExams.forEach(({ examType, level }) => {
                 const certificationRequest: CertificationRequest = {
                     examType,
                     level,
@@ -864,9 +842,9 @@ describe("CertificationService Business Logic Tests", () => {
         it("should handle mixed exam types in batch creation", () => {
             // Arrange
             const mixedRequests: CertificationRequest[] = [
-                { examType: ExamType.IELTS, level: "7.5" },
-                { examType: ExamType.SAT, level: "1400" },
-                { examType: ExamType.TOEIC, level: "850" },
+                { examType: CCNNType.IELTS, level: "7.5" },
+                { examType: CCQTType.SAT, level: "1400" },
+                { examType: CCNNType.TOEIC, level: "850" },
             ];
 
             const mockEntities = mixedRequests.map((req) => {
@@ -886,9 +864,9 @@ describe("CertificationService Business Logic Tests", () => {
                 certificationService.createCertificationEntities(mixedRequests);
 
             // Assert
-            expect(results[0].examType).toBe(ExamType.IELTS);
-            expect(results[1].examType).toBe(ExamType.SAT);
-            expect(results[2].examType).toBe(ExamType.TOEIC);
+            expect(results[0].examType).toBe(CCNNType.IELTS);
+            expect(results[1].examType).toBe(CCQTType.SAT);
+            expect(results[2].examType).toBe(CCNNType.TOEIC);
             expect(results[0].cefr).toBe(CEFR.C1);
             expect(results[1].cefr).toBeUndefined();
             expect(results[2].cefr).toBe(CEFR.B2);
@@ -897,7 +875,7 @@ describe("CertificationService Business Logic Tests", () => {
         it("should handle rapid successive calls", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.IELTS,
+                examType: CCNNType.IELTS,
                 level: "7.0",
             };
 
@@ -931,7 +909,7 @@ describe("CertificationService Business Logic Tests", () => {
         it("should handle certifications with string grades", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.A_Level,
+                examType: CCQTType.A_Level,
                 level: "A*",
             };
 
@@ -956,7 +934,7 @@ describe("CertificationService Business Logic Tests", () => {
         it("should handle JLPT certifications without CEFR mapping", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.JLPT,
+                examType: CCNNType.JLPT,
                 level: "N1",
             };
 
@@ -983,7 +961,7 @@ describe("CertificationService Business Logic Tests", () => {
         it("should validate that repository.create is called with correct parameters", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.IELTS,
+                examType: CCNNType.IELTS,
                 level: "7.5",
             };
 
@@ -997,7 +975,7 @@ describe("CertificationService Business Logic Tests", () => {
 
             // Assert
             expect(createSpy).toHaveBeenCalledWith({
-                examType: ExamType.IELTS,
+                examType: CCNNType.IELTS,
                 level: "7.5",
             });
         });
@@ -1005,7 +983,7 @@ describe("CertificationService Business Logic Tests", () => {
         it("should validate that createdBy defaults to ANONYMOUS via nullish coalescing", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.TOEFL_iBT,
+                examType: CCNNType.TOEFL_iBT,
                 level: "95",
             };
 
@@ -1030,7 +1008,7 @@ describe("CertificationService Business Logic Tests", () => {
         it("should preserve all properties from certification request", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.TOEIC,
+                examType: CCNNType.TOEIC,
                 level: "900",
             };
 
@@ -1055,11 +1033,11 @@ describe("CertificationService Business Logic Tests", () => {
             // Arrange
             const certificationRequests: CertificationRequest[] = [
                 {
-                    examType: ExamType.IELTS,
+                    examType: CCNNType.IELTS,
                     level: "7.5",
                 },
                 {
-                    examType: ExamType.TOEFL_iBT,
+                    examType: CCNNType.TOEFL_iBT,
                     level: "100",
                 },
             ];
@@ -1084,14 +1062,14 @@ describe("CertificationService Business Logic Tests", () => {
             // Assert - Verify each certification maintains its unique properties
             expect(results[0].examType).not.toBe(results[1].examType);
             expect(results[0].level).not.toBe(results[1].level);
-            expect(results[0].examType).toBe(ExamType.IELTS);
-            expect(results[1].examType).toBe(ExamType.TOEFL_iBT);
+            expect(results[0].examType).toBe(CCNNType.IELTS);
+            expect(results[1].examType).toBe(CCNNType.TOEFL_iBT);
         });
 
         it("should validate CEFR assignment happens for CCNN exams", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.IELTS,
+                examType: CCNNType.IELTS,
                 level: "6.5",
             };
 
@@ -1110,7 +1088,7 @@ describe("CertificationService Business Logic Tests", () => {
             // Assert - Verify repository.create was called and CEFR was assigned
             expect(createSpy).toHaveBeenCalledTimes(1);
             expect(result.cefr).toBe(CEFR.B2);
-            expect(result.examType).toBe(ExamType.IELTS);
+            expect(result.examType).toBe(CCNNType.IELTS);
             expect(result.level).toBe("6.5");
         });
     });
@@ -1132,7 +1110,7 @@ describe("CertificationService Business Logic Tests", () => {
 
             boundaries.forEach(({ expected, level }) => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.IELTS, level),
+                    certificationService.getCEFRLevel(CCNNType.IELTS, level),
                 ).toBe(expected);
             });
         });
@@ -1155,7 +1133,7 @@ describe("CertificationService Business Logic Tests", () => {
             boundaries.forEach(({ expected, level }) => {
                 expect(
                     certificationService.getCEFRLevel(
-                        ExamType.TOEFL_iBT,
+                        CCNNType.TOEFL_iBT,
                         level,
                     ),
                 ).toBe(expected);
@@ -1180,7 +1158,7 @@ describe("CertificationService Business Logic Tests", () => {
 
             boundaries.forEach(({ expected, level }) => {
                 expect(
-                    certificationService.getCEFRLevel(ExamType.TOEIC, level),
+                    certificationService.getCEFRLevel(CCNNType.TOEIC, level),
                 ).toBe(expected);
             });
         });
@@ -1190,7 +1168,7 @@ describe("CertificationService Business Logic Tests", () => {
         it("should call handleExamValidation before creating entity", () => {
             // Arrange
             const certificationRequest: CertificationRequest = {
-                examType: ExamType.IELTS,
+                examType: CCNNType.IELTS,
                 level: "7.5",
             };
 
@@ -1210,14 +1188,17 @@ describe("CertificationService Business Logic Tests", () => {
         });
 
         it("should handle valid scores for all exam types", () => {
-            const validExams = [
-                { examType: ExamType.IELTS, level: "7.5" },
-                { examType: ExamType.TOEFL_iBT, level: "100" },
-                { examType: ExamType.TOEIC, level: "850" },
-                { examType: ExamType.SAT, level: "1400" },
-                { examType: ExamType.ACT, level: "30" },
-                { examType: ExamType.A_Level, level: "A*" },
-                { examType: ExamType.JLPT, level: "N1" },
+            const validExams: {
+                examType: CCNNType | CCQTType;
+                level: string;
+            }[] = [
+                { examType: CCNNType.IELTS, level: "7.5" },
+                { examType: CCNNType.TOEFL_iBT, level: "100" },
+                { examType: CCNNType.TOEIC, level: "850" },
+                { examType: CCQTType.SAT, level: "1400" },
+                { examType: CCQTType.ACT, level: "30" },
+                { examType: CCQTType.A_Level, level: "A*" },
+                { examType: CCNNType.JLPT, level: "N1" },
             ];
 
             validExams.forEach(({ examType, level }) => {

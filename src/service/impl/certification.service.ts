@@ -10,7 +10,8 @@ import {
 } from "@/entity/uni_guide/certification.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import {
-    ExamType,
+    CCNNType,
+    CCQTType,
     handleExamValidation,
     isCCNNType,
 } from "@/type/enum/exam-type.enum.js";
@@ -60,7 +61,10 @@ export class CertificationService implements ICertificationService {
      * @param level - The score or level of the exam
      * @returns CEFR level or undefined if not applicable
      */
-    public getCEFRLevel(examType: ExamType, level: string): CEFR | undefined {
+    public getCEFRLevel(
+        examType: CCNNType | CCQTType,
+        level: string,
+    ): CEFR | undefined {
         // Check if examType is a CCNN type
         if (!isCCNNType(examType)) {
             return undefined;
@@ -73,17 +77,17 @@ export class CertificationService implements ICertificationService {
         }
 
         switch (examType) {
-            case ExamType.IELTS:
+            case CCNNType.IELTS:
                 return this.get_IELTS_CEFR_level(numberLevel);
-            case ExamType.JLPT:
+            case CCNNType.JLPT:
                 return undefined; // JLPT doesn't map to CEFR
-            case ExamType.TOEFL_CBT:
+            case CCNNType.TOEFL_CBT:
                 return this.get_TOEFL_CBT_level(numberLevel);
-            case ExamType.TOEFL_iBT:
+            case CCNNType.TOEFL_iBT:
                 return this.get_TOEFL_iBT_level(numberLevel);
-            case ExamType.TOEFL_Paper:
+            case CCNNType.TOEFL_Paper:
                 return this.get_TOEFL_Paper_level(numberLevel);
-            case ExamType.TOEIC:
+            case CCNNType.TOEIC:
                 return this.get_TOEIC_level(numberLevel);
             default:
                 return undefined; // Unsupported CCNN type for CEFR mapping

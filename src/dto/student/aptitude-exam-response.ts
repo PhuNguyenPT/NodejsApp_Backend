@@ -1,6 +1,6 @@
 import { Expose, Transform } from "class-transformer";
 
-import { ExamType } from "@/type/enum/exam-type.enum.js";
+import type { DGNLType } from "@/type/enum/exam-type.enum.js";
 
 export class AptitudeExamResponse {
     /**
@@ -8,7 +8,7 @@ export class AptitudeExamResponse {
      * @example "VNUHCM"
      */
     @Expose()
-    examType!: ExamType;
+    examType!: DGNLType;
 
     /**
      * Language score component for VNUHCM exam

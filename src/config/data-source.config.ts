@@ -37,7 +37,8 @@ import { L2Data1760411108656 } from "@/migration/1760411108656-l2-data.js";
 import { TranscriptSubjectGroup1760934064921 } from "@/migration/1760934064921-transcript-subject-group.js";
 import { UniItemL1Data1761452875227 } from "@/migration/1761452875227-uni-item-l1-data.js";
 import { Transcript1764903586789 } from "@/migration/1764903586789-transcript.js";
-import { MigrateUuidFromUUIDV4ToUUIDV71769316140669 } from "@/migration/1769316140669-MigrateUuidFromUUIDV4ToUUIDV7.js";
+import { MigrateUuidFromUUIDV4ToUUIDV71769316140669 } from "@/migration/1769316140669-migrate-uuid-from-uuidv4-to-uuidv7.js";
+import { ExamTypeChange1769859209514 } from "@/migration/1769859209514-exam-type-change.js";
 import { config } from "@/util/validate-env.js";
 
 /**
@@ -248,6 +249,7 @@ const postgresConnectionOptions: PostgresConnectionOptions = {
         UniItemL1Data1761452875227,
         Transcript1764903586789,
         MigrateUuidFromUUIDV4ToUUIDV71769316140669,
+        ExamTypeChange1769859209514,
     ],
 
     migrationsRun: shouldRunMigrations(),

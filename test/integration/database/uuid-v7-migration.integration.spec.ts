@@ -347,7 +347,7 @@ describe("UUID v7 Migration Tests", () => {
                 INSERT INTO "uni_guide"."aptitude_exams" 
                 (student_id, exam_type, score)
                 VALUES 
-                ($1, 'SAT', 1500)
+                ($1, 'HSA', 100)
                 RETURNING id
             `,
                 [studentId],
