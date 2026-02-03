@@ -43,10 +43,10 @@ export const IMAGE_MIMES: Set<string> = new Set<string>([
     "image/heif",
     "image/jpeg",
     "image/jpg",
+    "image/mpo",
     "image/png", // Uses DEFLATE (same as gzip)
     "image/tiff",
     "image/webp",
-    "image/x-ms-bmp", // Alternative BMP MIME type
 ]);
 
 // ### Audio ###

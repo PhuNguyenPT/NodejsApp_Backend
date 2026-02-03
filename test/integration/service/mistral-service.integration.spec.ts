@@ -14,6 +14,7 @@ import type { IMistralService } from "@/service/mistral-service.interface.js";
 import type { UUID } from "@/type/common/uuid.type.js";
 
 import { iocContainer } from "@/app/ioc-container.js";
+import { IMAGE_MIMES } from "@/config/zlib.config.js";
 import { UserEntity } from "@/entity/security/user.entity.js";
 import {
     FileEntity,
@@ -1372,6 +1373,9 @@ describe("MistralService Integration Tests", () => {
             expect(result.error).toBeDefined();
             // The error should be a string message from the caught SDKError
             expect(typeof result.error).toBe("string");
+            expect(result.error).toContain(
+                "could not be loaded as a valid image",
+            );
             // The service catches SDKError internally and returns error message
             expect(result.scores).toEqual([]);
         });
@@ -1424,10 +1428,13 @@ describe("MistralService Integration Tests", () => {
             expect(result.error).toBeDefined();
             // The error should be a string message from the caught SDKError
             expect(typeof result.error).toBe("string");
+            expect(result.error).toContain(
+                "could not be loaded as a valid image",
+            );
             expect(result.scores).toEqual([]);
         });
 
-        it("should handle different image formats (JPEG, WebP, GIF)", async () => {
+        it("should handle different image formats (AVIF, BMP, GIF, MPO, HEIC, HEIF, JPEG, JPG, PNG,  TIFF, WEBP)", async () => {
             // Arrange
             const user = await userRepository.save(
                 new UserEntity({
@@ -1448,9 +1455,17 @@ describe("MistralService Integration Tests", () => {
 
             // Create test images with different MIME types
             const imageFormats = [
-                { extension: "jpg", mimeType: "image/jpeg" },
-                { extension: "webp", mimeType: "image/webp" },
+                { extension: "avif", mimeType: "image/avif" },
+                { extension: "bmp", mimeType: "image/bmp" },
                 { extension: "gif", mimeType: "image/gif" },
+                { extension: "mpo", mimeType: "image/mpo" },
+                { extension: "heic", mimeType: "image/heic" },
+                { extension: "heif", mimeType: "image/heif" },
+                { extension: "jpeg", mimeType: "image/jpeg" },
+                { extension: "jpg", mimeType: "image/jpg" },
+                { extension: "png", mimeType: "image/png" },
+                { extension: "tiff", mimeType: "image/tiff" },
+                { extension: "webp", mimeType: "image/webp" },
             ];
 
             const fileIds: UUID[] = [];
@@ -1485,13 +1500,14 @@ describe("MistralService Integration Tests", () => {
             // Assert
             expect(result).toBeDefined();
             expect(result.success).toBe(true);
-            expect(result.results.length).toBe(3);
-
+            expect(result.results.length).toBe(11);
+            imageFormats.forEach((imageFormat) => {
+                expect(IMAGE_MIMES).toContain(imageFormat.mimeType);
+            });
             // Verify each format was processed
             for (const fileResult of result.results) {
                 expect(fileResult.fileId).toBeDefined();
-                // Each should either succeed or fail gracefully
-                expect(typeof fileResult.success).toBe("boolean");
+                expect(fileResult.success).toBe(true);
             }
         });
     });
