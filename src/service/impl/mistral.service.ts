@@ -223,12 +223,7 @@ export class MistralService implements IMistralService {
         try {
             const student: null | StudentEntity = await this.studentRepository
                 .createQueryBuilder("student")
-                .select([
-                    "student.id",
-                    "student.userId",
-                    "student.nationalExams",
-                    "files",
-                ])
+                .select(["student.id", "student.userId", "files"])
                 .leftJoinAndSelect("student.files", "files")
                 .addSelect("files.fileContent")
                 .where("student.id = :studentId", { studentId })
