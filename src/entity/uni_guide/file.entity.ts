@@ -15,6 +15,7 @@ import {
 
 import type { UUID } from "@/type/common/uuid.type.js";
 
+import { IMAGE_MIMES } from "@/config/zlib.config.js";
 import { OcrResultEntity } from "@/entity/uni_guide/ocr-result.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 
@@ -190,8 +191,13 @@ export class FileEntity {
         return documentTypes.includes(this.mimeType);
     }
 
+    /**
+     * Checks if the file is an image based on Mistral OCR supported formats.
+     * Supported formats: JPEG, PNG, WEBP, GIF, MPO, HEIF, AVIF, BMP, TIFF
+     * @returns true if the file MIME type is in the IMAGE_MIMES set
+     */
     isImage(): boolean {
-        return this.mimeType.startsWith("image/");
+        return IMAGE_MIMES.has(this.mimeType);
     }
 
     setTagsFromArray(tags: string[]): void {

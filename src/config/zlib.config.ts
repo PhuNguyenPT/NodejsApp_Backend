@@ -34,15 +34,19 @@ const DOCUMENT_MIMES: Set<string> = new Set<string>([
 
 // ### Images ###
 // These formats use internal compression.
-const IMAGE_MIMES: Set<string> = new Set<string>([
+// Based on Mistral OCR supported formats: JPEG, PNG, WEBP, GIF, MPO, HEIF, AVIF, BMP, TIFF
+export const IMAGE_MIMES: Set<string> = new Set<string>([
     "image/avif",
+    "image/bmp",
     "image/gif",
     "image/heic",
     "image/heif",
     "image/jpeg",
     "image/jpg",
     "image/png", // Uses DEFLATE (same as gzip)
+    "image/tiff",
     "image/webp",
+    "image/x-ms-bmp", // Alternative BMP MIME type
 ]);
 
 // ### Audio ###
