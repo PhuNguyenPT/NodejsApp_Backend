@@ -5,7 +5,7 @@ import {
     Entity,
     JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -47,7 +47,12 @@ export class MajorEntity {
     @Column({ name: "group_id", nullable: false, type: "uuid" })
     group_id!: UUID;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({ name: "name", nullable: false, type: "varchar" })

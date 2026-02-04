@@ -6,7 +6,7 @@ import {
     Entity,
     Index,
     OneToMany,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -19,7 +19,7 @@ import { Permission, Role } from "@/type/enum/user.enum.js";
 @Entity({ name: "users", schema: "security" })
 @Index("idx_user_id_name", ["id", "name"])
 @Index("idx_user_email", ["email"])
-@Index("idx_user_role", ["role"]) // Add index for role queries
+@Index("idx_user_role", ["role"])
 @Index("idx_user_account_status", [
     "enabled",
     "credentialsNonExpired",
@@ -54,7 +54,7 @@ export class UserEntity {
         type: "varchar",
         update: false,
     })
-    createdBy?: string;
+    createdBy!: string;
 
     @Column({ default: true, name: "credentials_non_expired", type: "boolean" })
     credentialsNonExpired = true;
@@ -65,7 +65,12 @@ export class UserEntity {
     @Column({ default: true, name: "enabled", type: "boolean" })
     enabled = true;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({ length: 255, name: "name", nullable: true, type: "varchar" })
@@ -79,7 +84,7 @@ export class UserEntity {
     permissions!: Permission[];
 
     @Column({ name: "phone_numbers", nullable: true, type: "jsonb" })
-    phoneNumbers?: string[];
+    phoneNumbers!: null | string[];
 
     @Column({
         default: Role.USER,
@@ -91,8 +96,9 @@ export class UserEntity {
 
     @OneToMany("StudentEntity", "user", {
         eager: false,
+        nullable: true,
     })
-    studentEntities?: Relation<StudentEntity[]>;
+    studentEntities!: null | Relation<StudentEntity[]>;
 
     @UpdateDateColumn({
         insert: false,
@@ -110,7 +116,7 @@ export class UserEntity {
         type: "varchar",
         update: true,
     })
-    updatedBy?: string;
+    updatedBy!: null | string;
 
     constructor(entityLike?: DeepPartial<UserEntity>) {
         Object.assign(this, entityLike);
@@ -139,17 +145,13 @@ export class UserEntity {
     // Helper method to check if user has all specified permissions
     hasAllPermissions(permissions: Permission[]): boolean {
         if (this.permissions.length <= 0) return false;
-        return permissions.every((permission) =>
-            this.permissions.includes(permission),
-        );
+        return permissions.every((p) => this.permissions.includes(p));
     }
 
     // Helper method to check if user has any of the specified permissions
     hasAnyPermission(permissions: Permission[]): boolean {
         if (this.permissions.length <= 0) return false;
-        return permissions.some((permission) =>
-            this.permissions.includes(permission),
-        );
+        return permissions.some((p) => this.permissions.includes(p));
     }
 
     // Helper method to check if user has a specific permission

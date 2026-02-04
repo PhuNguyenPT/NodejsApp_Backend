@@ -3,7 +3,7 @@ import {
     CreateDateColumn,
     type DeepPartial,
     Entity,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     UpdateDateColumn,
 } from "typeorm";
 
@@ -22,7 +22,12 @@ export class UniL1Entity {
     })
     createdAt!: Date;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({

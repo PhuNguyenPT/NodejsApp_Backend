@@ -6,7 +6,7 @@ import {
     Index,
     JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     Unique,
     UpdateDateColumn,
@@ -53,7 +53,12 @@ export class StudentAdmissionEntity {
     })
     createdBy!: string;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @JoinColumn({ name: "student_id" })

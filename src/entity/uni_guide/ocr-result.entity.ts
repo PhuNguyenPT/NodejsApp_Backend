@@ -8,7 +8,7 @@ import {
     JoinColumn,
     ManyToOne,
     OneToOne,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     Unique,
     UpdateDateColumn,
@@ -82,7 +82,12 @@ export class OcrResultEntity {
     @Column({ name: "file_id", type: "uuid" })
     fileId!: UUID;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({ name: "metadata", nullable: true, type: "jsonb" })
