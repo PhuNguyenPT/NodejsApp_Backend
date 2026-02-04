@@ -19,7 +19,7 @@ A modern Node.js Express application template built with TypeScript, TypeORM, ts
 
 ## 📋 Prerequisites
 
-- **Node.js** (v22+ recommended)
+- **Node.js** (v24+ recommended)
 - **Docker Desktop** (for database, etc.)
 - **npm**
 - **Git**
