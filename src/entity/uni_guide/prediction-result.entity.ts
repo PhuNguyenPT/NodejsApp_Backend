@@ -6,7 +6,7 @@ import {
     Index,
     JoinColumn,
     OneToOne,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -50,7 +50,12 @@ export class PredictionResultEntity {
     })
     createdBy!: string;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({ name: "l1_predict_results", nullable: true, type: "jsonb" })

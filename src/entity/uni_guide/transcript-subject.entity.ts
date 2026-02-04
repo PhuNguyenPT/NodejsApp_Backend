@@ -5,7 +5,7 @@ import {
     Entity,
     JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -35,7 +35,12 @@ export class TranscriptSubjectEntity {
     })
     createdBy?: string;
 
-    @PrimaryGeneratedColumn("uuid", { name: "id" })
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({

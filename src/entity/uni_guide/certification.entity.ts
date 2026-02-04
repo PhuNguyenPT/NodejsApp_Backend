@@ -7,7 +7,7 @@ import {
     Index,
     JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -70,7 +70,12 @@ export class CertificationEntity {
     })
     examType?: CCNNType | CCQTType;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({ length: 50, name: "level", nullable: true, type: "varchar" })

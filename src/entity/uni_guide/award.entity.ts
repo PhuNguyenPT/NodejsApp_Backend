@@ -7,7 +7,7 @@ import {
     Index,
     JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -54,7 +54,12 @@ export class AwardEntity {
     })
     createdBy?: string;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({

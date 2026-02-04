@@ -4,7 +4,7 @@ import {
     type DeepPartial,
     Entity,
     Index,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     UpdateDateColumn,
 } from "typeorm";
 
@@ -89,7 +89,12 @@ export class L2Entity {
     })
     createdAt!: Date;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({ name: "is_base_row", nullable: true, type: "boolean" })

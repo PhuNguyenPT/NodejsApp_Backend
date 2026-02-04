@@ -7,7 +7,7 @@ import {
     JoinColumn,
     ManyToOne,
     OneToOne,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -41,7 +41,12 @@ export class AptitudeExamEntity {
     @Column({ enum: DGNLType, name: "exam_type", type: "enum" })
     examType!: DGNLType;
 
-    @PrimaryGeneratedColumn("uuid", { name: "id" })
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({

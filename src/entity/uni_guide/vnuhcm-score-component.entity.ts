@@ -6,7 +6,7 @@ import {
     Entity,
     JoinColumn,
     OneToOne,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -45,7 +45,12 @@ export class VnuhcmScoreComponentEntity {
     })
     createdBy?: string;
 
-    @PrimaryGeneratedColumn("uuid", { name: "id" })
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     /**

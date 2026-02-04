@@ -5,7 +5,7 @@ import {
     Entity,
     Index,
     OneToMany,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -45,7 +45,12 @@ export class MajorGroupEntity {
     })
     englishName!: MajorGroupKey; // The English enum key for programmatic access
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     // A MajorGroup has many Majors. This defines the inverse side of the relationship.

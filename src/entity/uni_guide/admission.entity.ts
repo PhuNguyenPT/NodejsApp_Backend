@@ -5,7 +5,7 @@ import {
     Entity,
     Index,
     OneToMany,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -96,7 +96,12 @@ export class AdmissionEntity {
     })
     createdAt!: Date;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({ name: "major_code", nullable: true, type: "varchar" })

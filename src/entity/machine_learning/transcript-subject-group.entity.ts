@@ -4,7 +4,7 @@ import {
     type DeepPartial,
     Entity,
     Index,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     UpdateDateColumn,
 } from "typeorm";
 
@@ -25,7 +25,12 @@ export class TranscriptSubjectGroupEntity {
     })
     createdAt!: Date;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({ name: "major_code", nullable: true, type: "varchar" })

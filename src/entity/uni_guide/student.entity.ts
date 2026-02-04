@@ -8,7 +8,7 @@ import {
     ManyToOne,
     OneToMany,
     OneToOne,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -103,7 +103,12 @@ export class StudentEntity {
     })
     files?: Relation<FileEntity[]>;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({ name: "majors", nullable: true, type: "jsonb" })

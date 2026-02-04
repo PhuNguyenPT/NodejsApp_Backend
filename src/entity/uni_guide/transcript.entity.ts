@@ -7,7 +7,7 @@ import {
     ManyToOne,
     OneToMany,
     OneToOne,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -41,7 +41,12 @@ export class TranscriptEntity {
     @Column({ name: "grade", nullable: true, type: "integer" })
     grade?: number;
 
-    @PrimaryGeneratedColumn("uuid", { name: "id" })
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @JoinColumn({ name: "ocr_result_id" })

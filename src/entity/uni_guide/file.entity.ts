@@ -8,7 +8,7 @@ import {
     JoinColumn,
     ManyToOne,
     OneToOne,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     type Relation,
     UpdateDateColumn,
 } from "typeorm";
@@ -96,7 +96,12 @@ export class FileEntity {
     })
     fileType!: FileType;
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn({
+        default: () => "uuidv7()",
+        name: "id",
+        nullable: false,
+        type: "uuid",
+    })
     id!: UUID;
 
     @Column({ name: "metadata", nullable: true, type: "jsonb" })
