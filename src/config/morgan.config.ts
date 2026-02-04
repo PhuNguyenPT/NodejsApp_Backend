@@ -1,8 +1,8 @@
 import type { Request, RequestHandler, Response } from "express";
 
-import fs from "fs";
-import morgan from "morgan";
-import path from "path";
+import morgan, { token } from "morgan";
+import { existsSync, mkdirSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { createStream } from "rotating-file-stream";
 import { v7 } from "uuid";
 
@@ -15,7 +15,7 @@ interface ExtendedRequest extends Request {
 }
 
 // Custom token to get real client IP from Cloudflare headers
-morgan.token("real-ip", (req: Request) => {
+token("real-ip", (req: Request) => {
     // Priority order for getting real client IP
     // 1. CF-Connecting-IP (set by Cloudflare, most reliable)
     // 2. True-Client-IP (Cloudflare Enterprise)
@@ -51,13 +51,10 @@ morgan.token("real-ip", (req: Request) => {
     return req.socket.remoteAddress ?? req.ip ?? "unknown";
 });
 
-morgan.token(
-    "request-id",
-    (req: ExtendedRequest) => req.requestId ?? "unknown",
-);
+token("request-id", (req: ExtendedRequest) => req.requestId ?? "unknown");
 
 // Custom token for response time with color coding
-morgan.token("response-time-colored", (req: Request, res: Response) => {
+token("response-time-colored", (req: Request, res: Response) => {
     const responseTimeToken = (
         morgan as unknown as {
             "response-time": (
@@ -77,7 +74,7 @@ morgan.token("response-time-colored", (req: Request, res: Response) => {
 });
 
 // Custom token for status code with color coding
-morgan.token("status-colored", (_req: Request, res: Response) => {
+token("status-colored", (_req: Request, res: Response) => {
     const status = res.statusCode;
     const statusStr = status.toString();
 
@@ -88,16 +85,16 @@ morgan.token("status-colored", (_req: Request, res: Response) => {
 });
 
 // Custom token for content length with fallback
-morgan.token("content-length-safe", (_req: Request, res: Response) => {
+token("content-length-safe", (_req: Request, res: Response) => {
     return res.getHeader("content-length")?.toString() ?? "0";
 });
 
 // Add Cloudflare metadata tokens
-morgan.token("cf-ray", (req: Request) => {
+token("cf-ray", (req: Request) => {
     return req.headers["cf-ray"]?.toString() ?? "-";
 });
 
-morgan.token("cf-country", (req: Request) => {
+token("cf-country", (req: Request) => {
     return req.headers["cf-ipcountry"]?.toString() ?? "-";
 });
 
@@ -116,11 +113,11 @@ const devFormat =
 const getLogStream = () => {
     if (!config.ENABLE_FILE_LOGGING) return undefined;
 
-    const logDir = path.resolve(config.LOG_DIR);
+    const logDir = resolve(config.LOG_DIR);
 
     // Ensure log directory exists
-    if (!fs.existsSync(logDir)) {
-        fs.mkdirSync(logDir, { recursive: true });
+    if (!existsSync(logDir)) {
+        mkdirSync(logDir, { recursive: true });
     }
 
     // Create rotating stream
@@ -129,7 +126,7 @@ const getLogStream = () => {
         compress: "gzip", // Compress old logs
         encoding: "utf8",
         // Optional: tracking
-        history: path.join(logDir, ".rotation-history"),
+        history: join(logDir, ".rotation-history"),
 
         immutable: true, // Don't modify rotated files
         // Rotation timing

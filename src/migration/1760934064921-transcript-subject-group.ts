@@ -1,10 +1,10 @@
 import type { MigrationInterface, QueryRunner } from "typeorm";
 
 import csv from "csv-parser";
-import fs from "fs";
-import path from "path";
+import { createReadStream, existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import stripBomStream from "strip-bom-stream";
-import { fileURLToPath } from "url";
 
 import { logger } from "@/config/logger.config.js";
 import { TranscriptSubjectGroupEntity } from "@/entity/machine_learning/transcript-subject-group.entity.js";
@@ -26,9 +26,9 @@ export class TranscriptSubjectGroup1760934064921 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         const __filename = fileURLToPath(import.meta.url);
-        const __dirname = path.dirname(__filename);
+        const __dirname = dirname(__filename);
 
-        const csvPath = path.join(
+        const csvPath = join(
             __dirname,
             "../data/transcript-subject-group-data.csv",
         );
@@ -60,7 +60,7 @@ export class TranscriptSubjectGroup1760934064921 implements MigrationInterface {
     ): Promise<number> {
         logger.info(`Processing CSV file: ${csvPath}`);
 
-        if (!fs.existsSync(csvPath)) {
+        if (!existsSync(csvPath)) {
             const errorMsg = `CSV file not found at path: ${csvPath}`;
             logger.error(errorMsg);
             throw new Error(errorMsg);
@@ -70,8 +70,7 @@ export class TranscriptSubjectGroup1760934064921 implements MigrationInterface {
         let fileRecords = 0;
 
         // Strip BOM before parsing CSV
-        const stream = fs
-            .createReadStream(csvPath, { encoding: "utf-8" })
+        const stream = createReadStream(csvPath, { encoding: "utf-8" })
             .pipe(stripBomStream())
             .pipe(csv({ separator: "," }));
 

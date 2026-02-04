@@ -1,8 +1,8 @@
 // test/integration/service/file-service.integration.spec.ts
 import type { DataSource, Repository } from "typeorm";
 
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { IFileService } from "@/service/file-service.interface.js";

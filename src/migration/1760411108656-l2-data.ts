@@ -1,10 +1,10 @@
 import type { MigrationInterface, QueryRunner } from "typeorm";
 
 import csv from "csv-parser";
-import fs from "fs";
-import path from "path";
+import { createReadStream, existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import stripBomStream from "strip-bom-stream";
-import { fileURLToPath } from "url";
 
 import { logger } from "@/config/logger.config.js";
 import { L2Entity } from "@/entity/machine_learning/l2.entity.js";
@@ -44,12 +44,9 @@ export class L2Data1760411108656 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         const __filename = fileURLToPath(import.meta.url);
-        const __dirname = path.dirname(__filename);
+        const __dirname = dirname(__filename);
 
-        const csvPath = path.join(
-            __dirname,
-            "../data/l2-uni-requirement-data.csv",
-        );
+        const csvPath = join(__dirname, "../data/l2-uni-requirement-data.csv");
         const batchSize = 3000;
 
         try {
@@ -85,7 +82,7 @@ export class L2Data1760411108656 implements MigrationInterface {
     ): Promise<number> {
         logger.info(`Processing CSV file: ${csvPath}`);
 
-        if (!fs.existsSync(csvPath)) {
+        if (!existsSync(csvPath)) {
             const errorMsg = `CSV file not found at path: ${csvPath}`;
             logger.error(errorMsg);
             throw new Error(errorMsg);
@@ -95,8 +92,7 @@ export class L2Data1760411108656 implements MigrationInterface {
         let fileRecords = 0;
 
         // Note: CSV uses comma as delimiter
-        const stream = fs
-            .createReadStream(csvPath, { encoding: "utf-8" })
+        const stream = createReadStream(csvPath, { encoding: "utf-8" })
             .pipe(stripBomStream())
             .pipe(csv({ separator: "," }));
 

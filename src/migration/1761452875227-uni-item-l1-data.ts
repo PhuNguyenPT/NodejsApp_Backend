@@ -1,9 +1,9 @@
 import type { MigrationInterface, QueryRunner } from "typeorm";
 
 import { ParquetReader } from "@dsnp/parquetjs";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { logger } from "@/config/logger.config.js";
 import { UniL1Entity } from "@/entity/machine_learning/uni_l1.entity.js";
@@ -27,12 +27,9 @@ export class UniItemL1Data1761452875227 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         const __filename = fileURLToPath(import.meta.url);
-        const __dirname = path.dirname(__filename);
+        const __dirname = dirname(__filename);
 
-        const parquetPath = path.join(
-            __dirname,
-            "../data/uni-item-l1-data.parquet",
-        );
+        const parquetPath = join(__dirname, "../data/uni-item-l1-data.parquet");
         const batchSize = 20000;
 
         try {
@@ -58,8 +55,8 @@ export class UniItemL1Data1761452875227 implements MigrationInterface {
     ): Promise<number> {
         logger.info(`Processing Parquet file: ${parquetPath}`);
 
-        if (!fs.existsSync(parquetPath)) {
-            const errorMsg = `Parquet file not found at path: ${parquetPath}`;
+        if (!existsSync(parquetPath)) {
+            const errorMsg = `Parquet file not found at  ${parquetPath}`;
             logger.error(errorMsg);
             throw new Error(errorMsg);
         }
