@@ -11,7 +11,7 @@ import type { Config } from "@/config/app.config.js";
 import { corsOptions } from "@/config/cors.config.js";
 import {
     getMorganConfig,
-    setupRequestTracking,
+    requestTrackingMiddleware,
 } from "@/config/morgan.config.js";
 import errorMiddleware from "@/middleware/error-middleware.js";
 import { TYPES } from "@/type/container/types.js";
@@ -197,7 +197,7 @@ export class MiddlewareManager {
      * Initialize request tracking middleware
      */
     private initializeRequestTracking(app: Express): void {
-        app.use(setupRequestTracking());
+        app.use(requestTrackingMiddleware);
         this.logger.debug("Request tracking middleware initialized");
     }
 }

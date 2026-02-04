@@ -1,8 +1,8 @@
 import type { Request, RequestHandler, Response } from "express";
 
-import fs from "fs";
-import morgan from "morgan";
-import path from "path";
+import morgan, { token } from "morgan";
+import { existsSync, mkdirSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { createStream } from "rotating-file-stream";
 import { v7 } from "uuid";
 
@@ -15,7 +15,7 @@ interface ExtendedRequest extends Request {
 }
 
 // Custom token to get real client IP from Cloudflare headers
-morgan.token("real-ip", (req: Request) => {
+token("real-ip", (req: Request) => {
     // Priority order for getting real client IP
     // 1. CF-Connecting-IP (set by Cloudflare, most reliable)
     // 2. True-Client-IP (Cloudflare Enterprise)
@@ -51,33 +51,10 @@ morgan.token("real-ip", (req: Request) => {
     return req.socket.remoteAddress ?? req.ip ?? "unknown";
 });
 
-morgan.token(
-    "request-id",
-    (req: ExtendedRequest) => req.requestId ?? "unknown",
-);
-
-// Custom token for response time with color coding
-morgan.token("response-time-colored", (req: Request, res: Response) => {
-    const responseTimeToken = (
-        morgan as unknown as {
-            "response-time": (
-                req: Request,
-                res: Response,
-            ) => string | undefined;
-        }
-    )["response-time"];
-    const responseTimeStr = responseTimeToken(req, res) ?? "0";
-    const responseTime = parseFloat(responseTimeStr);
-
-    if (responseTime > 1000)
-        return `\x1b[31m${responseTime.toString()}ms\x1b[0m`; // Red for > 1s
-    if (responseTime > 500)
-        return `\x1b[33m${responseTime.toString()}ms\x1b[0m`; // Yellow for > 500ms
-    return `\x1b[32m${responseTime.toString()}ms\x1b[0m`; // Green for < 500ms
-});
+token("request-id", (req: ExtendedRequest) => req.requestId ?? "unknown");
 
 // Custom token for status code with color coding
-morgan.token("status-colored", (_req: Request, res: Response) => {
+token("status-colored", (_req: Request, res: Response) => {
     const status = res.statusCode;
     const statusStr = status.toString();
 
@@ -88,16 +65,16 @@ morgan.token("status-colored", (_req: Request, res: Response) => {
 });
 
 // Custom token for content length with fallback
-morgan.token("content-length-safe", (_req: Request, res: Response) => {
+token("content-length-safe", (_req: Request, res: Response) => {
     return res.getHeader("content-length")?.toString() ?? "0";
 });
 
 // Add Cloudflare metadata tokens
-morgan.token("cf-ray", (req: Request) => {
+token("cf-ray", (req: Request) => {
     return req.headers["cf-ray"]?.toString() ?? "-";
 });
 
-morgan.token("cf-country", (req: Request) => {
+token("cf-country", (req: Request) => {
     return req.headers["cf-ipcountry"]?.toString() ?? "-";
 });
 
@@ -110,17 +87,17 @@ const detailedFormat =
     ':request-id :real-ip - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :content-length-safe ":referrer" ":user-agent" - :response-time ms';
 
 const devFormat =
-    "\x1b[35m:request-id\x1b[0m \x1b[36m:method\x1b[0m \x1b[37m:url\x1b[0m :status-colored :response-time-colored - :content-length-safe bytes";
+    "\x1b[35m:request-id\x1b[0m \x1b[36m:method\x1b[0m \x1b[37m:url\x1b[0m :status-colored :response-time ms - :content-length-safe bytes";
 
 // Stream configuration for file logging with rotation
 const getLogStream = () => {
     if (!config.ENABLE_FILE_LOGGING) return undefined;
 
-    const logDir = path.resolve(config.LOG_DIR);
+    const logDir = resolve(config.LOG_DIR);
 
     // Ensure log directory exists
-    if (!fs.existsSync(logDir)) {
-        fs.mkdirSync(logDir, { recursive: true });
+    if (!existsSync(logDir)) {
+        mkdirSync(logDir, { recursive: true });
     }
 
     // Create rotating stream
@@ -129,7 +106,7 @@ const getLogStream = () => {
         compress: "gzip", // Compress old logs
         encoding: "utf8",
         // Optional: tracking
-        history: path.join(logDir, ".rotation-history"),
+        history: join(logDir, ".rotation-history"),
 
         immutable: true, // Don't modify rotated files
         // Rotation timing
@@ -158,14 +135,19 @@ const skipHealthChecks = (req: Request): boolean => {
     );
 };
 
-// Configuration factory
+/**
+ * Get Morgan middleware configuration based on NODE_ENV
+ * - development/test: Colored console output + optional file logging
+ * - production/staging: JSON file logging + error-only console output
+ */
 export const getMorganConfig = (): RequestHandler[] => {
     const middlewares: RequestHandler[] = [];
     const logStream = getLogStream();
 
     switch (config.NODE_ENV) {
         case "development":
-            // Console logging with colors for development
+        case "test":
+            // Console logging with colors for development/test
             middlewares.push(
                 morgan(devFormat, {
                     skip: skipHealthChecks,
@@ -189,7 +171,8 @@ export const getMorganConfig = (): RequestHandler[] => {
             break;
 
         case "production":
-            // Only log errors and warnings in production console
+        case "staging":
+            // Console: errors only
             middlewares.push(
                 morgan(detailedFormat, {
                     skip: (req: Request, res: Response) => {
@@ -197,13 +180,13 @@ export const getMorganConfig = (): RequestHandler[] => {
                     },
                     stream: {
                         write: (message: string) => {
-                            logger.warn(`HTTP Error: ${message.trim()}`);
+                            logger.error(`HTTP Error: ${message.trim()}`);
                         },
                     },
                 }),
             );
 
-            // All requests to file in structured format
+            // File: all requests in structured JSON format
             if (logStream) {
                 middlewares.push(
                     morgan(productionFormat, {
@@ -212,25 +195,12 @@ export const getMorganConfig = (): RequestHandler[] => {
                     }),
                 );
             }
-
-            // Separate error logging
-            middlewares.push(
-                morgan(detailedFormat, {
-                    skip: (_req: Request, res: Response) =>
-                        res.statusCode < 400,
-                    stream: {
-                        write: (message: string) => {
-                            logger.error(`HTTP Error: ${message.trim()}`);
-                        },
-                    },
-                }),
-            );
             break;
 
-        case "staging":
-            // Combined format for staging
+        default:
+            // Fallback: use same behavior as development/test
             middlewares.push(
-                morgan(detailedFormat, {
+                morgan(devFormat, {
                     skip: skipHealthChecks,
                     stream: {
                         write: (message: string) => {
@@ -240,7 +210,6 @@ export const getMorganConfig = (): RequestHandler[] => {
                 }),
             );
 
-            // File logging
             if (logStream) {
                 middlewares.push(
                     morgan(detailedFormat, {
@@ -249,40 +218,23 @@ export const getMorganConfig = (): RequestHandler[] => {
                     }),
                 );
             }
-            break;
-
-        default:
-            // Fallback to simple format
-            middlewares.push(morgan("common"));
     }
 
     return middlewares;
 };
 
-// Helper function to setup request ID tracking
-export const setupRequestTracking = (): RequestHandler => {
-    return (req: ExtendedRequest, res: Response, next) => {
-        req.requestId = UUIDSchema.parse(v7());
-
-        // Add request ID to response headers
-        res.setHeader("X-Request-ID", req.requestId);
-
-        next();
-    };
-};
-
-// Enhanced format with request ID
-const requestIdFormat =
-    ":request-id :real-ip :method :url :status :response-time ms";
-
-export const getMorganWithRequestId = (): RequestHandler => {
-    return morgan(requestIdFormat, {
-        stream: {
-            write: (message: string) => {
-                logger.http(message.trim());
-            },
-        },
-    });
+/**
+ * Middleware to track requests with unique UUIDs
+ * Adds req.requestId and X-Request-ID response header
+ */
+export const requestTrackingMiddleware: RequestHandler = (
+    req: ExtendedRequest,
+    res: Response,
+    next,
+) => {
+    req.requestId = UUIDSchema.parse(v7());
+    res.setHeader("X-Request-ID", req.requestId);
+    next();
 };
 
 export default getMorganConfig;

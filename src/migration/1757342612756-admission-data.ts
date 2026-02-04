@@ -1,9 +1,9 @@
 import type { MigrationInterface, QueryRunner } from "typeorm";
 
 import csv from "csv-parser";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import { createReadStream, existsSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { logger } from "@/config/logger.config.js";
 import { AdmissionEntity } from "@/entity/uni_guide/admission.entity.js";
@@ -39,13 +39,13 @@ export class AdmissionData1757342612756 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         const __filename = fileURLToPath(import.meta.url);
-        const __dirname = path.dirname(__filename);
+        const __dirname = dirname(__filename);
 
         // Define paths for all CSV files
         const csvFiles = [
-            path.join(__dirname, "../data/admission-data.csv"),
-            path.join(__dirname, "../data/priority-admission-data.csv"),
-            path.join(__dirname, "../data/transcript-admission-data.csv"),
+            join(__dirname, "../data/admission-data.csv"),
+            join(__dirname, "../data/priority-admission-data.csv"),
+            join(__dirname, "../data/transcript-admission-data.csv"),
         ];
 
         const batchSize = 2000;
@@ -112,10 +112,10 @@ export class AdmissionData1757342612756 implements MigrationInterface {
         queryRunner: QueryRunner,
         batchSize = 5000,
     ): Promise<number> {
-        const fileName = path.basename(csvPath);
+        const fileName = basename(csvPath);
         logger.info(`Processing CSV file: ${fileName}`);
 
-        if (!fs.existsSync(csvPath)) {
+        if (!existsSync(csvPath)) {
             const errorMsg = `CSV file not found at path: ${csvPath}`;
             logger.error(errorMsg);
             throw new Error(errorMsg);
@@ -126,9 +126,9 @@ export class AdmissionData1757342612756 implements MigrationInterface {
         let skippedRecords = 0;
 
         // Note: For this to work correctly, your CSV file MUST be saved with UTF-8 encoding.
-        const stream = fs
-            .createReadStream(csvPath, { encoding: "utf-8" })
-            .pipe(csv());
+        const stream = createReadStream(csvPath, { encoding: "utf-8" }).pipe(
+            csv(),
+        );
 
         // Use 'for await...of' to reliably process the stream.
         for await (const row of stream) {

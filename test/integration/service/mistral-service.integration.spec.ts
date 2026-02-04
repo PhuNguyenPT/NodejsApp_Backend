@@ -1,10 +1,10 @@
 // test/integration/service/mistral-service.integration.spec.ts
 import type { DataSource, Repository } from "typeorm";
 
-import { readFileSync } from "fs";
-import { promisify } from "util";
+import { readFileSync } from "node:fs";
+import { promisify } from "node:util";
+import { gzip } from "node:zlib";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { gzip } from "zlib";
 
 import type {
     BatchScoreExtractionResult,
