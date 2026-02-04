@@ -53,26 +53,6 @@ token("real-ip", (req: Request) => {
 
 token("request-id", (req: ExtendedRequest) => req.requestId ?? "unknown");
 
-// Custom token for response time with color coding
-token("response-time-colored", (req: Request, res: Response) => {
-    const responseTimeToken = (
-        morgan as unknown as {
-            "response-time": (
-                req: Request,
-                res: Response,
-            ) => string | undefined;
-        }
-    )["response-time"];
-    const responseTimeStr = responseTimeToken(req, res) ?? "0";
-    const responseTime = parseFloat(responseTimeStr);
-
-    if (responseTime > 1000)
-        return `\x1b[31m${responseTime.toString()}ms\x1b[0m`; // Red for > 1s
-    if (responseTime > 500)
-        return `\x1b[33m${responseTime.toString()}ms\x1b[0m`; // Yellow for > 500ms
-    return `\x1b[32m${responseTime.toString()}ms\x1b[0m`; // Green for < 500ms
-});
-
 // Custom token for status code with color coding
 token("status-colored", (_req: Request, res: Response) => {
     const status = res.statusCode;
@@ -107,7 +87,7 @@ const detailedFormat =
     ':request-id :real-ip - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :content-length-safe ":referrer" ":user-agent" - :response-time ms';
 
 const devFormat =
-    "\x1b[35m:request-id\x1b[0m \x1b[36m:method\x1b[0m \x1b[37m:url\x1b[0m :status-colored :response-time-colored - :content-length-safe bytes";
+    "\x1b[35m:request-id\x1b[0m \x1b[36m:method\x1b[0m \x1b[37m:url\x1b[0m :status-colored :response-time ms - :content-length-safe bytes";
 
 // Stream configuration for file logging with rotation
 const getLogStream = () => {
@@ -155,14 +135,19 @@ const skipHealthChecks = (req: Request): boolean => {
     );
 };
 
-// Configuration factory
+/**
+ * Get Morgan middleware configuration based on NODE_ENV
+ * - development/test: Colored console output + optional file logging
+ * - production/staging: JSON file logging + error-only console output
+ */
 export const getMorganConfig = (): RequestHandler[] => {
     const middlewares: RequestHandler[] = [];
     const logStream = getLogStream();
 
     switch (config.NODE_ENV) {
         case "development":
-            // Console logging with colors for development
+        case "test":
+            // Console logging with colors for development/test
             middlewares.push(
                 morgan(devFormat, {
                     skip: skipHealthChecks,
@@ -186,7 +171,8 @@ export const getMorganConfig = (): RequestHandler[] => {
             break;
 
         case "production":
-            // Only log errors and warnings in production console
+        case "staging":
+            // Console: errors only
             middlewares.push(
                 morgan(detailedFormat, {
                     skip: (req: Request, res: Response) => {
@@ -194,13 +180,13 @@ export const getMorganConfig = (): RequestHandler[] => {
                     },
                     stream: {
                         write: (message: string) => {
-                            logger.warn(`HTTP Error: ${message.trim()}`);
+                            logger.error(`HTTP Error: ${message.trim()}`);
                         },
                     },
                 }),
             );
 
-            // All requests to file in structured format
+            // File: all requests in structured JSON format
             if (logStream) {
                 middlewares.push(
                     morgan(productionFormat, {
@@ -209,25 +195,12 @@ export const getMorganConfig = (): RequestHandler[] => {
                     }),
                 );
             }
-
-            // Separate error logging
-            middlewares.push(
-                morgan(detailedFormat, {
-                    skip: (_req: Request, res: Response) =>
-                        res.statusCode < 400,
-                    stream: {
-                        write: (message: string) => {
-                            logger.error(`HTTP Error: ${message.trim()}`);
-                        },
-                    },
-                }),
-            );
             break;
 
-        case "staging":
-            // Combined format for staging
+        default:
+            // Fallback: use same behavior as development/test
             middlewares.push(
-                morgan(detailedFormat, {
+                morgan(devFormat, {
                     skip: skipHealthChecks,
                     stream: {
                         write: (message: string) => {
@@ -237,7 +210,6 @@ export const getMorganConfig = (): RequestHandler[] => {
                 }),
             );
 
-            // File logging
             if (logStream) {
                 middlewares.push(
                     morgan(detailedFormat, {
@@ -246,40 +218,23 @@ export const getMorganConfig = (): RequestHandler[] => {
                     }),
                 );
             }
-            break;
-
-        default:
-            // Fallback to simple format
-            middlewares.push(morgan("common"));
     }
 
     return middlewares;
 };
 
-// Helper function to setup request ID tracking
-export const setupRequestTracking = (): RequestHandler => {
-    return (req: ExtendedRequest, res: Response, next) => {
-        req.requestId = UUIDSchema.parse(v7());
-
-        // Add request ID to response headers
-        res.setHeader("X-Request-ID", req.requestId);
-
-        next();
-    };
-};
-
-// Enhanced format with request ID
-const requestIdFormat =
-    ":request-id :real-ip :method :url :status :response-time ms";
-
-export const getMorganWithRequestId = (): RequestHandler => {
-    return morgan(requestIdFormat, {
-        stream: {
-            write: (message: string) => {
-                logger.http(message.trim());
-            },
-        },
-    });
+/**
+ * Middleware to track requests with unique UUIDs
+ * Adds req.requestId and X-Request-ID response header
+ */
+export const requestTrackingMiddleware: RequestHandler = (
+    req: ExtendedRequest,
+    res: Response,
+    next,
+) => {
+    req.requestId = UUIDSchema.parse(v7());
+    res.setHeader("X-Request-ID", req.requestId);
+    next();
 };
 
 export default getMorganConfig;
