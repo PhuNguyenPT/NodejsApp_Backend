@@ -21,15 +21,6 @@ import { FileType } from "@/entity/uni_guide/file.entity.js";
  */
 export class CreateFileDTO {
     /**
-     * Optional uploader identifier
-     * @description User email
-     * @example "jane.doe@example.com"
-     */
-    @IsNotEmpty()
-    @IsString()
-    createdBy!: string;
-
-    /**
      * Optional file description
      * @description Additional context or details about the file content
      * @example "Student transcript for Fall 2024 semester"
@@ -131,4 +122,8 @@ export class CreateFileDTO {
     @IsString()
     @MaxLength(255)
     tags?: string;
+
+    constructor(partial?: Partial<CreateFileDTO>) {
+        if (partial) Object.assign(this, partial);
+    }
 }

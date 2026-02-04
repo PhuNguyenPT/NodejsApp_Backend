@@ -66,7 +66,7 @@ export class FileEntity {
         type: "varchar",
         update: false,
     })
-    createdBy?: string;
+    createdBy!: null | string;
 
     @Column({
         length: 500,
@@ -74,7 +74,7 @@ export class FileEntity {
         nullable: true,
         type: "varchar",
     })
-    description?: string;
+    description!: null | string;
 
     @Column({ name: "file_content", select: false, type: "bytea" })
     fileContent!: Buffer;
@@ -83,7 +83,7 @@ export class FileEntity {
     fileName!: string;
 
     @Column({ length: 500, name: "file_path", nullable: true, type: "varchar" })
-    filePath!: string;
+    filePath!: null | string;
 
     @Column({ name: "file_size", type: "bigint" })
     fileSize!: number;
@@ -100,7 +100,7 @@ export class FileEntity {
     id!: UUID;
 
     @Column({ name: "metadata", nullable: true, type: "jsonb" })
-    metadata?: Record<string, unknown>;
+    metadata!: null | Record<string, unknown>;
 
     @Column({ length: 100, name: "mime_type", type: "varchar" })
     mimeType!: string;
@@ -110,7 +110,7 @@ export class FileEntity {
         eager: false,
         nullable: true,
     })
-    ocrResult?: Relation<OcrResultEntity>;
+    ocrResult!: null | Relation<OcrResultEntity>;
 
     @Column({ length: 255, name: "original_file_name", type: "varchar" })
     originalFileName!: string;
@@ -135,7 +135,7 @@ export class FileEntity {
     studentId!: UUID;
 
     @Column({ length: 255, name: "tags", nullable: true, type: "varchar" })
-    tags?: string;
+    tags!: null | string;
 
     @UpdateDateColumn({
         insert: false,
@@ -153,7 +153,7 @@ export class FileEntity {
         type: "varchar",
         update: true,
     })
-    updatedBy?: string;
+    updatedBy!: null | string;
 
     constructor(entityLike?: DeepPartial<FileEntity>) {
         Object.assign(this, entityLike);

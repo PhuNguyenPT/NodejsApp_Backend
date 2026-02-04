@@ -1,6 +1,6 @@
 import { instanceToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
-import { EntityManager, IsNull, Repository } from "typeorm";
+import { DataSource, EntityManager, Repository } from "typeorm";
 import { promisify } from "util";
 import { Logger } from "winston";
 import { gunzip, gzip, type ZlibOptions } from "zlib";
@@ -15,9 +15,11 @@ import type { UUID } from "@/type/common/uuid.type.js";
 
 import { CreateFileDTO } from "@/dto/file/create-file.js";
 import { UpdateFileRequest } from "@/dto/file/update-file.js";
+import { UserEntity } from "@/entity/security/user.entity.js";
 import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TYPES } from "@/type/container/types.js";
+import { Role } from "@/type/enum/user.enum.js";
 import { AccessDeniedException } from "@/type/exception/access-denied.exception.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { ValidationException } from "@/type/exception/validation.exception.js";
@@ -42,8 +44,8 @@ export class FileService implements IFileService {
         @inject(TYPES.Logger) private readonly logger: Logger,
         @inject(TYPES.FileRepository)
         private readonly fileRepository: Repository<FileEntity>,
-        @inject(TYPES.StudentRepository)
-        private readonly studentRepository: Repository<StudentEntity>,
+        @inject(TYPES.DataSource)
+        private readonly datasource: DataSource,
         @inject(TYPES.IFileEventListener)
         private readonly fileEventListener: IFileEventListener,
         @inject(TYPES.CompressionOptions)
@@ -70,28 +72,44 @@ export class FileService implements IFileService {
         dtoWithCompression.fileSize = content.length;
         dtoWithCompression.metadata = metadata;
 
-        const savedFile = await this.studentRepository.manager.transaction(
-            async (transactionalEntityManager) => {
+        const savedFile = await this.datasource.manager.transaction(
+            async (tx) => {
                 await this._getAndValidateStudentForUpload(
-                    transactionalEntityManager,
+                    tx,
                     dtoWithCompression.studentId,
                     1,
                     userId,
                 );
+                let createdByEmail: string = Role.ANONYMOUS;
+                if (userId !== undefined) {
+                    const user = await tx.findOne(UserEntity, {
+                        select: ["email"],
+                        where: { id: userId },
+                    });
+
+                    if (!user) {
+                        throw new EntityNotFoundException(
+                            `User with ID ${userId} not found`,
+                        );
+                    }
+
+                    createdByEmail = user.email;
+                }
 
                 const newFile = this.fileRepository.create(dtoWithCompression);
-                return await transactionalEntityManager.save(
-                    FileEntity,
-                    newFile,
-                );
+                newFile.createdBy = createdByEmail;
+                const saved = await tx.save(FileEntity, newFile);
+                return this.fileRepository.create(saved);
             },
         );
 
-        this._publishFileCreatedEvent({
-            fileId: savedFile.id,
-            studentId: savedFile.studentId,
-            userId: userId,
-        });
+        if (savedFile.isImage()) {
+            this._publishFileCreatedEvent({
+                fileId: savedFile.id,
+                studentId: savedFile.studentId,
+                userId: userId,
+            });
+        }
 
         return savedFile;
     }
@@ -126,35 +144,49 @@ export class FileService implements IFileService {
 
                 const clonedDto = instanceToInstance(dto);
                 clonedDto.fileContent = content;
-                clonedDto.fileSize = content.length; // Update to actual storage size
+                clonedDto.fileSize = content.length;
                 clonedDto.metadata = metadata;
 
                 return clonedDto;
             }),
         );
 
-        const savedFiles = await this.studentRepository.manager.transaction(
-            async (transactionalEntityManager) => {
+        const savedFiles = await this.datasource.manager.transaction(
+            async (tx) => {
                 await this._getAndValidateStudentForUpload(
-                    transactionalEntityManager,
+                    tx,
                     studentId,
                     compressedDTOs.length,
                     userId,
                 );
+                let createdByEmail: string = Role.ANONYMOUS;
+                if (userId !== undefined) {
+                    const user = await tx.findOne(UserEntity, {
+                        select: ["email"],
+                        where: { id: userId },
+                    });
 
-                const newFiles = compressedDTOs.map((dto) =>
-                    this.fileRepository.create(dto),
-                );
-                return await transactionalEntityManager.save(
-                    FileEntity,
-                    newFiles,
-                );
+                    if (!user) {
+                        throw new EntityNotFoundException(
+                            `User with ID ${userId} not found`,
+                        );
+                    }
+                    createdByEmail = user.email;
+                }
+                const newFiles = compressedDTOs.map((dto) => {
+                    const newFile = this.fileRepository.create(dto);
+                    newFile.createdBy = createdByEmail;
+                    return newFile;
+                });
+                const saved = await tx.save(FileEntity, newFiles);
+                return saved.map((file) => this.fileRepository.create(file));
             },
         );
 
-        if (savedFiles.length > 0) {
+        const imageFiles = savedFiles.filter((file) => file.isImage());
+        if (imageFiles.length > 0) {
             this._publishFilesCreatedEvent({
-                fileIds: savedFiles.map((file) => file.id),
+                fileIds: imageFiles.map((file) => file.id),
                 studentId: studentId,
                 userId: userId,
             });
@@ -182,7 +214,7 @@ export class FileService implements IFileService {
             .where("files.id = :fileId", { fileId })
             .andWhere("files.status = :status", { status: FileStatus.ACTIVE });
 
-        if (userId) {
+        if (userId !== undefined) {
             query.andWhere("student.userId = :userId", { userId });
         } else {
             query.andWhere("student.userId IS NULL");
@@ -227,7 +259,7 @@ export class FileService implements IFileService {
             .where("files.status = :status", { status: FileStatus.ACTIVE })
             .andWhere("files.studentId = :studentId", { studentId: studentId });
 
-        if (userId) {
+        if (userId !== undefined) {
             query.andWhere("student.userId = :userId", { userId });
         } else {
             query.andWhere("student.userId IS NULL");
@@ -258,14 +290,31 @@ export class FileService implements IFileService {
             updateFileDTO,
         );
 
-        if (hasChanges && userId) {
-            file.updatedBy = userId;
-            const updatedFile: FileEntity =
-                await this.fileRepository.save(file);
-            this.logger.info(
-                `File updated successfully with ID: ${updatedFile.id}`,
-            );
-            return updatedFile;
+        if (hasChanges) {
+            return await this.datasource.manager.transaction(async (tx) => {
+                let updatedByEmail: string = Role.ANONYMOUS;
+                if (userId !== undefined) {
+                    const user = await tx.findOne(UserEntity, {
+                        select: ["email"],
+                        where: { id: userId },
+                    });
+
+                    if (!user) {
+                        throw new EntityNotFoundException(
+                            `User with ID ${userId} not found`,
+                        );
+                    }
+                    updatedByEmail = user.email;
+                }
+
+                file.updatedBy = updatedByEmail;
+                const updatedFile = await tx.save(FileEntity, file);
+
+                this.logger.info(
+                    `File updated successfully with ID: ${updatedFile.id}`,
+                );
+                return updatedFile;
+            });
         }
 
         this.logger.info(`No changes detected for file ID: ${file.id}`);
@@ -287,7 +336,7 @@ export class FileService implements IFileService {
             {
                 lock: { mode: "pessimistic_write" },
                 transaction: true,
-                where: { id: studentId, userId: userId ?? IsNull() },
+                where: { id: studentId },
             },
         );
 
@@ -297,8 +346,14 @@ export class FileService implements IFileService {
             );
         }
 
-        if (userId && student.userId !== userId) {
-            throw new AccessDeniedException("Access denied");
+        if (userId !== undefined) {
+            if (student.userId !== userId) {
+                throw new AccessDeniedException("Access denied");
+            }
+        } else {
+            if (student.userId) {
+                throw new AccessDeniedException("Access denied");
+            }
         }
 
         const currentActiveFiles = await transactionalEntityManager.count(
