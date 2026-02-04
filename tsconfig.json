@@ -1,5 +1,5 @@
 {
-  "extends": ["@tsconfig/node22/tsconfig.json", "./tsconfig.paths.json"],
+  "extends": ["@tsconfig/node24/tsconfig.json", "./tsconfig.paths.json"],
   "compilerOptions": {
     "allowImportingTsExtensions": false,
     "allowSyntheticDefaultImports": true,
@@ -23,7 +23,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "es2022",
+    "target": "es2024",
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "verbatimModuleSyntax": true
   },

@@ -1,7 +1,7 @@
 # =============================================================================
 # Stage 1: The "Builder" Stage
 # =============================================================================
-FROM node:22-trixie-slim AS builder
+FROM node:24-trixie-slim AS builder
 
 WORKDIR /app
 
@@ -26,7 +26,7 @@ RUN npm run build
 # =============================================================================
 # Stage 2: The "Production" Stage
 # =============================================================================
-FROM node:22-trixie-slim
+FROM node:24-trixie-slim
 
 # Install required packages: curl for health checks, gosu for user switching
 RUN apt-get update && \

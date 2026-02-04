@@ -4,7 +4,7 @@
   "description": "An Express.js template with TypeScript, ESLint and Prettier",
   "type": "module",
   "engines": {
-    "node": "22"
+    "node": "24"
   },
   "scripts": {
     "dev": "npm run tsoa:build && tsx --watch --env-file .env.dev src/app/index.ts",
@@ -114,7 +114,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
-    "@tsconfig/node22": "^22.0.2",
+    "@tsconfig/node24": "^24.0.4",
     "@types/bcrypt": "^6.0.0",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
