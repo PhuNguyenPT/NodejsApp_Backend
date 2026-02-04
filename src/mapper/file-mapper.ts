@@ -15,13 +15,13 @@ export const FileMapper = {
     toFileResponse(file: FileEntity): FileResponse {
         return {
             createdAt: file.createdAt,
-            description: file.description,
+            description: file.description ?? undefined,
             downloadUrl: `/files/${file.id}/download`,
             fileName: file.fileName,
             fileSize: file.getHumanReadableFileSize(),
             fileType: file.fileType,
             id: file.id,
-            metadata: file.metadata,
+            metadata: file.metadata ?? undefined,
             mimeType: file.mimeType,
             originalFileName: file.originalFileName,
             previewUrl: file.isImage()
@@ -29,7 +29,7 @@ export const FileMapper = {
                 : undefined,
             status: file.status,
             studentId: file.studentId,
-            tags: file.tags,
+            tags: file.tags ?? undefined,
             updatedAt: file.updatedAt,
         };
     },

@@ -617,7 +617,6 @@ export class FileController extends Controller {
         this.validateFileExtension(finalFileName, file.mimetype);
 
         const createFileDTO: CreateFileDTO = {
-            createdBy: user.email,
             description: description,
             fileContent: file.buffer,
             fileName: finalFileName,
@@ -722,7 +721,6 @@ export class FileController extends Controller {
         this.validateFileExtension(finalFileName, file.mimetype);
 
         const createFileDTO: CreateFileDTO = {
-            createdBy: Role.ANONYMOUS,
             description: description,
             fileContent: file.buffer,
             fileName: finalFileName,
