@@ -22,7 +22,6 @@ describe("AuthService Integration Tests", () => {
     let jwtRepository: IJwtRepository;
     const createdUserIds: UUID[] = [];
     const createdTokens: string[] = [];
-    const testEmail = "test@example.com";
     const testPassword = "TestPassword123!";
 
     const trackTokens = (result: {
@@ -37,21 +36,13 @@ describe("AuthService Integration Tests", () => {
         }
     };
 
-    beforeAll(async () => {
+    beforeAll(() => {
         getApp();
 
         dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
         authService = iocContainer.get<IAuthService>(TYPES.IAuthService);
         userRepository = dataSource.getRepository(UserEntity);
         jwtRepository = iocContainer.get<IJwtRepository>(TYPES.IJwtRepository);
-
-        const testUsers = await userRepository.find({
-            where: { email: testEmail },
-        });
-
-        for (const user of testUsers) {
-            await userRepository.delete(user.id);
-        }
     });
 
     afterAll(async () => {

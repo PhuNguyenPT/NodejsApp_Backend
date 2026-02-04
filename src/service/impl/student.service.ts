@@ -1,5 +1,8 @@
+import type { RedisClientType } from "redis";
+
+import { instanceToPlain, plainToInstance } from "class-transformer";
 import { inject, injectable } from "inversify";
-import { IsNull, Repository } from "typeorm";
+import { DataSource, IsNull } from "typeorm";
 import { Logger } from "winston";
 
 import type { Config } from "@/config/app.config.js";
@@ -17,6 +20,7 @@ import { UserEntity } from "@/entity/security/user.entity.js";
 import { AcademicPerformanceEntity } from "@/entity/uni_guide/academic-performance.entity.js";
 import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
 import { AwardEntity } from "@/entity/uni_guide/award.entity.js";
+import { CertificationEntity } from "@/entity/uni_guide/certification.entity.js";
 import { ConductEntity } from "@/entity/uni_guide/conduct.entity.js";
 import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
 import { NationalExamEntity } from "@/entity/uni_guide/national-exam.enity.js";
@@ -32,34 +36,15 @@ import { EntityNotFoundException } from "@/type/exception/entity-not-found.excep
 import { ValidationException } from "@/type/exception/validation.exception.js";
 import { PageImpl } from "@/type/pagination/page-impl.js";
 import { CacheKeys } from "@/util/cache-key.js";
+
 @injectable()
 export class StudentService implements IStudentService {
     constructor(
         @inject(TYPES.Config) private readonly config: Config,
-        @inject(TYPES.StudentRepository)
-        private readonly studentRepository: Repository<StudentEntity>,
-        @inject(TYPES.UserRepository)
-        private readonly userRepository: Repository<UserEntity>,
-        @inject(TYPES.AcademicPerformanceRepository)
-        private readonly academicPerformanceRepository: Repository<AcademicPerformanceEntity>,
-        @inject(TYPES.AptitudeExamRepository)
-        private readonly aptitudeExamRepository: Repository<AptitudeExamEntity>,
-        @inject(TYPES.StudentMajorGroupRepository)
-        private readonly studentMajorGroupRepository: Repository<StudentMajorGroupEntity>,
-        @inject(TYPES.VnuhcmScoreComponentRepository)
-        private readonly vnuhcmScoreComponentRepository: Repository<VnuhcmScoreComponentEntity>,
-        @inject(TYPES.AwardRepository)
-        private readonly awardRepository: Repository<AwardEntity>,
-        @inject(TYPES.FileRepository)
-        private readonly fileRepository: Repository<FileEntity>,
-        @inject(TYPES.ConductRepository)
-        private readonly conductRepository: Repository<ConductEntity>,
-        @inject(TYPES.NationalExamRepository)
-        private readonly nationalExamRepository: Repository<NationalExamEntity>,
-        @inject(TYPES.TalentExamRepository)
-        private readonly talentExamRepository: Repository<TalentExamEntity>,
-        @inject(TYPES.VsatExamRepository)
-        private readonly vsatExamRepository: Repository<VsatExamEntity>,
+        @inject(TYPES.RedisPublisher)
+        private readonly redisClient: RedisClientType,
+        @inject(TYPES.DataSource)
+        private readonly dataSource: DataSource,
         @inject(TYPES.ICertificationService)
         private readonly certificationService: ICertificationService,
         @inject(TYPES.IStudentEventListener)
@@ -86,10 +71,11 @@ export class StudentService implements IStudentService {
         let userEntity: null | UserEntity = null;
 
         if (userId) {
-            userEntity = await this.userRepository.findOne({
-                transaction: true,
-                where: { id: userId },
-            });
+            userEntity = await this.dataSource
+                .getRepository(UserEntity)
+                .findOne({
+                    where: { id: userId },
+                });
 
             if (!userEntity) {
                 throw new EntityNotFoundException(
@@ -111,7 +97,8 @@ export class StudentService implements IStudentService {
         userId: UUID,
         pageable: Pageable,
     ): Promise<Page<StudentEntity>> {
-        const queryBuilder = this.studentRepository
+        const queryBuilder = this.dataSource
+            .getRepository(StudentEntity)
             .createQueryBuilder("students")
             .where("students.userId = :userId", { userId });
 
@@ -152,26 +139,19 @@ export class StudentService implements IStudentService {
         userId?: UUID,
     ): Promise<StudentEntity> {
         const cacheKey = CacheKeys.studentProfile(id, userId);
+        const cached = await this.redisClient.get(cacheKey);
 
-        const studentEntity: null | StudentEntity =
-            await this.studentRepository.findOne({
-                cache: {
-                    id: cacheKey,
-                    milliseconds:
-                        this.config.CACHE_TTL_STUDENT_IN_SECONDS * 1000,
-                },
-                relations: [
-                    "academicPerformances",
-                    "aptitudeExams",
-                    "aptitudeExams.vnuhcmScoreComponents",
-                    "awards",
-                    "certifications",
-                    "conducts",
-                    "nationalExams",
-                    "talentExams",
-                    "vsatExams",
-                ],
-                transaction: true,
+        if (cached) {
+            this.logger.debug(`Cache hit for student profile ${id}`);
+            const data: unknown = JSON.parse(cached);
+            return plainToInstance(StudentEntity, data);
+        }
+
+        this.logger.debug(`Cache miss for student profile ${id}`);
+
+        const studentEntity = await this.dataSource
+            .getRepository(StudentEntity)
+            .findOne({
                 where: {
                     id,
                     userId: userId ?? IsNull(),
@@ -183,6 +163,58 @@ export class StudentService implements IStudentService {
                 `Student profile with id: ${id} not found`,
             );
         }
+
+        const [
+            academicPerformances,
+            aptitudeExamsWithComponents,
+            awards,
+            certifications,
+            conducts,
+            nationalExams,
+            talentExams,
+            vsatExams,
+        ] = await Promise.all([
+            this.dataSource.getRepository(AcademicPerformanceEntity).find({
+                where: { studentId: id },
+            }),
+            this.dataSource.getRepository(AptitudeExamEntity).find({
+                relations: ["vnuhcmScoreComponents"],
+                where: { studentId: id },
+            }),
+            this.dataSource.getRepository(AwardEntity).find({
+                where: { studentId: id },
+            }),
+            this.dataSource.getRepository(CertificationEntity).find({
+                where: { studentId: id },
+            }),
+            this.dataSource.getRepository(ConductEntity).find({
+                where: { studentId: id },
+            }),
+            this.dataSource.getRepository(NationalExamEntity).find({
+                where: { studentId: id },
+            }),
+            this.dataSource.getRepository(TalentExamEntity).find({
+                where: { studentId: id },
+            }),
+            this.dataSource.getRepository(VsatExamEntity).find({
+                where: { studentId: id },
+            }),
+        ]);
+
+        studentEntity.academicPerformances = academicPerformances;
+        studentEntity.aptitudeExams = aptitudeExamsWithComponents;
+        studentEntity.awards = awards;
+        studentEntity.certifications = certifications;
+        studentEntity.conducts = conducts;
+        studentEntity.nationalExams = nationalExams;
+        studentEntity.talentExams = talentExams;
+        studentEntity.vsatExams = vsatExams;
+
+        await this.redisClient.setEx(
+            cacheKey,
+            this.config.CACHE_TTL_STUDENT_IN_SECONDS,
+            JSON.stringify(instanceToPlain(studentEntity)),
+        );
 
         return studentEntity;
     }
@@ -205,13 +237,14 @@ export class StudentService implements IStudentService {
         const student = await this.getByIdAndUserId(studentId, userId);
 
         // 2. Fetch ONLY the active files using find
-        const activeFilesMetadata = await this.fileRepository.find({
-            transaction: true,
-            where: {
-                status: FileStatus.ACTIVE,
-                studentId: studentId,
-            },
-        });
+        const activeFilesMetadata = await this.dataSource
+            .getRepository(FileEntity)
+            .find({
+                where: {
+                    status: FileStatus.ACTIVE,
+                    studentId: studentId,
+                },
+            });
 
         // 3. Attach the result
         student.files = activeFilesMetadata;
@@ -236,8 +269,9 @@ export class StudentService implements IStudentService {
             });
         }
 
+        const studentRepository = this.dataSource.getRepository(StudentEntity);
         const studentEntity: StudentEntity =
-            this.studentRepository.create(studentRequest);
+            studentRepository.create(studentRequest);
 
         studentEntity.createdBy = userEntity
             ? userEntity.email
@@ -249,9 +283,9 @@ export class StudentService implements IStudentService {
                 studentRequest.academicPerformances.map(
                     (academicPerformanceRequest) => {
                         const academicPerformanceEntity: AcademicPerformanceEntity =
-                            this.academicPerformanceRepository.create(
-                                academicPerformanceRequest,
-                            );
+                            this.dataSource
+                                .getRepository(AcademicPerformanceEntity)
+                                .create(academicPerformanceRequest);
                         if (userEntity) {
                             academicPerformanceEntity.createdBy =
                                 userEntity.email;
@@ -271,7 +305,9 @@ export class StudentService implements IStudentService {
             studentEntity.aptitudeExams = studentRequest.aptitudeExams.map(
                 (aptitudeExamRequest) => {
                     const aptitudeExamEntity: AptitudeExamEntity =
-                        this.aptitudeExamRepository.create(aptitudeExamRequest);
+                        this.dataSource
+                            .getRepository(AptitudeExamEntity)
+                            .create(aptitudeExamRequest);
                     if (userEntity) {
                         aptitudeExamEntity.createdBy = userEntity.email;
                     } else {
@@ -289,9 +325,9 @@ export class StudentService implements IStudentService {
                                 aptitudeExamRequest.scienceLogic
                     ) {
                         const vnuhcmComponents: VnuhcmScoreComponentEntity =
-                            this.vnuhcmScoreComponentRepository.create(
-                                aptitudeExamRequest,
-                            );
+                            this.dataSource
+                                .getRepository(VnuhcmScoreComponentEntity)
+                                .create(aptitudeExamRequest);
 
                         if (userEntity) {
                             vnuhcmComponents.createdBy = userEntity.email;
@@ -308,8 +344,9 @@ export class StudentService implements IStudentService {
 
         if (studentRequest.awards && studentRequest.awards.length > 0) {
             studentEntity.awards = studentRequest.awards.map((awardRequest) => {
-                const awardEntity: AwardEntity =
-                    this.awardRepository.create(awardRequest);
+                const awardEntity: AwardEntity = this.dataSource
+                    .getRepository(AwardEntity)
+                    .create(awardRequest);
                 if (userEntity) {
                     awardEntity.createdBy = userEntity.email;
                 } else {
@@ -337,8 +374,9 @@ export class StudentService implements IStudentService {
         if (studentRequest.conducts.length > 0) {
             studentEntity.conducts = studentRequest.conducts.map(
                 (conductRequest) => {
-                    const conductEntity: ConductEntity =
-                        this.conductRepository.create(conductRequest);
+                    const conductEntity: ConductEntity = this.dataSource
+                        .getRepository(ConductEntity)
+                        .create(conductRequest);
                     if (userEntity) {
                         conductEntity.createdBy = userEntity.email;
                     } else {
@@ -358,9 +396,11 @@ export class StudentService implements IStudentService {
             studentEntity.studentMajorGroups = majorGroupEntities.map(
                 (majorGroup) => {
                     const studentMajorGroup: StudentMajorGroupEntity =
-                        this.studentMajorGroupRepository.create({
-                            majorGroup: majorGroup,
-                        });
+                        this.dataSource
+                            .getRepository(StudentMajorGroupEntity)
+                            .create({
+                                majorGroup: majorGroup,
+                            });
                     if (userEntity) {
                         studentMajorGroup.createdBy = userEntity.email;
                     } else {
@@ -375,7 +415,9 @@ export class StudentService implements IStudentService {
             studentEntity.nationalExams = studentRequest.nationalExams.map(
                 (nationalExam) => {
                     const nationalExamEntity: NationalExamEntity =
-                        this.nationalExamRepository.create(nationalExam);
+                        this.dataSource
+                            .getRepository(NationalExamEntity)
+                            .create(nationalExam);
                     if (userEntity) {
                         nationalExamEntity.createdBy = userEntity.email;
                     } else {
@@ -392,8 +434,9 @@ export class StudentService implements IStudentService {
         ) {
             studentEntity.talentExams = studentRequest.talentExams.map(
                 (talentExam) => {
-                    const talentExamEntity: TalentExamEntity =
-                        this.talentExamRepository.create(talentExam);
+                    const talentExamEntity: TalentExamEntity = this.dataSource
+                        .getRepository(TalentExamEntity)
+                        .create(talentExam);
                     if (userEntity) {
                         talentExamEntity.createdBy = userEntity.email;
                     } else {
@@ -407,8 +450,9 @@ export class StudentService implements IStudentService {
         if (studentRequest.vsatExams && studentRequest.vsatExams.length > 0) {
             studentEntity.vsatExams = studentRequest.vsatExams.map(
                 (vsatExam) => {
-                    const vsatExamEntity: VsatExamEntity =
-                        this.vsatExamRepository.create(vsatExam);
+                    const vsatExamEntity: VsatExamEntity = this.dataSource
+                        .getRepository(VsatExamEntity)
+                        .create(vsatExam);
                     if (userEntity) {
                         vsatExamEntity.createdBy = userEntity.email;
                     } else {
@@ -419,7 +463,7 @@ export class StudentService implements IStudentService {
             );
         }
 
-        const savedStudent = await this.studentRepository.save(studentEntity);
+        const savedStudent = await studentRepository.save(studentEntity);
         this.logger.info(`Saved student profile id: ${savedStudent.id}`);
 
         this._publishStudentCreatedEvent(savedStudent.id, userEntity?.id);
