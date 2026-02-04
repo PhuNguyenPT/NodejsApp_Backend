@@ -26,20 +26,13 @@ describe("AwardService Integration Tests", () => {
     const createdStudentIds: UUID[] = [];
     const createdAwardIds: UUID[] = [];
 
-    beforeAll(async () => {
+    beforeAll(() => {
         getApp();
 
         dataSource = iocContainer.get<DataSource>(TYPES.DataSource);
         awardService = iocContainer.get<IAwardService>(TYPES.IAwardService);
         studentRepository = dataSource.getRepository(StudentEntity);
-
-        // Clean up database - preserve system-created awards
         awardRepository = dataSource.getRepository(AwardEntity);
-        await awardRepository
-            .createQueryBuilder()
-            .delete()
-            .where("created_by != :systemCreator", { systemCreator: "system" })
-            .execute();
     });
 
     afterAll(async () => {
