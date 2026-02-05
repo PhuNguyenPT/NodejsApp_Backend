@@ -11,11 +11,11 @@ export interface IOcrResultService {
     markAsFailed(
         results: OcrResultEntity[],
         errorMessage: string,
-        startTime: Date,
+        startTime: number,
     ): Promise<void>;
     updateResults(
         initialResults: OcrResultEntity[],
         batchExtractionResult: BatchScoreExtractionResult,
-        processingStartTime: Date,
+        processingStartTime: number,
     ): Promise<OcrResultEntity[]>;
 }
