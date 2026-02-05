@@ -15,14 +15,14 @@ describe("UserService Business Logic Tests", () => {
         it("should create a user entity with proper defaults", () => {
             // Arrange & Act
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service1@example.com",
                 name: "Test User",
                 password: "hashedPassword",
                 role: Role.USER,
             });
 
             // Assert
-            expect(user.email).toBe("test@example.com");
+            expect(user.email).toBe("test-user-service1@example.com");
             expect(user.name).toBe("Test User");
             expect(user.accountNonExpired).toBe(true);
             expect(user.accountNonLocked).toBe(true);
@@ -60,7 +60,7 @@ describe("UserService Business Logic Tests", () => {
         it("should enable and disable account", () => {
             // Arrange
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service2@example.com",
                 enabled: true,
                 password: "hash",
                 role: Role.USER,
@@ -85,7 +85,7 @@ describe("UserService Business Logic Tests", () => {
             // Arrange
             const user = new UserEntity({
                 accountNonLocked: true,
-                email: "test@example.com",
+                email: "test-user-service3@example.com",
                 password: "hash",
                 role: Role.USER,
             });
@@ -109,7 +109,7 @@ describe("UserService Business Logic Tests", () => {
             // Arrange
             const user = new UserEntity({
                 accountNonExpired: true,
-                email: "test@example.com",
+                email: "test-user-service4@example.com",
                 password: "hash",
                 role: Role.USER,
             });
@@ -126,7 +126,7 @@ describe("UserService Business Logic Tests", () => {
             // Arrange
             const user = new UserEntity({
                 credentialsNonExpired: true,
-                email: "test@example.com",
+                email: "test-user-service5@example.com",
                 password: "hash",
                 role: Role.USER,
             });
@@ -142,7 +142,7 @@ describe("UserService Business Logic Tests", () => {
         it("should check if user has specific permission", () => {
             // Arrange
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service6@example.com",
                 password: "hash",
                 permissions: [Permission.USER_READ, Permission.USER_UPDATE],
                 role: Role.USER,
@@ -156,7 +156,7 @@ describe("UserService Business Logic Tests", () => {
         it("should check if user has all specified permissions", () => {
             // Arrange
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service7@example.com",
                 password: "hash",
                 permissions: [
                     Permission.USER_READ,
@@ -184,7 +184,7 @@ describe("UserService Business Logic Tests", () => {
         it("should check if user has any of the specified permissions", () => {
             // Arrange
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service8@example.com",
                 password: "hash",
                 permissions: [Permission.USER_READ],
                 role: Role.USER,
@@ -208,7 +208,7 @@ describe("UserService Business Logic Tests", () => {
         it("should return empty permissions for user with no permissions", () => {
             // Arrange
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service9@example.com",
                 password: "hash",
                 permissions: [],
                 role: Role.USER,
@@ -223,7 +223,7 @@ describe("UserService Business Logic Tests", () => {
             // Arrange
             const permissions = [Permission.USER_READ, Permission.USER_UPDATE];
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service10@example.com",
                 password: "hash",
                 permissions,
                 role: Role.USER,
@@ -468,7 +468,7 @@ describe("UserService Business Logic Tests", () => {
         it("should handle multiple phone numbers", () => {
             // Act
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service11@example.com",
                 password: "hash",
                 phoneNumbers: [
                     "+84 123 456 789",
@@ -512,7 +512,7 @@ describe("UserService Business Logic Tests", () => {
         it("should validate that update refreshes permissions when role changes", () => {
             // Simulate the update logic
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service12@example.com",
                 password: "hash",
                 permissions: getDefaultPermissionsByRole(Role.USER),
                 role: Role.USER,
@@ -548,7 +548,7 @@ describe("UserService Business Logic Tests", () => {
         it("should validate updatedBy field assignment logic", () => {
             // Simulate the update logic
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service13@example.com",
                 password: "hash",
                 role: Role.USER,
             });
@@ -586,7 +586,7 @@ describe("UserService Business Logic Tests", () => {
         it("should validate partial update logic", () => {
             // Test that partial updates work correctly
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service14@example.com",
                 name: "Original Name",
                 password: "hash",
                 phoneNumbers: ["+84 123 456 789"],
@@ -597,7 +597,7 @@ describe("UserService Business Logic Tests", () => {
             Object.assign(user, { name: "Updated Name" });
 
             expect(user.name).toBe("Updated Name");
-            expect(user.email).toBe("test@example.com");
+            expect(user.email).toBe("test-user-service14@example.com");
             expect(user.phoneNumbers).toEqual(["+84 123 456 789"]);
         });
 
@@ -605,7 +605,7 @@ describe("UserService Business Logic Tests", () => {
             // Simulate password update logic
             const SALT_ROUNDS = 12;
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service15@example.com",
                 password: await bcrypt.hash("OldPassword123!", SALT_ROUNDS),
                 role: Role.USER,
             });
@@ -631,7 +631,7 @@ describe("UserService Business Logic Tests", () => {
         it("should validate that role update only updates permissions when role is provided", () => {
             // Test conditional permission update logic
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service16@example.com",
                 password: "hash",
                 permissions: getDefaultPermissionsByRole(Role.USER),
                 role: Role.USER,
@@ -661,7 +661,7 @@ describe("UserService Business Logic Tests", () => {
         it("should handle user with empty permissions array", () => {
             // Arrange
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service17@example.com",
                 password: "hash",
                 permissions: [],
                 role: Role.USER,
@@ -677,7 +677,7 @@ describe("UserService Business Logic Tests", () => {
         it("should handle checking empty permission list", () => {
             // Arrange
             const user = new UserEntity({
-                email: "test@example.com",
+                email: "test-user-service18@example.com",
                 password: "hash",
                 permissions: [Permission.USER_READ, Permission.USER_UPDATE],
                 role: Role.USER,

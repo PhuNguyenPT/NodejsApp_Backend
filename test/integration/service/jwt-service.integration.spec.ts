@@ -705,7 +705,7 @@ describe("JwtService Integration Tests", () => {
         it("should handle payload with optional name field", async () => {
             // Arrange
             const payload: CustomJwtPayload = {
-                email: "test@example.com",
+                email: "test-jwt-service@example.com",
                 id: UUIDSchema.parse(uuidv7()),
                 role: Role.USER,
                 type: TokenType.ACCESS,
