@@ -1,4 +1,5 @@
 import { inject, injectable } from "inversify";
+import { performance } from "node:perf_hooks";
 import { Repository } from "typeorm";
 import { Logger } from "winston";
 
@@ -227,7 +228,7 @@ export class FileEventListener implements IFileEventListener {
     private async processMultipleFiles(
         payload: FilesCreatedEvent,
     ): Promise<void> {
-        const processingStartTime = new Date();
+        const processingStartTime = performance.now();
         let initialOcrResults: OcrResultEntity[] = [];
 
         try {
@@ -421,7 +422,7 @@ export class FileEventListener implements IFileEventListener {
     private async processSingleFile(
         payload: SingleFileCreatedEvent,
     ): Promise<void> {
-        const processingStartTime = new Date();
+        const processingStartTime = performance.now();
         let initialOcrResults: OcrResultEntity[] = [];
 
         try {

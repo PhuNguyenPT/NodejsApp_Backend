@@ -59,7 +59,7 @@ describe("UserService Integration Tests", () => {
         it("should create a new user with all fields", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 name: "Test User",
                 password: "SecurePass123!",
                 phoneNumbers: ["+84 123 456 789", "+1 555 123 4567"],
@@ -91,7 +91,7 @@ describe("UserService Integration Tests", () => {
             // Arrange
             const plainPassword = "SecurePass123!";
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 password: plainPassword,
                 role: Role.USER,
             };
@@ -113,7 +113,7 @@ describe("UserService Integration Tests", () => {
         it("should assign default permissions based on role", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 password: "SecurePass123!",
                 role: Role.ADMIN,
             };
@@ -132,7 +132,7 @@ describe("UserService Integration Tests", () => {
         it("should create user with minimal required fields", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 password: "SecurePass123!",
                 role: Role.USER,
             };
@@ -181,7 +181,7 @@ describe("UserService Integration Tests", () => {
 
             for (const role of roles) {
                 const createDto: CreateUserAdminDTO = {
-                    email: `test-${role}-${Date.now().toString()}@example.com`,
+                    email: `test-user-service${role}-${Date.now().toString()}@example.com`,
                     password: "SecurePass123!",
                     role,
                 };
@@ -207,7 +207,7 @@ describe("UserService Integration Tests", () => {
         it("should retrieve existing user by id", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 name: "Get By ID Test",
                 password: "SecurePass123!",
                 role: Role.USER,
@@ -243,7 +243,7 @@ describe("UserService Integration Tests", () => {
         it("should use cache on second retrieval", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 password: "SecurePass123!",
                 role: Role.USER,
             };
@@ -270,7 +270,7 @@ describe("UserService Integration Tests", () => {
             // Arrange
             const name = "Specific Name User";
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 name,
                 password: "SecurePass123!",
                 role: Role.USER,
@@ -290,7 +290,7 @@ describe("UserService Integration Tests", () => {
         it("should retrieve user by id only when name is undefined", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 name: "Test User",
                 password: "SecurePass123!",
                 role: Role.USER,
@@ -309,7 +309,7 @@ describe("UserService Integration Tests", () => {
         it("should throw EntityNotFoundException for wrong name", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 name: "Correct Name",
                 password: "SecurePass123!",
                 role: Role.USER,
@@ -364,7 +364,7 @@ describe("UserService Integration Tests", () => {
         it("should return true for existing user", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 password: "SecurePass123!",
                 role: Role.USER,
             };
@@ -396,7 +396,7 @@ describe("UserService Integration Tests", () => {
         it("should update user basic fields", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 name: "Original Name",
                 password: "SecurePass123!",
                 phoneNumbers: ["+84 111 111 111"],
@@ -435,7 +435,7 @@ describe("UserService Integration Tests", () => {
         it("should hash new password when updating", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 password: "SecurePass123!",
                 role: Role.USER,
             };
@@ -472,7 +472,7 @@ describe("UserService Integration Tests", () => {
         it("should update permissions when role changes", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 password: "SecurePass123!",
                 role: Role.USER,
             };
@@ -509,7 +509,7 @@ describe("UserService Integration Tests", () => {
         it("should not update permissions when role is not changed", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 password: "SecurePass123!",
                 role: Role.USER,
             };
@@ -565,7 +565,7 @@ describe("UserService Integration Tests", () => {
         it("should invalidate cache after update", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 password: "SecurePass123!",
                 role: Role.USER,
             };
@@ -600,7 +600,7 @@ describe("UserService Integration Tests", () => {
         it("should handle partial updates correctly", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 name: "Original Name",
                 password: "SecurePass123!",
                 phoneNumbers: ["+84 123 456 789"],
@@ -638,7 +638,7 @@ describe("UserService Integration Tests", () => {
         it("should delete existing user", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 password: "SecurePass123!",
                 role: Role.USER,
             };
@@ -659,7 +659,7 @@ describe("UserService Integration Tests", () => {
         it("should invalidate cache after deletion", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 password: "SecurePass123!",
                 role: Role.USER,
             };
@@ -697,7 +697,7 @@ describe("UserService Integration Tests", () => {
         it("should handle multiple updates in sequence", async () => {
             // Arrange
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 name: "Original",
                 password: "SecurePass123!",
                 role: Role.USER,
@@ -739,7 +739,7 @@ describe("UserService Integration Tests", () => {
         it("should maintain data integrity across create-read-update-delete cycle", async () => {
             // Create
             const createDto: CreateUserAdminDTO = {
-                email: `test-${Date.now().toString()}@example.com`,
+                email: `test-user-service${Date.now().toString()}@example.com`,
                 name: "CRUD Test",
                 password: "SecurePass123!",
                 role: Role.USER,
@@ -808,7 +808,7 @@ describe("UserService Integration Tests", () => {
         describe("Edge Cases", () => {
             it("should handle empty phone numbers array", async () => {
                 const createDto: CreateUserAdminDTO = {
-                    email: `test-${Date.now().toString()}@example.com`,
+                    email: `test-user-service${Date.now().toString()}@example.com`,
                     password: "SecurePass123!",
                     phoneNumbers: [],
                     role: Role.USER,
@@ -822,7 +822,7 @@ describe("UserService Integration Tests", () => {
 
             it("should handle updating to same email (no-op case)", async () => {
                 const created = await userService.create({
-                    email: `test-${Date.now().toString()}@example.com`,
+                    email: `test-user-service${Date.now().toString()}@example.com`,
                     password: "Pass123!",
                     role: Role.USER,
                 });
@@ -846,7 +846,7 @@ describe("UserService Integration Tests", () => {
 
             it("should handle role update to same role", async () => {
                 const created = await userService.create({
-                    email: `test-${Date.now().toString()}@example.com`,
+                    email: `test-user-service${Date.now().toString()}@example.com`,
                     password: "Pass123!",
                     role: Role.USER,
                 });

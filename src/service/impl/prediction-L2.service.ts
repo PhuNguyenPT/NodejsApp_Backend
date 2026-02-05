@@ -27,7 +27,7 @@ import {
     getRankByAcademicPerformance,
 } from "@/type/enum/academic-performance.enum.js";
 import { Conduct, getRankByConduct } from "@/type/enum/conduct.enum.js";
-import { CCNNType } from "@/type/enum/exam-type.enum.js";
+import { CCNNType, isCCNNType } from "@/type/enum/exam-type.enum.js";
 import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
 import { IllegalArgumentException } from "@/type/exception/illegal-argument.exception.js";
@@ -171,7 +171,9 @@ export class PredictionL2Service implements IPredictionL2Service {
         studentInfoDTO: StudentInfoDTO,
     ): UserInputL2[] {
         const ccnnCertifications: CertificationDTO[] =
-            studentInfoDTO.getCertificationsByExamType("CCNN");
+            studentInfoDTO.certifications?.filter((cert) =>
+                isCCNNType(cert.examType),
+            ) ?? [];
 
         // Create base template for user inputs
         const baseTemplate = this.createBaseL2UserInputTemplate(studentInfoDTO);

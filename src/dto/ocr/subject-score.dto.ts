@@ -16,4 +16,8 @@ export class SubjectScore implements ISubjectScore {
     @Min(0)
     @Type(() => Number)
     score!: number;
+
+    constructor(parital?: Partial<SubjectScore>) {
+        if (parital) Object.assign(this, parital);
+    }
 }

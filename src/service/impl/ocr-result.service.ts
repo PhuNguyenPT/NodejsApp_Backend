@@ -1,5 +1,5 @@
-import { differenceInMilliseconds } from "date-fns";
 import { inject, injectable } from "inversify";
+import { performance } from "node:perf_hooks";
 import { In, Repository } from "typeorm";
 import { Logger } from "winston";
 
@@ -123,14 +123,11 @@ export class OcrResultService implements IOcrResultService {
     public async markAsFailed(
         results: OcrResultEntity[],
         errorMessage: string,
-        startTime: Date,
+        startTime: number,
     ): Promise<void> {
         if (results.length === 0) return;
 
-        const processingTimeMs = differenceInMilliseconds(
-            new Date(),
-            startTime,
-        );
+        const processingTimeMs = performance.now() - startTime;
         results.forEach((result) => {
             result.status = OcrStatus.FAILED;
             result.errorMessage = errorMessage;
@@ -138,7 +135,7 @@ export class OcrResultService implements IOcrResultService {
                 extractedAt: new Date(),
                 failedFiles: results.length,
                 ocrModel: "unknown",
-                processingTimeMs,
+                processingTimeMs: Math.round(processingTimeMs),
                 successfulFiles: 0,
                 totalFilesProcessed: results.length,
             };
@@ -150,13 +147,12 @@ export class OcrResultService implements IOcrResultService {
     public async updateResults(
         initialResults: OcrResultEntity[],
         batchExtractionResult: BatchScoreExtractionResult,
-        processingStartTime: Date,
+        processingStartTime: number,
     ): Promise<OcrResultEntity[]> {
         if (initialResults.length === 0) return [];
 
-        const processingTimeMs = differenceInMilliseconds(
-            new Date(),
-            processingStartTime,
+        const processingTimeMs = Math.round(
+            performance.now() - processingStartTime,
         );
         const successfulFiles = batchExtractionResult.results.filter(
             (r) => r.success,

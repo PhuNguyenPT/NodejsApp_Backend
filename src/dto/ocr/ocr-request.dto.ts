@@ -152,4 +152,8 @@ export class OcrRequest {
     @Type(() => SubjectScore)
     @ValidateNested({ each: true })
     subjectScores!: SubjectScore[];
+
+    constructor(partial?: Partial<OcrRequest>) {
+        if (partial) Object.assign(this, partial);
+    }
 }

@@ -63,14 +63,16 @@ export class PredictionUtil {
     private _createCcqtScenarios(
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
-        if (studentInfoDTO.hasCertificationExamType("CCQT")) {
-            const ccqtCerts =
-                studentInfoDTO.getCertificationsByExamType("CCQT");
+        if (!studentInfoDTO.certifications) {
+            return [];
+        }
 
-            return ccqtCerts.reduce<ExamScenario[]>((acc, cert) => {
+        return studentInfoDTO.certifications.reduce<ExamScenario[]>(
+            (acc, cert) => {
                 if (!isCCQTType(cert.examType)) {
                     return acc;
                 }
+
                 const score = this.getAndValidateScoreByCCQT(
                     cert.examType,
                     cert.level,
@@ -84,16 +86,15 @@ export class PredictionUtil {
                     });
                 }
                 return acc;
-            }, []);
-        }
-        return [];
+            },
+            [],
+        );
     }
 
     private _createDgnlScenarios(
         studentInfoDTO: StudentInfoDTO,
     ): ExamScenario[] {
-        const dgnlTests: AptitudeExamDTO[] =
-            studentInfoDTO.getAptitudeTestScoresByExamType("ĐGNL");
+        const dgnlTests: AptitudeExamDTO[] = studentInfoDTO.aptitudeExams ?? [];
 
         return dgnlTests.map((test) => ({
             diem_chuan: test.score,
