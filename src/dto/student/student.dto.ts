@@ -20,7 +20,6 @@ import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import { NationalExam, TalentExam, VsatExam } from "@/dto/student/exam.dto.js";
 import { MajorGroupDTO } from "@/dto/student/major-group.dto.js";
-import { getExamCategory } from "@/type/enum/exam-type.enum.js";
 import { MajorGroup } from "@/type/enum/major.enum.js";
 import { SpecialStudentCase } from "@/type/enum/special-student-case.enum.js";
 import { VietnameseSubject } from "@/type/enum/subject.enum.js";
@@ -128,9 +127,9 @@ export class StudentInfoDTO {
      * Optional field that can contain multiple certification entries.
      * Each certification includes details like name, issuing organization, and validity dates.
      *
-     * @type {CertificationRequest[]}
+     * @type {CertificationDTO[]}
      * @optional
-     * @see CertificationRequest for detailed structure and validation rules
+     * @see CertificationDTO for detailed structure and validation rules
      * @example
      * [
      *   {
@@ -390,26 +389,6 @@ export class StudentInfoDTO {
     @ValidateNested({ each: true })
     vsatExams?: VsatExam[];
 
-    getAptitudeTestScoresByExamType(
-        type: "CCNN" | "CCQT" | "ĐGNL",
-    ): AptitudeExamDTO[] {
-        if (!this.aptitudeExams) return [];
-
-        return this.aptitudeExams.filter(
-            (cert) => getExamCategory(cert.examType) === type,
-        );
-    }
-
-    getCertificationsByExamType(
-        type: "CCNN" | "CCQT" | "ĐGNL",
-    ): CertificationDTO[] {
-        if (!this.certifications) return [];
-
-        return this.certifications.filter(
-            (cert) => getExamCategory(cert.examType) === type,
-        );
-    }
-
     /**
      * Get all major group codes as a Set for efficient filtering
      */
@@ -424,10 +403,6 @@ export class StudentInfoDTO {
             (sum, examSubject) => sum + examSubject.score,
             0,
         );
-    }
-
-    hasCertificationExamType(type: "CCNN" | "CCQT" | "ĐGNL"): boolean {
-        return this.getCertificationsByExamType(type).length > 0;
     }
 
     hasValidNationalExam(): boolean {

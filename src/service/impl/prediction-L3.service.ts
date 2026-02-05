@@ -37,7 +37,12 @@ import { FileEntity, FileStatus } from "@/entity/uni_guide/file.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
 import { TranscriptEntity } from "@/entity/uni_guide/transcript.entity.js";
 import { TYPES } from "@/type/container/types.js";
-import { CCQTType, DGNLType, isCCQTType } from "@/type/enum/exam-type.enum.js";
+import {
+    CCQTType,
+    DGNLType,
+    isCCNNType,
+    isCCQTType,
+} from "@/type/enum/exam-type.enum.js";
 import { getCodeByVietnameseName, MajorGroup } from "@/type/enum/major.enum.js";
 import { NationalExcellentStudentExamSubject } from "@/type/enum/national-excellent-exam.enum.js";
 import { Rank } from "@/type/enum/rank.enum.js";
@@ -1337,21 +1342,25 @@ export class PredictionL3Service implements IPredictionL3Service {
 
         // Get certifications and aptitude exams by type
         const ccnnCertifications: CertificationDTO[] =
-            studentInfoDTO.getCertificationsByExamType("CCNN");
+            studentInfoDTO.certifications?.filter((cert) =>
+                isCCNNType(cert.examType),
+            ) ?? [];
         this.logger.debug(
             "L3 Prediction: CCNN Certifications: ",
             ccnnCertifications,
         );
 
         const ccqtCertifications: CertificationDTO[] =
-            studentInfoDTO.getCertificationsByExamType("CCQT");
+            studentInfoDTO.certifications?.filter((cert) =>
+                isCCQTType(cert.examType),
+            ) ?? [];
         this.logger.debug(
             "L3 Prediction: CCQT Certifications: ",
             ccqtCertifications,
         );
 
         const dgnlAptitudeExams: AptitudeExamDTO[] =
-            studentInfoDTO.getAptitudeTestScoresByExamType("ĐGNL");
+            studentInfoDTO.aptitudeExams ?? [];
         this.logger.debug("L3 Prediction: ĐGNL Exams: ", dgnlAptitudeExams);
 
         // Create base template for user inputs
