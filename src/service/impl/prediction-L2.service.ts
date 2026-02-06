@@ -3,7 +3,7 @@ import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { inject, injectable } from "inversify";
 import pLimit from "p-limit";
-import { IsNull, Repository } from "typeorm";
+import { DataSource, IsNull } from "typeorm";
 import { Logger } from "winston";
 
 import type { PredictionModelServiceConfig } from "@/config/prediction-model.config.js";
@@ -20,7 +20,15 @@ import { AcademicPerformanceDTO } from "@/dto/student/academic-performance-dto.j
 import { CertificationDTO } from "@/dto/student/certification-dto.js";
 import { ConductDTO } from "@/dto/student/conduct-dto.js";
 import { StudentInfoDTO } from "@/dto/student/student.dto.js";
+import { AcademicPerformanceEntity } from "@/entity/uni_guide/academic-performance.entity.js";
+import { AptitudeExamEntity } from "@/entity/uni_guide/aptitude-exam.entity.js";
+import { CertificationEntity } from "@/entity/uni_guide/certification.entity.js";
+import { ConductEntity } from "@/entity/uni_guide/conduct.entity.js";
+import { NationalExamEntity } from "@/entity/uni_guide/national-exam.enity.js";
+import { StudentMajorGroupEntity } from "@/entity/uni_guide/student-major-group.entity.js";
 import { StudentEntity } from "@/entity/uni_guide/student.entity.js";
+import { TalentExamEntity } from "@/entity/uni_guide/talent-exam.entity.js";
+import { VsatExamEntity } from "@/entity/uni_guide/vsat-exam.entity.js";
 import { TYPES } from "@/type/container/types.js";
 import {
     AcademicPerformance,
@@ -42,8 +50,8 @@ export class PredictionL2Service implements IPredictionL2Service {
         @inject(TYPES.Logger) private readonly logger: Logger,
         @inject(TYPES.PredictionModelServiceConfig)
         private readonly config: PredictionModelServiceConfig,
-        @inject(TYPES.StudentRepository)
-        private readonly studentRepository: Repository<StudentEntity>,
+        @inject(TYPES.DataSource)
+        private readonly dataSource: DataSource,
         @inject(TYPES.PredictHttpClient)
         private readonly httpClient: AxiosInstance,
         @inject(TYPES.ConcurrencyUtil)
@@ -320,30 +328,66 @@ export class PredictionL2Service implements IPredictionL2Service {
         studentId: UUID,
         userId?: UUID,
     ): Promise<L2PredictResult[]> {
-        // Data retrieval and validation
-        const student = await this.studentRepository.findOne({
-            relations: [
-                "academicPerformances",
-                "aptitudeExams",
-                "certifications",
-                "conducts",
-                "studentMajorGroups.majorGroup",
-                "nationalExams",
-                "talentExams",
-                "vsatExams",
-            ],
-            transaction: true,
-            where: {
-                id: studentId,
-                userId: userId ?? IsNull(), // Handle both authenticated and anonymous
-            },
-        });
+        const student = await this.dataSource
+            .getRepository(StudentEntity)
+            .findOne({
+                where: {
+                    id: studentId,
+                    userId: userId ?? IsNull(),
+                },
+            });
 
         if (!student) {
             throw new EntityNotFoundException(
                 `Student profile with id: ${studentId} not found`,
             );
         }
+
+        const [
+            academicPerformances,
+            aptitudeExams,
+            certifications,
+            conducts,
+            studentMajorGroups,
+            nationalExams,
+            talentExams,
+            vsatExams,
+        ] = await Promise.all([
+            this.dataSource
+                .getRepository(AcademicPerformanceEntity)
+                .find({ where: { studentId: student.id } }),
+            this.dataSource
+                .getRepository(AptitudeExamEntity)
+                .find({ where: { studentId: student.id } }),
+            this.dataSource
+                .getRepository(CertificationEntity)
+                .find({ where: { studentId: student.id } }),
+            this.dataSource
+                .getRepository(ConductEntity)
+                .find({ where: { studentId: student.id } }),
+            this.dataSource.getRepository(StudentMajorGroupEntity).find({
+                relations: ["majorGroup"],
+                where: { studentId: student.id },
+            }),
+            this.dataSource
+                .getRepository(NationalExamEntity)
+                .find({ where: { studentId: student.id } }),
+            this.dataSource
+                .getRepository(TalentExamEntity)
+                .find({ where: { studentId: student.id } }),
+            this.dataSource
+                .getRepository(VsatExamEntity)
+                .find({ where: { studentId: student.id } }),
+        ]);
+
+        student.academicPerformances = academicPerformances;
+        student.aptitudeExams = aptitudeExams;
+        student.certifications = certifications;
+        student.conducts = conducts;
+        student.studentMajorGroups = studentMajorGroups;
+        student.nationalExams = nationalExams;
+        student.talentExams = talentExams;
+        student.vsatExams = vsatExams;
 
         const studentInfoDTO: StudentInfoDTO = plainToInstance(
             StudentInfoDTO,
