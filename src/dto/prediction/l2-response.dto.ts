@@ -1,5 +1,5 @@
 import { Expose } from "class-transformer";
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsString, Max, Min } from "class-validator";
 
 /**
  * API Response item representing a prediction result with admission code and confidence score.
@@ -30,5 +30,7 @@ export class L2PredictResult {
      */
     @Expose()
     @IsNumber()
+    @Max(1)
+    @Min(0)
     score!: number;
 }
