@@ -16,7 +16,7 @@ export interface IPredictionL2Service {
         studentId: UUID,
         userId?: UUID,
     ): Promise<L2PredictResult[]>;
-    predictMajorsByStudentIdAndUserId(
+    predictMajorsByUserInputL2(
         userInput: UserInputL2,
     ): Promise<L2PredictResult[]>;
     predictMajorsL2(userInput: UserInputL2): Promise<L2PredictResult[]>;

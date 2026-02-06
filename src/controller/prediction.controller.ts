@@ -197,7 +197,7 @@ export class PredictionController extends Controller {
     ): Promise<L2PredictResult[]> {
         const user: Express.User = request.user;
         const predictResults: L2PredictResult[] =
-            await this.predictionL2Service.predictMajorsByStudentIdAndUserId(
+            await this.predictionL2Service.predictMajorsByUserInputL2(
                 userInput,
             );
         this.logger.info("Predict major successfully for user", {

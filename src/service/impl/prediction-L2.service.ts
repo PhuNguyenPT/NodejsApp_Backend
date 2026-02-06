@@ -438,7 +438,7 @@ export class PredictionL2Service implements IPredictionL2Service {
         return deduplicatedResults;
     }
 
-    public async predictMajorsByStudentIdAndUserId(
+    public async predictMajorsByUserInputL2(
         userInput: UserInputL2,
     ): Promise<L2PredictResult[]> {
         return await this.predictMajorsL2(userInput);
