@@ -1,3 +1,5 @@
+import { plainToInstance } from "class-transformer";
+import { validate } from "class-validator";
 import { type DataSource } from "typeorm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -34,13 +36,70 @@ import { VietnameseSubject } from "@/type/enum/subject.enum.js";
 import { UniType } from "@/type/enum/uni-type.enum.js";
 import { VietnamSouthernProvinces } from "@/type/enum/vietnamese-provinces.enum.js";
 import { EntityNotFoundException } from "@/type/exception/entity-not-found.exception.js";
+import { ValidationException } from "@/type/exception/validation.exception.js";
 
 describe("PredictionL2Service Integration Tests", () => {
     let dataSource: DataSource;
     let predictionL2Service: IPredictionL2Service;
 
     const createdStudentIds: UUID[] = [];
+    async function createBaseStudent(overrides?: Partial<StudentEntity>) {
+        const studentRepository = dataSource.getRepository(StudentEntity);
 
+        // 1. Define your default values
+        const defaults = {
+            majors: [MajorGroup.ENGINEERING],
+            maxBudget: 50000000,
+            minBudget: 10000000,
+            province: VietnamSouthernProvinces.HO_CHI_MINH,
+            uniType: UniType.PUBLIC,
+        };
+
+        // 2. Merge defaults with overrides and create the entity instance
+        // This ensures overrides take precedence
+        const studentData = { ...defaults, ...overrides };
+        const student = studentRepository.create(studentData);
+
+        // 3. Save the merged entity
+        const saved = await studentRepository.save(student);
+
+        // 4. Track and return
+        createdStudentIds.push(saved.id);
+        return saved;
+    }
+
+    async function setupValidStudentData(studentId: UUID) {
+        await Promise.all([
+            dataSource.getRepository(AcademicPerformanceEntity).save([
+                {
+                    academicPerformance: AcademicPerformance.GOOD,
+                    grade: 10,
+                    studentId,
+                },
+                {
+                    academicPerformance: AcademicPerformance.GOOD,
+                    grade: 11,
+                    studentId,
+                },
+                {
+                    academicPerformance: AcademicPerformance.GOOD,
+                    grade: 12,
+                    studentId,
+                },
+            ]),
+            dataSource.getRepository(ConductEntity).save([
+                { conduct: Conduct.GOOD, grade: 10, studentId },
+                { conduct: Conduct.GOOD, grade: 11, studentId },
+                { conduct: Conduct.GOOD, grade: 12, studentId },
+            ]),
+            dataSource.getRepository(NationalExamEntity).save([
+                { name: VietnameseSubject.TOAN, score: 8.0, studentId },
+                { name: VietnameseSubject.VAT_LY, score: 7.5, studentId },
+                { name: VietnameseSubject.HOA_HOC, score: 7.0, studentId },
+                { name: VietnameseSubject.NGU_VAN, score: 7.0, studentId },
+            ]),
+        ]);
+    }
     beforeAll(() => {
         getApp();
 
@@ -2010,5 +2069,402 @@ describe("PredictionL2Service Integration Tests", () => {
                     ?.score,
             ).toBe(0.85);
         });
+    });
+
+    describe("Validation Error Cases", () => {
+        it("should throw ValidationException when student has insufficient academic performances", async () => {
+            const studentRepo = dataSource.getRepository(StudentEntity);
+            const student = studentRepo.create({
+                majors: [MajorGroup.ENGINEERING],
+                maxBudget: 50000000,
+                minBudget: 10000000,
+                province: VietnamSouthernProvinces.HO_CHI_MINH,
+                uniType: UniType.PUBLIC,
+            });
+            await studentRepo.save(student);
+            createdStudentIds.push(student.id);
+
+            await dataSource.getRepository(AcademicPerformanceEntity).save([
+                {
+                    academicPerformance: AcademicPerformance.GOOD,
+                    grade: 10,
+                    studentId: student.id,
+                },
+                {
+                    academicPerformance: AcademicPerformance.GOOD,
+                    grade: 11,
+                    studentId: student.id,
+                },
+                // Missing grade 12
+            ]);
+
+            await expect(
+                predictionL2Service.getL2PredictResults(student.id),
+            ).rejects.toThrow(ValidationException);
+        });
+
+        it("should throw ValidationException when student has insufficient conducts", async () => {
+            const student = await createBaseStudent({
+                majors: [MajorGroup.ENGINEERING],
+            });
+            await dataSource.getRepository(ConductEntity).save([
+                { conduct: Conduct.GOOD, grade: 10, studentId: student.id },
+                { conduct: Conduct.GOOD, grade: 11, studentId: student.id },
+                // Missing grade 12
+            ]);
+
+            await expect(
+                predictionL2Service.getL2PredictResults(student.id),
+            ).rejects.toThrow(ValidationException);
+        });
+
+        it("should throw ValidationException when student has insufficient national exams", async () => {
+            const student = await createBaseStudent({
+                majors: [MajorGroup.ENGINEERING],
+            });
+            await dataSource.getRepository(NationalExamEntity).save([
+                {
+                    name: VietnameseSubject.TOAN,
+                    score: 8.0,
+                    studentId: student.id,
+                },
+                {
+                    name: VietnameseSubject.VAT_LY,
+                    score: 7.5,
+                    studentId: student.id,
+                },
+                {
+                    name: VietnameseSubject.HOA_HOC,
+                    score: 7.0,
+                    studentId: student.id,
+                },
+                // Only 3 subjects, requires 4
+            ]);
+
+            await expect(
+                predictionL2Service.getL2PredictResults(student.id),
+            ).rejects.toThrow(ValidationException);
+        });
+    });
+
+    it("should return empty array when no matching programs exist", async () => {
+        const studentRepo = dataSource.getRepository(StudentEntity);
+        const student = studentRepo.create({
+            majors: [MajorGroup.ENGINEERING],
+            maxBudget: 1, // Impossible budget
+            minBudget: 1,
+            province: VietnamSouthernProvinces.HO_CHI_MINH,
+            uniType: UniType.PUBLIC,
+        });
+        await studentRepo.save(student);
+        createdStudentIds.push(student.id);
+
+        // Provide all other valid data
+        await setupValidStudentData(student.id);
+
+        const results = await predictionL2Service.getL2PredictResults(
+            student.id,
+        );
+
+        expect(results).toBeDefined();
+        expect(Array.isArray(results)).toBe(true);
+        expect(results.length).toBe(0);
+    });
+
+    describe("Boundary and Scale Tests", () => {
+        it("should handle extreme exam scores (0.0 and 10.0)", async () => {
+            const student = await createBaseStudent({
+                majors: [MajorGroup.ENGINEERING],
+            });
+            const studentId = student.id;
+            await Promise.all([
+                dataSource.getRepository(AcademicPerformanceEntity).save([
+                    {
+                        academicPerformance: AcademicPerformance.GOOD,
+                        grade: 10,
+                        studentId,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.GOOD,
+                        grade: 11,
+                        studentId,
+                    },
+                    {
+                        academicPerformance: AcademicPerformance.GOOD,
+                        grade: 12,
+                        studentId,
+                    },
+                ]),
+                dataSource.getRepository(ConductEntity).save([
+                    { conduct: Conduct.GOOD, grade: 10, studentId },
+                    { conduct: Conduct.GOOD, grade: 11, studentId },
+                    { conduct: Conduct.GOOD, grade: 12, studentId },
+                ]),
+                dataSource.getRepository(NationalExamEntity).save([
+                    {
+                        name: VietnameseSubject.TOAN,
+                        score: 0.0,
+                        studentId: student.id,
+                    },
+                    {
+                        name: VietnameseSubject.VAT_LY,
+                        score: 10.0,
+                        studentId: student.id,
+                    },
+                    {
+                        name: VietnameseSubject.HOA_HOC,
+                        score: 5.0,
+                        studentId: student.id,
+                    },
+                    {
+                        name: VietnameseSubject.NGU_VAN,
+                        score: 5.0,
+                        studentId: student.id,
+                    },
+                ]),
+            ]);
+
+            const results = await predictionL2Service.getL2PredictResults(
+                student.id,
+            );
+            expect(results.every((r) => r.score >= 0 && r.score <= 1)).toBe(
+                true,
+            );
+            expect(results).toBeDefined();
+            expect(results.length).toBeGreaterThan(0);
+        });
+
+        it("should handle student with maximum VSAT exams (8)", async () => {
+            const student = await createBaseStudent({
+                majors: [MajorGroup.ENGINEERING],
+            });
+            await setupValidStudentData(student.id);
+            const vsatSubjects = [
+                VietnameseSubject.TOAN,
+                VietnameseSubject.NGU_VAN,
+                VietnameseSubject.TIENG_ANH,
+                VietnameseSubject.VAT_LY,
+                VietnameseSubject.HOA_HOC,
+                VietnameseSubject.SINH_HOC,
+                VietnameseSubject.LICH_SU,
+                VietnameseSubject.DIA_LY,
+            ];
+
+            await dataSource.getRepository(VsatExamEntity).save(
+                vsatSubjects.map((name) => ({
+                    name,
+                    score: 140,
+                    studentId: student.id,
+                })),
+            );
+
+            const results = await predictionL2Service.getL2PredictResults(
+                student.id,
+            );
+            expect(results).toBeDefined();
+            expect(results).toBeDefined();
+            expect(results.length).toBeGreaterThan(0);
+        });
+
+        it("should handle student with maximum number of certifications", async () => {
+            const student = await createBaseStudent({
+                majors: [MajorGroup.HUMANITIES],
+            });
+            await setupValidStudentData(student.id);
+            const certificationRepository =
+                dataSource.getRepository(CertificationEntity);
+            await certificationRepository.save([
+                {
+                    examType: CCQTType.SAT,
+                    level: "1450",
+                    studentId: student.id,
+                },
+                {
+                    examType: CCQTType.ACT,
+                    level: "32",
+                    studentId: student.id,
+                },
+                {
+                    examType: CCNNType.JLPT,
+                    level: "N4",
+                    studentId: student.id,
+                },
+                {
+                    cefr: CEFR.C2,
+                    examType: CCNNType.TOEFL_iBT,
+                    level: "120",
+                    studentId: student.id,
+                },
+                {
+                    cefr: CEFR.C2,
+                    examType: CCNNType.TOEIC,
+                    level: "990",
+                    studentId: student.id,
+                },
+                {
+                    cefr: CEFR.C2,
+                    examType: CCNNType.IELTS,
+                    level: "9.0",
+                    studentId: student.id,
+                },
+            ]);
+            const results = await predictionL2Service.getL2PredictResults(
+                student.id,
+            );
+            expect(results).toBeDefined();
+            expect(results.length).toBeGreaterThan(0);
+        });
+    });
+
+    describe("Result Integrity", () => {
+        it("should maintain consistent results for same student across multiple calls", async () => {
+            const student = await createBaseStudent({
+                majors: [MajorGroup.ENGINEERING],
+            });
+            await setupValidStudentData(student.id);
+
+            const results1 = await predictionL2Service.getL2PredictResults(
+                student.id,
+            );
+            const results2 = await predictionL2Service.getL2PredictResults(
+                student.id,
+            );
+
+            expect(results1).toEqual(results2);
+        });
+
+        it("should validate L2PredictResult DTO structure with class-validator", async () => {
+            const student = await createBaseStudent({
+                majors: [MajorGroup.ENGINEERING],
+            });
+            await setupValidStudentData(student.id);
+
+            const results = await predictionL2Service.getL2PredictResults(
+                student.id,
+            );
+            expect(results).toBeDefined();
+            expect(results.length).toBeGreaterThan(0);
+            for (const result of results) {
+                const dto = plainToInstance(L2PredictResult, result);
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            }
+        });
+    });
+
+    it("should handle student with mixed JLPT and CEFR certifications", async () => {
+        const student = await createBaseStudent({
+            majors: [MajorGroup.HUMANITIES],
+        });
+        await setupValidStudentData(student.id);
+        await dataSource.getRepository(CertificationEntity).save([
+            { examType: CCNNType.JLPT, level: "N2", studentId: student.id },
+            {
+                cefr: CEFR.C1,
+                examType: CCNNType.IELTS,
+                level: "7.0",
+                studentId: student.id,
+            },
+        ]);
+
+        const results = await predictionL2Service.getL2PredictResults(
+            student.id,
+        );
+        expect(results).toBeDefined();
+        expect(results.length).toBeGreaterThan(0);
+    });
+
+    it("should handle student with all NOT_PASSED academic performances", async () => {
+        const student = await createBaseStudent({
+            majors: [MajorGroup.ENGINEERING],
+        });
+        await Promise.all([
+            dataSource.getRepository(ConductEntity).save([
+                { conduct: Conduct.GOOD, grade: 10, studentId: student.id },
+                { conduct: Conduct.GOOD, grade: 11, studentId: student.id },
+                { conduct: Conduct.GOOD, grade: 12, studentId: student.id },
+            ]),
+            dataSource.getRepository(NationalExamEntity).save([
+                {
+                    name: VietnameseSubject.TOAN,
+                    score: 8.0,
+                    studentId: student.id,
+                },
+                {
+                    name: VietnameseSubject.VAT_LY,
+                    score: 7.5,
+                    studentId: student.id,
+                },
+                {
+                    name: VietnameseSubject.HOA_HOC,
+                    score: 7.0,
+                    studentId: student.id,
+                },
+                {
+                    name: VietnameseSubject.NGU_VAN,
+                    score: 7.0,
+                    studentId: student.id,
+                },
+            ]),
+        ]);
+
+        await dataSource.getRepository(AcademicPerformanceEntity).save([
+            {
+                academicPerformance: AcademicPerformance.NOT_PASSED,
+                grade: 10,
+                studentId: student.id,
+            },
+            {
+                academicPerformance: AcademicPerformance.NOT_PASSED,
+                grade: 11,
+                studentId: student.id,
+            },
+            {
+                academicPerformance: AcademicPerformance.NOT_PASSED,
+                grade: 12,
+                studentId: student.id,
+            },
+        ]);
+
+        const results = await predictionL2Service.getL2PredictResults(
+            student.id,
+        );
+        expect(results).toBeDefined();
+        expect(results.length).toBeGreaterThan(0);
+    });
+
+    it("should handle all DGNLType exam types", async () => {
+        const student = await createBaseStudent({
+            majors: [MajorGroup.ENGINEERING],
+        });
+        await setupValidStudentData(student.id);
+
+        await dataSource.getRepository(AptitudeExamEntity).save([
+            {
+                examType: DGNLType.HSA,
+                score: 150,
+                studentId: student.id,
+            },
+            {
+                examType: DGNLType.TSA,
+                score: 100,
+                studentId: student.id,
+            },
+            {
+                examType: DGNLType.VNUHCM,
+                score: 850,
+                studentId: student.id,
+                vnuhcmScoreComponents: {
+                    languageScore: 350,
+                    mathScore: 300,
+                    scienceLogic: 200,
+                },
+            },
+        ]);
+        const results = await predictionL2Service.getL2PredictResults(
+            student.id,
+        );
+        expect(results).toBeDefined();
+        expect(results.length).toBeGreaterThan(0);
     });
 });

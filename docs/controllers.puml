@@ -1335,7 +1335,7 @@ interface IPredictionL2Service {
     +executeL2PredictionsWithRetry(userInputs: UserInputL2[], maxChunkSize: number): Promise<L2PredictResult[]>
     +generateL2UserInputCombinations(studentInfoDTO: StudentInfoDTO): UserInputL2[]
     +getL2PredictResults(studentId: string, userId?: string | undefined): Promise<L2PredictResult[]>
-    +predictMajorsByStudentIdAndUserId(userInput: UserInputL2): Promise<L2PredictResult[]>
+    +predictMajorsByUserInputL2(userInput: UserInputL2): Promise<L2PredictResult[]>
     +predictMajorsL2(userInput: UserInputL2): Promise<L2PredictResult[]>
     +predictMajorsL2Batch(userInputs: UserInputL2[], dynamicConcurrency?: number | undefined): Promise<L2PredictResult[]>
 }
