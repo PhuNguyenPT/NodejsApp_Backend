@@ -917,7 +917,7 @@ export class PredictionL1Service implements IPredictionL1Service {
                 case SpecialStudentCase.VERY_FEW_ETHNIC_MINORITY:
                     flags.dan_toc_thieu_so = 1;
                     break;
-                // Note: TRANSFER_STUDENT doesn't map to any of these flags
+                // Note: GIFTED_STUDENT doesn't map to any of these flags
                 default:
                     break;
             }
